@@ -65,14 +65,14 @@ function Navbar() {
             className="hs-collapse hidden overflow-hidden transition-all duration-300 basis-full grow md:block"
           >
             <div className="flex flex-col md:flex-row md:items-center md:justify-end py-2 md:py-0 md:ps-7">
-              {localStorage.getItem("user") && (
+              {/* {localStorage.getItem("user") && ( */}
                 <Link
                   className="py-3 ps-px sm:px-3 font-medium text-gray-500 hover:text-gray-400 dark:text-neutral-400 dark:hover:text-neutral-500"
                   to={"/dashboard"}
                 >
                   Dashboard
                 </Link>
-              )}
+              {/* )} */}
               {/* <a
                 className="py-3 ps-px sm:px-3 font-medium text-gray-500 hover:text-gray-400 dark:text-neutral-400 dark:hover:text-neutral-500"
                 href="#"

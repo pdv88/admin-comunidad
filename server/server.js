@@ -85,8 +85,10 @@ app.post("/login", async (req, res) => {
     });
   });
 
+// Register
+
   app.post("/register", async (req, res) => {
-    const { name, lastname, mail, phone, password } = req.body;
+    const { name, lastname, mail, password } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
     db.query("SELECT mail FROM users WHERE mail=?", [mail], (err, result) => {
       if (err) {
@@ -95,8 +97,8 @@ app.post("/login", async (req, res) => {
       if (result.length == 0) {
         const token = randomstring.generate(60);
         db.query(
-          "INSERT INTO users (name,lastname,password,mail,phone,subscription,weekly_notification,monthly_notification,verified_email,device_id,email_verification_token) VALUES (?,?,?,?,?,'',true,true,false,'',?)",
-          [name, lastname, hashedPassword, mail, phone, token],
+          "INSERT INTO users (name,lastname,password,mail,verified_email,email_verification_token,role) VALUES (?,?,?,?,'false',?,'admin')",
+          [name, lastname, hashedPassword, mail, token],
           (err, response) => {
             if (err) {
               console.error("Error en la insercion: " + err);
@@ -119,11 +121,14 @@ app.post("/login", async (req, res) => {
                   user: process.env.NODEMAILER_EMAIL_ADDRESS,
                   pass: process.env.NODEMAILER_EMAIL_PASSWORD,
                 },
+                tls: {
+                    rejectUnauthorized: false, // Disable SSL verification
+                  },
               });
               const mailOptions = {
                 from: process.env.NODEMAILER_EMAIL_ADDRESS,
                 to: mail,
-                subject: "SUITPI - Verificación de correo",
+                subject: "VIDEAPP - Verificación de correo",
                 html: htmlToSend,
               };
               transporter.sendMail(mailOptions, (err, info) => {
