@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start": "serve dist -s -n -L -p $PORT:"
   },
   "dependencies": {
     "axios": "^1.7.2",
@@ -16,6 +17,7 @@
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.24.0",
     "react-spinners": "^0.14.1",
+    "serve": "^14.2.3",
     "tailwind": "^4.0.0"
   },
   "devDependencies": {
