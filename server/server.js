@@ -98,7 +98,7 @@ app.post("/login", async (req, res) => {
       if (result.length == 0) {
         const token = randomstring.generate(60);
         db.query(
-          "INSERT INTO users (name,lastname,password,mail,verified_email,email_verification_token,role) VALUES (?,?,?,?,'false',?,'admin')",
+          "INSERT INTO users (name,lastname,password,mail,verified_email,email_verification_token,role) VALUES (?,?,?,?,false,?,'admin')",
           [name, lastname, hashedPassword, mail, token],
           (err, response) => {
             if (err) {
