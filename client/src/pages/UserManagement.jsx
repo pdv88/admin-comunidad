@@ -7,6 +7,42 @@ const UserManagement = () => {
     const [loading, setLoading] = useState(true);
     const [newUser, setNewUser] = useState({ email: '', fullName: '', roleName: 'neighbor', unitId: '' });
     const [message, setMessage] = useState('');
+    const [editingUser, setEditingUser] = useState(null); // User being edited
+
+    const handleEditClick = (user) => {
+        setEditingUser({
+            id: user.id,
+            email: user.email, // Email is typically not editable here, just for display
+            fullName: user.full_name,
+            roleName: user.roles?.name || 'neighbor',
+            unitId: user.unit_id || ''
+        });
+    };
+
+    const handleUpdateUser = async (e) => {
+        e.preventDefault();
+        setMessage('Updating user...');
+        try {
+            const res = await fetch(`http://localhost:5000/api/users/${editingUser.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    roleName: editingUser.roleName,
+                    unitId: editingUser.unitId
+                })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setMessage('User updated successfully!');
+                setEditingUser(null);
+                fetchData();
+            } else {
+                setMessage('Error: ' + data.error);
+            }
+        } catch (error) {
+            setMessage('Error updating user');
+        }
+    };
 
     useEffect(() => {
         fetchData();
@@ -138,6 +174,7 @@ const UserManagement = () => {
                                 <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-400">Name</th>
                                 <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-400">Role</th>
                                 <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-400">Unit</th>
+                                <th className="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase dark:text-neutral-400">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 dark:divide-neutral-700">
@@ -152,12 +189,88 @@ const UserManagement = () => {
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">
                                         {user.units ? `${user.units.unit_number}` : '-'}
                                     </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-end text-sm font-medium">
+                                        <button 
+                                            onClick={() => handleEditClick(user)}
+                                            className="text-blue-600 hover:text-blue-900 dark:text-blue-500 dark:hover:text-blue-400"
+                                        >
+                                            Edit
+                                        </button>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
                 </div>
             </div>
+            {/* Edit User Modal */}
+            {editingUser && (
+                <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                    <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onClick={() => setEditingUser(null)}></div>
+                        <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                        <div className="inline-block align-bottom bg-white dark:bg-neutral-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                            <div className="bg-white dark:bg-neutral-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                                <div className="sm:flex sm:items-start">
+                                    <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                                        <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white" id="modal-title">
+                                            Edit User: {editingUser.fullName}
+                                        </h3>
+                                        <div className="mt-4">
+                                            <form onSubmit={handleUpdateUser} className="space-y-4">
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300">Role</label>
+                                                    <select 
+                                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-white"
+                                                        value={editingUser.roleName}
+                                                        onChange={e => setEditingUser({...editingUser, roleName: e.target.value})}
+                                                    >
+                                                        <option value="neighbor">Neighbor</option>
+                                                        <option value="president">President</option>
+                                                        <option value="secretary">Secretary</option>
+                                                        <option value="vice_president">Vice President</option>
+                                                        <option value="admin">Administrator</option>
+                                                        <option value="treasurer">Treasurer</option>
+                                                        <option value="maintenance">Maintenance</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300">Unit</label>
+                                                    <select 
+                                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-white"
+                                                        value={editingUser.unitId}
+                                                        onChange={e => setEditingUser({...editingUser, unitId: e.target.value})}
+                                                    >
+                                                        <option value="">No Unit</option>
+                                                        {getAllUnits().map(u => (
+                                                            <option key={u.id} value={u.id}>{u.blockName} - {u.unit_number}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                                <div className="flex justify-end pt-4">
+                                                    <button 
+                                                        type="button" 
+                                                        className="mr-2 inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm dark:bg-neutral-700 dark:text-white dark:border-neutral-600 dark:hover:bg-neutral-600"
+                                                        onClick={() => setEditingUser(null)}
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                    <button 
+                                                        type="submit" 
+                                                        className="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
+                                                    >
+                                                        Save Changes
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </DashboardLayout>
     );
 };

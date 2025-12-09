@@ -78,3 +78,16 @@ exports.updatePassword = async (req, res) => {
         res.status(400).json({ error: err.message });
     }
 };
+
+exports.forgotPassword = async (req, res) => {
+    const { email } = req.body;
+    try {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: 'http://localhost:5173/update-password', // Assuming frontend is on 5173
+        });
+        if (error) throw error;
+        res.json({ message: 'Password reset link sent' });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+};

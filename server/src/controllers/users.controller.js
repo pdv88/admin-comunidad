@@ -62,3 +62,42 @@ exports.inviteUser = async (req, res) => {
         res.status(400).json({ error: err.message });
     }
 }
+
+exports.updateUser = async (req, res) => {
+    const { id } = req.params;
+    const { roleName, unitId } = req.body;
+
+    try {
+        // Find role ID if roleName is provided
+        let roleId = null;
+        if (roleName) {
+            const { data: roleData, error: roleError } = await supabase
+                .from('roles')
+                .select('id')
+                .eq('name', roleName)
+                .single();
+
+            if (roleError) throw roleError;
+            roleId = roleData.id;
+        }
+
+        // Prepare update object
+        const updates = {};
+        if (roleId) updates.role_id = roleId;
+        if (unitId !== undefined) updates.unit_id = unitId === "" ? null : unitId; // Handle unassignment
+
+        // Use supabaseAdmin to bypass RLS
+        const { data, error } = await supabaseAdmin
+            .from('profiles')
+            .update(updates)
+            .eq('id', id)
+            .select();
+
+        if (error) throw error;
+
+        res.json(data[0]);
+    } catch (err) {
+        console.error("Update user error:", err);
+        res.status(400).json({ error: err.message });
+    }
+}
