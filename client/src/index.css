@@ -2,7 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  background-color: #2a2a2a;
-  height: 100dvh;
+@layer base {
+  body {
+    @apply bg-white text-gray-800 dark:bg-neutral-900 dark:text-neutral-200;
+    height: 100dvh;
+  }
 }

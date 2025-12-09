@@ -1,4 +1,5 @@
 import React from 'react'
+import testimonialJosh from '../../images/testimonial_josh.png'
 
 function Testimonials() {
   return (
@@ -11,10 +12,10 @@ function Testimonials() {
       {/* <!-- Title --> */}
       <div className="mb-8">
         <h2 className="mb-2 text-3xl text-gray-800 font-bold lg:text-4xl dark:text-neutral-200">
-          It's all about speed
+          Eficiencia y Rapidez
         </h2>
         <p className="text-gray-600 dark:text-neutral-400">
-          We provide you with a test account that can be set up in seconds. Our main focus is getting responses to you as soon as we can.
+          Te ofrecemos una cuenta de prueba que se configura en segundos. Nuestro objetivo es facilitarte la gestión lo antes posible.
         </p>
       </div>
       {/* <!-- End Title --> */}
@@ -27,14 +28,14 @@ function Testimonials() {
 
         <div className="relative z-10">
           <p className="text-xl italic text-gray-800 dark:text-white">
-            Amazing people to work with. Very fast and professional partner.
+            Gente increíble con la que trabajar. Un socio muy rápido y profesional.
           </p>
         </div>
 
         <footer className="mt-6">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <img className="size-8 rounded-full" src="https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=facearea&facepad=2&w=320&h=320&q=80" alt="Image Description"/>
+              <img className="size-8 rounded-full" src={testimonialJosh} alt="Josh Grazioso"/>
             </div>
             <div className="grow ms-4">
               <div className="font-semibold text-gray-800 dark:text-neutral-200">Josh Grazioso</div>
@@ -56,7 +57,7 @@ function Testimonials() {
               45k+
             </div>
             <p className="text-sm sm:text-base text-gray-600 dark:text-neutral-400">
-              users - from new startups to public companies
+              usuarios - desde pequeñas comunidades hasta grandes empresas
             </p>
           </li>
 
@@ -66,7 +67,7 @@ function Testimonials() {
               23%
             </div>
             <p className="text-sm sm:text-base text-gray-600 dark:text-neutral-400">
-              increase in traffic on webpages with Looms
+              incremento en la eficiencia de la gestión
             </p>
           </li>
 
@@ -76,7 +77,7 @@ function Testimonials() {
               9.3%
             </div>
             <p className="text-sm sm:text-base text-gray-600 dark:text-neutral-400">
-              boost in reply rates across sales outreach
+              aumento en la satisfacción de los vecinos
             </p>
           </li>
 
@@ -85,7 +86,7 @@ function Testimonials() {
               2x
             </div>
             <p className="text-sm sm:text-base text-gray-600 dark:text-neutral-400">
-              faster than previous Preline versions
+              más rápido que otros métodos de gestión
             </p>
           </li>
         </ul>

@@ -1,121 +1,117 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-function Navbar() {
+function Header() {
   return (
-    <>
-      {/* <!-- ========== HEADER ========== --> */}
-      <header className="flex flex-wrap md:justify-start md:flex-nowrap z-50 w-full text-sm">
-        <nav
-          className="mt-6 relative max-w-[85rem] w-full bg-white border border-gray-200 rounded-[36px] mx-2 py-3 px-4 md:flex md:items-center md:justify-between md:py-0 md:px-6 lg:px-8 xl:mx-auto dark:bg-neutral-800 dark:border-neutral-700"
-          aria-label="Global"
-        >
-          <div className="flex items-center justify-between">
-            <Link
-              className="flex-none text-xl font-semibold dark:text-white"
-              to="/"
-              aria-label="Brand"
-            >
-              VIDEAPP
-            </Link>
-            <div className="md:hidden">
-              <button
-                type="button"
-                className="hs-collapse-toggle size-8 flex justify-center items-center text-sm font-semibold rounded-full border border-gray-200 text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:border-neutral-700 dark:hover:bg-neutral-700"
-                data-hs-collapse="#navbar-collapse-with-animation"
-                aria-controls="navbar-collapse-with-animation"
-                aria-label="Toggle navigation"
-              >
-                <svg
-                  className="hs-collapse-open:hidden flex-shrink-0 size-4"
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <line x1="3" x2="21" y1="6" y2="6" />
-                  <line x1="3" x2="21" y1="12" y2="12" />
-                  <line x1="3" x2="21" y1="18" y2="18" />
-                </svg>
-                <svg
-                  className="hs-collapse-open:block hidden flex-shrink-0 size-4"
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M18 6 6 18" />
-                  <path d="m6 6 12 12" />
-                </svg>
-              </button>
-            </div>
-          </div>
-          <div
-            id="navbar-collapse-with-animation"
-            className="hs-collapse hidden overflow-hidden transition-all duration-300 basis-full grow md:block"
+    <header className="sticky top-0 inset-x-0 flex flex-wrap md:justify-start md:flex-nowrap z-50 w-full text-sm bg-white/90 backdrop-blur-xl border-b border-gray-200 dark:bg-neutral-900/90 dark:border-neutral-700 shadow-sm">
+      <nav
+        className="relative max-w-[85rem] w-full mx-auto px-4 py-3 md:flex md:items-center md:justify-between md:px-6 lg:px-8"
+        aria-label="Global"
+      >
+        <div className="flex items-center justify-between">
+          <Link
+            className="flex-none text-xl font-bold text-indigo-600 dark:text-indigo-400"
+            to="/"
+            aria-label="Brand"
           >
-            <div className="flex flex-col md:flex-row md:items-center md:justify-end py-2 md:py-0 md:ps-7">
-              {/* {localStorage.getItem("user") && ( */}
-                <Link
-                  className="py-3 ps-px sm:px-3 font-medium text-gray-500 hover:text-gray-400 dark:text-neutral-400 dark:hover:text-neutral-500"
-                  to={"/dashboard"}
-                >
-                  Dashboard
-                </Link>
-              {/* )} */}
-              {/* <a
-                className="py-3 ps-px sm:px-3 font-medium text-gray-500 hover:text-gray-400 dark:text-neutral-400 dark:hover:text-neutral-500"
-                href="#"
+            VIDEAPP
+          </Link>
+          <div className="md:hidden">
+            <button
+              type="button"
+              className="hs-collapse-toggle size-9 flex justify-center items-center text-sm font-semibold rounded-lg border border-gray-200 text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:border-neutral-700 dark:hover:bg-neutral-700"
+              data-hs-collapse="#navbar-collapse-with-animation"
+              aria-controls="navbar-collapse-with-animation"
+              aria-label="Toggle navigation"
+            >
+              <svg
+                className="hs-collapse-open:hidden flex-shrink-0 size-4"
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               >
-                Blog
-              </a> */}
+                <line x1="3" x2="21" y1="6" y2="6" />
+                <line x1="3" x2="21" y1="12" y2="12" />
+                <line x1="3" x2="21" y1="18" y2="18" />
+              </svg>
+              <svg
+                className="hs-collapse-open:block hidden flex-shrink-0 size-4"
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M18 6 6 18" />
+                <path d="m6 6 12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div
+          id="navbar-collapse-with-animation"
+          className="hs-collapse hidden overflow-hidden transition-all duration-300 basis-full grow md:block"
+        >
+          <div className="flex flex-col gap-y-4 gap-x-0 mt-5 md:flex-row md:items-center md:justify-end md:gap-y-0 md:gap-x-7 md:mt-0 md:ps-7">
+            <Link
+              className="font-medium text-gray-600 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400"
+              to="/"
+            >
+              Inicio
+            </Link>
+            <a
+              className="font-medium text-gray-600 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400"
+              href="#features"
+            >
+              Características
+            </a>
+            <a
+              className="font-medium text-gray-600 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400"
+              href="#pricing"
+            >
+              Precios
+            </a>
+            
+            {/* {localStorage.getItem("user") && ( */}
+            <Link
+              className="font-medium text-gray-600 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400"
+              to="/dashboard"
+            >
+              Panel
+            </Link>
+            {/* )} */}
 
-              <Link
-                to={"/login"}
-                className="flex items-center gap-x-2 font-medium text-gray-500 hover:text-blue-600 md:border-s md:border-gray-300 py-2 md:py-0 md:my-6 md:ps-6 dark:border-neutral-700 dark:text-neutral-400 dark:hover:text-blue-500"
+            <div className="flex items-center gap-x-2 md:ms-4">
+               <Link
+                to="/login"
+                className="font-medium text-gray-600 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400"
               >
-                <svg
-                  className="flex-shrink-0 size-4"
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>
-                Log in
+                Iniciar Sesión
+              </Link>
+              <Link
+                to="/register"
+                className="flex items-center gap-x-2 font-medium text-gray-500 hover:text-indigo-600 md:border-s md:border-gray-300 py-2 md:py-0 md:ps-6 dark:border-neutral-700 dark:text-neutral-400 dark:hover:text-indigo-500"
+              >
+                <span className="flex items-center gap-x-2 font-medium text-white bg-indigo-600 hover:bg-indigo-700 py-2 px-3 rounded-md transition-colors">
+                  Registrarse
+                </span>
               </Link>
             </div>
           </div>
-        </nav>
-      </header>
-      {/* <!-- ========== END HEADER ========== --> */}
-
-      {/* <!-- ========== MAIN CONTENT ========== --> */}
-      <main id="content">
-        <div className="max-w-[85rem] mx-auto pt-12 pb-10 px-4 sm:px-6 lg:px-8 md:pt-24">
-          {/* <!-- your content goes here ... --> */}
         </div>
-      </main>
-      {/* <!-- ========== END MAIN CONTENT ========== --> */}
-    </>
+      </nav>
+    </header>
   );
 }
 
-export default Navbar;
+export default Header;

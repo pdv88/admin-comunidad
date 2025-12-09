@@ -1,4 +1,7 @@
 import React from 'react'
+import featureMeeting from '../../images/feature_meeting.png'
+import featureApp from '../../images/feature_app.png'
+import featureMaintenance from '../../images/feature_maintenance.png'
 
 function Features() {
   return (
@@ -11,17 +14,17 @@ function Features() {
       {/* <!-- Grid --> */}
       <div className="grid grid-cols-12 gap-2 sm:gap-6 items-center lg:-translate-x-10">
         <div className="col-span-4">
-          <img className="rounded-xl" src="https://images.unsplash.com/photo-1606868306217-dbf5046868d2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1981&q=80" alt="Image Description"/>
+          <img className="rounded-xl" src={featureMeeting} alt="Reunión de comunidad"/>
         </div>
         {/* <!-- End Col --> */}
 
         <div className="col-span-3">
-          <img className="rounded-xl" src="https://images.unsplash.com/photo-1605629921711-2f6b00c6bbf4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=987&q=80" alt="Image Description"/>
+          <img className="rounded-xl" src={featureApp} alt="App de gestión"/>
         </div>
         {/* <!-- End Col --> */}
 
         <div className="col-span-5">
-          <img className="rounded-xl" src="https://images.unsplash.com/photo-1600194992440-50b26e0a0309?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=987&q=80" alt="Image Description"/>
+          <img className="rounded-xl" src={featureMaintenance} alt="Mantenimiento"/>
         </div>
         {/* <!-- End Col --> */}
       </div>
@@ -34,10 +37,10 @@ function Features() {
         {/* <!-- Title --> */}
         <div className="space-y-2 md:space-y-4">
           <h2 className="font-bold text-3xl lg:text-4xl text-gray-800 dark:text-neutral-200">
-            Collaborative tools to design user experience
+            Herramientas colaborativas para la gestión de comunidades
           </h2>
           <p className="text-gray-500 dark:text-neutral-500">
-            Use our tools to explore your ideas and make your vision come true. Then share your work easily.
+            Usa nuestras herramientas para mejorar la comunicación, gestionar incidencias y optimizar recursos.
           </p>
         </div>
         {/* <!-- End Title --> */}
@@ -52,7 +55,7 @@ function Features() {
             {/* <!-- End Solid Check --> */}
 
             <span className="text-sm sm:text-base text-gray-500 dark:text-neutral-500">
-              <span className="font-bold">Less routine</span> – more creativity
+              <span className="font-bold">Menos gestión</span> – más comunidad
             </span>
           </li>
 
@@ -64,7 +67,7 @@ function Features() {
             {/* <!-- End Solid Check --> */}
 
             <span className="text-sm sm:text-base text-gray-500 dark:text-neutral-500">
-              Hundreds of thousands saved
+              Ahorro de tiempo y recursos
             </span>
           </li>
 
@@ -76,7 +79,7 @@ function Features() {
             {/* <!-- End Solid Check --> */}
 
             <span className="text-sm sm:text-base text-gray-500 dark:text-neutral-500">
-              Scale budgets <span className="font-bold">efficiently</span>
+              Escala tu administración <span className="font-bold">eficientemente</span>
             </span>
           </li>
         </ul>
