@@ -1,0 +1,111 @@
+{
+    "header": {
+        "brand": "VIDEAPP",
+        "home": "Home",
+        "features": "Features",
+        "pricing": "Pricing",
+        "dashboard": "Dashboard",
+        "login": "Log In",
+        "register": "Register"
+    },
+    "hero": {
+        "title": "Start your journey with Preline",
+        "subtitle": "Hand-picked professionals and expertly crafted components, designed for any kind of entrepreneur.",
+        "cta_primary": "Get started",
+        "cta_secondary": "Contact sales team",
+        "reviews": "4.6 / 5 - from 12k reviews"
+    },
+    "features": {
+        "title": "Collaborative tools for community management",
+        "description": "Use our tools to improve communication, manage incidents, and optimize resources.",
+        "item1": "Less management – more community",
+        "item2": "Time and resource savings",
+        "item3": "Scale your administration efficiently"
+    },
+    "faqs": {
+        "title": "Frequently Asked Questions",
+        "subtitle": "Answers to the most common questions about the platform.",
+        "q1": "Can I cancel at any time?",
+        "a1": "Yes, you can cancel your subscription at any time without questions.",
+        "q2": "How do I manage neighbor access?",
+        "a2": "From the admin panel, you can invite neighbors via email and assign specific roles.",
+        "q3": "How do payments work?",
+        "a3": "We accept credit cards and bank transfers. Billing can be monthly or annual with a discount.",
+        "q4": "Is the platform secure?",
+        "a4": "Protecting your data is our priority. We use SSL encryption and secure servers to guarantee privacy."
+    },
+    "pricing": {
+        "title": "Pricing",
+        "subtitle": "Choose the plan that best fits your community needs.",
+        "monthly": "Monthly",
+        "annual": "Annual",
+        "save": "Save 10%",
+        "basic": {
+            "title": "Basic",
+            "price": "Free",
+            "desc": "To get started organizing",
+            "btn": "Sign up"
+        },
+        "pro": {
+            "badge": "Most Popular",
+            "title": "Pro",
+            "desc": "For active communities",
+            "btn": "Buy Pro"
+        },
+        "enterprise": {
+            "title": "Enterprise",
+            "desc": "For property managers",
+            "btn": "Contact us"
+        },
+        "features": {
+            "neighbors": "neighbors",
+            "docs": "Basic document management",
+            "email_support": "Email support",
+            "unlimited": "Unlimited neighbors",
+            "incidents": "Incident management",
+            "voting": "Online voting",
+            "multi": "Multi-community",
+            "api": "API Integration",
+            "priority": "24/7 Priority support"
+        }
+    },
+    "testimonials": {
+        "title": "Efficiency and Speed",
+        "desc": "We offer a trial account that sets up in seconds. Our goal is to make management easier for you as soon as possible.",
+        "quote": "Amazing people to work with. A very fast and professional partner.",
+        "role": "Director Payments & Risk | Airbnb",
+        "stats": {
+            "users": "users",
+            "users_desc": "from small communities to large companies",
+            "efficiency": "increase in management efficiency",
+            "satisfaction": "increase in neighbor satisfaction",
+            "faster": "faster than other management methods"
+        }
+    },
+    "footer": {
+        "about": "About us",
+        "services": "Services",
+        "blog": "Blog"
+    },
+    "auth": {
+        "signin_title": "Sign in",
+        "signup_title": "Sign up",
+        "no_account": "Don't have an account yet?",
+        "has_account": "Already have an account?",
+        "signup_here": "Sign up here",
+        "signin_here": "Sign in here",
+        "email": "Email address",
+        "password": "Password",
+        "forgot_password": "Forgot password?",
+        "fullname": "Full Name",
+        "confirm_password": "Confirm Password",
+        "password_mismatch": "Passwords do not match",
+        "registration_success": "Registration successful! Please check your email to verify account.",
+        "signin_btn": "Sign in",
+        "signup_btn": "Sign up"
+    },
+    "dashboard": {
+        "total_users": "Total Users",
+        "total_revenue": "Total Revenue"
+    }
+}

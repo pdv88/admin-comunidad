@@ -1,0 +1,111 @@
+{
+    "header": {
+        "brand": "VIDEAPP",
+        "home": "Inicio",
+        "features": "Características",
+        "pricing": "Precios",
+        "dashboard": "Panel",
+        "login": "Iniciar Sesión",
+        "register": "Registrarse"
+    },
+    "hero": {
+        "title": "Gestión Inteligente para tu Comunidad",
+        "subtitle": "Simplifica la administración de condominios y edificios. Control de pagos, residentes y áreas comunes en una sola plataforma.",
+        "cta_primary": "Empezar Gratis",
+        "cta_secondary": "Contactar Ventas",
+        "reviews": "4.8 / 5 - de 5k reseñas"
+    },
+    "features": {
+        "title": "Herramientas colaborativas para la gestión de comunidades",
+        "description": "Usa nuestras herramientas para mejorar la comunicación, gestionar incidencias y optimizar recursos.",
+        "item1": "Menos gestión – más comunidad",
+        "item2": "Ahorro de tiempo y recursos",
+        "item3": "Escala tu administración eficientemente"
+    },
+    "faqs": {
+        "title": "Preguntas frecuentes",
+        "subtitle": "Respuestas a las preguntas más comunes sobre la plataforma.",
+        "q1": "¿Puedo cancelar en cualquier momento?",
+        "a1": "Sí, puedes cancelar tu suscripción en cualquier momento sin preguntas.",
+        "q2": "¿Cómo gestiono los accesos de los vecinos?",
+        "a2": "Desde el panel de administración puedes invitar a los vecinos por correo electrónico y asignarles roles específicos.",
+        "q3": "¿Cómo funcionan los pagos?",
+        "a3": "Aceptamos tarjetas de crédito y transferencias bancarias. La facturación puede ser mensual o anual con descuento.",
+        "q4": "¿Es segura la plataforma?",
+        "a4": "La protección de tus datos es nuestra prioridad. Utilizamos encriptación SSL y servidores seguros para garantizar la privacidad."
+    },
+    "pricing": {
+        "title": "Precios",
+        "subtitle": "Elige el plan que mejor se adapte a las necesidades de tu comunidad.",
+        "monthly": "Mensual",
+        "annual": "Anual",
+        "save": "Ahorra 10%",
+        "basic": {
+            "title": "Básico",
+            "price": "Gratis",
+            "desc": "Para empezar a organizarse",
+            "btn": "Registrarse"
+        },
+        "pro": {
+            "badge": "Más Popular",
+            "title": "Pro",
+            "desc": "Para comunidades activas",
+            "btn": "Comprar Pro"
+        },
+        "enterprise": {
+            "title": "Empresarial",
+            "desc": "Para administradores de fincas",
+            "btn": "Contactar"
+        },
+        "features": {
+            "neighbors": "vecinos",
+            "docs": "Gestión de documentos",
+            "email_support": "Soporte por email",
+            "unlimited": "Vecinos ilimitados",
+            "incidents": "Gestión de incidencias",
+            "voting": "Votaciones online",
+            "multi": "Multi-comunidad",
+            "api": "API Integración",
+            "priority": "Soporte prioritario 24/7"
+        }
+    },
+    "testimonials": {
+        "title": "Eficiencia y Rapidez",
+        "desc": "Te ofrecemos una cuenta de prueba que se configura en segundos. Nuestro objetivo es facilitarte la gestión lo antes posible.",
+        "quote": "Gente increíble con la que trabajar. Un socio muy rápido y profesional.",
+        "role": "Director Payments & Risk | Airbnb",
+        "stats": {
+            "users": "usuarios",
+            "users_desc": "desde pequeñas comunidades hasta grandes empresas",
+            "efficiency": "incremento en la eficiencia de la gestión",
+            "satisfaction": "aumento en la satisfacción de los vecinos",
+            "faster": "más rápido que otros métodos de gestión"
+        }
+    },
+    "footer": {
+        "about": "Sobre nosotros",
+        "services": "Servicios",
+        "blog": "Blog"
+    },
+    "auth": {
+        "signin_title": "Iniciar Sesión",
+        "signup_title": "Registrarse",
+        "no_account": "¿Aún no tienes cuenta?",
+        "has_account": "¿Ya tienes una cuenta?",
+        "signup_here": "Regístrate aquí",
+        "signin_here": "Inicia sesión aquí",
+        "email": "Correo electrónico",
+        "password": "Contraseña",
+        "forgot_password": "¿Olvidaste tu contraseña?",
+        "fullname": "Nombre completo",
+        "confirm_password": "Confirmar contraseña",
+        "password_mismatch": "Las contraseñas no coinciden",
+        "registration_success": "¡Registro exitoso! Por favor verifica tu correo.",
+        "signin_btn": "Iniciar Sesión",
+        "signup_btn": "Registrarse"
+    },
+    "dashboard": {
+        "total_users": "Usuarios Totales",
+        "total_revenue": "Ingresos Totales"
+    }
+}

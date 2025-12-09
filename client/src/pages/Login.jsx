@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -8,6 +9,7 @@ const Login = () => {
   const [error, setError] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,12 +27,13 @@ const Login = () => {
     <div className="flex bg-white dark:bg-neutral-900 border border-t border-gray-200 shadow-sm rounded-xl py-4 sm:px-7 dark:border-neutral-700 h-[100dvh] items-center justify-center">
       <div className="mt-5 w-full max-w-md p-6 bg-white border border-gray-200 rounded-xl shadow-sm dark:bg-neutral-900 dark:border-neutral-700">
         <div className="text-center">
-          <h1 className="block text-2xl font-bold text-gray-800 dark:text-white">Sign in</h1>
+          <h1 className="block text-2xl font-bold text-gray-800 dark:text-white">{t('auth.signin_title')}</h1>
           <p className="mt-2 text-sm text-gray-600 dark:text-neutral-400">
-            Don't have an account yet?
-            <a className="text-blue-600 decoration-2 hover:underline font-medium dark:text-blue-500" href="#">
-              Sign up here
-            </a>
+            {t('auth.no_account')}
+            {' '}
+            <Link className="text-blue-600 decoration-2 hover:underline font-medium dark:text-blue-500" to="/register">
+              {t('auth.signup_here')}
+            </Link>
           </p>
         </div>
 
@@ -40,7 +43,7 @@ const Login = () => {
             <div className="grid gap-y-4">
               {/* <!-- Form Group --> */}
               <div>
-                <label htmlFor="email" className="block text-sm mb-2 dark:text-white">Email address</label>
+                <label htmlFor="email" className="block text-sm mb-2 dark:text-white">{t('auth.email')}</label>
                 <div className="relative">
                   <input 
                     type="email" 
@@ -65,8 +68,8 @@ const Login = () => {
               {/* <!-- Form Group --> */}
               <div>
                 <div className="flex justify-between items-center">
-                  <label htmlFor="password" className="block text-sm mb-2 dark:text-white">Password</label>
-                  <Link className="text-sm text-blue-600 decoration-2 hover:underline font-medium dark:text-blue-500" to="/forgot-password">Forgot password?</Link>
+                  <label htmlFor="password" className="block text-sm mb-2 dark:text-white">{t('auth.password')}</label>
+                  <Link className="text-sm text-blue-600 decoration-2 hover:underline font-medium dark:text-blue-500" to="/forgot-password">{t('auth.forgot_password')}</Link>
                 </div>
                 <div className="relative">
                   <input 
@@ -88,7 +91,7 @@ const Login = () => {
               </div>
               {/* <!-- End Form Group --> */}
 
-              <button type="submit" className="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">Sign in</button>
+              <button type="submit" className="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">{t('auth.signin_btn')}</button>
             </div>
           </form>
           {/* <!-- End Form --> */}

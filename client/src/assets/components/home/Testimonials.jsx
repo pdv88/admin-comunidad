@@ -1,7 +1,10 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next';
 import testimonialJosh from '../../images/testimonial_josh.png'
 
 function Testimonials() {
+  const { t } = useTranslation();
+
   return (
     <>
     {/* <!-- Testimonials with Stats --> */}
@@ -12,10 +15,10 @@ function Testimonials() {
       {/* <!-- Title --> */}
       <div className="mb-8">
         <h2 className="mb-2 text-3xl text-gray-800 font-bold lg:text-4xl dark:text-neutral-200">
-          Eficiencia y Rapidez
+          {t('testimonials.title')}
         </h2>
         <p className="text-gray-600 dark:text-neutral-400">
-          Te ofrecemos una cuenta de prueba que se configura en segundos. Nuestro objetivo es facilitarte la gestión lo antes posible.
+          {t('testimonials.desc')}
         </p>
       </div>
       {/* <!-- End Title --> */}
@@ -28,7 +31,7 @@ function Testimonials() {
 
         <div className="relative z-10">
           <p className="text-xl italic text-gray-800 dark:text-white">
-            Gente increíble con la que trabajar. Un socio muy rápido y profesional.
+            {t('testimonials.quote')}
           </p>
         </div>
 
@@ -39,7 +42,7 @@ function Testimonials() {
             </div>
             <div className="grow ms-4">
               <div className="font-semibold text-gray-800 dark:text-neutral-200">Josh Grazioso</div>
-              <div className="text-xs text-gray-500 dark:text-neutral-500">Director Payments & Risk | Airbnb</div>
+              <div className="text-xs text-gray-500 dark:text-neutral-500">{t('testimonials.role')}</div>
             </div>
           </div>
         </footer>
@@ -57,27 +60,27 @@ function Testimonials() {
               45k+
             </div>
             <p className="text-sm sm:text-base text-gray-600 dark:text-neutral-400">
-              usuarios - desde pequeñas comunidades hasta grandes empresas
+              {t('testimonials.stats.users')} - {t('testimonials.stats.users_desc')}
             </p>
           </li>
 
           <li className="flex flex-col -m-0.5 p-4 sm:p-8">
             <div className="flex items-end gap-x-2 text-3xl sm:text-5xl font-bold text-gray-800 mb-2 dark:text-neutral-200">
-              <svg className="flex-shrink-0 size-5 text-blue-600 dark:text-blue-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
+              <svg className="flex-shrink-0 size-5 text-indigo-600 dark:text-indigo-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
               23%
             </div>
             <p className="text-sm sm:text-base text-gray-600 dark:text-neutral-400">
-              incremento en la eficiencia de la gestión
+               {t('testimonials.stats.efficiency')}
             </p>
           </li>
 
           <li className="flex flex-col -m-0.5 p-4 sm:p-8">
             <div className="flex items-end gap-x-2 text-3xl sm:text-5xl font-bold text-gray-800 mb-2 dark:text-neutral-200">
-              <svg className="flex-shrink-0 size-5 text-blue-600 dark:text-blue-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
+              <svg className="flex-shrink-0 size-5 text-indigo-600 dark:text-indigo-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
               9.3%
             </div>
             <p className="text-sm sm:text-base text-gray-600 dark:text-neutral-400">
-              aumento en la satisfacción de los vecinos
+              {t('testimonials.stats.satisfaction')}
             </p>
           </li>
 
@@ -86,7 +89,7 @@ function Testimonials() {
               2x
             </div>
             <p className="text-sm sm:text-base text-gray-600 dark:text-neutral-400">
-              más rápido que otros métodos de gestión
+               {t('testimonials.stats.faster')}
             </p>
           </li>
         </ul>

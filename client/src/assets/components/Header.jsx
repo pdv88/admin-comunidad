@@ -1,9 +1,16 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 function Header() {
+  const { t, i18n } = useTranslation();
+
+  const changeLanguage = (lng) => {
+    i18n.changeLanguage(lng);
+  };
+
   return (
-    <header className="sticky top-0 inset-x-0 flex flex-wrap md:justify-start md:flex-nowrap z-50 w-full text-sm bg-white/90 backdrop-blur-xl border-b border-gray-200 dark:bg-neutral-900/90 dark:border-neutral-700 shadow-sm">
+    <header className="sticky top-0 inset-x-0 flex flex-wrap md:justify-start md:flex-nowrap z-50 w-full text-sm bg-white/80 backdrop-blur-md border-b border-gray-200 dark:bg-neutral-900/80 dark:border-neutral-700">
       <nav
         className="relative max-w-[85rem] w-full mx-auto px-4 py-3 md:flex md:items-center md:justify-between md:px-6 lg:px-8"
         aria-label="Global"
@@ -14,7 +21,7 @@ function Header() {
             to="/"
             aria-label="Brand"
           >
-            VIDEAPP
+            {t("header.brand")}
           </Link>
           <div className="md:hidden">
             <button
@@ -67,43 +74,54 @@ function Header() {
               className="font-medium text-gray-600 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400"
               to="/"
             >
-              Inicio
+              {t("header.home")}
             </Link>
             <a
               className="font-medium text-gray-600 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400"
               href="#features"
             >
-              Características
+              {t("header.features")}
             </a>
             <a
               className="font-medium text-gray-600 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400"
               href="#pricing"
             >
-              Precios
+              {t("header.pricing")}
             </a>
             
-            {/* {localStorage.getItem("user") && ( */}
             <Link
               className="font-medium text-gray-600 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400"
               to="/dashboard"
             >
-              Panel
+              {t("header.dashboard")}
             </Link>
-            {/* )} */}
 
             <div className="flex items-center gap-x-2 md:ms-4">
+              {/* Language Switcher */}
+              <div className="hs-dropdown relative inline-flex">
+                <button
+                  id="hs-dropdown-default"
+                  type="button"
+                  className="hs-dropdown-toggle py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800"
+                  onClick={() => changeLanguage(i18n.language === 'en' ? 'es' : 'en')}
+                >
+                  <span className="uppercase">{i18n.language}</span>
+                  <svg className="hs-dropdown-open:rotate-180 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+              </div>
+
                <Link
                 to="/login"
                 className="font-medium text-gray-600 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400"
               >
-                Iniciar Sesión
+                {t("header.login")}
               </Link>
               <Link
                 to="/register"
                 className="flex items-center gap-x-2 font-medium text-gray-500 hover:text-indigo-600 md:border-s md:border-gray-300 py-2 md:py-0 md:ps-6 dark:border-neutral-700 dark:text-neutral-400 dark:hover:text-indigo-500"
               >
                 <span className="flex items-center gap-x-2 font-medium text-white bg-indigo-600 hover:bg-indigo-700 py-2 px-3 rounded-md transition-colors">
-                  Registrarse
+                  {t("header.register")}
                 </span>
               </Link>
             </div>
