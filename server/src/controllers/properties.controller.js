@@ -1,4 +1,5 @@
 const supabase = require('../config/supabaseClient');
+const supabaseAdmin = require('../config/supabaseAdmin');
 
 exports.getAllBlocks = async (req, res) => {
     try {
@@ -7,12 +8,7 @@ exports.getAllBlocks = async (req, res) => {
             .from('blocks')
             .select(`
                 *,
-                units(*),
-                representative:representative_id (
-                    id,
-                    email,
-                    raw_user_meta_data
-                )
+                units(*)
             `);
 
         // Note: The structure of representative data depends on how Supabase joins auth.users. 
@@ -37,10 +33,11 @@ exports.getAllBlocks = async (req, res) => {
 
 exports.createBlock = async (req, res) => {
     try {
-        const { data, error } = await supabase.from('blocks').insert([req.body]).select();
+        const { data, error } = await supabaseAdmin.from('blocks').insert([req.body]).select();
         if (error) throw error;
         res.status(201).json(data[0]);
     } catch (err) {
+        console.error("Error creating block:", err);
         res.status(400).json({ error: err.message });
     }
 };
@@ -50,7 +47,7 @@ exports.updateBlock = async (req, res) => {
     const { representative_id } = req.body;
 
     try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
             .from('blocks')
             .update({ representative_id })
             .eq('id', id)
@@ -65,7 +62,7 @@ exports.updateBlock = async (req, res) => {
 
 exports.createUnit = async (req, res) => {
     try {
-        const { data, error } = await supabase.from('units').insert([req.body]).select();
+        const { data, error } = await supabaseAdmin.from('units').insert([req.body]).select();
         if (error) throw error;
         res.status(201).json(data[0]);
     } catch (err) {
@@ -76,7 +73,7 @@ exports.createUnit = async (req, res) => {
 exports.assignUnitToUser = async (req, res) => {
     const { userId, unitId } = req.body;
     try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
             .from('profiles')
             .update({ unit_id: unitId })
             .eq('id', userId)

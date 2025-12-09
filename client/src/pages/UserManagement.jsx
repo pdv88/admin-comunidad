@@ -54,11 +54,13 @@ const UserManagement = () => {
     // Helper to get all units
     const getAllUnits = () => {
         let units = [];
-        blocks.forEach(b => {
-             if (b.units) {
-                 b.units.forEach(u => units.push({ ...u, blockName: b.name }));
-             }
-        });
+        if (Array.isArray(blocks)) {
+            blocks.forEach(b => {
+                 if (b.units) {
+                     b.units.forEach(u => units.push({ ...u, blockName: b.name }));
+                 }
+            });
+        }
         return units;
     };
 

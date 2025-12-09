@@ -126,7 +126,7 @@ const Properties = () => {
                                 required
                             >
                                 <option value="">Select Block</option>
-                                {blocks.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                                {Array.isArray(blocks) && blocks.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                             </select>
                              <input 
                                 type="text" 
@@ -154,7 +154,7 @@ const Properties = () => {
                 <div className="mt-8">
                     <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Current Structure</h2>
                     <div className="space-y-6">
-                        {blocks.map(block => (
+                        {Array.isArray(blocks) && blocks.map(block => (
                             <div key={block.id} className="bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700 overflow-hidden">
                                  <div className="bg-gray-50 dark:bg-neutral-700 px-6 py-3 border-b border-gray-200 dark:border-neutral-600 flex justify-between items-center">
                                     <h3 className="font-bold text-gray-800 dark:text-white">{block.name}</h3>
