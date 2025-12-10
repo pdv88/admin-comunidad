@@ -92,9 +92,9 @@ const DashboardLayout = ({ children }) => {
                             </button>
                         </div>
                         <div className="flex items-center justify-end w-full gap-4">
-                             <div className="text-sm text-gray-700 dark:text-neutral-300">
+                             <Link to="/app/settings" className="text-sm text-gray-700 dark:text-neutral-300 hover:text-indigo-600 dark:hover:text-indigo-400">
                                 {user?.user_metadata?.full_name || user?.email} ({displayRole(user?.profile?.roles?.name)})
-                             </div>
+                             </Link>
                              <button onClick={handleLogout} className="text-sm font-medium text-red-600 hover:text-red-700 dark:text-red-400 transition-colors">
                                 {t('dashboard_layout.sign_out')}
                              </button>

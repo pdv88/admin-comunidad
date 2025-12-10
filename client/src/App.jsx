@@ -18,6 +18,7 @@ import Voting from "./pages/Voting";
 import Properties from "./pages/Properties";
 import UserManagement from "./pages/UserManagement";
 import UpdatePassword from "./pages/UpdatePassword";
+import Settings from "./pages/Settings"; // Import Settings page
 
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -40,6 +41,7 @@ function App() {
              <Route path="/app/voting" element={<Voting />} />
              <Route path="/app/properties" element={<Properties />} />
              <Route path="/app/users" element={<UserManagement />} />
+             <Route path="/app/settings" element={<Settings />} /> {/* New Settings Route */}
              {/* Redirect /dashboard to /app/dashboard for backward compatibility if needed */}
              <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
           </Route>

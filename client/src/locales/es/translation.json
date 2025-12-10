@@ -229,5 +229,12 @@
         "invalid_token": "Token inválido",
         "no_token": "No se encontró Token",
         "login_btn": "Iniciar Sesión"
+    },
+    "settings": {
+        "title": "Configuración de la Cuenta",
+        "subtitle": "Administra tu perfil y preferencias.",
+        "fullname": "Nombre Completo",
+        "email": "Correo Electrónico",
+        "role": "Rol"
     }
 }

@@ -229,5 +229,12 @@
         "invalid_token": "Invalid Token",
         "no_token": "No Token Found",
         "login_btn": "Login"
+    },
+    "settings": {
+        "title": "Account Settings",
+        "subtitle": "Manage your account profile and preferences.",
+        "fullname": "Full Name",
+        "email": "Email Address",
+        "role": "Role"
     }
 }
