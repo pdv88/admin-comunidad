@@ -50,12 +50,16 @@
             "badge": "Más Popular",
             "title": "Pro",
             "desc": "Para comunidades activas",
-            "btn": "Comprar Pro"
+            "btn": "Comprar Pro",
+            "price_monthly": "39 €",
+            "price_annual": "29 €"
         },
         "enterprise": {
             "title": "Empresarial",
             "desc": "Para administradores de fincas",
-            "btn": "Contactar"
+            "btn": "Contactar",
+            "price_monthly": "109 €",
+            "price_annual": "89 €"
         },
         "features": {
             "neighbors": "vecinos",

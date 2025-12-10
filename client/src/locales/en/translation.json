@@ -9,11 +9,11 @@
         "register": "Register"
     },
     "hero": {
-        "title": "Start your journey with Preline",
-        "subtitle": "Hand-picked professionals and expertly crafted components, designed for any kind of entrepreneur.",
-        "cta_primary": "Get started",
-        "cta_secondary": "Contact sales team",
-        "reviews": "4.6 / 5 - from 12k reviews"
+        "title": "Smart Management for Your Community",
+        "subtitle": "Simplify the administration of condominiums and buildings. Control payments, residents, and common areas in a single platform.",
+        "cta_primary": "Get Started Free",
+        "cta_secondary": "Contact Sales",
+        "reviews": "4.8 / 5 - from 5k reviews"
     },
     "features": {
         "title": "Collaborative tools for community management",
@@ -50,12 +50,16 @@
             "badge": "Most Popular",
             "title": "Pro",
             "desc": "For active communities",
-            "btn": "Buy Pro"
+            "btn": "Buy Pro",
+            "price_monthly": "€39",
+            "price_annual": "€29"
         },
         "enterprise": {
             "title": "Enterprise",
             "desc": "For property managers",
-            "btn": "Contact us"
+            "btn": "Contact us",
+            "price_monthly": "€109",
+            "price_annual": "€89"
         },
         "features": {
             "neighbors": "neighbors",

@@ -18,18 +18,18 @@ function Pricing() {
 
         {/* <!-- Switch --> */}
         <div className="flex justify-center items-center">
-          <label className="min-w-14 text-sm text-gray-500 me-3 dark:text-neutral-400">{t('pricing.monthly')}</label>
+          <label htmlFor="hs-basic-with-description" className="min-w-14 text-sm text-gray-500 me-3 dark:text-neutral-400 cursor-pointer whitespace-nowrap">{t('pricing.monthly')}</label>
 
           <input 
             type="checkbox" 
             id="hs-basic-with-description" 
-            className="relative w-[3.25rem] h-7 p-px bg-gray-100 border-transparent text-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:ring-indigo-600 disabled:opacity-50 disabled:pointer-events-none checked:bg-none checked:text-indigo-600 checked:border-indigo-600 focus:checked:border-indigo-600 dark:bg-neutral-800 dark:border-neutral-700 dark:checked:bg-indigo-500 dark:checked:border-indigo-500 dark:focus:ring-offset-gray-600
+            className="appearance-none relative w-[3.25rem] h-7 p-px bg-gray-100 border-transparent text-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:ring-indigo-600 disabled:opacity-50 disabled:pointer-events-none checked:bg-none checked:text-indigo-600 checked:border-indigo-600 focus:checked:border-indigo-600 dark:bg-neutral-800 dark:border-neutral-700 dark:checked:bg-indigo-500 dark:checked:border-indigo-500 dark:focus:ring-offset-gray-600
             before:inline-block before:size-6 before:bg-white checked:before:bg-white before:translate-x-0 checked:before:translate-x-full before:rounded-full before:shadow before:transform before:ring-0 before:transition before:ease-in-out before:duration-200 dark:before:bg-neutral-400 dark:checked:before:bg-white" 
             checked={isAnnual}
             onChange={() => setIsAnnual(!isAnnual)}
           />
 
-          <label className="relative min-w-14 text-sm text-gray-500 ms-3 dark:text-neutral-400">
+          <label htmlFor="hs-basic-with-description" className="relative min-w-14 text-sm text-gray-500 ms-3 dark:text-neutral-400 cursor-pointer whitespace-nowrap">
             {t('pricing.annual')}
             <span className="absolute -top-10 start-auto -end-28">
               <span className="flex items-center">
@@ -85,8 +85,7 @@ function Pricing() {
             <p className="mb-3"><span className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-lg text-xs uppercase font-semibold bg-indigo-100 text-indigo-800 dark:bg-indigo-600 dark:text-white">{t('pricing.pro.badge')}</span></p>
             <h4 className="font-medium text-lg text-gray-800 dark:text-neutral-200">{t('pricing.pro.title')}</h4>
             <span className="mt-5 font-bold text-5xl text-gray-800 dark:text-neutral-200">
-              <span className="font-bold text-2xl -me-2">€</span>
-              {isAnnual ? '29' : '39'}
+               {isAnnual ? t('pricing.pro.price_annual') : t('pricing.pro.price_monthly')}
             </span>
             <p className="mt-2 text-sm text-gray-500 dark:text-neutral-500">{t('pricing.pro.desc')}</p>
 
@@ -123,8 +122,7 @@ function Pricing() {
           <div className="flex flex-col border border-gray-200 text-center rounded-xl p-8 dark:border-neutral-800">
             <h4 className="font-medium text-lg text-gray-800 dark:text-neutral-200">{t('pricing.enterprise.title')}</h4>
             <span className="mt-5 font-bold text-5xl text-gray-800 dark:text-neutral-200">
-              <span className="font-bold text-2xl -me-2">€</span>
-              {isAnnual ? '89' : '109'}
+               {isAnnual ? t('pricing.enterprise.price_annual') : t('pricing.enterprise.price_monthly')}
             </span>
             <p className="mt-2 text-sm text-gray-500 dark:text-neutral-500">{t('pricing.enterprise.desc')}</p>
 
