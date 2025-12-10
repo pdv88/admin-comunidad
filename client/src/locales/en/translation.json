@@ -242,8 +242,11 @@
             "title": "Subscription & Payment",
             "plan": "Current Plan",
             "active": "Active",
-            "next_billing": "Next billing date",
-            "manage": "Manage Subscription"
+            "next_billing": "Next billing date"
         }
+    },
+    "cookies": {
+        "message": "We use cookies to ensure you get the best experience on our website.",
+        "accept": "Accept Cookies"
     }
 }

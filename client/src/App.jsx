@@ -19,7 +19,7 @@ import Properties from "./pages/Properties";
 import UserManagement from "./pages/UserManagement";
 import UpdatePassword from "./pages/UpdatePassword";
 import Settings from "./pages/Settings"; 
-import CookieConsent from "./components/CookieConsent"; // Import CookieConsent
+import PrivacyNotice from "./components/PrivacyNotice"; // Import PrivacyNotice
 
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -50,7 +50,7 @@ function App() {
           <Route path="/verifyEmail/:token" element={<EmailVerification />} />
           <Route path="/update-password" element={<UpdatePassword />} />
         </Routes>
-        <CookieConsent />
+        <PrivacyNotice />
       </Router>
     </AuthProvider>
   );

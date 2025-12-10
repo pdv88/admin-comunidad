@@ -242,8 +242,11 @@
             "title": "Suscripción y Pagos",
             "plan": "Plan Actual",
             "active": "Activo",
-            "next_billing": "Próxima facturación",
-            "manage": "Gestionar Suscripción"
+            "next_billing": "Próxima facturación"
         }
+    },
+    "cookies": {
+        "message": "Utilizamos cookies para asegurar que tengas la mejor experiencia en nuestro sitio web.",
+        "accept": "Aceptar Cookies"
     }
 }

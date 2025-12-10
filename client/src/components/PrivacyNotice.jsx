@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
-const CookieConsent = () => {
+const PrivacyNotice = () => {
     const [showBanner, setShowBanner] = useState(false);
     const { t } = useTranslation();
 
@@ -40,4 +40,4 @@ const CookieConsent = () => {
     );
 };
 
-export default CookieConsent;
+export default PrivacyNotice;
