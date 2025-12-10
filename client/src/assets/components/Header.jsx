@@ -1,12 +1,19 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "../../context/AuthContext";
 
 function Header() {
   const { t, i18n } = useTranslation();
+  const { user } = useAuth(); // Get user from AuthContext
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 
   const changeLanguage = (lng) => {
     i18n.changeLanguage(lng);
+  };
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
   };
 
   return (
@@ -27,47 +34,49 @@ function Header() {
             <button
               type="button"
               className="hs-collapse-toggle size-9 flex justify-center items-center text-sm font-semibold rounded-lg border border-gray-200 text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:border-neutral-700 dark:hover:bg-neutral-700"
-              data-hs-collapse="#navbar-collapse-with-animation"
-              aria-controls="navbar-collapse-with-animation"
+              onClick={toggleMenu}
               aria-label="Toggle navigation"
             >
-              <svg
-                className="hs-collapse-open:hidden flex-shrink-0 size-4"
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <line x1="3" x2="21" y1="6" y2="6" />
-                <line x1="3" x2="21" y1="12" y2="12" />
-                <line x1="3" x2="21" y1="18" y2="18" />
-              </svg>
-              <svg
-                className="hs-collapse-open:block hidden flex-shrink-0 size-4"
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M18 6 6 18" />
-                <path d="m6 6 12 12" />
-              </svg>
+              {isMenuOpen ? (
+                <svg
+                  className="flex-shrink-0 size-4"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
+              ) : (
+                <svg
+                  className="flex-shrink-0 size-4"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="3" x2="21" y1="6" y2="6" />
+                  <line x1="3" x2="21" y1="12" y2="12" />
+                  <line x1="3" x2="21" y1="18" y2="18" />
+                </svg>
+              )}
             </button>
           </div>
         </div>
         <div
           id="navbar-collapse-with-animation"
-          className="hs-collapse hidden overflow-hidden transition-all duration-300 basis-full grow md:block"
+          className={`hs-collapse overflow-hidden transition-all duration-300 basis-full grow md:block ${isMenuOpen ? 'block' : 'hidden'}`}
         >
           <div className="flex flex-col gap-y-4 gap-x-0 mt-5 md:flex-row md:items-center md:justify-end md:gap-y-0 md:gap-x-7 md:mt-0 md:ps-7">
             <Link
@@ -89,24 +98,29 @@ function Header() {
               {t("header.pricing")}
             </a>
             
-            <Link
-              className="font-medium text-gray-600 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400"
-              to="/dashboard"
-            >
-              {t("header.dashboard")}
-            </Link>
+            {user && (
+              <Link
+                className="font-medium text-gray-600 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400"
+                to="/dashboard"
+              >
+                {t("header.dashboard")}
+              </Link>
+            )}
 
             <div className="flex items-center gap-x-2 md:ms-4">
               {/* Language Switcher */}
-              <div className="hs-dropdown relative inline-flex">
+              <div className="flex bg-gray-100 hover:bg-gray-200 rounded-lg transition p-1 dark:bg-neutral-700 dark:hover:bg-neutral-600">
                 <button
-                  id="hs-dropdown-default"
-                  type="button"
-                  className="hs-dropdown-toggle py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800"
-                  onClick={() => changeLanguage(i18n.language === 'en' ? 'es' : 'en')}
+                  onClick={() => changeLanguage('en')}
+                  className={`px-3 py-1.5 rounded-md text-xs font-bold transition uppercase ${i18n.language === 'en' ? 'bg-white text-gray-800 shadow-sm dark:bg-neutral-800 dark:text-white' : 'text-gray-500 hover:text-gray-700 dark:text-neutral-400 dark:hover:text-neutral-200'}`}
                 >
-                  <span className="uppercase">{i18n.language}</span>
-                  <svg className="hs-dropdown-open:rotate-180 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                  En
+                </button>
+                <button
+                  onClick={() => changeLanguage('es')}
+                  className={`px-3 py-1.5 rounded-md text-xs font-bold transition uppercase ${i18n.language === 'es' ? 'bg-white text-gray-800 shadow-sm dark:bg-neutral-800 dark:text-white' : 'text-gray-500 hover:text-gray-700 dark:text-neutral-400 dark:hover:text-neutral-200'}`}
+                >
+                  Es
                 </button>
               </div>
 
