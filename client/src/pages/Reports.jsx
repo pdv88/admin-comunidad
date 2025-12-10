@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import DashboardLayout from '../components/DashboardLayout';
 import { useTranslation } from 'react-i18next';
+import { API_URL } from '../config';
 
 const Reports = () => {
     const { user } = useAuth();
@@ -17,7 +18,7 @@ const Reports = () => {
 
     const fetchReports = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/reports');
+            const res = await fetch(`${API_URL}/api/reports`);
             const data = await res.json();
             setReports(data);
         } catch (error) {
@@ -30,7 +31,7 @@ const Reports = () => {
     const  handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const res = await fetch('http://localhost:5000/api/reports', {
+            const res = await fetch(`${API_URL}/api/reports`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ ...newReport, user_id: user?.id })

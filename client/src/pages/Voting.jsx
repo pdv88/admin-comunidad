@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import DashboardLayout from '../components/DashboardLayout';
 import { useTranslation } from 'react-i18next';
+import { API_URL } from '../config';
 
 const Voting = () => {
     const { user } = useAuth();
@@ -15,7 +16,7 @@ const Voting = () => {
 
     const fetchPolls = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/polls');
+            const res = await fetch(`${API_URL}/api/polls`);
             const data = await res.json();
             setPolls(data);
         } catch (error) {
@@ -27,7 +28,7 @@ const Voting = () => {
 
     const handleVote = async (pollId, optionId) => {
         try {
-            const res = await fetch('http://localhost:5000/api/polls/vote', {
+            const res = await fetch(`${API_URL}/api/polls/vote`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

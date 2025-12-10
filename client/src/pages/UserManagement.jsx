@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import { useTranslation } from 'react-i18next';
+import { API_URL } from '../config';
 
 const UserManagement = () => {
     const [users, setUsers] = useState([]);
@@ -25,7 +26,7 @@ const UserManagement = () => {
         e.preventDefault();
         setMessage('Updating user...');
         try {
-            const res = await fetch(`http://localhost:5000/api/users/${editingUser.id}`, {
+            const res = await fetch(`${API_URL}/api/users/${editingUser.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -53,8 +54,8 @@ const UserManagement = () => {
     const fetchData = async () => {
         try {
             const [usersRes, blocksRes] = await Promise.all([
-                fetch('http://localhost:5000/api/users'),
-                fetch('http://localhost:5000/api/properties/blocks')
+                fetch(`${API_URL}/api/users`),
+                fetch(`${API_URL}/api/properties/blocks`)
             ]);
             setUsers(await usersRes.json());
             const blocksData = await blocksRes.json();
@@ -71,7 +72,7 @@ const UserManagement = () => {
         e.preventDefault();
         setMessage('Sending invitation...');
         try {
-            const res = await fetch('http://localhost:5000/api/users/invite', {
+            const res = await fetch(`${API_URL}/api/users/invite`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newUser)

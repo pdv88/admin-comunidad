@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { API_URL } from '../config';
 
 const ForgotPassword = () => {
     const [email, setEmail] = useState('');
@@ -16,7 +17,7 @@ const ForgotPassword = () => {
         setError('');
 
         try {
-            const res = await fetch('http://localhost:5000/api/auth/forgot-password', {
+            const res = await fetch(`${API_URL}/api/auth/forgot-password`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email })

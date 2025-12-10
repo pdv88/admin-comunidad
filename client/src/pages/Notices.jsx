@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import { useTranslation } from 'react-i18next';
+import { API_URL } from '../config';
 
 const Notices = () => {
     const [notices, setNotices] = useState([]);
@@ -13,7 +14,7 @@ const Notices = () => {
 
     const fetchNotices = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/notices');
+            const res = await fetch(`${API_URL}/api/notices`);
             const data = await res.json();
             setNotices(data);
         } catch (error) {

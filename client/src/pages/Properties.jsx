@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import { useTranslation } from 'react-i18next';
+import { API_URL } from '../config';
 
 const Properties = () => {
     const [blocks, setBlocks] = useState([]);
@@ -17,8 +18,8 @@ const Properties = () => {
     const fetchData = async () => {
         try {
             const [blocksRes, usersRes] = await Promise.all([
-                fetch('http://localhost:5000/api/properties/blocks'),
-                fetch('http://localhost:5000/api/properties/users')
+                fetch(`${API_URL}/api/properties/blocks`),
+                fetch(`${API_URL}/api/properties/users`)
             ]);
             setBlocks(await blocksRes.json());
             setUsers(await usersRes.json());
@@ -32,7 +33,7 @@ const Properties = () => {
     const handleCreateBlock = async (e) => {
         e.preventDefault();
         try {
-            const res = await fetch('http://localhost:5000/api/properties/blocks', {
+            const res = await fetch(`${API_URL}/api/properties/blocks`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: newBlock })
@@ -49,7 +50,7 @@ const Properties = () => {
     const handleCreateUnit = async (e) => {
         e.preventDefault();
         try {
-            const res = await fetch('http://localhost:5000/api/properties/units', {
+            const res = await fetch(`${API_URL}/api/properties/units`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
@@ -69,7 +70,7 @@ const Properties = () => {
 
     const handleAssignRep = async (blockId, userId) => {
         try {
-            const res = await fetch(`http://localhost:5000/api/properties/blocks/${blockId}`, {
+            const res = await fetch(`${API_URL}/api/properties/blocks/${blockId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ representative_id: userId || null })
