@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
+import { useTranslation } from 'react-i18next';
 
 const Notices = () => {
     const [notices, setNotices] = useState([]);
     const [loading, setLoading] = useState(true);
+    const { t } = useTranslation();
 
     useEffect(() => {
         fetchNotices();
@@ -25,7 +27,7 @@ const Notices = () => {
         return (
             <DashboardLayout>
                 <div className="p-6">
-                    <div>Loading notices...</div>
+                    <div>{t('notices.loading')}</div>
                 </div>
             </DashboardLayout>
         );
@@ -43,9 +45,9 @@ const Notices = () => {
         <DashboardLayout>
             <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Community Notices</h1>
+                    <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t('notices.title')}</h1>
                     {/* Only admin sees this */}
-                    <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Post Notice</button>
+                    <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">{t('notices.post_notice')}</button>
                 </div>
 
                 <div className="space-y-4">
@@ -57,11 +59,11 @@ const Notices = () => {
                             </div>
                             <p className="mt-2 text-sm opacity-90">{notice.content}</p>
                             <div className="mt-3 text-xs opacity-70">
-                                Posted on {new Date(notice.created_at).toLocaleDateString()}
+                                {t('notices.posted_on')} {new Date(notice.created_at).toLocaleDateString()}
                             </div>
                         </div>
                     ))}
-                    {notices.length === 0 && <p className="text-gray-500">No notices at the moment.</p>}
+                    {notices.length === 0 && <p className="text-gray-500">{t('notices.no_notices')}</p>}
                 </div>
             </div>
         </DashboardLayout>

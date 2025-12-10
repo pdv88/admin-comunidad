@@ -4,10 +4,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import { PulseLoader } from "react-spinners";
 import Footer from "../assets/components/Footer";
 import Header from "../assets/components/Header";
+import { useTranslation } from "react-i18next";
 
 function EmailVerification() {
   const url = import.meta.env.VITE_URL;
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const { token } = useParams();
 
@@ -16,9 +18,8 @@ function EmailVerification() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    document.title = "Verificación de Email | VIDEAPP";
     if (!token) {
-      setError("No se encontró Token");
+      setError(t('email_verification.no_token'));
       return;
     }
     setIsLoading(true);
@@ -31,11 +32,12 @@ function EmailVerification() {
           setIsVerified(true);
         }
         if (result.data.status === "fail") {
-          setError("Token inválido");
+          setError(t('email_verification.invalid_token'));
         }
       })
       .catch((err) => {
         console.log(err);
+        setError(t('email_verification.error_title'));
       })
       .finally(() => {
         setIsLoading(false);
@@ -56,7 +58,7 @@ function EmailVerification() {
               <div className="flex justify-center items-center min-h-[calc(100svh-4.5rem)]">
                 <div className="flex flex-col gap-5 bg-card p-5 rounded-3xl justify-center items-center">
                   <h2 className="text-3xl text-center">
-                    Error al verificar correo
+                    {t('email_verification.error_title')}
                   </h2>
                   <p>{error}</p>
                 </div>
@@ -66,13 +68,13 @@ function EmailVerification() {
               <div className="flex justify-center items-center min-h-[calc(100svh-4.5rem)]">
                 <div className="flex flex-col gap-5 bg-card p-5 rounded-3xl justify-center items-center">
                   <h2 className="text-3xl text-center">
-                    Correo verificado con éxito
+                    {t('email_verification.success_title')}
                   </h2>
                   <button
                     className="btn-primary rounded-full p-2 w-36"
                     onClick={() => navigate("/login")}
                   >
-                    Login
+                    {t('email_verification.login_btn')}
                   </button>
                 </div>
               </div>

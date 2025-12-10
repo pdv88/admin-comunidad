@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import DashboardLayout from '../components/DashboardLayout';
+import { useTranslation } from 'react-i18next';
 
 const Voting = () => {
     const { user } = useAuth();
     const [polls, setPolls] = useState([]);
     const [loading, setLoading] = useState(true);
+    const { t } = useTranslation();
 
     useEffect(() => {
         fetchPolls();
@@ -49,7 +51,7 @@ const Voting = () => {
         return (
             <DashboardLayout>
                 <div className="p-6">
-                    <div>Loading polls...</div>
+                    <div>{t('voting.loading')}</div>
                 </div>
             </DashboardLayout>
         );
@@ -59,8 +61,8 @@ const Voting = () => {
         <DashboardLayout>
             <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Active Polls</h1>
-                    <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Create Poll</button>
+                    <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t('voting.title')}</h1>
+                    <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">{t('voting.create_poll')}</button>
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -81,7 +83,7 @@ const Voting = () => {
                                 ))}
                             </div>
                             <div className="mt-4 text-xs text-gray-500 text-right">
-                                Ends: {new Date(poll.ends_at).toLocaleDateString()}
+                                {t('voting.ends')} {new Date(poll.ends_at).toLocaleDateString()}
                             </div>
                         </div>
                     ))}

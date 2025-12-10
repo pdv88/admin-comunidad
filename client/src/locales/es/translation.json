@@ -102,10 +102,128 @@
         "password_mismatch": "Las contraseñas no coinciden",
         "registration_success": "¡Registro exitoso! Por favor verifica tu correo.",
         "signin_btn": "Iniciar Sesión",
-        "signup_btn": "Registrarse"
+        "signup_btn": "Registrarse",
+        "forgot_pass_title": "Recuperar contraseña",
+        "remember_pass": "¿Recuerdas tu contraseña?",
+        "enter_email_placeholder": "Ingresa tu correo",
+        "reset_pass_btn": "Restablecer contraseña",
+        "sending": "Enviando...",
+        "check_email": "Revisa tu correo para el enlace de recuperación."
     },
     "dashboard": {
         "total_users": "Usuarios Totales",
-        "total_revenue": "Ingresos Totales"
+        "total_revenue": "Ingresos Totales",
+        "welcome": "Bienvenido"
+    },
+    "dashboard_layout": {
+        "brand": "Admin Comunidad",
+        "nav": {
+            "dashboard": "Panel",
+            "notices": "Avisos",
+            "reports": "Reportes",
+            "voting": "Votaciones",
+            "properties": "Propiedades",
+            "users": "Usuarios"
+        },
+        "sign_out": "Cerrar sesión"
+    },
+    "notices": {
+        "title": "Avisos de la Comunidad",
+        "post_notice": "Publicar Aviso",
+        "loading": "Cargando avisos...",
+        "no_notices": "No hay avisos por el momento.",
+        "posted_on": "Publicado el"
+    },
+    "properties": {
+        "title": "Estructura de Propiedad",
+        "loading": "Cargando propiedades...",
+        "add_block": "Añadir Bloque/Calle",
+        "add_block_btn": "Añadir Bloque",
+        "block_placeholder": "Nombre (ej. Torre A)",
+        "add_unit": "Añadir Unidad",
+        "add_unit_btn": "Añadir Unidad",
+        "select_block": "Seleccionar Bloque",
+        "unit_placeholder": "Número (ej. 101)",
+        "unit_type": {
+            "apartment": "Apartamento",
+            "house": "Casa",
+            "parking": "Estacionamiento",
+            "storage": "Trastero"
+        },
+        "current_structure": "Estructura Actual",
+        "representative": "Representante",
+        "none": "Ninguno",
+        "no_units": "Aún no hay unidades en este bloque."
+    },
+    "reports": {
+        "title": "Incidencias y Mantenimiento",
+        "report_issue": "Reportar Incidencia",
+        "cancel": "Cancelar",
+        "loading": "Cargando...",
+        "form": {
+            "title": "Título",
+            "category": "Categoría",
+            "desc": "Descripción",
+            "submit": "Enviar Reporte"
+        },
+        "categories": {
+            "maintenance": "Mantenimiento",
+            "security": "Seguridad",
+            "other": "Otro"
+        }
+    },
+    "voting": {
+        "title": "Votaciones Activas",
+        "create_poll": "Crear Votación",
+        "loading": "Cargando votaciones...",
+        "ends": "Termina:"
+    },
+    "user_management": {
+        "title": "Gestión de Usuarios",
+        "loading": "Cargando usuarios...",
+        "invite": {
+            "title": "Invitar Nuevo Usuario",
+            "email": "Correo",
+            "fullname": "Nombre Completo",
+            "role": "Rol",
+            "assign_unit": "Asignar Unidad (Opcional)",
+            "send": "Enviar Invitación"
+        },
+        "table": {
+            "name": "Nombre",
+            "role": "Rol",
+            "unit": "Unidad",
+            "actions": "Acciones"
+        },
+        "roles": {
+            "neighbor": "Vecino",
+            "president": "Presidente",
+            "secretary": "Secretario",
+            "vice_president": "Vicepresidente",
+            "admin": "Administrador",
+            "treasurer": "Tesorero",
+            "maintenance": "Mantenimiento"
+        },
+        "edit": {
+            "title": "Editar Usuario",
+            "cancel": "Cancelar",
+            "save": "Guardar Cambios"
+        }
+    },
+    "update_password": {
+        "title": "Establecer Nueva Contraseña",
+        "placeholder": "Nueva Contraseña",
+        "btn": "Establecer Contraseña",
+        "updating": "Actualizando...",
+        "success": "Contraseña actualizada con éxito. Redirigiendo...",
+        "error": "Error al actualizar la contraseña"
+    },
+    "email_verification": {
+        "title": "Verificación de Email",
+        "error_title": "Error al verificar correo",
+        "success_title": "Correo verificado con éxito",
+        "invalid_token": "Token inválido",
+        "no_token": "No se encontró Token",
+        "login_btn": "Iniciar Sesión"
     }
 }

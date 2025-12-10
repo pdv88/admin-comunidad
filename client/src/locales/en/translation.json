@@ -102,10 +102,128 @@
         "password_mismatch": "Passwords do not match",
         "registration_success": "Registration successful! Please check your email to verify account.",
         "signin_btn": "Sign in",
-        "signup_btn": "Sign up"
+        "signup_btn": "Sign up",
+        "forgot_pass_title": "Forgot password?",
+        "remember_pass": "Remember your password?",
+        "enter_email_placeholder": "Enter your email",
+        "reset_pass_btn": "Reset Password",
+        "sending": "Sending...",
+        "check_email": "Check your email for the password reset link."
     },
     "dashboard": {
         "total_users": "Total Users",
-        "total_revenue": "Total Revenue"
+        "total_revenue": "Total Revenue",
+        "welcome": "Welcome"
+    },
+    "dashboard_layout": {
+        "brand": "Admin Community",
+        "nav": {
+            "dashboard": "Dashboard",
+            "notices": "Notices",
+            "reports": "Reports",
+            "voting": "Voting",
+            "properties": "Properties",
+            "users": "Users"
+        },
+        "sign_out": "Sign out"
+    },
+    "notices": {
+        "title": "Community Notices",
+        "post_notice": "Post Notice",
+        "loading": "Loading notices...",
+        "no_notices": "No notices at the moment.",
+        "posted_on": "Posted on"
+    },
+    "properties": {
+        "title": "Property Structure",
+        "loading": "Loading properties...",
+        "add_block": "Add Building/Street",
+        "add_block_btn": "Add Block",
+        "block_placeholder": "Name (e.g. Tower A)",
+        "add_unit": "Add Unit",
+        "add_unit_btn": "Add Unit",
+        "select_block": "Select Block",
+        "unit_placeholder": "Unit Number (e.g. 101)",
+        "unit_type": {
+            "apartment": "Apartment",
+            "house": "House",
+            "parking": "Parking",
+            "storage": "Storage"
+        },
+        "current_structure": "Current Structure",
+        "representative": "Representative",
+        "none": "None",
+        "no_units": "No units in this block yet."
+    },
+    "reports": {
+        "title": "Issues & Maintenance",
+        "report_issue": "Report Issue",
+        "cancel": "Cancel",
+        "loading": "Loading...",
+        "form": {
+            "title": "Title",
+            "category": "Category",
+            "desc": "Description",
+            "submit": "Submit Report"
+        },
+        "categories": {
+            "maintenance": "Maintenance",
+            "security": "Security",
+            "other": "Other"
+        }
+    },
+    "voting": {
+        "title": "Active Polls",
+        "create_poll": "Create Poll",
+        "loading": "Loading polls...",
+        "ends": "Ends:"
+    },
+    "user_management": {
+        "title": "User Management",
+        "loading": "Loading users...",
+        "invite": {
+            "title": "Invite New User",
+            "email": "Email",
+            "fullname": "Full Name",
+            "role": "Role",
+            "assign_unit": "Assign Unit (Optional)",
+            "send": "Send Invite"
+        },
+        "table": {
+            "name": "Name",
+            "role": "Role",
+            "unit": "Unit",
+            "actions": "Actions"
+        },
+        "roles": {
+            "neighbor": "Neighbor",
+            "president": "President",
+            "secretary": "Secretary",
+            "vice_president": "Vice President",
+            "admin": "Administrator",
+            "treasurer": "Treasurer",
+            "maintenance": "Maintenance"
+        },
+        "edit": {
+            "title": "Edit User",
+            "cancel": "Cancel",
+            "save": "Save Changes"
+        }
+    },
+    "update_password": {
+        "title": "Set New Password",
+        "placeholder": "New Password",
+        "btn": "Set Password",
+        "updating": "Updating...",
+        "success": "Password updated successfully. Redirecting...",
+        "error": "Failed to update password"
+    },
+    "email_verification": {
+        "title": "Email Verification",
+        "error_title": "Error verifying email",
+        "success_title": "Email verified successfully",
+        "invalid_token": "Invalid Token",
+        "no_token": "No Token Found",
+        "login_btn": "Login"
     }
 }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
+import { useTranslation } from 'react-i18next';
 
 const Properties = () => {
     const [blocks, setBlocks] = useState([]);
@@ -7,6 +8,7 @@ const Properties = () => {
     const [loading, setLoading] = useState(true);
     const [newBlock, setNewBlock] = useState('');
     const [newUnit, setNewUnit] = useState({ blockId: '', number: '', type: 'apartment' });
+    const { t } = useTranslation();
 
     useEffect(() => {
         fetchData();
@@ -84,7 +86,7 @@ const Properties = () => {
         return (
             <DashboardLayout>
                  <div className="p-6">
-                    <div>Loading properties...</div>
+                    <div>{t('properties.loading')}</div>
                 </div>
             </DashboardLayout>
         );
@@ -95,29 +97,29 @@ const Properties = () => {
             <div className="p-6">
                  {/* ... existing content ... */}
                  <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Property Structure</h1>
+                    <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t('properties.title')}</h1>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Create Block */}
                     <div className="bg-white dark:bg-neutral-800 p-6 rounded-xl border border-gray-200 dark:border-neutral-700">
-                        <h2 className="font-bold mb-4 dark:text-white">Add Building/Street</h2>
+                        <h2 className="font-bold mb-4 dark:text-white">{t('properties.add_block')}</h2>
                         <form onSubmit={handleCreateBlock}>
                             <input 
                                 type="text" 
-                                placeholder="Name (e.g. Tower A)" 
+                                placeholder={t('properties.block_placeholder')} 
                                 className="w-full mb-3 rounded-lg border-gray-300 dark:bg-neutral-900 dark:border-neutral-700 font-normal"
                                 value={newBlock}
                                 onChange={(e) => setNewBlock(e.target.value)}
                                 required
                             />
-                             <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded-lg">Add Block</button>
+                             <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded-lg">{t('properties.add_block_btn')}</button>
                         </form>
                     </div>
 
                     {/* Create Unit */}
                     <div className="bg-white dark:bg-neutral-800 p-6 rounded-xl border border-gray-200 dark:border-neutral-700 lg:col-span-2">
-                        <h2 className="font-bold mb-4 dark:text-white">Add Unit</h2>
+                        <h2 className="font-bold mb-4 dark:text-white">{t('properties.add_unit')}</h2>
                         <form onSubmit={handleCreateUnit} className="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <select 
                                 className="rounded-lg border-gray-300 dark:bg-neutral-900 dark:border-neutral-700"
@@ -125,12 +127,12 @@ const Properties = () => {
                                 onChange={(e) => setNewUnit({...newUnit, blockId: e.target.value})}
                                 required
                             >
-                                <option value="">Select Block</option>
+                                <option value="">{t('properties.select_block')}</option>
                                 {Array.isArray(blocks) && blocks.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                             </select>
                              <input 
                                 type="text" 
-                                placeholder="Unit Number (e.g. 101)" 
+                                placeholder={t('properties.unit_placeholder')} 
                                 className="rounded-lg border-gray-300 dark:bg-neutral-900 dark:border-neutral-700"
                                 value={newUnit.number}
                                 onChange={(e) => setNewUnit({...newUnit, number: e.target.value})}
@@ -141,31 +143,31 @@ const Properties = () => {
                                 value={newUnit.type}
                                 onChange={(e) => setNewUnit({...newUnit, type: e.target.value})}
                             >
-                                <option value="apartment">Apartment</option>
-                                <option value="house">House</option>
-                                <option value="parking">Parking</option>
-                                <option value="storage">Storage</option>
+                                <option value="apartment">{t('properties.unit_type.apartment')}</option>
+                                <option value="house">{t('properties.unit_type.house')}</option>
+                                <option value="parking">{t('properties.unit_type.parking')}</option>
+                                <option value="storage">{t('properties.unit_type.storage')}</option>
                             </select>
-                            <button type="submit" className="bg-green-600 text-white py-2 rounded-lg">Add Unit</button>
+                            <button type="submit" className="bg-green-600 text-white py-2 rounded-lg">{t('properties.add_unit_btn')}</button>
                         </form>
                     </div>
                 </div>
 
                 <div className="mt-8">
-                    <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Current Structure</h2>
+                    <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">{t('properties.current_structure')}</h2>
                     <div className="space-y-6">
                         {Array.isArray(blocks) && blocks.map(block => (
                             <div key={block.id} className="bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700 overflow-hidden">
                                  <div className="bg-gray-50 dark:bg-neutral-700 px-6 py-3 border-b border-gray-200 dark:border-neutral-600 flex justify-between items-center">
                                     <h3 className="font-bold text-gray-800 dark:text-white">{block.name}</h3>
                                     <div className="flex items-center gap-2">
-                                         <span className="text-xs text-gray-500">Representative:</span>
+                                         <span className="text-xs text-gray-500">{t('properties.representative')}:</span>
                                          <select 
                                             className="text-sm py-1 px-2 rounded border border-gray-300 dark:bg-neutral-800 dark:border-neutral-600"
                                             value={block.representative_id || ''}
                                             onChange={(e) => handleAssignRep(block.id, e.target.value)}
                                          >
-                                            <option value="">None</option>
+                                            <option value="">{t('properties.none')}</option>
                                             {users.map(u => (
                                                 <option key={u.id} value={u.id}>{u.full_name || u.email || 'User'}</option>
                                             ))}
@@ -178,12 +180,14 @@ const Properties = () => {
                                             {block.units.map(unit => (
                                                 <div key={unit.id} className="text-center p-2 bg-gray-100 dark:bg-neutral-900 rounded border border-gray-200 dark:border-neutral-700">
                                                     <span className="block font-bold text-gray-800 dark:text-white">{unit.unit_number}</span>
-                                                    <span className="text-xs text-gray-500 uppercase">{unit.type}</span>
+                                                    <span className="text-xs text-gray-500 uppercase">
+                                                        {t(`properties.unit_type.${unit.type}`) !== `properties.unit_type.${unit.type}` ? t(`properties.unit_type.${unit.type}`) : unit.type}
+                                                    </span>
                                                 </div>
                                             ))}
                                         </div>
                                     ) : (
-                                        <p className="text-gray-500 text-sm">No units in this block yet.</p>
+                                        <p className="text-gray-500 text-sm">{t('properties.no_units')}</p>
                                     )}
                                 </div>
                             </div>
