@@ -235,6 +235,15 @@
         "subtitle": "Administra tu perfil y preferencias.",
         "fullname": "Nombre Completo",
         "email": "Correo Electrónico",
-        "role": "Rol"
+        "role": "Rol",
+        "save": "Guardar Cambios",
+        "update_success": "Perfil actualizado exitosamente.",
+        "subscription": {
+            "title": "Suscripción y Pagos",
+            "plan": "Plan Actual",
+            "active": "Activo",
+            "next_billing": "Próxima facturación",
+            "manage": "Gestionar Suscripción"
+        }
     }
 }

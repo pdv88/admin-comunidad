@@ -235,6 +235,15 @@
         "subtitle": "Manage your account profile and preferences.",
         "fullname": "Full Name",
         "email": "Email Address",
-        "role": "Role"
+        "role": "Role",
+        "save": "Save Changes",
+        "update_success": "Profile updated successfully.",
+        "subscription": {
+            "title": "Subscription & Payment",
+            "plan": "Current Plan",
+            "active": "Active",
+            "next_billing": "Next billing date",
+            "manage": "Manage Subscription"
+        }
     }
 }

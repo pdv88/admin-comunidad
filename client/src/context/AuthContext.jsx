@@ -9,15 +9,37 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for stored token and validate (mock implementation for now)
-    const token = localStorage.getItem('token');
-    if (token) {
-        // Here we would ideally validate the token with the backend
-        // For now, we assume if token exists, user is logged in (simplified)
-        // You should fetch user profile from backend /api/auth/me
-        setUser({ token }); 
-    }
-    setLoading(false);
+    const checkUserLoggedIn = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+            const response = await fetch('http://localhost:5000/api/auth/me', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                setUser({ ...data.user, token }); // Ensure token is kept in user object if needed
+            } else {
+                // If token is invalid or expired (401), remove it
+                localStorage.removeItem('token');
+                setUser(null);
+            }
+        } catch (error) {
+            console.error("Session verification failed:", error);
+            // On network error, maybe keep user logged in or not? 
+            // Safer to clear if we can't verify, or keep generic error.
+            // For now, assuming if verification fails, we logout.
+            localStorage.removeItem('token');
+            setUser(null);
+        }
+      }
+      setLoading(false);
+    };
+
+    checkUserLoggedIn();
   }, []);
 
   const login = async (email, password) => {
@@ -50,10 +72,26 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const updateProfile = async (userData) => {
+    // In a real app, this would be an API call to PUT /api/auth/me
+    // For now, we update local state and localStorage
+    try {
+        const updatedUser = { ...user, user_metadata: { ...user.user_metadata, ...userData } };
+        setUser(updatedUser);
+        // If we were using a real JWT, we'd need a new token or verify the backend handles the update
+        // For this mock/MVP, updating state is enough for the UI to reflect changes
+        return updatedUser;
+    } catch (error) {
+        console.error("Update profile error:", error);
+        throw error;
+    }
+  };
+
   const value = {
     user,
     login,
     logout,
+    updateProfile, // Add updateProfile to context
     loading
   };
 

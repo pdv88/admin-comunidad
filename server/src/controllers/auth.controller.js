@@ -59,9 +59,33 @@ exports.login = async (req, res) => {
 };
 
 exports.getMe = async (req, res) => {
-    // This would use the middleware to get the user from the token
-    // For now, simpler implementation
-    res.json({ message: "Protected route accessed" });
+    const token = req.headers.authorization?.split(' ')[1];
+
+    if (!token) return res.status(401).json({ error: 'No token provided' });
+
+    try {
+        const { data: { user }, error } = await supabase.auth.getUser(token);
+
+        if (error || !user) throw new Error('Invalid token');
+
+        // Fetch profile
+        const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*, roles(*)')
+            .eq('id', user.id)
+            .single();
+
+        if (profileError && profileError.code !== 'PGRST116') {
+            console.error("Profile fetch error:", profileError);
+        }
+
+        res.status(200).json({
+            user: { ...user, profile }
+        });
+
+    } catch (error) {
+        res.status(401).json({ error: 'Session expired or invalid' });
+    }
 };
 
 exports.updatePassword = async (req, res) => {
