@@ -8,7 +8,10 @@ exports.getAllBlocks = async (req, res) => {
             .from('blocks')
             .select(`
                 *,
-                units(*)
+                units(
+                    *,
+                    profiles(*)
+                )
             `);
 
         // Note: The structure of representative data depends on how Supabase joins auth.users. 
@@ -96,3 +99,31 @@ exports.getUsers = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 }
+
+exports.deleteBlock = async (req, res) => {
+    const { id } = req.params;
+    try {
+        // Optional: Check if block has units or restrictive delete. 
+        // For "fixing mistakes", we assume admin knows what they are doing.
+        // If there are FK constraints, this might fail unless cascade is on or we delete units first.
+        // Let's try direct delete. If it fails, we catch error.
+
+        // Use supabaseAdmin to bypass RLS if needed, or if constraints are strict
+        const { error } = await supabaseAdmin.from('blocks').delete().eq('id', id);
+        if (error) throw error;
+        res.status(204).send();
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+};
+
+exports.deleteUnit = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const { error } = await supabaseAdmin.from('units').delete().eq('id', id);
+        if (error) throw error;
+        res.status(204).send();
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+};

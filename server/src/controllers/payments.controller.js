@@ -124,7 +124,7 @@ exports.getPayments = async (req, res) => {
         if (campaignIds.length > 0) {
             const { data: campaignsData } = await supabaseAdmin
                 .from('campaigns')
-                .select('id, name')
+                .select('*') // Fetch all fields (target_amount, current_amount) for progress bars
                 .in('id', campaignIds);
 
             if (campaignsData) {
@@ -144,43 +144,73 @@ exports.getPayments = async (req, res) => {
         if (userIds.length > 0) {
             const { data: profiles, error: profilesError } = await supabaseAdmin
                 .from('profiles')
-                .select('id, full_name, email, unit_id')
+                .select('id, full_name, unit_id, email, phone')
                 .in('id', userIds);
 
             if (!profilesError && profiles) {
                 profiles.forEach(p => { profileMap[p.id] = p; });
-                // console.log('DEBUG: Profiles fetched:', profiles.map(p => ({ id: p.id, unit_id: p.unit_id })));
 
-                // Fetch Units if we have profiles with units
+                // Fetch Units
                 const unitIds = [...new Set(profiles.map(p => p.unit_id).filter(uid => uid))];
-                // console.log('DEBUG: Unit IDs to fetch:', unitIds);
+                let blockMap = {};
 
                 if (unitIds.length > 0) {
                     const { data: unitsData } = await supabaseAdmin
                         .from('units')
-                        .select('id, block, number, floor, door')
+                        .select('id, unit_number, block_id')
                         .in('id', unitIds);
 
                     if (unitsData) {
                         unitsData.forEach(u => { unitMap[u.id] = u; });
-                        // console.log('DEBUG: Units fetched:', unitsData);
+
+                        // Fetch Blocks if we have units with block_ids
+                        const blockIds = [...new Set(unitsData.map(u => u.block_id).filter(bid => bid))];
+
+                        if (blockIds.length > 0) {
+                            const { data: blocksData } = await supabaseAdmin
+                                .from('blocks')
+                                .select('id, name')
+                                .in('id', blockIds);
+
+                            if (blocksData) {
+                                blocksData.forEach(b => { blockMap[b.id] = b; });
+                            }
+                        }
                     }
                 }
+
+                // Attach enhanced unit info (with block name) to profiles
+                profiles.forEach(p => {
+                    const unitRaw = unitMap[p.unit_id];
+                    let enhancedUnit = null;
+
+                    if (unitRaw) {
+                        const block = blockMap[unitRaw.block_id];
+                        enhancedUnit = {
+                            ...unitRaw,
+                            number: unitRaw.unit_number, // Map unit_number to number for frontend
+                            block: block ? block.name : 'Unknown' // Map block name to block
+                        };
+                    }
+                    p.units = enhancedUnit;
+                    profileMap[p.id] = p;
+                });
             }
         }
 
         // 4. Map everything
         result = payments.map(payment => {
             const profile = profileMap[payment.user_id];
-            const unit = profile?.unit_id ? unitMap[profile.unit_id] : null;
 
             return {
                 ...payment,
                 campaigns: payment.campaign_id ? campaignMap[payment.campaign_id] : null,
                 profiles: profile ? {
                     ...profile,
-                    units: unit // Attach unit info to profile
-                } : { full_name: 'Unknown', email: 'N/A' }
+                    email: profile.email || 'N/A',
+                    phone: profile.phone || 'N/A',
+                    units: profile.units // Already processed above
+                } : { full_name: 'Unknown', email: 'N/A', phone: 'N/A' }
             };
         });
 
@@ -306,7 +336,7 @@ exports.createCampaign = async (req, res) => {
             .from('campaigns')
             .insert({
                 name,
-                goal_amount,
+                target_amount: goal_amount,
                 current_amount: 0,
                 description,
                 deadline,
@@ -320,6 +350,38 @@ exports.createCampaign = async (req, res) => {
 
     } catch (error) {
         console.error('Create campaign error:', error);
+        res.status(400).json({ error: error.message });
+    }
+};
+
+exports.updateCampaign = async (req, res) => {
+    try {
+        const { user, profile } = await getUserFromToken(req);
+        if (profile.roles.name !== 'admin' && profile.roles.name !== 'president') {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        const { id } = req.params;
+        const { name, goal_amount, description, deadline, is_active } = req.body;
+
+        const { data, error } = await supabaseAdmin
+            .from('campaigns')
+            .update({
+                name,
+                target_amount: goal_amount,
+                description,
+                deadline,
+                is_active
+            })
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) throw error;
+        res.json(data);
+
+    } catch (error) {
+        console.error('Update campaign error:', error);
         res.status(400).json({ error: error.message });
     }
 };

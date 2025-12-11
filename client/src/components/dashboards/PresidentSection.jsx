@@ -1,19 +1,13 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-import ActiveCampaignsWidget from '../payments/ActiveCampaignsWidget';
-
-const PresidentDashboard = () => {
+const PresidentSection = () => {
     const { t } = useTranslation();
 
     return (
         <div className="space-y-6">
             <h2 className="text-xl font-bold text-gray-800 dark:text-white">{t('dashboard.president.title', 'President\'s Overview')}</h2>
             
-            <div className="mb-6">
-                <ActiveCampaignsWidget />
-            </div>
-
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-white dark:bg-neutral-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-700">
                     <h3 className="text-gray-500 text-sm font-medium uppercase dark:text-neutral-400">{t('dashboard.president.balance', 'Consolidated Balance')}</h3>
@@ -51,4 +45,4 @@ const PresidentDashboard = () => {
     );
 };
 
-export default PresidentDashboard;
+export default PresidentSection;

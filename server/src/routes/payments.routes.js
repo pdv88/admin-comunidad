@@ -8,6 +8,7 @@ router.put('/:id', paymentsController.updatePaymentStatus);
 router.delete('/:id', paymentsController.deletePayment);
 router.get('/campaigns', paymentsController.getCampaigns);
 router.post('/campaigns', paymentsController.createCampaign);
+router.put('/campaigns/:id', paymentsController.updateCampaign);
 router.get('/stats', paymentsController.getStats);
 
 module.exports = router;

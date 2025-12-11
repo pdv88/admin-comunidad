@@ -200,7 +200,12 @@
         "current_structure": "Estructura Actual",
         "representative": "Representante",
         "none": "Ninguno",
-        "no_units": "Aún no hay unidades en este bloque."
+        "no_units": "Aún no hay unidades en este bloque.",
+        "delete_block": "Eliminar Bloque",
+        "delete_unit": "Eliminar Unidad",
+        "confirm_delete_block": "¿Estás seguro de que quieres eliminar este bloque? Esta acción no se puede deshacer.",
+        "confirm_delete_unit": "¿Estás seguro de que quieres eliminar esta unidad? Esta acción no se puede deshacer.",
+        "unoccupied": "Sin ocupar"
     },
     "reports": {
         "title": "Incidencias y Mantenimiento",
@@ -301,7 +306,11 @@
         "download": "Descargar PDF",
         "add_comment": "Añadir Observación",
         "view": "Ver",
-        "loading": "Cargando..."
+        "loading": "Cargando...",
+        "delete": "Eliminar",
+        "cancel": "Cancelar",
+        "confirm": "Confirmar",
+        "error_occurred": "Ocurrió un error"
     },
     "payments": {
         "title": "Pagos y Aportaciones",

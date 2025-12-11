@@ -2,19 +2,13 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
-import ActiveCampaignsWidget from '../payments/ActiveCampaignsWidget';
-
-const VocalDashboard = () => {
+const VocalSection = () => {
     const { t } = useTranslation();
 
     return (
         <div className="space-y-6">
             <h2 className="text-xl font-bold text-gray-800 dark:text-white">{t('dashboard.vocal.title', 'Vocal\'s Overview')}</h2>
             
-            <div className="mb-6">
-                <ActiveCampaignsWidget />
-            </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                  <div className="bg-white dark:bg-neutral-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-700">
                     <h3 className="text-gray-500 text-sm font-medium uppercase dark:text-neutral-400">{t('dashboard.vocal.active_polls', 'Active Polls')}</h3>
@@ -50,4 +44,4 @@ const VocalDashboard = () => {
     );
 };
 
-export default VocalDashboard;
+export default VocalSection;

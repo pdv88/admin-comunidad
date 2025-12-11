@@ -59,8 +59,6 @@ const Payments = () => {
                     {t('payments.title', 'Payments & Contributions')}
                 </h1>
 
-                <CampaignProgress />
-
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Left/Main Column */}
                     <div className={canUpload || isAdmin ? "lg:col-span-2 space-y-8" : "lg:col-span-3 space-y-8"}>

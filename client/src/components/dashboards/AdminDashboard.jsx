@@ -2,6 +2,8 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
+import ActiveCampaignsWidget from '../payments/ActiveCampaignsWidget';
+
 const AdminDashboard = () => {
     const { t } = useTranslation();
 
@@ -34,6 +36,14 @@ const AdminDashboard = () => {
             </div>
 
             {/* Quick Actions / Sections */}
+            {/* Active Campaigns */}
+            <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4 mt-8">
+                {t('payments.active_campaigns', 'Active Campaigns')}
+            </h2>
+            <div className="mb-8">
+                <ActiveCampaignsWidget />
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-white dark:bg-neutral-800 p-6 rounded-xl border border-gray-200 dark:border-neutral-700">
                     <h3 className="font-bold text-gray-800 dark:text-white mb-4">{t('dashboard.admin.pending_actions', 'Pending Actions')}</h3>

@@ -2,35 +2,36 @@ import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import DashboardLayout from '../components/DashboardLayout';
 import { useTranslation } from 'react-i18next';
-import AdminDashboard from '../components/dashboards/AdminDashboard';
-import PresidentDashboard from '../components/dashboards/PresidentDashboard';
-import VocalDashboard from '../components/dashboards/VocalDashboard';
-import ResidentDashboard from '../components/dashboards/ResidentDashboard';
+import AdminSection from '../components/dashboards/AdminSection';
+import PresidentSection from '../components/dashboards/PresidentSection';
+import VocalSection from '../components/dashboards/VocalSection';
+import ResidentSection from '../components/dashboards/ResidentSection';
+import ActiveCampaignsWidget from '../components/payments/ActiveCampaignsWidget';
 
 const Dashboard = () => {
     const { user } = useAuth();
+    const { t } = useTranslation();
     const role = user?.profile?.roles?.name || 'resident';
-
-    const renderDashboard = () => {
-        switch(role) {
-            case 'admin':
-                return <AdminDashboard />;
-            case 'president':
-                return <PresidentDashboard />;
-            case 'vice_president':
-            case 'secretary':
-            case 'treasurer':
-            case 'vocal': // Assuming 'vocal' is a role or similar
-                 return <VocalDashboard />;
-            default:
-                return <ResidentDashboard />;
-        }
-    };
 
     return (
         <DashboardLayout>
-            <div className="p-6">
-                {renderDashboard()}
+            <div className="max-w-7xl mx-auto p-6 space-y-8"> 
+                {/* 1. Global: Active Campaigns */}
+                <div>
+                     <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
+                        {t('payments.active_campaigns', 'Active Campaigns')}
+                    </h2>
+                    <ActiveCampaignsWidget />
+                </div>
+
+                {/* 2. Role Specific Sections */}
+                {role === 'admin' && <AdminSection />}
+                {role === 'president' && <PresidentSection />}
+                {(role === 'vocal' || role === 'secretary' || role === 'treasurer') && <VocalSection />}
+
+                {/* 3. Base Resident Section (Everyone gets this) */}
+                <hr className="border-gray-200 dark:border-neutral-700" />
+                <ResidentSection />
             </div>
         </DashboardLayout>
     );

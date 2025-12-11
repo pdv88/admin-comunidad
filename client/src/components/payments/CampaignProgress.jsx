@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { API_URL } from '../../config';
 
-const CampaignProgress = () => {
+const CampaignProgress = ({ campaign: propCampaign }) => {
     const { t } = useTranslation();
-    const [campaigns, setCampaigns] = useState([]);
+    const [fetchedCampaign, setFetchedCampaign] = useState(null);
     
     useEffect(() => {
-        fetchCampaigns();
-    }, []);
+        if (!propCampaign) {
+            fetchCampaigns();
+        }
+    }, [propCampaign]);
 
     const fetchCampaigns = async () => {
         try {
@@ -17,17 +19,19 @@ const CampaignProgress = () => {
                  headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
-                setCampaigns(await res.json());
+                const data = await res.json();
+                if (data.length > 0) {
+                    setFetchedCampaign(data[0]);
+                }
             }
         } catch (error) {
             console.error(error);
         }
     };
 
-    if (campaigns.length === 0) return null;
+    const campaign = propCampaign || fetchedCampaign;
 
-    // Just showing the first/latest active campaign for MVP
-    const campaign = campaigns[0];
+    if (!campaign) return null;
     const percentage = Math.min(100, (campaign.current_amount / campaign.target_amount) * 100);
 
     return (

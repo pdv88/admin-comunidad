@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import { useTranslation } from 'react-i18next';
 import { API_URL } from '../config';
+import ConfirmationModal from '../components/ConfirmationModal';
 
 const Properties = () => {
     const [blocks, setBlocks] = useState([]);
@@ -10,6 +11,9 @@ const Properties = () => {
     const [newBlock, setNewBlock] = useState('');
     const [newUnit, setNewUnit] = useState({ blockId: '', number: '', type: 'apartment' });
     const { t } = useTranslation();
+
+    // Modal State
+    const [deleteModal, setDeleteModal] = useState({ isOpen: false, type: null, id: null });
 
     useEffect(() => {
         fetchData();
@@ -21,8 +25,20 @@ const Properties = () => {
                 fetch(`${API_URL}/api/properties/blocks`),
                 fetch(`${API_URL}/api/properties/users`)
             ]);
-            setBlocks(await blocksRes.json());
-            setUsers(await usersRes.json());
+            setUsers((await usersRes.json()).sort((a, b) => (a.full_name || '').localeCompare(b.full_name || '')));
+            
+            const blocksData = await blocksRes.json();
+            // Sort blocks by name naturally
+            blocksData.sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { numeric: true }));
+            
+            // Sort units within each block naturally
+            blocksData.forEach(block => {
+                if (block.units && Array.isArray(block.units)) {
+                    block.units.sort((a, b) => (a.unit_number || '').localeCompare(b.unit_number || '', undefined, { numeric: true }));
+                }
+            });
+            
+            setBlocks(blocksData);
         } catch (error) {
             console.error("Error fetching data:", error);
         } finally {
@@ -77,6 +93,33 @@ const Properties = () => {
             });
             if (res.ok) {
                 fetchData();
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const confirmDelete = (type, id) => {
+        setDeleteModal({ isOpen: true, type, id });
+    };
+
+    const handleExecuteDelete = async () => {
+        const { type, id } = deleteModal;
+        if (!type || !id) return;
+
+        const endpoint = type === 'block' 
+            ? `${API_URL}/api/properties/blocks/${id}` 
+            : `${API_URL}/api/properties/units/${id}`;
+
+        try {
+            const res = await fetch(endpoint, {
+                method: 'DELETE'
+            });
+            if (res.ok) {
+                fetchData();
+                setDeleteModal({ isOpen: false, type: null, id: null });
+            } else {
+                alert(t('common.error_occurred', 'An error occurred'));
             }
         } catch (error) {
             console.error(error);
@@ -179,16 +222,42 @@ const Properties = () => {
                                     {block.units && block.units.length > 0 ? (
                                         <div className="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-8 gap-3">
                                             {block.units.map(unit => (
-                                                <div key={unit.id} className="text-center p-2 bg-gray-100 dark:bg-neutral-900 rounded border border-gray-200 dark:border-neutral-700">
+                                                <div key={unit.id} className="relative group text-center p-2 bg-gray-100 dark:bg-neutral-900 rounded border border-gray-200 dark:border-neutral-700">
+                                                    <button 
+                                                        onClick={() => confirmDelete('unit', unit.id)}
+                                                        className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition shadow-sm z-10"
+                                                        title={t('common.delete', 'Delete')}
+                                                    >
+                                                        &times;
+                                                    </button>
                                                     <span className="block font-bold text-gray-800 dark:text-white">{unit.unit_number}</span>
-                                                    <span className="text-xs text-gray-500 uppercase">
+                                                    <div className="text-xs mt-1 truncate max-w-[100px] mx-auto">
+                                                        {unit.profiles && unit.profiles.length > 0 ? (
+                                                            <span className="text-blue-600 dark:text-blue-400 font-medium" title={unit.profiles[0].full_name}>
+                                                                {unit.profiles[0].full_name}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-gray-400 italic">
+                                                                {t('properties.unoccupied', 'Unoccupied')}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <span className="text-xs text-gray-500 uppercase block mt-1">
                                                         {t(`properties.unit_type.${unit.type}`) !== `properties.unit_type.${unit.type}` ? t(`properties.unit_type.${unit.type}`) : unit.type}
                                                     </span>
                                                 </div>
                                             ))}
                                         </div>
                                     ) : (
-                                        <p className="text-gray-500 text-sm">{t('properties.no_units')}</p>
+                                        <div className="flex justify-between items-center">
+                                            <p className="text-gray-500 text-sm">{t('properties.no_units')}</p>
+                                            <button 
+                                                onClick={() => confirmDelete('block', block.id)}
+                                                className="text-red-500 text-xs hover:underline"
+                                            >
+                                                {t('properties.delete_block', 'Delete Block')}
+                                            </button>
+                                        </div>
                                     )}
                                 </div>
                             </div>
@@ -196,6 +265,16 @@ const Properties = () => {
                     </div>
                 </div>
             </div>
+
+            <ConfirmationModal 
+                isOpen={deleteModal.isOpen}
+                onClose={() => setDeleteModal({ ...deleteModal, isOpen: false })}
+                onConfirm={handleExecuteDelete}
+                title={deleteModal.type === 'block' ? t('properties.delete_block', 'Delete Block') : t('properties.delete_unit', 'Delete Unit')}
+                message={deleteModal.type === 'block' ? t('properties.confirm_delete_block', 'Are you sure you want to delete this block? This action cannot be undone.') : t('properties.confirm_delete_unit', 'Are you sure you want to delete this unit? This action cannot be undone.')}
+                isDangerous={true}
+                confirmText={t('common.delete', 'Delete')}
+            />
         </DashboardLayout>
     );
 };
