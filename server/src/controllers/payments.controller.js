@@ -252,6 +252,47 @@ exports.updatePaymentStatus = async (req, res) => {
     }
 };
 
+exports.deletePayment = async (req, res) => {
+    try {
+        const { user } = await getUserFromToken(req);
+        const { id } = req.params;
+
+        // Fetch payment to verify ownership and status
+        const { data: payment, error: fetchError } = await supabaseAdmin
+            .from('payments')
+            .select('*')
+            .eq('id', id)
+            .maybeSingle();
+
+        if (fetchError) throw fetchError;
+        if (!payment) return res.status(404).json({ error: 'Payment not found' });
+
+        // Check ownership
+        if (payment.user_id !== user.id) {
+            return res.status(403).json({ error: 'Unauthorized. You can only delete your own payments.' });
+        }
+
+        // Check status (Safety: only allow deleting pending payments)
+        if (payment.status !== 'pending') {
+            return res.status(400).json({ error: 'Cannot delete a processed payment.' });
+        }
+
+        // Delete (we could also delete the file from storage here, but omitting for brevity)
+        const { error: deleteError } = await supabaseAdmin
+            .from('payments')
+            .delete()
+            .eq('id', id);
+
+        if (deleteError) throw deleteError;
+
+        res.status(200).json({ message: 'Payment deleted' });
+
+    } catch (error) {
+        console.error('Delete payment error:', error);
+        res.status(400).json({ error: error.message });
+    }
+};
+
 exports.getCampaigns = async (req, res) => {
     try {
         const { data, error } = await supabase
