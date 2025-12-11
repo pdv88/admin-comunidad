@@ -73,6 +73,9 @@ const DashboardLayout = ({ children }) => {
                     <Link to="/app/properties" onClick={closeSidebar} className={`block py-2 px-4 rounded-lg transition-colors ${isActive('/app/properties')}`}>
                          {t('dashboard_layout.nav.properties')}
                     </Link>
+                    <Link to="/app/payments" onClick={closeSidebar} className={`block py-2 px-4 rounded-lg transition-colors ${isActive('/app/payments')}`}>
+                         {t('dashboard_layout.nav.payments')}
+                    </Link>
                     <Link to="/app/users" onClick={closeSidebar} className={`block py-2 px-4 rounded-lg transition-colors ${isActive('/app/users')}`}>
                          {t('dashboard_layout.nav.users')}
                     </Link>

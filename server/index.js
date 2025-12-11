@@ -15,7 +15,8 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -24,6 +25,7 @@ app.use('/api/reports', reportsRoutes);
 app.use('/api/polls', pollsRoutes);
 app.use('/api/properties', propertiesRoutes);
 app.use('/api/users', usersRoutes);
+app.use('/api/payments', require('./src/routes/payments.routes'));
 
 // Base route
 app.get('/', (req, res) => {

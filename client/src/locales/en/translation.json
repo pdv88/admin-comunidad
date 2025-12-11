@@ -117,7 +117,48 @@
     "dashboard": {
         "total_users": "Total Users",
         "total_revenue": "Total Revenue",
-        "welcome": "Welcome"
+        "welcome": "Welcome",
+        "admin": {
+            "title": "Admin Overview",
+            "revenue": "Revenue",
+            "expenses": "Expenses",
+            "delinquency": "Delinquency",
+            "monthly": "This month",
+            "active_cases": "active cases",
+            "tickets": "Open Tickets",
+            "urgent": "urgent",
+            "pending_actions": "Pending Actions",
+            "recent_activity": "Recent Activity"
+        },
+        "president": {
+            "title": "President's Overview",
+            "balance": "Consolidated Balance",
+            "next_meeting": "Next Meeting",
+            "participation": "Voting Participation",
+            "approvals": "Pending Approvals"
+        },
+        "vocal": {
+            "title": "Vocal's Overview",
+            "active_polls": "Active Polls",
+            "recent_minutes": "Recent Minutes",
+            "agreements": "Agreements Status",
+            "observations": "Observations & Comments"
+        },
+        "resident": {
+            "title": "My Home",
+            "balance": "My Balance",
+            "up_to_date": "Up to date",
+            "next_payment": "Next Payment",
+            "due_date": "Due date",
+            "my_incidents": "My Incidents",
+            "in_progress": "In progress",
+            "recent_notices": "Community Notices",
+            "quick_links": "Quick Links",
+            "report_issue": "Report Issue",
+            "vote": "Vote",
+            "reserve": "Reserve Area",
+            "directory": "Directory"
+        }
     },
     "dashboard_layout": {
         "brand": "Admin Community",
@@ -127,6 +168,7 @@
             "reports": "Reports",
             "voting": "Voting",
             "properties": "Properties",
+            "payments": "Payments",
             "users": "Users"
         },
         "sign_out": "Sign out"
@@ -243,6 +285,59 @@
             "plan": "Current Plan",
             "active": "Active",
             "next_billing": "Next billing date"
+        },
+        "preferences": {
+            "title": "Preferences",
+            "language": "Language",
+            "select": "Select Language"
+        }
+    },
+    "common": {
+        "review": "Review",
+        "approve": "Approve",
+        "reject": "Reject",
+        "view_all": "View All",
+        "download": "Download PDF",
+        "add_comment": "Add Observation",
+        "view": "View",
+        "loading": "Loading..."
+    },
+    "payments": {
+        "title": "Payments & Contributions",
+        "success": "Payment registered successfully",
+        "error": "Error registering payment",
+        "campaign": {
+            "funded": "Funded"
+        },
+        "upload": {
+            "title": "Register Payment",
+            "amount": "Amount (€)",
+            "notes": "Notes (Optional)",
+            "receipt": "Receipt (Image)",
+            "submit": "Submit Payment",
+            "user_select": "Select Resident (Admin)",
+            "myself": "Myself"
+        },
+        "list": {
+            "title": "Payment History",
+            "title_admin": "Review Payments",
+            "title_community": "Community Payments (By Block)",
+            "my_title": "My Payment History",
+            "empty": "No payments found."
+        },
+        "table": {
+            "date": "Date",
+            "user": "Resident",
+            "unit": "Block / Unit",
+            "amount": "Amount",
+            "status": "Status",
+            "proof": "Receipt",
+            "actions": "Actions"
+        },
+        "status": {
+            "pending": "Pending",
+            "confirmed": "Confirmed",
+            "rejected": "Rejected"
         }
     },
     "cookies": {

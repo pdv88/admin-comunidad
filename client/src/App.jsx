@@ -19,6 +19,7 @@ import Properties from "./pages/Properties";
 import UserManagement from "./pages/UserManagement";
 import UpdatePassword from "./pages/UpdatePassword";
 import Settings from "./pages/Settings"; 
+import Payments from "./pages/Payments";
 import PrivacyNotice from "./components/PrivacyNotice"; // Import PrivacyNotice
 
 import { AuthProvider } from "./context/AuthContext";
@@ -43,6 +44,7 @@ function App() {
              <Route path="/app/properties" element={<Properties />} />
              <Route path="/app/users" element={<UserManagement />} />
              <Route path="/app/settings" element={<Settings />} /> 
+             <Route path="/app/payments" element={<Payments />} />
              {/* Redirect /dashboard to /app/dashboard for backward compatibility if needed */}
              <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
           </Route>

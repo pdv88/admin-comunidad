@@ -5,7 +5,7 @@ import DashboardLayout from '../components/DashboardLayout';
 
 const Settings = () => {
   const { user, updateProfile } = useAuth();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [fullName, setFullName] = React.useState(user?.user_metadata?.full_name || '');
   const [loading, setLoading] = React.useState(false);
   const [successMsg, setSuccessMsg] = React.useState('');
@@ -75,6 +75,22 @@ const Settings = () => {
                  <div className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm bg-gray-100 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400">
                   {user?.profile?.roles?.name || 'User'}
                 </div>
+              </div>
+
+              {/* Preferences Section */}
+              <div className="pt-6 border-t border-gray-200 dark:border-neutral-700">
+                  <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4">{t('settings.preferences.title', 'Preferences')}</h2>
+                  <div>
+                      <label className="block text-sm font-medium mb-2 dark:text-white">{t('settings.preferences.language', 'Language')}</label>
+                      <select
+                          className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400"
+                          value={i18n.language}
+                          onChange={(e) => i18n.changeLanguage(e.target.value)}
+                      >
+                          <option value="en">English</option>
+                          <option value="es">Español</option>
+                      </select>
+                  </div>
               </div>
 
               {/* Admin Only Section */}

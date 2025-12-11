@@ -117,7 +117,48 @@
     "dashboard": {
         "total_users": "Usuarios Totales",
         "total_revenue": "Ingresos Totales",
-        "welcome": "Bienvenido"
+        "welcome": "Bienvenido",
+        "admin": {
+            "title": "Visión General Admin",
+            "revenue": "Ingresos",
+            "expenses": "Gastos",
+            "delinquency": "Morosidad",
+            "monthly": "Este mes",
+            "active_cases": "casos activos",
+            "tickets": "Tickets Abiertos",
+            "urgent": "urgentes",
+            "pending_actions": "Acciones Pendientes",
+            "recent_activity": "Actividad Reciente"
+        },
+        "president": {
+            "title": "Visión General Presidente",
+            "balance": "Balance Consolidado",
+            "next_meeting": "Próxima Junta",
+            "participation": "Participación Votaciones",
+            "approvals": "Aprobaciones Pendientes"
+        },
+        "vocal": {
+            "title": "Visión General Vocal",
+            "active_polls": "Votaciones Activas",
+            "recent_minutes": "Actas Recientes",
+            "agreements": "Estado de Acuerdos",
+            "observations": "Observaciones y Comentarios"
+        },
+        "resident": {
+            "title": "Mi Hogar",
+            "balance": "Mi Saldo",
+            "up_to_date": "Al día",
+            "next_payment": "Próximo Pago",
+            "due_date": "Vence: 01 Oct",
+            "my_incidents": "Mis Incidencias",
+            "in_progress": "En progreso",
+            "recent_notices": "Avisos de la Comunidad",
+            "quick_links": "Accesos Rápidos",
+            "report_issue": "Reportar Incidencia",
+            "vote": "Votar",
+            "reserve": "Reservar Área",
+            "directory": "Directorio"
+        }
     },
     "dashboard_layout": {
         "brand": "Admin Comunidad",
@@ -127,6 +168,7 @@
             "reports": "Reportes",
             "voting": "Votaciones",
             "properties": "Propiedades",
+            "payments": "Pagos",
             "users": "Usuarios"
         },
         "sign_out": "Cerrar sesión"
@@ -243,6 +285,59 @@
             "plan": "Plan Actual",
             "active": "Activo",
             "next_billing": "Próxima facturación"
+        },
+        "preferences": {
+            "title": "Preferencias",
+            "language": "Idioma",
+            "select": "Seleccionar Idioma"
+        }
+    },
+    "common": {
+        "review": "Revisar",
+        "approve": "Aprobar",
+        "reject": "Rechazar",
+        "view_all": "Ver Todo",
+        "download": "Descargar PDF",
+        "add_comment": "Añadir Observación",
+        "view": "Ver",
+        "loading": "Cargando..."
+    },
+    "payments": {
+        "title": "Pagos y Aportaciones",
+        "success": "Pago registrado exitosamente",
+        "error": "Error al registrar pago",
+        "campaign": {
+            "funded": "Financiado"
+        },
+        "upload": {
+            "title": "Registrar Pago",
+            "amount": "Monto (€)",
+            "notes": "Notas (Opcional)",
+            "receipt": "Comprobante (Imagen)",
+            "submit": "Enviar Pago",
+            "user_select": "Seleccionar Residente (Admin)",
+            "myself": "Mí mismo"
+        },
+        "list": {
+            "title": "Historial de Pagos",
+            "title_admin": "Revisar Pagos",
+            "title_community": "Pagos de la Comunidad (Por Bloque)",
+            "my_title": "Mi Historial de Pagos",
+            "empty": "No se encontraron pagos."
+        },
+        "table": {
+            "date": "Fecha",
+            "user": "Residente",
+            "unit": "Bloque / Unidad",
+            "amount": "Monto",
+            "status": "Estado",
+            "proof": "Recibo",
+            "actions": "Acciones"
+        },
+        "status": {
+            "pending": "Pendiente",
+            "confirmed": "Confirmado",
+            "rejected": "Rechazado"
         }
     },
     "cookies": {
