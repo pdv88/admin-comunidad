@@ -293,6 +293,37 @@ exports.deletePayment = async (req, res) => {
     }
 };
 
+exports.createCampaign = async (req, res) => {
+    try {
+        const { user, profile } = await getUserFromToken(req);
+        if (profile.roles.name !== 'admin' && profile.roles.name !== 'president') {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        const { name, goal_amount, description, deadline } = req.body;
+
+        const { data, error } = await supabaseAdmin
+            .from('campaigns')
+            .insert({
+                name,
+                goal_amount,
+                current_amount: 0,
+                description,
+                deadline,
+                is_active: true
+            })
+            .select()
+            .single();
+
+        if (error) throw error;
+        res.status(201).json(data);
+
+    } catch (error) {
+        console.error('Create campaign error:', error);
+        res.status(400).json({ error: error.message });
+    }
+};
+
 exports.getCampaigns = async (req, res) => {
     try {
         const { data, error } = await supabase

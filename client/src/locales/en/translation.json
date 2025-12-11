@@ -169,6 +169,7 @@
             "voting": "Voting",
             "properties": "Properties",
             "payments": "Payments",
+            "campaigns": "Campaigns",
             "users": "Users"
         },
         "sign_out": "Sign out"
@@ -338,6 +339,20 @@
             "pending": "Pending",
             "confirmed": "Confirmed",
             "rejected": "Rejected"
+        },
+        "campaigns": {
+            "title": "Funding Campaigns",
+            "create_title": "Create New Campaign",
+            "name": "Campaign Name",
+            "goal": "Goal Amount (€)",
+            "description": "Description",
+            "deadline": "Deadline",
+            "create_btn": "Create Campaign",
+            "success": "Campaign created successfully!",
+            "error": "Error creating campaign",
+            "no_desc": "No description provided",
+            "collected": "Collected",
+            "empty": "No active campaigns found."
         }
     },
     "cookies": {

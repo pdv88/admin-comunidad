@@ -169,6 +169,7 @@
             "voting": "Votaciones",
             "properties": "Propiedades",
             "payments": "Pagos",
+            "campaigns": "Campañas",
             "users": "Usuarios"
         },
         "sign_out": "Cerrar sesión"
@@ -338,6 +339,20 @@
             "pending": "Pendiente",
             "confirmed": "Confirmado",
             "rejected": "Rechazado"
+        },
+        "campaigns": {
+            "title": "Campañas de Fondos",
+            "create_title": "Crear Nueva Campaña",
+            "name": "Nombre de la Campaña",
+            "goal": "Meta (€)",
+            "description": "Descripción",
+            "deadline": "Fecha Límite",
+            "create_btn": "Crear Campaña",
+            "success": "¡Campaña creada con éxito!",
+            "error": "Error al crear la campaña",
+            "no_desc": "Sin descripción",
+            "collected": "Recaudado",
+            "empty": "No hay campañas activas."
         }
     },
     "cookies": {
