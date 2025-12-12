@@ -38,7 +38,7 @@ exports.getAll = async (req, res) => {
         const { data: polls, error } = await query;
         if (error) throw error;
 
-        // 2. Fetch My Votes explicitly (since admin client returns ALL votes if we matched in the join)
+        // 2. Fetch My Votes explicitly (since admin returns ALL votes if we matched in the join)
         const pollIds = polls.map(p => p.id);
         const { data: myVotes } = await supabaseAdmin
             .from('poll_votes')
@@ -59,19 +59,11 @@ exports.getAll = async (req, res) => {
                 // Check if any of user's blocks match target list
                 return p.target_blocks.some(tb => userBlockIds.includes(tb));
             }
-            return true; // Default show if logic unclear? Or hide? Let's show if user is Admin/President maybe?
+            // Default show if logic unclear
+            return true;
         });
 
         // 3. Fetch Vote Counts (Securely)
-        // We can't do this efficiently in the loop without N+1 RPC calls or a separate view.
-        // For MVP, checking counts via a separate admin-level query or RPC is best.
-        // Let's use the RPC 'get_poll_results' for each poll? Or a summary query.
-        // Optimization: Create a view 'poll_counts' that is public (or community scoped).
-        // Let's assume we use an RPC designed for batch fetching or just loop for now.
-        // Actually, let's use supabaseAdmin to fetch counts for these polls?
-        // Or assume the user DOES NOT see counts until they vote?
-        // User said "have a counter of how many votes".
-
         const enhancedPolls = await Promise.all(visiblePolls.map(async (p) => {
             // Get counts
             const { data: counts } = await supabaseAdmin.rpc('get_poll_results', { poll_id: p.id });
@@ -159,21 +151,37 @@ exports.create = async (req, res) => {
 
 exports.vote = async (req, res) => {
     const { poll_id, option_id, user_id } = req.body;
-    // We should also check token here to verify user_id matches token
-    // For now, let's assuming user_id passed is correct or verify it
     const token = req.headers.authorization?.split(' ')[1];
 
     try {
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
         if (authError || !user) throw new Error('Unauthorized');
 
+        // Strict user ID check
         if (user.id !== user_id) {
             return res.status(403).json({ error: 'Cannot vote for another user' });
         }
 
+        // Check if Poll is expired
+        const { data: poll } = await supabaseAdmin
+            .from('polls')
+            .select('ends_at')
+            .eq('id', poll_id)
+            .single();
+
+        if (poll && poll.ends_at && new Date(poll.ends_at) < new Date()) {
+            return res.status(400).json({ error: 'Poll has ended' });
+        }
+
+        // Upsert Vote (Insert or Update if exists)
+        // We rely on the unique constraint (poll_id, user_id) to handle the conflict
         const { data, error } = await supabaseAdmin
             .from('poll_votes')
-            .insert([{ poll_id, option_id, user_id }])
+            .upsert({
+                poll_id,
+                option_id,
+                user_id
+            }, { onConflict: 'poll_id, user_id' })
             .select();
 
         if (error) throw error;
@@ -192,8 +200,6 @@ exports.deletePoll = async (req, res) => {
         if (authError || !user) throw new Error('Unauthorized');
 
         // Check Role/Ownership
-        // We can allow the creator OR any admin to delete? 
-        // Let's enforce Admin/President role for safety regardless of creator.
         const { data: profile } = await supabaseAdmin
             .from('profiles')
             .select('roles(name)')

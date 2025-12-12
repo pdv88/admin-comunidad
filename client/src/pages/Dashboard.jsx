@@ -7,6 +7,7 @@ import PresidentSection from '../components/dashboards/PresidentSection';
 import VocalSection from '../components/dashboards/VocalSection';
 import ResidentSection from '../components/dashboards/ResidentSection';
 import ActiveCampaignsWidget from '../components/payments/ActiveCampaignsWidget';
+import ActivePollsWidget from '../components/voting/ActivePollsWidget';
 
 const Dashboard = () => {
     const { user } = useAuth();
@@ -47,6 +48,12 @@ const Dashboard = () => {
                         {t('payments.active_campaigns', 'Active Campaigns')}
                     </h2>
                     <ActiveCampaignsWidget />
+                </div>
+                <div className="mb-8">
+                     <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
+                        {t('voting.title', 'Active Polls')}
+                    </h2>
+                    <ActivePollsWidget />
                 </div>
 
                 {/* 2. Role Specific Sections */}

@@ -1,0 +1,128 @@
+import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
+import { API_URL } from '../../config';
+
+const ActivePollsWidget = () => {
+    const { t } = useTranslation();
+    const [polls, setPolls] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchPolls();
+    }, []);
+
+    const fetchPolls = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${API_URL}/api/polls`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                const now = new Date();
+                const active = data.filter(p => !p.ends_at || new Date(p.ends_at) > now);
+                setPolls(active);
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (loading) return null;
+    if (polls.length === 0) return null;
+
+    // Helper to get vote count for an option
+    const getVoteCount = (poll, optionId) => {
+        if (!poll.results) return 0;
+        const result = poll.results.find(r => r.option_id === optionId);
+        return result ? result.vote_count : 0;
+    };
+
+    // Colors for the stacked bar
+    const colors = [
+        'bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-yellow-500', 'bg-pink-500', 'bg-indigo-500'
+    ];
+
+    return (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {polls.map(poll => {
+                const totalVotes = poll.total_votes || 0;
+                
+                return (
+                    <div key={poll.id} className="bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700 p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col h-full">
+                        <div className="flex justify-between items-start mb-2">
+                            <h3 className="font-semibold text-gray-800 dark:text-white line-clamp-2">{poll.title}</h3>
+                            {poll.user_voted && (
+                                 <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full whitespace-nowrap dark:bg-green-900/30 dark:text-green-400">
+                                    {t('common.voted', 'Voted')}
+                                </span>
+                            )}
+                        </div>
+                        <p className="text-sm text-gray-500 dark:text-neutral-400 mb-4 line-clamp-2 flex-grow">{poll.description}</p>
+                        
+                        {/* Unified Progress Bar */}
+                        <div className="mb-4 space-y-3">
+                            <div className="flex h-3 w-full bg-gray-100 dark:bg-neutral-700 rounded-full overflow-hidden">
+                                {totalVotes > 0 ? (
+                                    poll.poll_options?.map((option, index) => {
+                                        const count = getVoteCount(poll, option.id);
+                                        const percentage = (count / totalVotes) * 100;
+                                        if (percentage === 0) return null;
+                                        return (
+                                            <div 
+                                                key={option.id}
+                                                style={{ width: `${percentage}%` }}
+                                                className={`h-full ${colors[index % colors.length]}`}
+                                                title={`${option.option_text}: ${count} votes (${Math.round(percentage)}%)`}
+                                            />
+                                        );
+                                    })
+                                ) : (
+                                    <div className="w-full h-full bg-gray-200 dark:bg-neutral-600" />
+                                )}
+                            </div>
+                            
+                            {/* Legend */}
+                            {totalVotes > 0 && (
+                                <div className="grid grid-cols-2 gap-2 text-xs">
+                                    {poll.poll_options?.map((option, index) => {
+                                        const count = getVoteCount(poll, option.id);
+                                        const percentage = (count / totalVotes) * 100;
+                                        return (
+                                            <div key={option.id} className="flex items-center gap-2">
+                                                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${colors[index % colors.length]}`}></span>
+                                                <span className="text-gray-600 dark:text-neutral-400 truncate flex-1" title={option.option_text}>
+                                                    {option.option_text}
+                                                </span>
+                                                <span className="font-medium text-gray-800 dark:text-neutral-300">
+                                                    {Math.round(percentage)}%
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+
+                            <div className="flex justify-between items-center text-xs text-gray-400 dark:text-neutral-500 pt-2 border-t border-gray-100 dark:border-neutral-700">
+                                 <span>{totalVotes} {t('voting.votes', 'votes')}</span>
+                                 <span>{t('voting.ends')} {poll.ends_at ? new Date(poll.ends_at).toLocaleDateString() : 'N/A'}</span>
+                            </div>
+                        </div>
+
+                        <Link 
+                            to="/app/voting"
+                            className="block w-full text-center bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/40 py-2 rounded-lg font-medium transition-colors text-sm mt-auto"
+                        >
+                            {poll.user_voted ? t('common.view_results', 'View Results') : t('voting.vote_now', 'Vote Now')}
+                        </Link>
+                    </div>
+                );
+            })}
+        </div>
+    );
+};
+
+export default ActivePollsWidget;

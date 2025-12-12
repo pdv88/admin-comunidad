@@ -61,9 +61,11 @@ const DashboardLayout = ({ children }) => {
                     <Link to="/app/dashboard" onClick={closeSidebar} className={`block py-2 px-4 rounded-lg transition-colors ${isActive('/app/dashboard')}`}>
                         {t('dashboard_layout.nav.dashboard')}
                     </Link>
-                    <Link to="/app/notices" onClick={closeSidebar} className={`block py-2 px-4 rounded-lg transition-colors ${isActive('/app/notices')}`}>
-                         {t('dashboard_layout.nav.notices')}
-                    </Link>
+                    {['admin', 'president', 'secretary', 'vocal'].includes(user?.profile?.roles?.name) && (
+                        <Link to="/app/notices" onClick={closeSidebar} className={`block py-2 px-4 rounded-lg transition-colors ${isActive('/app/notices')}`}>
+                             {t('dashboard_layout.nav.notices')}
+                        </Link>
+                    )}
                     <Link to="/app/reports" onClick={closeSidebar} className={`block py-2 px-4 rounded-lg transition-colors ${isActive('/app/reports')}`}>
                          {t('dashboard_layout.nav.reports')}
                     </Link>

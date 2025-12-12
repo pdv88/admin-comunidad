@@ -241,16 +241,19 @@ const Voting = () => {
                                             <div key={option.id} className="relative">
                                                 {/* Visual Bar for results */}
                                                 {(hasVoted || isExpired || isAdmin) && (
-                                                    <div className="absolute inset-0 bg-blue-50 dark:bg-blue-900/20 rounded-lg overflow-hidden">
-                                                        <div className="h-full bg-blue-100 dark:bg-blue-800/40" style={{ width: `${percentage}%` }}></div>
+                                                    <div className={`absolute inset-0 rounded-lg overflow-hidden ${isMyVote ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-gray-50 dark:bg-neutral-700/50'}`}>
+                                                        <div 
+                                                            className={`h-full transition-all duration-500 ${isMyVote ? 'bg-blue-200 dark:bg-blue-800/40' : 'bg-gray-200 dark:bg-neutral-600'}`} 
+                                                            style={{ width: `${percentage}%` }}
+                                                        ></div>
                                                     </div>
                                                 )}
                                                 
                                                 <button 
-                                                    disabled={hasVoted || isExpired}
+                                                    disabled={isExpired || isMyVote}
                                                     onClick={() => handleVote(poll.id, option.id)}
                                                     className={`relative w-full text-left px-4 py-3 rounded-lg border transition-colors flex justify-between items-center z-10
-                                                        ${hasVoted || isExpired ? 'border-transparent cursor-default' : 'border-gray-200 hover:bg-gray-50 dark:border-neutral-700 dark:hover:bg-neutral-700'}
+                                                        ${isExpired || isMyVote ? 'border-transparent cursor-default' : 'border-gray-200 hover:bg-gray-50 dark:border-neutral-700 dark:hover:bg-neutral-700'}
                                                         ${isMyVote ? 'ring-2 ring-blue-500' : ''}
                                                     `}
                                                 >

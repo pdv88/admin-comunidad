@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import RecentNoticesWidget from '../notices/RecentNoticesWidget';
 
 const ResidentSection = () => {
     const { t } = useTranslation();
@@ -8,6 +9,9 @@ const ResidentSection = () => {
     return (
         <div className="space-y-6">
             <h2 className="text-xl font-bold text-gray-800 dark:text-white mt-8">{t('dashboard.resident.title', 'My Home')}</h2>
+            
+            {/* Notices Banner */}
+            <RecentNoticesWidget />
             
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div className="bg-white dark:bg-neutral-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-700">
@@ -28,21 +32,6 @@ const ResidentSection = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="bg-white dark:bg-neutral-800 p-6 rounded-xl border border-gray-200 dark:border-neutral-700">
-                     <h3 className="font-bold text-gray-800 dark:text-white mb-4">{t('dashboard.resident.recent_notices', 'Community Notices')}</h3>
-                     <ul className="space-y-3">
-                         <li className="p-3 border-l-4 border-blue-500 bg-blue-50 dark:bg-neutral-700 dark:border-blue-400 rounded-r-lg">
-                             <p className="text-sm font-bold text-gray-800 dark:text-white">Garage Cleaning</p>
-                             <p className="text-xs text-gray-600 dark:text-neutral-300 mt-1">Scheduled for next Tuesday...</p>
-                         </li>
-                          <li className="p-3 border-l-4 border-yellow-500 bg-yellow-50 dark:bg-neutral-700 dark:border-yellow-400 rounded-r-lg">
-                             <p className="text-sm font-bold text-gray-800 dark:text-white">Elevator Maintenance</p>
-                             <p className="text-xs text-gray-600 dark:text-neutral-300 mt-1">Temporarily out of service on...</p>
-                         </li>
-                     </ul>
-                      <Link to="/app/notices" className="block mt-4 text-sm text-center text-blue-600 hover:underline">{t('common.view_all', 'View All Notices')}</Link>
-                  </div>
-
                    <div className="bg-white dark:bg-neutral-800 p-6 rounded-xl border border-gray-200 dark:border-neutral-700">
                      <h3 className="font-bold text-gray-800 dark:text-white mb-4">{t('dashboard.resident.quick_links', 'Quick Links')}</h3>
                      <div className="grid grid-cols-2 gap-4">

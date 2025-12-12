@@ -185,7 +185,24 @@
         "post_notice": "Post Notice",
         "loading": "Loading notices...",
         "no_notices": "No notices at the moment.",
-        "posted_on": "Posted on"
+        "posted_on": "Posted on",
+        "subtitle": "Manage community announcements",
+        "global_notice": "Global Notice",
+        "block_notice": "Block Notice",
+        "form": {
+            "title": "Title",
+            "priority": "Priority",
+            "target": "Target Audience",
+            "content": "Content"
+        },
+        "priority": {
+            "normal": "Normal",
+            "high": "High",
+            "urgent": "Urgent"
+        },
+        "target": {
+            "global": "Entire Community"
+        }
     },
     "properties": {
         "title": "Property Structure",
@@ -225,23 +242,47 @@
         "report_issue": "Report Issue",
         "cancel": "Cancel",
         "loading": "Loading...",
-        "form": {
-            "title": "Title",
-            "category": "Category",
-            "desc": "Description",
-            "submit": "Submit Report"
-        },
         "categories": {
             "maintenance": "Maintenance",
             "security": "Security",
-            "other": "Other"
+            "other": "Other",
+            "cleanliness": "Cleanliness"
+        },
+        "tabs": {
+            "my": "My Reports",
+            "block": "Block Reports",
+            "all": "All Reports"
+        },
+        "status": {
+            "pending": "Pending",
+            "in_progress": "In Progress",
+            "resolved": "Resolved",
+            "rejected": "Rejected"
+        },
+        "actions": {
+            "start": "Start Progress",
+            "resolve": "Mark Resolved",
+            "reject": "Reject"
+        },
+        "no_reports": "No reports found.",
+        "form": {
+            "title": "Title",
+            "issue_title": "Issue Title",
+            "category": "Category",
+            "unit": "Unit",
+            "desc": "Description",
+            "placeholder_title": "e.g. Broken Light",
+            "placeholder_desc": "Describe the issue...",
+            "submit": "Submit Report"
         }
     },
     "voting": {
         "title": "Active Polls",
         "create_poll": "Create Poll",
         "loading": "Loading polls...",
-        "ends": "Ends:"
+        "ends": "Ends:",
+        "votes": "votes",
+        "vote_now": "Vote Now"
     },
     "user_management": {
         "title": "User Management",
@@ -323,9 +364,14 @@
         "delete": "Delete",
         "cancel": "Cancel",
         "confirm": "Confirm",
+        "confirm_delete_report": "Are you sure you want to delete this report? This cannot be undone.",
         "error_occurred": "An error occurred",
         "edit": "Edit",
-        "save": "Save"
+        "save": "Save",
+        "voted": "Voted",
+        "view_results": "View Results",
+        "confirm_delete_notice": "Are you sure you want to delete this notice?",
+        "unauthorized": "Unauthorized access"
     },
     "payments": {
         "title": "Payments & Contributions",

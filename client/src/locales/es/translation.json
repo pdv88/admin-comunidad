@@ -181,7 +181,24 @@
         "post_notice": "Publicar Aviso",
         "loading": "Cargando avisos...",
         "no_notices": "No hay avisos por el momento.",
-        "posted_on": "Publicado el"
+        "posted_on": "Publicado el",
+        "subtitle": "Gestiona los anuncios de la comunidad",
+        "global_notice": "Aviso General",
+        "block_notice": "Aviso de Bloque",
+        "form": {
+            "title": "Título",
+            "priority": "Prioridad",
+            "target": "Audiencia",
+            "content": "Contenido"
+        },
+        "priority": {
+            "normal": "Normal",
+            "high": "Alta",
+            "urgent": "Urgente"
+        },
+        "target": {
+            "global": "Toda la Comunidad"
+        }
     },
     "properties": {
         "title": "Estructura de Propiedad",
@@ -220,23 +237,47 @@
         "report_issue": "Reportar Incidencia",
         "cancel": "Cancelar",
         "loading": "Cargando...",
-        "form": {
-            "title": "Título",
-            "category": "Categoría",
-            "desc": "Descripción",
-            "submit": "Enviar Reporte"
-        },
         "categories": {
             "maintenance": "Mantenimiento",
             "security": "Seguridad",
-            "other": "Otro"
+            "other": "Otro",
+            "cleanliness": "Limpieza"
+        },
+        "tabs": {
+            "my": "Mis Incidencias",
+            "block": "Incidencias Bloque",
+            "all": "Todas"
+        },
+        "status": {
+            "pending": "Pendiente",
+            "in_progress": "En Progreso",
+            "resolved": "Resuelto",
+            "rejected": "Rechazado"
+        },
+        "actions": {
+            "start": "Iniciar",
+            "resolve": "Resolver",
+            "reject": "Rechazar"
+        },
+        "no_reports": "No se encontraron reportes.",
+        "form": {
+            "title": "Título",
+            "issue_title": "Título de Incidencia",
+            "category": "Categoría",
+            "unit": "Unidad",
+            "desc": "Descripción",
+            "placeholder_title": "ej. Luz rota",
+            "placeholder_desc": "Describe el problema...",
+            "submit": "Enviar Reporte"
         }
     },
     "voting": {
         "title": "Votaciones Activas",
         "create_poll": "Crear Votación",
         "loading": "Cargando votaciones...",
-        "ends": "Termina:"
+        "ends": "Termina:",
+        "votes": "votos",
+        "vote_now": "Votar Ahora"
     },
     "user_management": {
         "title": "Gestión de Usuarios",
@@ -318,9 +359,14 @@
         "delete": "Eliminar",
         "cancel": "Cancelar",
         "confirm": "Confirmar",
+        "confirm_delete_report": "¿Estás seguro de que quieres eliminar este reporte? No se puede deshacer.",
         "error_occurred": "Ocurrió un error",
         "edit": "Editar",
-        "save": "Guardar"
+        "save": "Guardar",
+        "voted": "Votado",
+        "view_results": "Ver Resultados",
+        "confirm_delete_notice": "¿Estás seguro de que quieres eliminar este aviso?",
+        "unauthorized": "Acceso no autorizado"
     },
     "payments": {
         "title": "Pagos y Aportaciones",
