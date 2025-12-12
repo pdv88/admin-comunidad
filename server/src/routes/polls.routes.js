@@ -5,5 +5,7 @@ const pollsController = require('../controllers/polls.controller');
 router.get('/', pollsController.getAll);
 router.post('/', pollsController.create);
 router.post('/vote', pollsController.vote);
+router.delete('/:id', pollsController.deletePoll);
+router.put('/:id', pollsController.update);
 
 module.exports = router;

@@ -117,7 +117,7 @@ exports.login = async (req, res) => {
         // Fetch user profile with role using Admin client to bypass RLS
         const { data: profile, error: profileError } = await require('../config/supabaseAdmin')
             .from('profiles')
-            .select('*, roles(*)')
+            .select('*, roles(*), unit_owners(units(*, blocks(*)))')
             .eq('id', data.user.id)
             .single();
 
@@ -149,13 +149,15 @@ exports.getMe = async (req, res) => {
         // Fetch profile
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
-            .select('*, roles(*), units(*, blocks(*))')
+            .select('*, roles(*), unit_owners(units(*, blocks(*)))')
             .eq('id', user.id)
             .single();
 
         if (profileError && profileError.code !== 'PGRST116') {
             console.error("Profile fetch error:", profileError);
         }
+
+
 
         res.status(200).json({
             user: { ...user, profile }

@@ -4,7 +4,7 @@ const randomstring = require('randomstring');
 
 exports.listUsers = async (req, res) => {
     try {
-        const { data, error } = await supabase.from('profiles').select('*, roles(name), units(*)');
+        const { data, error } = await supabase.from('profiles').select('*, roles(name), unit_owners(unit_id, units(*))');
         if (error) throw error;
         res.json(data);
     } catch (err) {
@@ -13,7 +13,7 @@ exports.listUsers = async (req, res) => {
 }
 
 exports.inviteUser = async (req, res) => {
-    const { email, fullName, roleName, unitId } = req.body;
+    const { email, fullName, roleName, unitIds } = req.body;
 
     try {
         // 1. Generate a temp password (or rely on magic link, but creating user requires password usually)
@@ -44,16 +44,30 @@ exports.inviteUser = async (req, res) => {
 
         if (roleError) throw roleError;
 
-        // Update profile with role and unit
+        // Update profile role
         const { error: updateError } = await supabase
             .from('profiles')
             .update({
-                role_id: roleData.id,
-                unit_id: unitId || null
+                role_id: roleData.id
             })
             .eq('id', userId);
 
         if (updateError) throw updateError;
+
+        // Assign units if any
+        if (unitIds && unitIds.length > 0) {
+            const unitInserts = unitIds.map(uid => ({
+                profile_id: userId,
+                unit_id: uid,
+                is_primary: false // Or true for first one?
+            }));
+
+            const { error: ownersError } = await supabaseAdmin
+                .from('unit_owners')
+                .insert(unitInserts);
+
+            if (ownersError) throw ownersError;
+        }
 
         res.status(201).json({ message: `Invitation sent to ${email}`, user: data.user });
 
@@ -65,7 +79,7 @@ exports.inviteUser = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
     const { id } = req.params;
-    const { roleName, unitId } = req.body;
+    const { roleName, unitIds } = req.body;
 
     try {
         // Find role ID if roleName is provided
@@ -84,9 +98,9 @@ exports.updateUser = async (req, res) => {
         // Prepare update object
         const updates = {};
         if (roleId) updates.role_id = roleId;
-        if (unitId !== undefined) updates.unit_id = unitId === "" ? null : unitId; // Handle unassignment
+        // Don't update unit_id in profiles anymore
 
-        // Use supabaseAdmin to bypass RLS
+        // Update Profile
         const { data, error } = await supabaseAdmin
             .from('profiles')
             .update(updates)
@@ -94,6 +108,30 @@ exports.updateUser = async (req, res) => {
             .select();
 
         if (error) throw error;
+
+        // Update Units
+        if (unitIds !== undefined) {
+            // Delete existing
+            const { error: delError } = await supabaseAdmin
+                .from('unit_owners')
+                .delete()
+                .eq('profile_id', id);
+
+            if (delError) throw delError;
+
+            // Insert new
+            if (unitIds.length > 0) {
+                const unitInserts = unitIds.map(uid => ({
+                    profile_id: id,
+                    unit_id: uid
+                }));
+                const { error: insError } = await supabaseAdmin
+                    .from('unit_owners')
+                    .insert(unitInserts);
+
+                if (insError) throw insError;
+            }
+        }
 
         res.json(data[0]);
     } catch (err) {

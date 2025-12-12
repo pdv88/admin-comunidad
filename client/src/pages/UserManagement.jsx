@@ -7,7 +7,7 @@ const UserManagement = () => {
     const [users, setUsers] = useState([]);
     const [blocks, setBlocks] = useState([]); // For assignment
     const [loading, setLoading] = useState(true);
-    const [newUser, setNewUser] = useState({ email: '', fullName: '', roleName: 'neighbor', unitId: '' });
+    const [newUser, setNewUser] = useState({ email: '', fullName: '', roleName: 'neighbor', unitIds: [] });
     const [message, setMessage] = useState('');
     const [editingUser, setEditingUser] = useState(null); // User being edited
     const { t } = useTranslation();
@@ -18,7 +18,7 @@ const UserManagement = () => {
             email: user.email, // Email is typically not editable here, just for display
             fullName: user.full_name,
             roleName: user.roles?.name || 'neighbor',
-            unitId: user.unit_id || ''
+            unitIds: user.unit_owners ? user.unit_owners.map(uo => uo.unit_id) : []
         });
     };
 
@@ -31,7 +31,7 @@ const UserManagement = () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     roleName: editingUser.roleName,
-                    unitId: editingUser.unitId
+                    unitIds: editingUser.unitIds
                 })
             });
             const data = await res.json();
@@ -80,7 +80,7 @@ const UserManagement = () => {
             const data = await res.json();
             if (res.ok) {
                 setMessage('Invitation sent successfully!');
-                setNewUser({ email: '', fullName: '', roleName: 'neighbor', unitId: '' });
+                setNewUser({ email: '', fullName: '', roleName: 'neighbor', unitIds: [] });
                 fetchData();
             } else {
                 setMessage('Error: ' + data.error);
@@ -90,17 +90,33 @@ const UserManagement = () => {
         }
     };
 
-    // Helper to get all units
-    const getAllUnits = () => {
-        let units = [];
+    // Helper to get available units
+    // For new user (excludeUserId = null): Show only unassigned units
+    // For editing user: Show unassigned units + units assigned to THIS user
+    const getAvailableUnits = (excludeUserId = null) => {
+        // 1. Collect all assigned unit IDs from all users
+        const assignedUnitIds = new Set();
+        users.forEach(u => {
+            // If we are looking for available units for a specific user, 
+            // we skip their own assignments so they remain in the list (as "assigned to them")
+            // Wait, logic: We want to show units that are (Free OR Owned by CurrentUser).
+            // So we collect IDs owned by EVERYONE ELSE.
+            if (u.id !== excludeUserId && u.unit_owners) {
+                u.unit_owners.forEach(uo => assignedUnitIds.add(uo.unit_id));
+            }
+        });
+
+        let allUnits = [];
         if (Array.isArray(blocks)) {
             blocks.forEach(b => {
                  if (b.units) {
-                     b.units.forEach(u => units.push({ ...u, blockName: b.name }));
+                     b.units.forEach(u => allUnits.push({ ...u, blockName: b.name }));
                  }
             });
         }
-        return units;
+
+        // 2. Filter
+        return allUnits.filter(u => !assignedUnitIds.has(u.id));
     };
 
     if (loading) {
@@ -154,16 +170,34 @@ const UserManagement = () => {
                             <option value="treasurer">{t('user_management.roles.treasurer')}</option>
                             <option value="maintenance">{t('user_management.roles.maintenance')}</option>
                         </select>
-                         <select 
-                            className="rounded-lg border-gray-300 dark:bg-neutral-900 dark:border-neutral-700"
-                            value={newUser.unitId}
-                            onChange={e => setNewUser({...newUser, unitId: e.target.value})}
-                        >
-                            <option value="">{t('user_management.invite.assign_unit')}</option>
-                            {getAllUnits().map(u => (
-                                <option key={u.id} value={u.id}>{u.blockName} - {u.unit_number}</option>
-                            ))}
-                        </select>
+                        <div className="border border-gray-300 dark:border-neutral-700 rounded-lg p-2 h-32 overflow-y-auto bg-white dark:bg-neutral-900">
+                             <p className="text-xs text-gray-500 dark:text-neutral-400 mb-2 sticky top-0 bg-white dark:bg-neutral-900 pb-1 border-b border-gray-100 dark:border-neutral-800">
+                                {t('user_management.invite.assign_unit')}
+                             </p>
+                             <div className="space-y-1">
+                                {getAvailableUnits(null).map(u => (
+                                    <label key={u.id} className="flex items-center space-x-2 p-1 hover:bg-gray-50 dark:hover:bg-neutral-800 rounded cursor-pointer">
+                                        <input 
+                                            type="checkbox"
+                                            value={u.id}
+                                            checked={newUser.unitIds.includes(u.id)}
+                                            onChange={e => {
+                                                const id = u.id;
+                                                let newIds;
+                                                if (e.target.checked) {
+                                                    newIds = [...newUser.unitIds, id];
+                                                } else {
+                                                    newIds = newUser.unitIds.filter(uid => uid !== id);
+                                                }
+                                                setNewUser({...newUser, unitIds: newIds});
+                                            }}
+                                            className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                        />
+                                        <span className="text-sm text-gray-700 dark:text-neutral-300">{u.blockName} - {u.unit_number}</span>
+                                    </label>
+                                ))}
+                             </div>
+                        </div>
                         <button type="submit" className="bg-blue-600 text-white rounded-lg">{t('user_management.invite.send')}</button>
                     </form>
                     {message && <p className="mt-2 text-sm text-gray-600 dark:text-neutral-400">{message}</p>}
@@ -190,7 +224,9 @@ const UserManagement = () => {
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">
-                                        {user.units ? `${user.units.unit_number}` : '-'}
+                                        {user.unit_owners && user.unit_owners.length > 0 
+                                            ? user.unit_owners.map(uo => uo.units ? uo.units.unit_number : '').join(', ') 
+                                            : '-'}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-end text-sm font-medium">
                                         <button 
@@ -239,16 +275,31 @@ const UserManagement = () => {
                                                 </div>
                                                 <div>
                                                     <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300">{t('user_management.table.unit')}</label>
-                                                    <select 
-                                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-white"
-                                                        value={editingUser.unitId}
-                                                        onChange={e => setEditingUser({...editingUser, unitId: e.target.value})}
-                                                    >
-                                                        <option value="">{t('properties.none')}</option>
-                                                        {getAllUnits().map(u => (
-                                                            <option key={u.id} value={u.id}>{u.blockName} - {u.unit_number}</option>
-                                                        ))}
-                                                    </select>
+                                                    <div className="mt-1 border border-gray-300 dark:border-neutral-700 rounded-md p-2 h-48 overflow-y-auto bg-white dark:bg-neutral-900">
+                                                        <div className="space-y-1">
+                                                            {getAvailableUnits(editingUser.id).map(u => (
+                                                                <label key={u.id} className="flex items-center space-x-2 p-1 hover:bg-gray-50 dark:hover:bg-neutral-800 rounded cursor-pointer">
+                                                                    <input 
+                                                                        type="checkbox"
+                                                                        value={u.id}
+                                                                        checked={editingUser.unitIds.includes(u.id)}
+                                                                        onChange={e => {
+                                                                            const id = u.id;
+                                                                            let newIds;
+                                                                            if (e.target.checked) {
+                                                                                newIds = [...editingUser.unitIds, id];
+                                                                            } else {
+                                                                                newIds = editingUser.unitIds.filter(uid => uid !== id);
+                                                                            }
+                                                                            setEditingUser({...editingUser, unitIds: newIds});
+                                                                        }}
+                                                                        className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                                                    />
+                                                                    <span className="text-sm text-gray-700 dark:text-neutral-300">{u.blockName} - {u.unit_number}</span>
+                                                                </label>
+                                                            ))}
+                                                        </div>
+                                                    </div>
                                                 </div>
                                                 <div className="flex justify-end pt-4">
                                                     <button 
