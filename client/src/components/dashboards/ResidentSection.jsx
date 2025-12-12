@@ -1,7 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import RecentNoticesWidget from '../notices/RecentNoticesWidget';
 
 const ResidentSection = () => {
     const { t } = useTranslation();
@@ -9,9 +8,6 @@ const ResidentSection = () => {
     return (
         <div className="space-y-6">
             <h2 className="text-xl font-bold text-gray-800 dark:text-white mt-8">{t('dashboard.resident.title', 'My Home')}</h2>
-            
-            {/* Notices Banner */}
-            <RecentNoticesWidget />
             
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div className="bg-white dark:bg-neutral-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-700">

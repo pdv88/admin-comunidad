@@ -8,6 +8,7 @@ import VocalSection from '../components/dashboards/VocalSection';
 import ResidentSection from '../components/dashboards/ResidentSection';
 import ActiveCampaignsWidget from '../components/payments/ActiveCampaignsWidget';
 import ActivePollsWidget from '../components/voting/ActivePollsWidget';
+import RecentNoticesWidget from '../components/notices/RecentNoticesWidget';
 
 const Dashboard = () => {
     const { user } = useAuth();
@@ -17,6 +18,9 @@ const Dashboard = () => {
     return (
         <DashboardLayout>
             <div className="max-w-7xl mx-auto p-6 space-y-8"> 
+                {/* Notices Banner (Global) */}
+                <RecentNoticesWidget />
+
                 {/* Welcome Section */}
                 <div className="bg-white dark:bg-neutral-800 p-6 rounded-xl border border-gray-200 dark:border-neutral-700 shadow-sm">
                     <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">

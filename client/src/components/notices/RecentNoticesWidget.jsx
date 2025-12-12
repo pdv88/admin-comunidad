@@ -85,6 +85,7 @@ const RecentNoticesWidget = () => {
                         key={animationKey}
                         className="whitespace-nowrap flex items-center gap-8 absolute animate-marquee"
                         style={{ 
+                            transform: 'translateX(100%)', // Ensure it starts off-screen
                             animationIterationCount: notices.length > 1 ? 1 : 'infinite' 
                         }}
                         onAnimationEnd={handleAnimationEnd}
