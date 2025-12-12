@@ -118,6 +118,8 @@
         "total_users": "Usuarios Totales",
         "total_revenue": "Ingresos Totales",
         "welcome": "Bienvenido",
+        "role": "Rol",
+        "unit": "Unidad",
         "admin": {
             "title": "Visión General Admin",
             "revenue": "Ingresos",
@@ -205,7 +207,13 @@
         "delete_unit": "Eliminar Unidad",
         "confirm_delete_block": "¿Estás seguro de que quieres eliminar este bloque? Esta acción no se puede deshacer.",
         "confirm_delete_unit": "¿Estás seguro de que quieres eliminar esta unidad? Esta acción no se puede deshacer.",
-        "unoccupied": "Sin ocupar"
+        "unoccupied": "Sin ocupar",
+        "edit_tenant_info": "Editar Información del Inquilino",
+        "tenant_name": "Nombre del Inquilino",
+        "tenant_email": "Correo del Inquilino",
+        "tenant_phone": "Teléfono del Inquilino",
+        "tenant": "Inquilino",
+        "owner": "Propietario"
     },
     "reports": {
         "title": "Incidencias y Mantenimiento",
@@ -310,7 +318,9 @@
         "delete": "Eliminar",
         "cancel": "Cancelar",
         "confirm": "Confirmar",
-        "error_occurred": "Ocurrió un error"
+        "error_occurred": "Ocurrió un error",
+        "edit": "Editar",
+        "save": "Guardar"
     },
     "payments": {
         "title": "Pagos y Aportaciones",

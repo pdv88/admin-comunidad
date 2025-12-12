@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
+import { API_URL } from '../config';
 import { useTranslation } from 'react-i18next';
 import DashboardLayout from '../components/DashboardLayout';
 
@@ -10,6 +11,59 @@ const Settings = () => {
   const [loading, setLoading] = React.useState(false);
   const [successMsg, setSuccessMsg] = React.useState('');
   const [errorMsg, setErrorMsg] = React.useState('');
+
+  // Community Settings State
+  const [commName, setCommName] = React.useState('');
+  const [commAddress, setCommAddress] = React.useState('');
+  const [commLoading, setCommLoading] = React.useState(false);
+  const [commSuccess, setCommSuccess] = React.useState('');
+  const [commError, setCommError] = React.useState('');
+
+  React.useEffect(() => {
+    if (user?.profile?.roles?.name === 'admin') {
+        const fetchCommunity = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_URL}/api/communities/my`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    setCommName(data.name || '');
+                    setCommAddress(data.address || '');
+                }
+            } catch (error) {
+                console.error("Failed to fetch community", error);
+            }
+        };
+        fetchCommunity();
+    }
+  }, [user]);
+
+  const handleUpdateCommunity = async () => {
+    setCommLoading(true);
+    setCommSuccess('');
+    setCommError('');
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/api/communities/my`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ name: commName, address: commAddress })
+        });
+        
+        if (!response.ok) throw new Error('Failed to update');
+        
+        setCommSuccess(t('settings.update_success', 'Updated successfully'));
+    } catch (error) {
+        setCommError(t('common.error_occurred'));
+    } finally {
+        setCommLoading(false);
+    }
+  };
 
   const handleUpdateProfile = async () => {
     setLoading(true);
@@ -95,6 +149,40 @@ const Settings = () => {
 
               {/* Admin Only Section */}
               {user?.profile?.roles?.name === 'admin' && (
+                  <>
+                  <div className="mt-8 pt-8 border-t border-gray-200 dark:border-neutral-700">
+                    <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4">{t('auth.community_name', 'Community Settings')}</h2>
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium mb-2 dark:text-white">{t('auth.community_name', 'Community Name')}</label>
+                            <input 
+                                type="text"
+                                className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400"
+                                value={commName}
+                                onChange={(e) => setCommName(e.target.value)}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-2 dark:text-white">{t('auth.community_address', 'Address')}</label>
+                            <input 
+                                type="text"
+                                className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400"
+                                value={commAddress}
+                                onChange={(e) => setCommAddress(e.target.value)}
+                            />
+                        </div>
+                        <button 
+                            onClick={handleUpdateCommunity}
+                            disabled={commLoading}
+                            className="py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:pointer-events-none"
+                        >
+                            {commLoading ? '...' : t('settings.save', 'Save Changes')}
+                        </button>
+                        {commSuccess && <p className="text-sm text-green-600">{commSuccess}</p>}
+                        {commError && <p className="text-sm text-red-600">{commError}</p>}
+                    </div>
+                  </div>
+
                   <div className="mt-8 pt-8 border-t border-gray-200 dark:border-neutral-700">
                       <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4">{t('settings.subscription.title', 'Subscription & Payment')}</h2>
                       <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 dark:bg-neutral-800 dark:border-neutral-700">
@@ -115,6 +203,8 @@ const Settings = () => {
                           </div>
                       </div>
                   </div>
+
+                  </>
               )}
 
             </div>

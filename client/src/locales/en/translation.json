@@ -112,12 +112,18 @@
         "enter_email_placeholder": "Enter your email",
         "reset_pass_btn": "Reset Password",
         "sending": "Sending...",
-        "check_email": "Check your email for the password reset link."
+        "check_email": "Check your email for the password reset link.",
+        "community_name": "Community Name",
+        "community_name_placeholder": "e.g. My Community",
+        "community_address": "Address",
+        "community_address_placeholder": "e.g. 123 Main St"
     },
     "dashboard": {
         "total_users": "Total Users",
         "total_revenue": "Total Revenue",
         "welcome": "Welcome",
+        "role": "Role",
+        "unit": "Unit",
         "admin": {
             "title": "Admin Overview",
             "revenue": "Revenue",
@@ -190,6 +196,7 @@
         "add_unit": "Add Unit",
         "add_unit_btn": "Add Unit",
         "select_block": "Select Block",
+        "select_blocks": "Select Blocks",
         "unit_placeholder": "Unit Number (e.g. 101)",
         "unit_type": {
             "apartment": "Apartment",
@@ -205,7 +212,13 @@
         "delete_unit": "Delete Unit",
         "confirm_delete_block": "Are you sure you want to delete this block? This action cannot be undone.",
         "confirm_delete_unit": "Are you sure you want to delete this unit? This action cannot be undone.",
-        "unoccupied": "Unoccupied"
+        "unoccupied": "Unoccupied",
+        "edit_tenant_info": "Edit Tenant Info",
+        "tenant_name": "Tenant Name",
+        "tenant_email": "Tenant Email",
+        "tenant_phone": "Tenant Phone",
+        "tenant": "Tenant",
+        "owner": "Owner"
     },
     "reports": {
         "title": "Issues & Maintenance",
@@ -310,7 +323,9 @@
         "delete": "Delete",
         "cancel": "Cancel",
         "confirm": "Confirm",
-        "error_occurred": "An error occurred"
+        "error_occurred": "An error occurred",
+        "edit": "Edit",
+        "save": "Save"
     },
     "payments": {
         "title": "Payments & Contributions",

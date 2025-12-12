@@ -330,7 +330,7 @@ exports.createCampaign = async (req, res) => {
             return res.status(403).json({ error: 'Unauthorized' });
         }
 
-        const { name, goal_amount, description, deadline } = req.body;
+        const { name, goal_amount, description, deadline, target_type, target_blocks } = req.body;
 
         const { data, error } = await supabaseAdmin
             .from('campaigns')
@@ -340,6 +340,8 @@ exports.createCampaign = async (req, res) => {
                 current_amount: 0,
                 description,
                 deadline,
+                target_type: target_type || 'all',
+                target_blocks: target_blocks || [],
                 is_active: true
             })
             .select()
@@ -388,13 +390,65 @@ exports.updateCampaign = async (req, res) => {
 
 exports.getCampaigns = async (req, res) => {
     try {
-        const { data, error } = await supabase
+        const { user, profile } = await getUserFromToken(req);
+
+        let query = supabaseAdmin
             .from('campaigns')
             .select('*')
             .order('created_at', { ascending: false });
 
+        // If not Admin/President, apply targeting filter
+        if (profile.roles.name !== 'admin' && profile.roles.name !== 'president') {
+            // 1. Get User's Block ID
+            // Profile has unit_id. We need to find the block of that unit.
+            if (!profile.unit_id) {
+                // If user has no unit, they can only see 'all' campaigns
+                // or maybe none? Let's assume 'all'.
+                // query = query.eq('target_type', 'all'); // Effectively filtering in memory usually better for array overlap in supabase if complex
+            } else {
+                const { data: unit } = await supabaseAdmin
+                    .from('units')
+                    .select('block_id')
+                    .eq('id', profile.unit_id)
+                    .single();
+
+                const userBlockId = unit?.block_id;
+
+                // Supabase Filter for Array contains: .cs (contains) or .ov (overlaps)
+                // But mixing OR logic (type='all' OR blocks contains X) is hard in one chaining query generally requiring .or() syntax.
+                // Let's fetch all and filter in memory for simplicity unless dataset is huge. 
+                // Campaigns are usually few.
+            }
+        }
+
+        const { data: allCampaigns, error } = await query;
         if (error) throw error;
-        res.json(data);
+
+        // Filter in memory
+        let visibleCampaigns = allCampaigns;
+        if (profile.roles.name !== 'admin' && profile.roles.name !== 'president') {
+            // Fetch block info if needed
+            let userBlockId = null;
+            if (profile.unit_id) {
+                const { data: unit } = await supabaseAdmin
+                    .from('units')
+                    .select('block_id')
+                    .eq('id', profile.unit_id)
+                    .single();
+                userBlockId = unit?.block_id;
+            }
+
+            visibleCampaigns = allCampaigns.filter(c => {
+                if (c.target_type === 'all') return true;
+                if (c.target_type === 'blocks') {
+                    // Check if users block is in target_blocks array
+                    return userBlockId && c.target_blocks && c.target_blocks.includes(userBlockId);
+                }
+                return false;
+            });
+        }
+
+        res.json(visibleCampaigns);
     } catch (error) {
         res.status(400).json({ error: error.message });
     }

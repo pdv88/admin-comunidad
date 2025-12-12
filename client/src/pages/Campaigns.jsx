@@ -7,10 +7,13 @@ import DashboardLayout from '../components/DashboardLayout';
 
 const Campaigns = () => {
     const { t } = useTranslation();
-    const { user } = useAuth(); // We can check role here if needed, but the Route is protected/Sidebar handles visibility
+    const { user } = useAuth(); 
+    const role = user?.profile?.roles?.name;
+    const canCreate = role === 'admin' || role === 'president';
+    
     const [campaigns, setCampaigns] = useState([]);
     const [loading, setLoading] = useState(true);
-    
+
     // Form State
     const [name, setName] = useState('');
     const [goal, setGoal] = useState('');
@@ -19,6 +22,11 @@ const Campaigns = () => {
     const [creating, setCreating] = useState(false);
     const [message, setMessage] = useState('');
     const [showCreateForm, setShowCreateForm] = useState(false);
+
+    // Targeting State
+    const [availableBlocks, setAvailableBlocks] = useState([]);
+    const [targetType, setTargetType] = useState('all'); // 'all' or 'blocks'
+    const [selectedBlocks, setSelectedBlocks] = useState([]); // Array of block IDs
 
     // Edit State
     const [editingCampaign, setEditingCampaign] = useState(null);
@@ -32,7 +40,22 @@ const Campaigns = () => {
 
     useEffect(() => {
         fetchCampaigns();
+        fetchBlocks();
     }, []);
+
+    const fetchBlocks = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${API_URL}/api/properties/blocks`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                setAvailableBlocks(await res.json());
+            }
+        } catch (error) {
+            console.error("Error fetching blocks:", error);
+        }
+    };
 
     const fetchCampaigns = async () => {
         try {
@@ -68,7 +91,9 @@ const Campaigns = () => {
                     name,
                     goal_amount: goal,
                     description: desc,
-                    deadline: deadline || null
+                    deadline: deadline || null,
+                    target_type: targetType,
+                    target_blocks: targetType === 'blocks' ? selectedBlocks : []
                 })
             });
 
@@ -78,7 +103,10 @@ const Campaigns = () => {
             setName('');
             setGoal('');
             setDesc('');
+            setDesc('');
             setDeadline('');
+            setTargetType('all');
+            setSelectedBlocks([]);
             setShowCreateForm(false);
             fetchCampaigns(); // Refresh list
 
@@ -134,12 +162,14 @@ const Campaigns = () => {
             <div className="space-y-6">
                 <div className="flex justify-between items-center">
                     <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t('campaigns.title', 'Funding Campaigns')}</h1>
-                    <button 
-                        onClick={() => setShowCreateForm(!showCreateForm)}
-                        className="py-2 px-4 inline-flex justify-center items-center gap-2 rounded-lg border border-transparent font-semibold bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all text-sm"
-                    >
-                        {showCreateForm ? t('common.cancel', 'Cancel') : t('campaigns.create_btn', 'Create Campaign')}
-                    </button>
+                    {canCreate && (
+                        <button 
+                            onClick={() => setShowCreateForm(!showCreateForm)}
+                            className="py-2 px-4 inline-flex justify-center items-center gap-2 rounded-lg border border-transparent font-semibold bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all text-sm"
+                        >
+                            {showCreateForm ? t('common.cancel', 'Cancel') : t('campaigns.create_btn', 'Create Campaign')}
+                        </button>
+                    )}
                 </div>
 
                 {/* Create Campaign Form */}
@@ -188,6 +218,61 @@ const Campaigns = () => {
                                 onChange={(e) => setDeadline(e.target.value)}
                             />
                         </div>
+
+                         {/* Targeting Options */}
+                         <div className="pt-2">
+                             <label className="block text-sm font-medium mb-2 dark:text-gray-300">{t('campaigns.target_audience', 'Target Audience')}</label>
+                             <div className="flex gap-4 mb-3">
+                                 <label className="flex items-center gap-2 cursor-pointer">
+                                     <input 
+                                         type="radio" 
+                                         name="targetType" 
+                                         value="all"
+                                         checked={targetType === 'all'}
+                                         onChange={() => setTargetType('all')}
+                                         className="text-indigo-600 focus:ring-indigo-500"
+                                     />
+                                     <span className="text-sm dark:text-gray-300">{t('campaigns.target_all', 'All Community')}</span>
+                                 </label>
+                                 <label className="flex items-center gap-2 cursor-pointer">
+                                     <input 
+                                         type="radio" 
+                                         name="targetType" 
+                                         value="blocks"
+                                         checked={targetType === 'blocks'}
+                                         onChange={() => setTargetType('blocks')}
+                                         className="text-indigo-600 focus:ring-indigo-500"
+                                     />
+                                     <span className="text-sm dark:text-gray-300">{t('campaigns.target_blocks', 'Specific Blocks')}</span>
+                                 </label>
+                             </div>
+ 
+                             {targetType === 'blocks' && (
+                                 <div className="mt-2 p-3 bg-gray-50 dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-700">
+                                     <label className="block text-xs font-semibold text-gray-500 uppercase mb-2">{t('campaigns.select_blocks', 'Select Blocks')}</label>
+                                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                         {availableBlocks.map(block => (
+                                             <label key={block.id} className="flex items-center gap-2 cursor-pointer p-2 hover:bg-gray-100 dark:hover:bg-neutral-800 rounded">
+                                                 <input 
+                                                     type="checkbox"
+                                                     value={block.id}
+                                                     checked={selectedBlocks.includes(block.id)}
+                                                     onChange={(e) => {
+                                                         if(e.target.checked) {
+                                                             setSelectedBlocks([...selectedBlocks, block.id]);
+                                                         } else {
+                                                             setSelectedBlocks(selectedBlocks.filter(id => id !== block.id));
+                                                         }
+                                                     }}
+                                                     className="rounded text-indigo-600 focus:ring-indigo-500"
+                                                 />
+                                                 <span className="text-sm text-gray-700 dark:text-gray-300">{block.name}</span>
+                                             </label>
+                                         ))}
+                                     </div>
+                                 </div>
+                             )}
+                         </div>
                         
                         {message && <p className={`text-sm ${message.includes('success') ? 'text-green-600' : 'text-red-600'}`}>{message}</p>}
 
@@ -231,12 +316,14 @@ const Campaigns = () => {
                                      </div>
                                 )}
 
-                                <button 
-                                    onClick={() => handleEditClick(campaign)}
-                                    className="w-full py-2 px-3 inline-flex justify-center items-center gap-2 rounded-lg border font-medium bg-white text-gray-700 shadow-sm align-middle hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-blue-600 transition-all text-sm dark:bg-neutral-800 dark:hover:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400 dark:hover:text-white dark:focus:ring-offset-gray-800"
-                                >
-                                    {t('common.edit', 'Edit')}
-                                </button>
+                                {canCreate && (
+                                    <button 
+                                        onClick={() => handleEditClick(campaign)}
+                                        className="w-full py-2 px-3 inline-flex justify-center items-center gap-2 rounded-lg border font-medium bg-white text-gray-700 shadow-sm align-middle hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-blue-600 transition-all text-sm dark:bg-neutral-800 dark:hover:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400 dark:hover:text-white dark:focus:ring-offset-gray-800"
+                                    >
+                                        {t('common.edit', 'Edit')}
+                                    </button>
+                                )}
                             </div>
                         </div>
                     ))}

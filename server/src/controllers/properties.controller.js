@@ -127,3 +127,21 @@ exports.deleteUnit = async (req, res) => {
         res.status(400).json({ error: err.message });
     }
 };
+
+exports.updateUnit = async (req, res) => {
+    const { id } = req.params;
+    const { tenant_name, tenant_email, tenant_phone } = req.body;
+
+    try {
+        const { data, error } = await supabaseAdmin
+            .from('units')
+            .update({ tenant_name, tenant_email, tenant_phone })
+            .eq('id', id)
+            .select();
+
+        if (error) throw error;
+        res.json(data[0]);
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+};

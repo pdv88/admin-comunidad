@@ -9,6 +9,8 @@ const Register = () => {
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
+    communityName: '',
+    communityAddress: '',
     password: '',
     confirmPassword: '',
   });
@@ -42,6 +44,8 @@ const Register = () => {
         body: JSON.stringify({
           fullName: formData.fullName,
           email: formData.email,
+          communityName: formData.communityName,
+          communityAddress: formData.communityAddress,
           password: formData.password
         }),
       });
@@ -82,6 +86,16 @@ const Register = () => {
                 <div>
                   <label className="block text-sm mb-2 dark:text-white">{t('auth.fullname')}</label>
                   <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400" required />
+                </div>
+
+                <div>
+                  <label className="block text-sm mb-2 dark:text-white">{t('auth.community_name', 'Community Name')}</label>
+                  <input type="text" name="communityName" value={formData.communityName} onChange={handleChange} className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400" required placeholder={t('auth.community_name_placeholder', 'e.g. Residencial Las Torres')} />
+                </div>
+
+                <div>
+                  <label className="block text-sm mb-2 dark:text-white">{t('auth.community_address', 'Address')}</label>
+                  <input type="text" name="communityAddress" value={formData.communityAddress} onChange={handleChange} className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400" required placeholder={t('auth.community_address_placeholder', 'e.g. Av. Principal 123')} />
                 </div>
 
                 <div>

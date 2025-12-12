@@ -74,6 +74,7 @@ const Payments = () => {
                                     isAdmin={true} 
                                     onRefresh={fetchData} 
                                     showResidentInfo={true}
+                                    loading={loading}
                                 />
                             </div>
                         )}
@@ -88,6 +89,7 @@ const Payments = () => {
                                 isAdmin={false} // Even if admin, for THIS list we behave like user
                                 onRefresh={fetchData} 
                                 showResidentInfo={false}
+                                loading={loading}
                             />
                         </div>
                     </div>

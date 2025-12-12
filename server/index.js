@@ -25,6 +25,7 @@ app.use('/api/reports', reportsRoutes);
 app.use('/api/polls', pollsRoutes);
 app.use('/api/properties', propertiesRoutes);
 app.use('/api/users', usersRoutes);
+app.use('/api/communities', require('./src/routes/communities.routes'));
 app.use('/api/payments', require('./src/routes/payments.routes'));
 
 // Base route

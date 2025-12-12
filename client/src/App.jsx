@@ -42,8 +42,13 @@ function App() {
              <Route path="/app/notices" element={<Notices />} />
              <Route path="/app/reports" element={<Reports />} />
              <Route path="/app/voting" element={<Voting />} />
-             <Route path="/app/properties" element={<Properties />} />
-             <Route path="/app/users" element={<UserManagement />} />
+             
+             {/* Admin/President Only Routes */}
+             <Route element={<ProtectedRoute allowedRoles={['admin', 'president']} />}>
+                <Route path="/app/properties" element={<Properties />} />
+                <Route path="/app/users" element={<UserManagement />} />
+             </Route>
+
              <Route path="/app/settings" element={<Settings />} /> 
              <Route path="/app/payments" element={<Payments />} />
              <Route path="/app/campaigns" element={<Campaigns />} />

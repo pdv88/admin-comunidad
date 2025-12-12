@@ -43,6 +43,30 @@ export const AuthProvider = ({ children }) => {
     checkUserLoggedIn();
   }, []);
 
+  // Global Fetch Interceptor for 401
+  useEffect(() => {
+    const originalFetch = window.fetch;
+    window.fetch = async (...args) => {
+      try {
+        const response = await originalFetch(...args);
+        if (response.status === 401) {
+            console.warn("Session expired (401). Redirecting to login.");
+            localStorage.removeItem('token');
+            setUser(null);
+            // Optional: window.location.href = '/login'; 
+            // Setting user to null should trigger re-render and Router should redirect if protected
+        }
+        return response;
+      } catch (error) {
+        throw error;
+      }
+    };
+
+    return () => {
+        window.fetch = originalFetch;
+    };
+  }, []);
+
   const login = async (email, password) => {
     try {
       const response = await fetch(`${API_URL}/api/auth/login`, {
@@ -74,13 +98,28 @@ export const AuthProvider = ({ children }) => {
   };
 
   const updateProfile = async (userData) => {
-    // In a real app, this would be an API call to PUT /api/auth/me
-    // For now, we update local state and localStorage
     try {
-        const updatedUser = { ...user, user_metadata: { ...user.user_metadata, ...userData } };
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/api/auth/me`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(userData)
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to update profile');
+        }
+
+        const data = await response.json();
+        // Update local user state with the returned updated user data
+        // We merge existing user state with new metadata to be safe, though backend returns some structure
+        const updatedUser = { ...user, ...data.user, user_metadata: { ...user.user_metadata, ...userData } };
+        
         setUser(updatedUser);
-        // If we were using a real JWT, we'd need a new token or verify the backend handles the update
-        // For this mock/MVP, updating state is enough for the UI to reflect changes
         return updatedUser;
     } catch (error) {
         console.error("Update profile error:", error);
