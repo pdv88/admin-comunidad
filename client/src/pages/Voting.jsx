@@ -173,7 +173,7 @@ const Voting = () => {
 
     return (
         <DashboardLayout>
-            <div className="p-6">
+            <div className="max-w-7xl mx-auto space-y-4 md:space-y-8">
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t('voting.title')}</h1>
                     {isAdmin && (

@@ -25,6 +25,9 @@ const Payments = () => {
     // Admin: Confirma, registra.
     // Presidente: Supervisa (ve reportes/lista).
 
+    const [activeTab, setActiveTab] = useState('maintenance'); // 'maintenance' or 'campaigns'
+    const [showUploadForm, setShowUploadForm] = useState(false);
+
     useEffect(() => {
         fetchData();
     }, []);
@@ -52,54 +55,114 @@ const Payments = () => {
         }
     };
 
+    // Filter helpers
+    const filterPayments = (payments) => {
+        return payments.filter(p => {
+             if (activeTab === 'maintenance') return !p.campaign_id;
+             if (activeTab === 'campaigns') return p.campaign_id;
+             return true;
+        });
+    };
+
+    const filteredMyPayments = filterPayments(myPayments);
+    const filteredAllPayments = filterPayments(allPayments);
+
     return (
         <DashboardLayout>
-            <div className="max-w-6xl mx-auto space-y-6">
-                <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">
-                    {t('payments.title', 'Payments & Contributions')}
-                </h1>
+            <div className="max-w-6xl mx-auto space-y-4 md:space-y-8">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                    <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
+                        {t('payments.title', 'Payments & Contributions')}
+                    </h1>
+                     {/* New Payment Button (Toggles Form) */}
+                     {(canUpload || role === 'admin') && (
+                        <button 
+                            onClick={() => setShowUploadForm(!showUploadForm)}
+                            className="py-2 px-4 inline-flex justify-center items-center gap-2 rounded-lg border border-transparent font-semibold bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all text-sm"
+                        >
+                            <svg className={`w-4 h-4 transition-transform ${showUploadForm ? 'rotate-45' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
+                            {showUploadForm ? t('common.cancel', 'Cancel') : t('payments.new_payment', 'New Payment')}
+                        </button>
+                    )}
+                </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Left/Main Column */}
-                    <div className={canUpload || isAdmin ? "lg:col-span-2 space-y-8" : "lg:col-span-3 space-y-8"}>
-                        
-                        {/* 1. Community Payments (Admin View) */}
-                        {isAdmin && (
-                            <div className="bg-white dark:bg-neutral-800 p-6 rounded-xl border border-gray-200 dark:border-neutral-700">
-                                <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4">
-                                    {t('payments.list.all_title', 'Community Payments (By Block)')}
-                                </h2>
-                                <PaymentList 
-                                    payments={allPayments} 
-                                    isAdmin={true} 
-                                    onRefresh={fetchData} 
-                                    showResidentInfo={true}
-                                    loading={loading}
-                                />
-                            </div>
-                        )}
+                {/* Upload Form Section (Collapsible) */}
+                {showUploadForm && (
+                     <div className="bg-white dark:bg-neutral-800 p-6 rounded-xl border border-gray-200 dark:border-neutral-700 shadow-sm animate-fade-in-down mb-6">
+                        <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4">{t('payments.upload_title', 'Register New Payment')}</h2>
+                        <PaymentUpload 
+                            onSuccess={() => {
+                                fetchData();
+                                setShowUploadForm(false);
+                            }} 
+                            isAdmin={isAdmin} 
+                        />
+                    </div>
+                )}
 
-                        {/* 2. My Payments (Personal History) */}
+                {/* Tabs */}
+                <div className="border-b border-gray-200 dark:border-neutral-700">
+                    <nav className="-mb-px flex gap-6" aria-label="Tabs">
+                        <button 
+                            onClick={() => setActiveTab('maintenance')}
+                            className={`py-4 px-1 inline-flex items-center gap-2 border-b-2 font-medium text-sm whitespace-nowrap ${
+                                activeTab === 'maintenance'
+                                ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-neutral-400 dark:hover:text-neutral-300'
+                            }`}
+                        >
+                            {t('payments.tabs.maintenance', 'Monthly Fees')}
+                        </button>
+                        <button 
+                            onClick={() => setActiveTab('campaigns')}
+                            className={`py-4 px-1 inline-flex items-center gap-2 border-b-2 font-medium text-sm whitespace-nowrap ${
+                                activeTab === 'campaigns'
+                                ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-neutral-400 dark:hover:text-neutral-300'
+                            }`}
+                        >
+                            {t('payments.tabs.campaigns', 'Campaigns')}
+                        </button>
+                    </nav>
+                </div>
+
+                {/* Payment Lists */}
+                <div className="space-y-8">
+                     {/* 1. Community Payments (Admin View) */}
+                     {isAdmin && (
                         <div className="bg-white dark:bg-neutral-800 p-6 rounded-xl border border-gray-200 dark:border-neutral-700">
-                             <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4">
-                                {t('payments.list.my_title', 'My Payment History')}
+                            <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4">
+                                {activeTab === 'maintenance' 
+                                    ? t('payments.list.all_maintenance', 'Community Maintenance Payments')
+                                    : t('payments.list.all_campaigns', 'Community Campaign Contributions')
+                                }
                             </h2>
                             <PaymentList 
-                                payments={myPayments} 
-                                isAdmin={false} // Even if admin, for THIS list we behave like user
+                                payments={filteredAllPayments} 
+                                isAdmin={true} 
                                 onRefresh={fetchData} 
-                                showResidentInfo={false}
+                                showResidentInfo={true}
                                 loading={loading}
                             />
                         </div>
-                    </div>
-
-                    {/* Right Column: Upload/Action (Narrow) */}
-                    {(canUpload || role === 'admin') && (
-                        <div className="lg:col-span-1">
-                            <PaymentUpload onSuccess={fetchData} isAdmin={isAdmin} />
-                        </div>
                     )}
+
+                    {/* 2. My Payments (Personal History) */}
+                    <div className="bg-white dark:bg-neutral-800 p-6 rounded-xl border border-gray-200 dark:border-neutral-700">
+                            <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4">
+                            {activeTab === 'maintenance' 
+                                ? t('payments.list.my_maintenance', 'My Monthly Fees')
+                                : t('payments.list.my_campaigns', 'My Campaign Contributions')
+                            }
+                        </h2>
+                        <PaymentList 
+                            payments={filteredMyPayments} 
+                            isAdmin={false} // Even if admin, for THIS list we behave like user
+                            onRefresh={fetchData} 
+                            showResidentInfo={false}
+                            loading={loading}
+                        />
+                    </div>
                 </div>
             </div>
         </DashboardLayout>

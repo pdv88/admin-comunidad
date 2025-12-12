@@ -65,18 +65,17 @@ const Notices = () => {
     const fetchBlocks = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`${API_URL}/api/blocks`, { // Assuming blocks endpoint exists, or fetch structure
+            // Fetch blocks from the correct endpoint provided by properties module
+            const res = await fetch(`${API_URL}/api/properties/blocks`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            // If API_URL/api/properties/structure exists, use that, otherwise straightforward blocks
-            // Let's assume generic fetch for now or use what properties uses.
-            // Actually usually properties fetches structure. Let's try to infer or just fetch blocks
-             const res2 = await fetch(`${API_URL}/api/properties`, { headers: { 'Authorization': `Bearer ${token}` }});
-             if(res2.ok) {
-                 const data = await res2.json();
-                 // data is structure? usually blocks.
+            
+            if (res.ok) {
+                 const data = await res.json();
                  setBlocks(data || []);
-             }
+            } else {
+                console.error("Failed to fetch blocks", res.status);
+            }
         } catch (error) {
             console.error("Error fetching blocks:", error);
         }
@@ -164,7 +163,7 @@ const Notices = () => {
 
     return (
         <DashboardLayout>
-            <div className="p-6 max-w-5xl mx-auto">
+             <div className="max-w-5xl mx-auto space-y-4 md:space-y-8">
                 <div className="flex justify-between items-center mb-6">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t('notices.title')}</h1>

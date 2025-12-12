@@ -9,6 +9,8 @@ import ResidentSection from '../components/dashboards/ResidentSection';
 import ActiveCampaignsWidget from '../components/payments/ActiveCampaignsWidget';
 import ActivePollsWidget from '../components/voting/ActivePollsWidget';
 import RecentNoticesWidget from '../components/notices/RecentNoticesWidget';
+import RecentReportsWidget from '../components/reports/RecentReportsWidget';
+import MonthlyPaymentWidget from '../components/payments/MonthlyPaymentWidget';
 
 const Dashboard = () => {
     const { user } = useAuth();
@@ -17,7 +19,7 @@ const Dashboard = () => {
 
     return (
         <DashboardLayout>
-            <div className="max-w-7xl mx-auto p-6 space-y-8"> 
+            <div className="max-w-7xl mx-auto space-y-4 md:space-y-8"> 
                 {/* Notices Banner (Global) */}
                 <RecentNoticesWidget />
 
@@ -45,6 +47,10 @@ const Dashboard = () => {
                         )}
                     </div>
                 </div>
+                {/* Monthly Fee Status */}
+                <div className="mb-8">
+                     <MonthlyPaymentWidget />
+                </div>
 
                 {/* 1. Global: Active Campaigns */}
                 <div>
@@ -53,6 +59,9 @@ const Dashboard = () => {
                     </h2>
                     <ActiveCampaignsWidget />
                 </div>
+
+
+
                 <div className="mb-8">
                      <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
                         {t('voting.title', 'Active Polls')}
@@ -60,14 +69,19 @@ const Dashboard = () => {
                     <ActivePollsWidget />
                 </div>
 
+                {/* Service / Reports */}
+                <div className="mb-8">
+                     <RecentReportsWidget />
+                </div>
+
                 {/* 2. Role Specific Sections */}
                 {role === 'admin' && <AdminSection />}
                 {role === 'president' && <PresidentSection />}
                 {(role === 'vocal' || role === 'secretary' || role === 'treasurer') && <VocalSection />}
 
-                {/* 3. Base Resident Section (Everyone gets this) */}
-                <hr className="border-gray-200 dark:border-neutral-700" />
-                <ResidentSection />
+                {/* 3. Base Resident Section (Everyone gets this) - Removed as per request (Quick Links) */}
+                {/* <hr className="border-gray-200 dark:border-neutral-700" /> */}
+                {/* <ResidentSection /> */}
             </div>
         </DashboardLayout>
     );

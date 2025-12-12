@@ -47,14 +47,16 @@ const ActivePollsWidget = () => {
     ];
 
     return (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1">
             {polls.map(poll => {
                 const totalVotes = poll.total_votes || 0;
                 
                 return (
                     <div key={poll.id} className="bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700 p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col h-full">
                         <div className="flex justify-between items-start mb-2">
-                            <h3 className="font-semibold text-gray-800 dark:text-white line-clamp-2">{poll.title}</h3>
+                            <Link to="/app/voting" className="font-semibold text-gray-800 dark:text-white line-clamp-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                                {poll.title}
+                            </Link>
                             {poll.user_voted && (
                                  <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full whitespace-nowrap dark:bg-green-900/30 dark:text-green-400">
                                     {t('common.voted', 'Voted')}
@@ -112,12 +114,8 @@ const ActivePollsWidget = () => {
                             </div>
                         </div>
 
-                        <Link 
-                            to="/app/voting"
-                            className="block w-full text-center bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/40 py-2 rounded-lg font-medium transition-colors text-sm mt-auto"
-                        >
-                            {poll.user_voted ? t('common.view_results', 'View Results') : t('voting.vote_now', 'Vote Now')}
-                        </Link>
+
+                        {/* Button Removed */}
                     </div>
                 );
             })}
