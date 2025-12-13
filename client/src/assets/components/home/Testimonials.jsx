@@ -1,107 +1,83 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next';
-import testimonialJosh from '../../images/testimonial_josh.png'
 
 function Testimonials() {
   const { t } = useTranslation();
 
+  const testimonials = [
+      {
+          quote: t('testimonials.t1.quote', "Since switching to this platform, our community meetings are shorter and more productive. The voting system is a game changer."),
+          author: "Maria Gonzalez",
+          role: "Community President",
+          avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+      },
+      {
+          quote: t('testimonials.t2.quote', "I love being able to pay my fees from my phone. No more bank transfers or lost receipts!"),
+          author: "Carlos Rodriguez",
+          role: "Resident",
+          avatar: "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+      },
+      {
+          quote: t('testimonials.t3.quote', "Reporting maintenance issues is so easy now. I take a photo, upload it, and it gets fixed."),
+          author: "Sarah Johnson",
+          role: "Resident",
+          avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+      } 
+  ];
+
   return (
-    <>
-    {/* <!-- Testimonials with Stats --> */}
-<div className="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
-  {/* <!-- Grid --> */}
-  <div className="lg:grid lg:grid-cols-12 lg:gap-16 lg:items-center lg:justify-between">
-    <div className="lg:col-span-5 lg:col-start-1">
-      {/* <!-- Title --> */}
-      <div className="mb-8">
-        <h2 className="mb-2 text-3xl text-gray-800 font-bold lg:text-4xl dark:text-neutral-200">
-          {t('testimonials.title')}
+    <div className="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
+      {/* Title */}
+      <div className="max-w-2xl mx-auto text-center mb-10 lg:mb-14">
+        <h2 className="text-2xl font-bold md:text-4xl md:leading-tight dark:text-white">
+          {t('testimonials.title', 'Trusted by Communities Everywhere')}
         </h2>
-        <p className="text-gray-600 dark:text-neutral-400">
-          {t('testimonials.desc')}
+        <p className="mt-1 text-gray-600 dark:text-neutral-400">
+          {t('testimonials.subtitle', 'See what presidents and residents are saying.')}
         </p>
       </div>
-      {/* <!-- End Title --> */}
 
-      {/* <!-- Blockquote --> */}
-      <blockquote className="relative">
-        <svg className="absolute top-0 start-0 transform -translate-x-6 -translate-y-8 size-16 text-gray-200 dark:text-neutral-800" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path d="M7.39762 10.3C7.39762 11.0733 7.14888 11.7 6.6514 12.18C6.15392 12.6333 5.52552 12.86 4.76621 12.86C3.84979 12.86 3.09047 12.5533 2.48825 11.94C1.91222 11.3266 1.62421 10.4467 1.62421 9.29999C1.62421 8.07332 1.96459 6.87332 2.64535 5.69999C3.35231 4.49999 4.33418 3.55332 5.59098 2.85999L6.4943 4.25999C5.81354 4.73999 5.26369 5.27332 4.84476 5.85999C4.45201 6.44666 4.19017 7.12666 4.05926 7.89999C4.29491 7.79332 4.56983 7.73999 4.88403 7.73999C5.61716 7.73999 6.21938 7.97999 6.69067 8.45999C7.16197 8.93999 7.39762 9.55333 7.39762 10.3ZM14.6242 10.3C14.6242 11.0733 14.3755 11.7 13.878 12.18C13.3805 12.6333 12.7521 12.86 11.9928 12.86C11.0764 12.86 10.3171 12.5533 9.71484 11.94C9.13881 11.3266 8.85079 10.4467 8.85079 9.29999C8.85079 8.07332 9.19117 6.87332 9.87194 5.69999C10.5789 4.49999 11.5608 3.55332 12.8176 2.85999L13.7209 4.25999C13.0401 4.73999 12.4903 5.27332 12.0713 5.85999C11.6786 6.44666 11.4168 7.12666 11.2858 7.89999C11.5215 7.79332 11.7964 7.73999 12.1106 7.73999C12.8437 7.73999 13.446 7.97999 13.9173 8.45999C14.3886 8.93999 14.6242 9.55333 14.6242 10.3Z" fill="currentColor"/>
-        </svg>
+      {/* Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {testimonials.map((item, idx) => (
+            <div key={idx} className="flex flex-col bg-white/20 backdrop-blur-xl border border-gray-200/50 shadow-sm rounded-xl p-8 dark:bg-neutral-900/60 dark:border-neutral-700/50">
+                <div className="flex-auto">
+                    <p className="text-gray-700 dark:text-neutral-200 text-lg italic">
+                        "{item.quote}"
+                    </p>
+                </div>
 
-        <div className="relative z-10">
-          <p className="text-xl italic text-gray-800 dark:text-white">
-            {t('testimonials.quote')}
-          </p>
-        </div>
-
-        <footer className="mt-6">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <img className="size-8 rounded-full" src={testimonialJosh} alt="Josh Grazioso"/>
+                <div className="mt-6 flex items-center gap-x-4">
+                    <img className="size-10 rounded-full" src={item.avatar} alt={item.author} />
+                    <div>
+                        <h3 className="text-sm font-semibold text-gray-800 dark:text-white">{item.author}</h3>
+                        <p className="text-sm text-gray-500 dark:text-neutral-500">{item.role}</p>
+                    </div>
+                </div>
             </div>
-            <div className="grow ms-4">
-              <div className="font-semibold text-gray-800 dark:text-neutral-200">Josh Grazioso</div>
-              <div className="text-xs text-gray-500 dark:text-neutral-500">{t('testimonials.role')}</div>
-            </div>
-          </div>
-        </footer>
-      </blockquote>
-      {/* <!-- End Blockquote --> */}
-    </div>
-    {/* <!-- End Col --> */}
-
-    <div className="mt-10 lg:mt-0 lg:col-span-6 lg:col-end-13">
-      <div className="space-y-6 sm:space-y-8">
-        {/* <!-- List --> */}
-        <ul className="grid grid-cols-2 divide-y divide-y-2 divide-x divide-x-2 divide-gray-200 overflow-hidden dark:divide-neutral-700">
-          <li className="flex flex-col -m-0.5 p-4 sm:p-8">
-            <div className="flex items-end gap-x-2 text-3xl sm:text-5xl font-bold text-gray-800 mb-2 dark:text-neutral-200">
-              45k+
-            </div>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-neutral-400">
-              {t('testimonials.stats.users')} - {t('testimonials.stats.users_desc')}
-            </p>
-          </li>
-
-          <li className="flex flex-col -m-0.5 p-4 sm:p-8">
-            <div className="flex items-end gap-x-2 text-3xl sm:text-5xl font-bold text-gray-800 mb-2 dark:text-neutral-200">
-              <svg className="flex-shrink-0 size-5 text-indigo-600 dark:text-indigo-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
-              23%
-            </div>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-neutral-400">
-               {t('testimonials.stats.efficiency')}
-            </p>
-          </li>
-
-          <li className="flex flex-col -m-0.5 p-4 sm:p-8">
-            <div className="flex items-end gap-x-2 text-3xl sm:text-5xl font-bold text-gray-800 mb-2 dark:text-neutral-200">
-              <svg className="flex-shrink-0 size-5 text-indigo-600 dark:text-indigo-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
-              9.3%
-            </div>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-neutral-400">
-              {t('testimonials.stats.satisfaction')}
-            </p>
-          </li>
-
-          <li className="flex flex-col -m-0.5 p-4 sm:p-8">
-            <div className="flex items-end gap-x-2 text-3xl sm:text-5xl font-bold text-gray-800 mb-2 dark:text-neutral-200">
-              2x
-            </div>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-neutral-400">
-               {t('testimonials.stats.faster')}
-            </p>
-          </li>
-        </ul>
-        {/* <!-- End List --> */}
+        ))}
       </div>
+
+       {/* Stats Section */}
+       <div className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8 border-t border-gray-200 dark:border-neutral-700 pt-10">
+          <div className="text-center">
+              <h4 className="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-500">45k+</h4>
+              <p className="text-sm text-gray-500 dark:text-neutral-500 mt-2">Active Users</p>
+          </div>
+          <div className="text-center">
+              <h4 className="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-500">99%</h4>
+              <p className="text-sm text-gray-500 dark:text-neutral-500 mt-2">Uptime</p>
+          </div>
+           <div className="text-center">
+              <h4 className="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-500">€2M+</h4>
+              <p className="text-sm text-gray-500 dark:text-neutral-500 mt-2">Processed</p>
+          </div>
+           <div className="text-center">
+              <h4 className="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-500">500+</h4>
+              <p className="text-sm text-gray-500 dark:text-neutral-500 mt-2">Communities</p>
+          </div>
+       </div>
     </div>
-    {/* <!-- End Col --> */}
-  </div>
-  {/* <!-- End Grid --> */}
-</div>
-{/* <!-- End Testimonials with Stats --> */}
-    </>
   )
 }
 

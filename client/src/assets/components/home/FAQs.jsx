@@ -17,68 +17,57 @@ function FAQs() {
   };
 
   return (
-    <>
-    {/* <!-- FAQ --> */}
-<div className="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
-  {/* <!-- Grid --> */}
-  <div className="grid md:grid-cols-5 gap-10">
-    <div className="md:col-span-2">
-      <div className="max-w-xs">
-        <h2 className="text-2xl font-bold md:text-4xl md:leading-tight dark:text-white">
-            {t('faqs.title').split(" ").map((word, i) => (
-              <React.Fragment key={i}>
-                {word} {i === 1 && <br/>} {!((i === 1) || (i === t('faqs.title').split(" ").length - 1)) && " "}
-              </React.Fragment>
-            ))}
-        </h2>
-        <p className="mt-1 hidden md:block text-gray-600 dark:text-neutral-400">
-            {t('faqs.subtitle')}
-        </p>
-      </div>
-    </div>
-    {/* <!-- End Col --> */}
-
-    <div className="md:col-span-3">
-      {/* <!-- Accordion --> */}
-      <div className="hs-accordion-group divide-y divide-gray-200 dark:divide-neutral-700">
-        {faqs.map((faq, index) => (
-          <div 
-            key={faq.id} 
-            className={`hs-accordion pt-6 pb-3 ${activeIndex === index ? 'active' : ''}`} 
-            id={`hs-basic-with-title-and-arrow-stretched-heading-${faq.id}`}
-          >
-            <button 
-              className="hs-accordion-toggle group pb-3 inline-flex items-center justify-between gap-x-3 w-full md:text-lg font-semibold text-start text-gray-800 rounded-lg transition hover:text-gray-500 dark:text-neutral-200 dark:hover:text-neutral-400" 
-              aria-controls={`hs-basic-with-title-and-arrow-stretched-collapse-${faq.id}`}
-              onClick={() => toggleAccordion(index)}
-            >
-              {t(faq.q)}
-              {activeIndex !== index ? (
-                <svg className="block flex-shrink-0 size-5 text-gray-600 group-hover:text-gray-500 dark:text-neutral-400" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-              ) : (
-                <svg className="block flex-shrink-0 size-5 text-gray-600 group-hover:text-gray-500 dark:text-neutral-400" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
-              )}
-            </button>
-            <div 
-              id={`hs-basic-with-title-and-arrow-stretched-collapse-${faq.id}`} 
-              className={`hs-accordion-content w-full overflow-hidden transition-[height] duration-300 ${activeIndex === index ? 'block' : 'hidden'}`} 
-              aria-labelledby={`hs-basic-with-title-and-arrow-stretched-heading-${faq.id}`}
-            >
-              <p className="text-gray-600 dark:text-neutral-400">
-                {t(faq.a)}
-              </p>
-            </div>
+    <div className="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto my-10 relative">
+      
+      <div className="grid md:grid-cols-5 gap-10">
+        <div className="md:col-span-2">
+          <div className="max-w-xs sticky top-24">
+             <h2 className="text-2xl font-bold md:text-3xl md:leading-tight dark:text-white bg-clip-text text-transparent bg-gradient-to-r from-violet-600 to-blue-600 dark:from-violet-400 dark:to-blue-400">
+               {t('faqs.title', 'Frequently Asked Questions')}
+             </h2>
+            <p className="mt-2 hidden md:block text-gray-600 dark:text-neutral-400">
+               {t('faqs.subtitle', 'Answers to the most common questions about our platform.')}
+            </p>
           </div>
-        ))}
+        </div>
+
+        <div className="md:col-span-3">
+          <div className="hs-accordion-group space-y-4">
+            {faqs.map((faq, index) => (
+              <div 
+                key={faq.id} 
+                className={`hs-accordion bg-white/20 dark:bg-neutral-800/60 backdrop-blur-xl border border-white/40 dark:border-neutral-700/50 rounded-2xl p-6 transition-all duration-300 shadow-sm hover:shadow-lg ${activeIndex === index ? 'ring-1 ring-blue-500/30 bg-white/80 dark:bg-neutral-800/80 shadow-md' : ''}`} 
+                id={`faq-${faq.id}`}
+              >
+                <button 
+                  className="hs-accordion-toggle group inline-flex items-center justify-between gap-x-3 w-full md:text-lg font-semibold text-start text-gray-800 dark:text-neutral-200 rounded-lg transition" 
+                  aria-controls={`faq-collapse-${faq.id}`}
+                  onClick={() => toggleAccordion(index)}
+                >
+                  {t(faq.q)}
+                  <span className={`block flex-shrink-0 size-8 text-gray-600 group-hover:text-blue-600 dark:text-neutral-400 transition-transform duration-300 ${activeIndex === index ? 'rotate-180 text-blue-600' : ''}`}>
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                      </svg>
+                  </span>
+                </button>
+                <div 
+                  id={`faq-collapse-${faq.id}`} 
+                  className={`hs-accordion-content w-full overflow-hidden transition-all duration-300 grid ${activeIndex === index ? 'grid-rows-[1fr] opacity-100 mt-4' : 'grid-rows-[0fr] opacity-0 mt-0'}`} 
+                  aria-labelledby={`faq-${faq.id}`}
+                >
+                  <div className="min-h-0">
+                    <p className="text-gray-600 dark:text-neutral-400 leading-relaxed">
+                      {t(faq.a)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
-      {/* <!-- End Accordion --> */}
     </div>
-    {/* <!-- End Col --> */}
-  </div>
-  {/* <!-- End Grid --> */}
-</div>
-{/* <!-- End FAQ --> */}
-    </>
   )
 }
 

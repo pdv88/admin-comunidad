@@ -17,14 +17,14 @@ function Header() {
   };
 
   return (
-    <header className="sticky top-0 inset-x-0 flex flex-wrap md:justify-start md:flex-nowrap z-50 w-full text-sm bg-white/80 backdrop-blur-md border-b border-gray-200 dark:bg-neutral-900/80 dark:border-neutral-700">
+    <header className="fixed top-4 inset-x-0 flex flex-wrap md:justify-start md:flex-nowrap z-50 w-full text-sm">
       <nav
-        className="relative max-w-[85rem] w-full mx-auto px-4 py-3 md:flex md:items-center md:justify-between md:px-6 lg:px-8"
+        className={`relative w-[95%] lg:w-[80%] mx-auto px-4 md:flex md:items-center md:justify-between md:px-6 lg:px-8 bg-white/20 backdrop-blur-xl border border-white/20 shadow-lg shadow-gray-200/30 p-2 dark:bg-neutral-900/60 dark:border-neutral-700/50 dark:shadow-black/20 transition-all duration-300 ${isMenuOpen ? 'rounded-3xl' : 'rounded-full'}`}
         aria-label="Global"
       >
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between w-full md:w-auto">
           <Link
-            className="flex-none text-xl font-bold text-indigo-600 dark:text-indigo-400"
+            className="flex-none text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-400 dark:to-violet-400 px-2"
             to="/"
             aria-label="Brand"
           >
@@ -33,7 +33,7 @@ function Header() {
           <div className="md:hidden">
             <button
               type="button"
-              className="hs-collapse-toggle size-9 flex justify-center items-center text-sm font-semibold rounded-lg border border-gray-200 text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:border-neutral-700 dark:hover:bg-neutral-700"
+              className="hs-collapse-toggle size-9 flex justify-center items-center text-sm font-semibold rounded-full hover:bg-white/20 disabled:opacity-50 disabled:pointer-events-none text-gray-800 dark:text-white dark:hover:bg-neutral-800/50"
               onClick={toggleMenu}
               aria-label="Toggle navigation"
             >
@@ -74,70 +74,52 @@ function Header() {
             </button>
           </div>
         </div>
+
         <div
           id="navbar-collapse-with-animation"
-          className={`hs-collapse overflow-hidden transition-all duration-300 basis-full grow md:block ${isMenuOpen ? 'block' : 'hidden'}`}
+          className={`overflow-hidden transition-all duration-300 ease-out grid md:block ${isMenuOpen ? 'grid-rows-[1fr] opacity-100 mt-2' : 'grid-rows-[0fr] opacity-0 md:opacity-100 md:grid-rows-[1fr] mt-0'}`}
         >
-          <div className="flex flex-col gap-y-4 gap-x-0 mt-5 md:flex-row md:items-center md:justify-end md:gap-y-0 md:gap-x-7 md:mt-0 md:ps-7">
-            <Link
-              className="font-medium text-gray-600 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400"
-              to="/"
-            >
-              {t("header.home")}
-            </Link>
-            <a
-              className="font-medium text-gray-600 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400"
-              href="#features"
-            >
-              {t("header.features")}
-            </a>
-            <a
-              className="font-medium text-gray-600 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400"
-              href="#pricing"
-            >
-              {t("header.pricing")}
-            </a>
-            
-            {user && (
-              <Link
-                className="font-medium text-gray-600 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400"
-                to="/dashboard"
-              >
-                {t("header.dashboard")}
-              </Link>
-            )}
-
-            <div className="flex items-center gap-x-2 md:ms-4">
-              {/* Language Switcher */}
-              <div className="flex bg-gray-100 hover:bg-gray-200 rounded-lg transition p-1 dark:bg-neutral-700 dark:hover:bg-neutral-600">
-                <button
-                  onClick={() => changeLanguage('en')}
-                  className={`px-3 py-1.5 rounded-md text-xs font-bold transition uppercase ${i18n.language === 'en' ? 'bg-white text-gray-800 shadow-sm dark:bg-neutral-800 dark:text-white' : 'text-gray-500 hover:text-gray-700 dark:text-neutral-400 dark:hover:text-neutral-200'}`}
+          <div className="min-h-0">
+            <div className="flex flex-col gap-y-4 gap-x-0 mt-2 md:flex-row md:items-center md:justify-end md:gap-y-0 md:gap-x-1 md:mt-0 md:ps-7">
+              {user && (
+                <Link
+                  className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 rounded-full hover:bg-white/50 transition-colors dark:text-gray-300 dark:hover:text-blue-400 dark:hover:bg-neutral-800"
+                  to="/dashboard"
                 >
-                  En
-                </button>
-                <button
-                  onClick={() => changeLanguage('es')}
-                  className={`px-3 py-1.5 rounded-md text-xs font-bold transition uppercase ${i18n.language === 'es' ? 'bg-white text-gray-800 shadow-sm dark:bg-neutral-800 dark:text-white' : 'text-gray-500 hover:text-gray-700 dark:text-neutral-400 dark:hover:text-neutral-200'}`}
-                >
-                  Es
-                </button>
-              </div>
+                  {t("header.dashboard")}
+                </Link>
+              )}
 
-               <Link
-                to="/login"
-                className="font-medium text-gray-600 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400"
-              >
-                {t("header.login")}
-              </Link>
-              <Link
-                to="/register"
-                className="flex items-center gap-x-2 font-medium text-gray-500 hover:text-indigo-600 md:border-s md:border-gray-300 py-2 md:py-0 md:ps-6 dark:border-neutral-700 dark:text-neutral-400 dark:hover:text-indigo-500"
-              >
-                <span className="flex items-center gap-x-2 font-medium text-white bg-indigo-600 hover:bg-indigo-700 py-2 px-3 rounded-md transition-colors">
+              <div className="flex items-center gap-x-2 md:ms-4">
+                {/* Language Switcher */}
+                <div className="flex bg-gray-100/50 hover:bg-gray-200/50 rounded-full transition p-1 dark:bg-neutral-700/50">
+                  <button
+                    onClick={() => changeLanguage('en')}
+                    className={`px-2 py-1 rounded-full text-[10px] font-bold transition uppercase ${i18n.language === 'en' ? 'bg-white shadow-sm text-blue-600 dark:bg-neutral-800 dark:text-blue-400' : 'text-gray-500 hover:text-gray-700 dark:text-neutral-400'}`}
+                  >
+                    En
+                  </button>
+                  <button
+                    onClick={() => changeLanguage('es')}
+                    className={`px-2 py-1 rounded-full text-[10px] font-bold transition uppercase ${i18n.language === 'es' ? 'bg-white shadow-sm text-blue-600 dark:bg-neutral-800 dark:text-blue-400' : 'text-gray-500 hover:text-gray-700 dark:text-neutral-400'}`}
+                  >
+                    Es
+                  </button>
+                </div>
+
+                <Link
+                  to="/login"
+                  className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors dark:text-gray-300 dark:hover:text-blue-400"
+                >
+                  {t("header.login")}
+                </Link>
+                <Link
+                  to="/register"
+                  className="inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-full border border-transparent bg-gradient-to-r from-blue-600 via-violet-600 to-blue-600 bg-[length:200%_auto] text-white hover:shadow-lg hover:bg-right transition-all duration-500 py-2.5 px-6"
+                >
                   {t("header.register")}
-                </span>
-              </Link>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
