@@ -1,5 +1,6 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next';
+import { FadeIn, StaggerContainer, StaggerItem } from '../AnimationWrapper';
 
 function Testimonials() {
   const { t } = useTranslation();
@@ -28,19 +29,19 @@ function Testimonials() {
   return (
     <div className="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
       {/* Title */}
-      <div className="max-w-2xl mx-auto text-center mb-10 lg:mb-14">
+      <FadeIn className="max-w-2xl mx-auto text-center mb-10 lg:mb-14">
         <h2 className="text-2xl font-bold md:text-4xl md:leading-tight dark:text-white">
           {t('testimonials.title', 'Trusted by Communities Everywhere')}
         </h2>
         <p className="mt-1 text-gray-600 dark:text-neutral-400">
           {t('testimonials.subtitle', 'See what presidents and residents are saying.')}
         </p>
-      </div>
+      </FadeIn>
 
       {/* Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {testimonials.map((item, idx) => (
-            <div key={idx} className="flex flex-col bg-white/20 backdrop-blur-xl border border-gray-200/50 shadow-sm rounded-xl p-8 dark:bg-neutral-900/60 dark:border-neutral-700/50">
+            <StaggerItem key={idx} className="flex flex-col bg-white/20 backdrop-blur-xl border border-gray-200/50 shadow-sm rounded-xl p-8 dark:bg-neutral-900/60 dark:border-neutral-700/50">
                 <div className="flex-auto">
                     <p className="text-gray-700 dark:text-neutral-200 text-lg italic">
                         "{item.quote}"
@@ -54,12 +55,12 @@ function Testimonials() {
                         <p className="text-sm text-gray-500 dark:text-neutral-500">{item.role}</p>
                     </div>
                 </div>
-            </div>
+            </StaggerItem>
         ))}
-      </div>
+      </StaggerContainer>
 
        {/* Stats Section */}
-       <div className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8 border-t border-gray-200 dark:border-neutral-700 pt-10">
+       <FadeIn delay={0.4} className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8 border-t border-gray-200 dark:border-neutral-700 pt-10">
           <div className="text-center">
               <h4 className="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-500">45k+</h4>
               <p className="text-sm text-gray-500 dark:text-neutral-500 mt-2">Active Users</p>
@@ -76,7 +77,7 @@ function Testimonials() {
               <h4 className="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-500">500+</h4>
               <p className="text-sm text-gray-500 dark:text-neutral-500 mt-2">Communities</p>
           </div>
-       </div>
+       </FadeIn>
     </div>
   )
 }

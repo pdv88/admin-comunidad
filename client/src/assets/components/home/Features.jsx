@@ -1,6 +1,7 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import { FadeIn, StaggerContainer, StaggerItem } from '../AnimationWrapper';
 
 function Features() {
   const { t } = useTranslation();
@@ -49,7 +50,7 @@ function Features() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
         
         {/* Intro */}
-         <div className="space-y-6 sm:space-y-8">
+         <FadeIn className="space-y-6 sm:space-y-8">
             <h2 className="font-bold text-3xl lg:text-4xl text-gray-700 dark:text-neutral-200">
                {t('features.main_title', 'Everything you need to manage your community')}
             </h2>
@@ -71,28 +72,30 @@ function Features() {
                   </li>
                ))}
             </ul>
-         </div>
+         </FadeIn>
 
          {/* Bento Grid */}
-         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+         <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {features.map((feature, idx) => (
-               <Link key={idx} to={feature.link} className="group flex flex-col h-full bg-white/20 backdrop-blur-md border border-gray-200/50 shadow-sm rounded-xl p-5 dark:bg-neutral-900/60 dark:border-neutral-700/50 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
-                  <div className={`flex justify-center items-center size-10 rounded-lg ${feature.bg} mb-4`}>
-                     {feature.icon}
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400">
-                     {feature.title}
-                  </h3>
-                  <p className="mt-2 text-gray-500 dark:text-neutral-400 text-sm">
-                     {feature.desc}
-                  </p>
-                  <span className="mt-4 inline-flex items-center gap-x-1.5 text-blue-600 decoration-2 group-hover:underline font-medium text-sm">
-                     {t('common.learn_more', 'Learn more')}
-                     <svg className="flex-shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-                  </span>
-               </Link>
+               <StaggerItem key={idx}>
+                 <Link to={feature.link} className="group flex flex-col h-full bg-white/20 backdrop-blur-md border border-gray-200/50 shadow-sm rounded-xl p-5 dark:bg-neutral-900/60 dark:border-neutral-700/50 hover:shadow-xl transition-all duration-300">
+                    <div className={`flex justify-center items-center size-10 rounded-lg ${feature.bg} mb-4`}>
+                       {feature.icon}
+                    </div>
+                    <h3 className="text-lg font-bold text-gray-700 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                       {feature.title}
+                    </h3>
+                    <p className="mt-2 text-gray-500 dark:text-neutral-400 text-sm">
+                       {feature.desc}
+                    </p>
+                    <span className="mt-4 inline-flex items-center gap-x-1.5 text-blue-600 decoration-2 group-hover:underline font-medium text-sm">
+                       {t('common.learn_more', 'Learn more')}
+                       <svg className="flex-shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                    </span>
+                 </Link>
+               </StaggerItem>
             ))}
-         </div>
+         </StaggerContainer>
 
       </div>
     </div>

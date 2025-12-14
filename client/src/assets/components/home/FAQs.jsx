@@ -1,5 +1,6 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next';
+import { FadeIn, StaggerContainer, StaggerItem } from '../AnimationWrapper';
 
 function FAQs() {
   const { t } = useTranslation();
@@ -21,22 +22,22 @@ function FAQs() {
       
       <div className="grid md:grid-cols-5 gap-10">
         <div className="md:col-span-2">
-          <div className="max-w-xs sticky top-24">
+          <FadeIn className="max-w-xs sticky top-24">
              <h2 className="text-2xl font-bold md:text-3xl md:leading-tight dark:text-white bg-clip-text text-transparent bg-gradient-to-r from-violet-600 to-blue-600 dark:from-violet-400 dark:to-blue-400">
                {t('faqs.title', 'Frequently Asked Questions')}
              </h2>
             <p className="mt-2 hidden md:block text-gray-600 dark:text-neutral-400">
                {t('faqs.subtitle', 'Answers to the most common questions about our platform.')}
             </p>
-          </div>
+          </FadeIn>
         </div>
 
         <div className="md:col-span-3">
-          <div className="hs-accordion-group space-y-4">
+          <StaggerContainer className="hs-accordion-group space-y-4">
             {faqs.map((faq, index) => (
-              <div 
+              <StaggerItem 
                 key={faq.id} 
-                className={`hs-accordion bg-white/20 dark:bg-neutral-800/60 backdrop-blur-xl border border-white/40 dark:border-neutral-700/50 rounded-2xl p-6 transition-all duration-300 shadow-sm hover:shadow-lg ${activeIndex === index ? 'ring-1 ring-blue-500/30 bg-white/80 dark:bg-neutral-800/80 shadow-md' : ''}`} 
+                className={`hs-accordion bg-white/20 dark:bg-neutral-800/60 backdrop-blur-xl border border-white/40 dark:border-neutral-700/50 rounded-2xl p-6 transition-all duration-300 shadow-sm hover:shadow-lg ${activeIndex === index ? 'ring-1 ring-blue-500/30 shadow-md' : ''}`} 
                 id={`faq-${faq.id}`}
               >
                 <button 
@@ -62,9 +63,9 @@ function FAQs() {
                     </p>
                   </div>
                 </div>
-              </div>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerContainer>
         </div>
       </div>
     </div>
