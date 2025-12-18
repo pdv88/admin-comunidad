@@ -6,7 +6,7 @@ import { API_URL } from '../config';
 import ConfirmationModal from '../components/ConfirmationModal';
 
 const Notices = () => {
-    const { user } = useAuth();
+    const { user, activeCommunity } = useAuth();
     const { t } = useTranslation();
     const [notices, setNotices] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -18,21 +18,24 @@ const Notices = () => {
         title: '',
         content: '',
         priority: 'normal',
-        block_id: '' // '' means Global for Admin, or 'first block' for Vocal
+        block_id: '' 
     });
 
     // Delete State
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [noticeToDelete, setNoticeToDelete] = useState(null);
 
-    const role = user?.profile?.roles?.name;
+    const role = activeCommunity?.roles?.name;
     const canCreate = ['admin', 'president', 'secretary', 'vocal'].includes(role);
     const isAdminOrPres = ['admin', 'president', 'secretary'].includes(role);
     const isVocal = role === 'vocal';
 
-    const userUnits = user?.profile?.unit_owners?.map(uo => uo.units) || [];
-    // Extract unique blocks owned by Vocal
-    const vocalBlockIds = [...new Set(userUnits.map(u => u.block_id))].filter(Boolean);
+    // Extract blocks owned by Vocal from profile
+    // Assuming backend populates unit_owners on login or getMe.
+    // If user.profile is legacy, we might need a safer way.
+    // For now, rely on user.unit_owners if user structure updated, or user.profile.unit_owners.
+    const userUnits = user?.unit_owners || user?.profile?.unit_owners || [];
+    const vocalBlockIds = [...new Set(userUnits.map(u => u.units?.block_id).filter(Boolean))];
 
     useEffect(() => {
         if (!canCreate) return; // Redirect logic usually handled by router or layout, but good to check

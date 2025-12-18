@@ -10,9 +10,9 @@ const ProtectedRoute = ({ allowedRoles }) => {
   }
 
   if (allowedRoles && allowedRoles.length > 0) {
-    // Check if user has one of the allowed roles
-    // user.profile.roles is an object with a 'name' property
-    const userRole = user.profile?.roles?.name;
+    // Check if user has one of the allowed roles in the ACTIVE COMMUNITY
+    const { activeCommunity } = useAuth();
+    const userRole = activeCommunity?.roles?.name;
     
     if (!userRole || !allowedRoles.includes(userRole)) {
       // User not authorized, redirect to dashboard

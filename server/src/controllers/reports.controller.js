@@ -3,33 +3,40 @@ const supabaseAdmin = require('../config/supabaseAdmin');
 
 exports.getAll = async (req, res) => {
     const token = req.headers.authorization?.split(' ')[1];
+    const communityId = req.headers['x-community-id'];
+
+    if (!token) return res.status(401).json({ error: 'No token' });
+    if (!communityId) return res.status(400).json({ error: 'Community ID header missing' });
 
     try {
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
         if (authError || !user) throw new Error('Unauthorized');
 
-        // Fetch Full Profile with Roles and Unity Ownership
-        const { data: profile } = await supabaseAdmin
-            .from('profiles')
+        // Fetch Membership
+        const { data: member } = await supabaseAdmin
+            .from('community_members')
             .select(`
-                *,
                 roles(name),
-                unit_owners(
-                    unit_id,
-                    units(
-                        id,
-                        unit_number,
-                        block_id,
-                        blocks(name)
+                profile:profile_id (
+                     unit_owners(
+                        unit_id,
+                        units(
+                            id,
+                            unit_number,
+                            block_id,
+                            blocks(name)
+                        )
                     )
                 )
             `)
-            .eq('id', user.id)
+            .eq('profile_id', user.id)
+            .eq('community_id', communityId)
             .single();
 
-        if (!profile) throw new Error('Profile not found');
+        if (!member) return res.status(403).json({ error: 'Not a member' });
 
-        const role = profile.roles?.name;
+        const role = member.roles?.name;
+        const profile = member.profile;
 
         let query = supabaseAdmin
             .from('reports')
@@ -38,11 +45,12 @@ exports.getAll = async (req, res) => {
                 profiles:user_id (full_name, email),
                 units:unit_id (unit_number, blocks(name))
             `)
+            .eq('community_id', communityId) // Filter by Community
             .order('created_at', { ascending: false });
 
         // RBAC Filtering
         if (['admin', 'president', 'maintenance', 'secretary'].includes(role)) {
-            // See ALL reports
+            // See ALL reports in community
         } else if (role === 'vocal') {
             // See reports for their BLOCKS or their own reports
             const myBlockIds = profile.unit_owners
@@ -50,12 +58,8 @@ exports.getAll = async (req, res) => {
                 .filter(Boolean);
 
             if (myBlockIds && myBlockIds.length > 0) {
-                // Filter by block_id IN myBlockIds OR user_id = me
-                // Supabase syntax for OR with reference to column is tricky in JS client .or()
-                // syntax: .or(`block_id.in.(${myBlockIds.join(',')}),user_id.eq.${user.id}`)
                 query = query.or(`block_id.in.(${myBlockIds.join(',')}),user_id.eq.${user.id}`);
             } else {
-                // Fallback if no blocks assigned, just own
                 query = query.eq('user_id', user.id);
             }
         } else {
@@ -76,12 +80,27 @@ exports.getAll = async (req, res) => {
 exports.create = async (req, res) => {
     const { title, description, category, image_url, unit_id } = req.body;
     const token = req.headers.authorization?.split(' ')[1];
+    const communityId = req.headers['x-community-id'];
+
+    if (!communityId) return res.status(400).json({ error: 'Community ID header missing' });
 
     try {
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
         if (authError || !user) throw new Error('Unauthorized');
 
-        // If unit_id provided, fetch block_id
+        // Verify membership? Assuming frontend sends correct ID, but better to check if user belongs.
+        // For efficiency, we might skip full role check here if "create report" is allowed for all members.
+        // But verifying membership prevents data injection into random communities.
+        const { data: member } = await supabaseAdmin // Lightweight check
+            .from('community_members')
+            .select('id')
+            .eq('profile_id', user.id)
+            .eq('community_id', communityId)
+            .single();
+
+        if (!member) return res.status(403).json({ error: 'Not a member of this community' });
+
+        // If unit_id provided, fetch block_id (ensure unit is in THIS community? Not checked here, assumes valid unit)
         let block_id = null;
         if (unit_id) {
             const { data: unit } = await supabaseAdmin
@@ -96,6 +115,7 @@ exports.create = async (req, res) => {
             .from('reports')
             .insert([{
                 user_id: user.id,
+                community_id: communityId,
                 title,
                 description,
                 category,
@@ -117,22 +137,34 @@ exports.create = async (req, res) => {
 
 exports.update = async (req, res) => {
     const { id } = req.params;
-    const { status } = req.body; // changing status
+    const { status } = req.body;
     const token = req.headers.authorization?.split(' ')[1];
+    const communityId = req.headers['x-community-id'];
+
+    if (!communityId) return res.status(400).json({ error: 'Community ID header missing' });
 
     try {
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
         if (authError || !user) throw new Error('Unauthorized');
 
-        const { data: profile } = await supabaseAdmin
-            .from('profiles')
-            .select(`*, roles(name), unit_owners(units(block_id))`)
-            .eq('id', user.id)
+        const { data: member } = await supabaseAdmin
+            .from('community_members')
+            .select(`
+                roles(name),
+                profile:profile_id (
+                     unit_owners(units(block_id))
+                )
+            `)
+            .eq('profile_id', user.id)
+            .eq('community_id', communityId)
             .single();
 
-        const role = profile.roles?.name;
+        if (!member) return res.status(403).json({ error: 'Not a member' });
 
-        // Fetch Report to check ownership/block
+        const role = member.roles?.name;
+        const profile = member.profile;
+
+        // Fetch Report
         const { data: report } = await supabaseAdmin
             .from('reports')
             .select('*')
@@ -140,6 +172,7 @@ exports.update = async (req, res) => {
             .single();
 
         if (!report) throw new Error('Report not found');
+        if (report.community_id !== communityId) return res.status(404).json({ error: 'Report not in this community' });
 
         // Authorization Logic
         let isAuthorized = false;
@@ -147,14 +180,11 @@ exports.update = async (req, res) => {
         if (['admin', 'president', 'maintenance'].includes(role)) {
             isAuthorized = true;
         } else if (role === 'vocal') {
-            // Authorized if report is in vocal's block
             const vocalBlockIds = profile.unit_owners?.map(uo => uo.units?.block_id);
             if (vocalBlockIds?.includes(report.block_id)) {
                 isAuthorized = true;
             }
         }
-
-        // Residents CANNOT update status (except maybe cancel if pending, not impl yet)
 
         if (!isAuthorized) {
             return res.status(403).json({ error: 'Unauthorized to update status' });
@@ -166,10 +196,8 @@ exports.update = async (req, res) => {
             .eq('id', id);
 
         if (updateError) throw updateError;
-
         res.json({ message: 'Status updated' });
     } catch (err) {
-        console.error('Update Report Error:', err);
         res.status(400).json({ error: err.message });
     }
 };
@@ -177,28 +205,35 @@ exports.update = async (req, res) => {
 exports.delete = async (req, res) => {
     const { id } = req.params;
     const token = req.headers.authorization?.split(' ')[1];
+    const communityId = req.headers['x-community-id'];
+
+    if (!communityId) return res.status(400).json({ error: 'Community ID header missing' });
 
     try {
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
         if (authError || !user) throw new Error('Unauthorized');
 
-        const { data: profile } = await supabaseAdmin
-            .from('profiles')
+        const { data: member } = await supabaseAdmin
+            .from('community_members')
             .select('roles(name)')
-            .eq('id', user.id)
+            .eq('profile_id', user.id)
+            .eq('community_id', communityId)
             .single();
 
-        const role = profile.roles?.name;
+        if (!member) return res.status(403).json({ error: 'Not a member' });
+        const role = member.roles?.name;
 
         if (['admin', 'president'].includes(role)) {
-            // Admin/President can delete anything
-            const { error } = await supabaseAdmin.from('reports').delete().eq('id', id);
+            // Verify report belongs to community
+            const { error } = await supabaseAdmin.from('reports').delete().eq('id', id).eq('community_id', communityId);
             if (error) throw error;
         } else {
             // Regular users can only delete their own PENDING reports
-            const { data: report } = await supabaseAdmin.from('reports').select('user_id, status').eq('id', id).single();
+            const { data: report } = await supabaseAdmin.from('reports').select('user_id, status, community_id').eq('id', id).single();
 
             if (!report) return res.status(404).json({ error: 'Report not found' });
+
+            if (report.community_id !== communityId) return res.status(403).json({ error: 'Wrong community' });
 
             if (report.user_id !== user.id) {
                 return res.status(403).json({ error: 'Unauthorized' });

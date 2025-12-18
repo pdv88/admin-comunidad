@@ -4,5 +4,6 @@ const communitiesController = require('../controllers/communities.controller');
 
 router.get('/my', communitiesController.getMyCommunity);
 router.put('/update', communitiesController.updateCommunity);
+router.post('/create', communitiesController.createCommunity);
 
 module.exports = router;

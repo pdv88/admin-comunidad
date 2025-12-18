@@ -4,9 +4,47 @@ const randomstring = require('randomstring');
 
 exports.listUsers = async (req, res) => {
     try {
-        const { data, error } = await supabase.from('profiles').select('*, roles(name), unit_owners(unit_id, units(*))');
+        const communityId = req.headers['x-community-id'];
+        if (!communityId) return res.status(400).json({ error: 'Community ID header missing' });
+
+        // Fetch members of the specific community
+        // Note: unit_owners is related to profiles, not community_members directly.
+        const { data, error } = await supabase
+            .from('community_members')
+            .select(`
+                *,
+                profiles (
+                    *,
+                    unit_owners (
+                        unit_id,
+                        units ( * )
+                    )
+                ),
+                roles ( name )
+            `)
+            .eq('community_id', communityId);
+
         if (error) throw error;
-        res.json(data);
+
+        // Flatten structure for frontend compatibility
+        const users = data.map(member => {
+            const profile = member.profiles || {};
+            const rawUnits = profile.unit_owners || [];
+
+            // Filter units to only show ones belonging to this community
+            // (Assuming units table has community_id populated)
+            const communityUnits = rawUnits.filter(uo => uo.units && uo.units.community_id === communityId);
+
+            return {
+                ...profile,   // Profile details
+                roles: member.roles,  // Role details
+                unit_owners: communityUnits, // Frontend expects 'unit_owners' array on the user object for the table mapping
+                community_member_id: member.id,
+                role_id: member.role_id
+            };
+        });
+
+        res.json(users);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -14,43 +52,46 @@ exports.listUsers = async (req, res) => {
 
 exports.inviteUser = async (req, res) => {
     const { email, fullName, roleName, unitIds } = req.body;
+    const communityId = req.headers['x-community-id'];
+
+    if (!communityId) return res.status(400).json({ error: 'Community ID header missing' });
 
     try {
-        // 1. Get Inviter's Community ID
+        // 1. Verify Inviter's Permission in this Community
         const token = req.headers.authorization?.split(' ')[1];
         if (!token) throw new Error('No token provided');
 
         const { data: { user: inviterUser }, error: authError } = await supabase.auth.getUser(token);
         if (authError || !inviterUser) throw new Error('Invalid token');
 
-        const { data: inviterProfile } = await supabase
-            .from('profiles')
-            .select('community_id')
-            .eq('id', inviterUser.id)
+        // Check if inviter is Admin/President/Secretary in this community
+        const { data: membership, error: memberError } = await supabase
+            .from('community_members')
+            .select('roles(name)')
+            .eq('profile_id', inviterUser.id)
+            .eq('community_id', communityId)
             .single();
 
-        if (!inviterProfile?.community_id) {
-            throw new Error('Inviter does not belong to a community.');
+        if (memberError || !membership) throw new Error('Inviter is not a member of this community');
+
+        const allowedRoles = ['president', 'admin', 'secretary'];
+        if (!allowedRoles.includes(membership.roles.name)) {
+            throw new Error('Insufficient permissions to invite users');
         }
 
-        // 2. Generate a temp password (or rely on magic link, but creating user requires password usually)
-        // With inviteUserByEmail we don't need password.
-
+        // 2. Invite User
         const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
             data: {
                 full_name: fullName,
                 is_admin_registration: false,
-                community_id: inviterProfile.community_id // Metadata backup
+                community_id: communityId // Metadata backup
             },
             redirectTo: (process.env.CLIENT_URL || 'http://localhost:5173') + '/update-password'
         });
 
         if (error) throw error;
 
-        // 3. We need to assign the role and unit to this new user.
-        // The trigger 'handle_new_user' might run on insert to auth.users.
-        // The default trigger assigns 'neighbor'. We can update it now.
-
+        // 3. Add to community_members
         const userId = data.user.id;
 
         // Find role ID
@@ -62,25 +103,27 @@ exports.inviteUser = async (req, res) => {
 
         if (roleError) throw roleError;
 
-        // Update profile role AND community_id
-        const { error: updateError } = await supabaseAdmin
-            .from('profiles')
-            .update({
-                role_id: roleData.id,
-                community_id: inviterProfile.community_id // Explicitly set community ID
-            })
-            .eq('id', userId);
+        // Insert into community_members
+        // Use UPSERT to handle re-invites or if profile already existed
+        const { error: memberInsertError } = await supabaseAdmin
+            .from('community_members')
+            .upsert({
+                profile_id: userId,
+                community_id: communityId,
+                role_id: roleData.id
+            });
 
-        if (updateError) throw updateError;
+        if (memberInsertError) throw memberInsertError;
 
         // Assign units if any
         if (unitIds && unitIds.length > 0) {
             const unitInserts = unitIds.map(uid => ({
                 profile_id: userId,
                 unit_id: uid,
-                is_primary: false // Or true for first one?
+                is_primary: false
             }));
 
+            // Note: unit_owners might need community_id context check, but IDs are unique globally usually.
             const { error: ownersError } = await supabaseAdmin
                 .from('unit_owners')
                 .insert(unitInserts);
@@ -97,8 +140,10 @@ exports.inviteUser = async (req, res) => {
 }
 
 exports.updateUser = async (req, res) => {
-    const { id } = req.params;
+    const { id } = req.params; // potentially the community_member_id or profile_id
+    // Ideally we pass profile_id. Let's assume ID is profile_id for now as it's standard.
     const { roleName, unitIds } = req.body;
+    const communityId = req.headers['x-community-id'];
 
     try {
         // Find role ID if roleName is provided
@@ -114,29 +159,42 @@ exports.updateUser = async (req, res) => {
             roleId = roleData.id;
         }
 
-        // Prepare update object
-        const updates = {};
-        if (roleId) updates.role_id = roleId;
-        // Don't update unit_id in profiles anymore
+        // Update Community Member Role
+        if (roleId) {
+            const { error: updateError } = await supabaseAdmin
+                .from('community_members')
+                .update({ role_id: roleId })
+                .eq('profile_id', id)
+                .eq('community_id', communityId);
 
-        // Update Profile
-        const { data, error } = await supabaseAdmin
-            .from('profiles')
-            .update(updates)
-            .eq('id', id)
-            .select();
-
-        if (error) throw error;
+            if (updateError) throw updateError;
+        }
 
         // Update Units
         if (unitIds !== undefined) {
-            // Delete existing
-            const { error: delError } = await supabaseAdmin
+            // 1. Get IDs of units in this community to identify which ownerships to delete
+            // We want to delete ownerships where unit -> block -> community_id = current
+            // Since we can't do complex joins in delete, we fetch relevant ownership IDs first.
+
+            // Or safer: Fetch all unit_owners for this profile, verify which belong to this community, then delete specific IDs.
+            const { data: userOwnerships } = await supabaseAdmin
                 .from('unit_owners')
-                .delete()
+                .select('id, units(block_id, blocks(community_id))')
                 .eq('profile_id', id);
 
-            if (delError) throw delError;
+            if (userOwnerships) {
+                const idsToDelete = userOwnerships
+                    .filter(uo => uo.units?.blocks?.community_id === communityId)
+                    .map(uo => uo.id);
+
+                if (idsToDelete.length > 0) {
+                    const { error: delError } = await supabaseAdmin
+                        .from('unit_owners')
+                        .delete()
+                        .in('id', idsToDelete);
+                    if (delError) throw delError;
+                }
+            }
 
             // Insert new
             if (unitIds.length > 0) {
@@ -152,7 +210,7 @@ exports.updateUser = async (req, res) => {
             }
         }
 
-        res.json(data[0]);
+        res.json({ message: 'User updated' });
     } catch (err) {
         console.error("Update user error:", err);
         res.status(400).json({ error: err.message });

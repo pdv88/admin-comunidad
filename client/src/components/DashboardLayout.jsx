@@ -4,9 +4,10 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 import AnimatedBackground from '../assets/components/AnimatedBackground';
+import CommunitySwitcher from './CommunitySwitcher';
 
 const DashboardLayout = ({ children }) => {
-    const { logout, user } = useAuth();
+    const { logout, user, activeCommunity } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
     const { t } = useTranslation();
@@ -61,13 +62,16 @@ const DashboardLayout = ({ children }) => {
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
+                
+                {/* Community Switcher */}
+                <CommunitySwitcher />
 
                 {/* Nav Links - Scrollable area */}
                 <nav className="flex-1 px-4 space-y-2 overflow-y-auto customer-scrollbar">
                     <Link to="/app/dashboard" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/dashboard')}`}>
                         {t('dashboard_layout.nav.dashboard')}
                     </Link>
-                    {['admin', 'president', 'secretary', 'vocal'].includes(user?.profile?.roles?.name) && (
+                    {['admin', 'president', 'secretary', 'vocal'].includes(activeCommunity?.roles?.name) && (
                         <Link to="/app/notices" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/notices')}`}>
                              {t('dashboard_layout.nav.notices')}
                         </Link>
@@ -84,7 +88,7 @@ const DashboardLayout = ({ children }) => {
                     <Link to="/app/campaigns" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/campaigns')}`}>
                         {t('dashboard_layout.nav.campaigns')}
                     </Link>
-                    {(user?.profile?.roles?.name === 'admin' || user?.profile?.roles?.name === 'president') && (
+                    {(activeCommunity?.roles?.name === 'admin' || activeCommunity?.roles?.name === 'president') && (
                         <>
                             <div className="pt-4 pb-2">
                                 <div className="h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-neutral-600 to-transparent mb-3 opacity-50"></div>
@@ -117,7 +121,7 @@ const DashboardLayout = ({ children }) => {
                                     {user?.user_metadata?.full_name || user?.email}
                                 </Link>
                                 <span className="text-xs text-gray-500 dark:text-gray-400 capitalize truncate">
-                                    {displayRole(user?.profile?.roles?.name)}
+                                    {displayRole(activeCommunity?.roles?.name)}
                                 </span>
                             </div>
                         </div>

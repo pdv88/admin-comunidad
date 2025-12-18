@@ -59,7 +59,9 @@ const UserManagement = () => {
                 fetch(`${API_URL}/api/users`),
                 fetch(`${API_URL}/api/properties/blocks`)
             ]);
-            setUsers(await usersRes.json());
+            const usersData = await usersRes.json();
+            setUsers(Array.isArray(usersData) ? usersData : []); // Safety check
+            
             const blocksData = await blocksRes.json();
             // Flatten units for dropdown
             setBlocks(blocksData); 

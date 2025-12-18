@@ -3,41 +3,49 @@ const supabaseAdmin = require('../config/supabaseAdmin');
 
 exports.getAll = async (req, res) => {
     const token = req.headers.authorization?.split(' ')[1];
+    const communityId = req.headers['x-community-id'];
+
+    if (!token) return res.status(401).json({ error: 'No token' });
+    if (!communityId) return res.status(400).json({ error: 'Community ID header missing' });
 
     try {
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
         if (authError || !user) throw new Error('Unauthorized');
 
-        // Fetch User Profile & Roles
-        const { data: profile } = await supabaseAdmin
-            .from('profiles')
+        // Fetch Membership & Roles
+        const { data: member } = await supabaseAdmin
+            .from('community_members')
             .select(`
-                *,
                 roles(name),
-                unit_owners(
-                    unit_id,
-                    units(
-                        id,
-                        block_id
+                profile:profile_id (
+                     unit_owners(
+                        unit_id,
+                        units(
+                            id,
+                            block_id
+                        )
                     )
                 )
             `)
-            .eq('id', user.id)
+            .eq('profile_id', user.id)
+            .eq('community_id', communityId)
             .single();
 
-        if (!profile) throw new Error('Profile not found');
+        if (!member) return res.status(403).json({ error: 'Not a member' });
 
-        const role = profile.roles?.name;
+        const role = member.roles?.name;
+        const profile = member.profile; // joined profile data
 
         // Base Query
         let query = supabaseAdmin
             .from('notices')
             .select('*')
+            .eq('community_id', communityId) // Filter by Community
             .order('created_at', { ascending: false });
 
-        // RBAC Filtering
+        // RBAC Filtering - Block Level
         if (['admin', 'president', 'secretary', 'maintenance'].includes(role)) {
-            // See ALL notices (Global + All Blocks)
+            // See ALL notices in this community
         } else {
             // Vocals and Residents: See Global (block_id IS NULL) + Their Blocks
             const myBlockIds = profile.unit_owners
@@ -45,10 +53,8 @@ exports.getAll = async (req, res) => {
                 .filter(Boolean);
 
             if (myBlockIds && myBlockIds.length > 0) {
-                // block_id IS NULL OR block_id IN (myBlockIds)
                 query = query.or(`block_id.is.null,block_id.in.(${myBlockIds.join(',')})`);
             } else {
-                // Only Global
                 query = query.is('block_id', null);
             }
         }
@@ -66,33 +72,43 @@ exports.getAll = async (req, res) => {
 exports.create = async (req, res) => {
     const { title, content, priority, block_id } = req.body;
     const token = req.headers.authorization?.split(' ')[1];
+    const communityId = req.headers['x-community-id'];
+
+    if (!communityId) return res.status(400).json({ error: 'Community ID header missing' });
 
     try {
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
         if (authError || !user) throw new Error('Unauthorized');
 
-        const { data: profile } = await supabaseAdmin
-            .from('profiles')
-            .select(`*, roles(name), unit_owners(units(block_id))`)
-            .eq('id', user.id)
+        const { data: member } = await supabaseAdmin
+            .from('community_members')
+            .select(`
+                roles(name),
+                profile:profile_id (
+                     unit_owners(units(block_id))
+                )
+            `)
+            .eq('profile_id', user.id)
+            .eq('community_id', communityId)
             .single();
 
-        const role = profile.roles?.name;
+        if (!member) return res.status(403).json({ error: 'Not a member' });
 
-        // 1. Permission Check: Who can create notices?
+        const role = member.roles?.name;
+        const profile = member.profile;
+
+        // 1. Permission Check
         if (!['admin', 'president', 'secretary', 'vocal'].includes(role)) {
             return res.status(403).json({ error: 'Unauthorized to create notices' });
         }
 
-        // 2. Scope Check: Can this user post to this scope?
-        let finalBlockId = block_id || null; // Force null if undefined
+        // 2. Scope Check
+        let finalBlockId = block_id || null;
 
         if (role === 'vocal') {
-            // Vocals MUST post to a specific block they own
             const vocalBlockIds = profile.unit_owners?.map(uo => uo.units?.block_id);
 
             if (!finalBlockId) {
-                // If they didn't select one, and they have exactly one, default to it
                 if (vocalBlockIds.length === 1) {
                     finalBlockId = vocalBlockIds[0];
                 } else {
@@ -100,17 +116,16 @@ exports.create = async (req, res) => {
                 }
             }
 
-            // Verify they own the block they are posting to
             if (!vocalBlockIds.includes(finalBlockId)) {
                 return res.status(403).json({ error: 'You can only post notices for your assigned blocks' });
             }
         }
-        // Admins/Presidents can post Global (null) or Any Block (id) - no extra checks needed
 
         const { data: notice, error } = await supabaseAdmin
             .from('notices')
             .insert([{
                 created_by: user.id,
+                community_id: communityId,
                 title,
                 content,
                 priority: priority || 'normal',
@@ -131,25 +146,28 @@ exports.create = async (req, res) => {
 exports.delete = async (req, res) => {
     const { id } = req.params;
     const token = req.headers.authorization?.split(' ')[1];
+    const communityId = req.headers['x-community-id'];
+
+    if (!communityId) return res.status(400).json({ error: 'Community ID header missing' });
 
     try {
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
         if (authError || !user) throw new Error('Unauthorized');
 
-        const { data: profile } = await supabaseAdmin
-            .from('profiles')
+        const { data: member } = await supabaseAdmin
+            .from('community_members')
             .select('roles(name)')
-            .eq('id', user.id)
+            .eq('profile_id', user.id)
+            .eq('community_id', communityId)
             .single();
 
-        const role = profile.roles?.name;
+        if (!member) return res.status(403).json({ error: 'Not a member' });
+        const role = member.roles?.name;
 
         if (['admin', 'president'].includes(role)) {
-            // Admin can delete any
             const { error } = await supabaseAdmin.from('notices').delete().eq('id', id);
             if (error) throw error;
         } else {
-            // Others (Vocal/Secretary) can only delete their own
             const { data: notice } = await supabaseAdmin.from('notices').select('created_by').eq('id', id).single();
             if (!notice || notice.created_by !== user.id) {
                 return res.status(403).json({ error: 'Unauthorized' });

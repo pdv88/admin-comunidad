@@ -29,49 +29,32 @@ exports.register = async (req, res) => {
             options: {
                 data: {
                     full_name: fullName,
-                    is_admin_registration: true,
-                    // Store community_id in metadata as backup/reference
-                    community_id: communityId
+                    is_admin_registration: true
+                    // community_id is no longer stored in metadata as primary link
                 },
             },
         });
 
         if (error) {
-            // Rollback community creation if auth fails? 
-            // For MVP, we might leave a ghost community or try to delete it.
-            // Let's try to cleanup.
+            // Cleanup ghost community
             await require('../config/supabaseAdmin').from('communities').delete().eq('id', communityId);
             throw error;
         }
 
-        // 3. Link User Profile to Community
-        // We need to wait for trigger or manually update. 
-        // Since we have supabaseAdmin and want to be sure, let's manually update/ensure.
-        // If trigger creates profile, we update it. If not, we insert it.
-
-        // Wait a moment for trigger? Or just use Upsert.
-        // Let's use Upsert with the same ID.
+        // 3. Create Profile (if not exists)
         const { error: profileError } = await require('../config/supabaseAdmin')
             .from('profiles')
             .upsert({
                 id: data.user.id,
                 email: email,
-                full_name: fullName,
-                community_id: communityId,
-                // Admin role usually has specific ID, but let's assume default trigger sets it or we set it here.
-                // If this is a NEW community, this user MUST be an Admin.
-                // We should probably set the role to 'admin' explicitly given they registered a new community.
-                // Hardcoding admin role UUID for now or looking it up?
-                // Better to look it up, but for speed let's assume the 'admin' role name logic or ID.
-                // Let's just update community_id for now and rely on is_admin_registration logic or manual promotion if needed.
-                // Actually, if they register a community, they SHOULD be admin.
+                full_name: fullName
             })
             .select();
 
-        // Use a separate step to ensure Role is Admin if possible, but 'is_admin_registration' metadata 
-        // might be used by a trigger to assign role.
-        // If we don't have that trigger logic verified, we should manually set the role here.
-        // Let's fetch the 'admin' role ID.
+        if (profileError) console.error("Profile creation error:", profileError);
+
+        // 4. Link User to Community as Admin
+        // Fetch 'admin' role ID
         const { data: roleData } = await require('../config/supabaseAdmin')
             .from('roles')
             .select('id')
@@ -80,14 +63,12 @@ exports.register = async (req, res) => {
 
         if (roleData) {
             await require('../config/supabaseAdmin')
-                .from('profiles')
-                .update({ role_id: roleData.id })
-                .eq('id', data.user.id);
-        }
-
-        if (profileError) {
-            console.error("Error linking profile to community:", profileError);
-            // Non-fatal? The user exists.
+                .from('community_members')
+                .insert({
+                    profile_id: data.user.id,
+                    community_id: communityId,
+                    role_id: roleData.id
+                });
         }
 
         res.status(201).json({
@@ -117,22 +98,28 @@ exports.login = async (req, res) => {
             throw error;
         }
 
-        // Fetch user profile with role
-        // Fetch user profile with role using Admin client to bypass RLS
+        // Fetch user profile
         const { data: profile, error: profileError } = await require('../config/supabaseAdmin')
             .from('profiles')
-            .select('*, roles(*), unit_owners(units(*, blocks(*)))')
+            .select('*')
             .eq('id', data.user.id)
             .single();
 
-        if (profileError) {
-            console.error("Profile fetch error:", profileError);
-        }
+        if (profileError) console.error("Profile fetch error:", profileError);
+
+        // Fetch Communities and Roles
+        const { data: communities, error: commError } = await require('../config/supabaseAdmin')
+            .from('community_members')
+            .select('*, communities(*), roles(*)')
+            .eq('profile_id', data.user.id);
+
+        if (commError) console.error("Community fetch error:", commError);
 
         res.status(200).json({
             message: 'Login successful',
             token: data.session.access_token,
-            user: { ...data.user, profile }
+            user: { ...data.user, profile },
+            communities: communities || [] // Return list of communities
         });
 
     } catch (error) {
@@ -153,7 +140,7 @@ exports.getMe = async (req, res) => {
         // Fetch profile
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
-            .select('*, roles(*), unit_owners(units(*, blocks(*)))')
+            .select('*')
             .eq('id', user.id)
             .single();
 
@@ -161,10 +148,15 @@ exports.getMe = async (req, res) => {
             console.error("Profile fetch error:", profileError);
         }
 
-
+        // Fetch Communities
+        const { data: communities, error: commError } = await supabase
+            .from('community_members')
+            .select('*, communities(*), roles(*)')
+            .eq('profile_id', user.id);
 
         res.status(200).json({
-            user: { ...user, profile }
+            user: { ...user, profile },
+            communities: communities || []
         });
 
     } catch (error) {

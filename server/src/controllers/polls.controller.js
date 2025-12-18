@@ -3,31 +3,29 @@ const supabaseAdmin = require('../config/supabaseAdmin');
 
 exports.getAll = async (req, res) => {
     const token = req.headers.authorization?.split(' ')[1];
+    const communityId = req.headers['x-community-id'];
+
     if (!token) return res.status(401).json({ error: 'No token' });
+    if (!communityId) return res.status(400).json({ error: 'Community ID header missing' });
 
     try {
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
         if (authError || !user) throw new Error('Invalid token');
 
-        // Fetch full profile to get community_id and unit info (for block targeting)
+        // Fetch full profile to get unit info (for block targeting)
+        // Note: unit_owners might span multiple communities, but block_id usually unique.
         const { data: profile } = await supabaseAdmin
             .from('profiles')
-            .select('*, unit_owners(units(block_id))') // Assuming structure
+            .select('*, unit_owners(units(block_id))')
             .eq('id', user.id)
             .single();
 
         if (!profile) throw new Error('Profile not found');
-        const communityId = profile.community_id;
-
-        if (!communityId) {
-            // New users might not have a community_id yet, return empty to avoid UUID error
-            return res.json([]);
-        }
 
         // Get user's block IDs (could be multiple if multiple units)
         const userBlockIds = profile.unit_owners?.map(uo => uo.units?.block_id).filter(Boolean) || [];
 
-        // 1. Fetch Polls for this Community (Using Admin to bypass RLS, we prefer filtering explicitly)
+        // 1. Fetch Polls for this Community
         let query = supabaseAdmin
             .from('polls')
             .select(`
@@ -43,7 +41,7 @@ exports.getAll = async (req, res) => {
         const { data: polls, error } = await query;
         if (error) throw error;
 
-        // 2. Fetch My Votes explicitly (since admin returns ALL votes if we matched in the join)
+        // 2. Fetch My Votes explicitly
         const pollIds = polls.map(p => p.id);
         const { data: myVotes } = await supabaseAdmin
             .from('poll_votes')
@@ -57,26 +55,18 @@ exports.getAll = async (req, res) => {
         }
 
         // 3. Filter by Targeting and Enhance with Counts
-
         const visiblePolls = polls.filter(p => {
             if (p.target_type === 'all') return true;
             if (p.target_type === 'blocks' && p.target_blocks) {
-                // Check if any of user's blocks match target list
                 return p.target_blocks.some(tb => userBlockIds.includes(tb));
             }
-            // Default show if logic unclear
             return true;
         });
 
-        // 3. Fetch Vote Counts (Securely)
+        // 4. Fetch Vote Counts (Securely)
         const enhancedPolls = await Promise.all(visiblePolls.map(async (p) => {
-            // Get counts
             const { data: counts } = await supabaseAdmin.rpc('get_poll_results', { poll_id: p.id });
-
-            // Calc total votes
             const totalVotes = counts ? counts.reduce((acc, curr) => acc + curr.vote_count, 0) : 0;
-
-            // Check if voted
             const myVote = myVoteMap.get(p.id) || null;
 
             return {
@@ -84,7 +74,7 @@ exports.getAll = async (req, res) => {
                 total_votes: totalVotes,
                 my_vote: myVote,
                 user_voted: !!myVote,
-                results: counts // Detailed results [ {option_id, vote_count} ]
+                results: counts
             };
         }));
 
@@ -98,23 +88,26 @@ exports.getAll = async (req, res) => {
 exports.create = async (req, res) => {
     const { title, description, options, deadline, targetType, targetBlocks } = req.body;
     const token = req.headers.authorization?.split(' ')[1];
+    const communityId = req.headers['x-community-id'];
+
+    if (!communityId) return res.status(400).json({ error: 'Community ID header missing' });
 
     try {
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
         if (authError) throw authError;
 
-        // Get Community ID and Roles
-        const { data: profile } = await supabaseAdmin
-            .from('profiles')
-            .select('*, roles(name)')
-            .eq('id', user.id)
+        // Check Permissions in Community Members
+        const { data: member } = await supabaseAdmin
+            .from('community_members')
+            .select('roles(name)')
+            .eq('profile_id', user.id)
+            .eq('community_id', communityId)
             .single();
 
-        if (!profile) throw new Error('Profile not found');
+        if (!member) return res.status(403).json({ error: 'Not a member of this community' });
 
-        // Security Check: Role
         const allowedRoles = ['admin', 'president', 'secretary'];
-        if (!allowedRoles.includes(profile.roles?.name)) {
+        if (!allowedRoles.includes(member.roles?.name)) {
             return res.status(403).json({ error: 'Unauthorized: Only admins can create polls.' });
         }
 
@@ -125,7 +118,7 @@ exports.create = async (req, res) => {
                 title,
                 description,
                 created_by: user.id,
-                community_id: profile.community_id,
+                community_id: communityId,
                 ends_at: deadline,
                 target_type: targetType || 'all',
                 target_blocks: targetBlocks || null
@@ -162,12 +155,10 @@ exports.vote = async (req, res) => {
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
         if (authError || !user) throw new Error('Unauthorized');
 
-        // Strict user ID check
         if (user.id !== user_id) {
             return res.status(403).json({ error: 'Cannot vote for another user' });
         }
 
-        // Check if Poll is expired
         const { data: poll } = await supabaseAdmin
             .from('polls')
             .select('ends_at')
@@ -178,8 +169,6 @@ exports.vote = async (req, res) => {
             return res.status(400).json({ error: 'Poll has ended' });
         }
 
-        // Upsert Vote (Insert or Update if exists)
-        // We rely on the unique constraint (poll_id, user_id) to handle the conflict
         const { data, error } = await supabaseAdmin
             .from('poll_votes')
             .upsert({
@@ -199,20 +188,24 @@ exports.vote = async (req, res) => {
 exports.deletePoll = async (req, res) => {
     const { id } = req.params;
     const token = req.headers.authorization?.split(' ')[1];
+    const communityId = req.headers['x-community-id'];
+
+    if (!communityId) return res.status(400).json({ error: 'Community ID header missing' });
 
     try {
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
         if (authError || !user) throw new Error('Unauthorized');
 
-        // Check Role/Ownership
-        const { data: profile } = await supabaseAdmin
-            .from('profiles')
+        // Check Permissions
+        const { data: member } = await supabaseAdmin
+            .from('community_members')
             .select('roles(name)')
-            .eq('id', user.id)
+            .eq('profile_id', user.id)
+            .eq('community_id', communityId)
             .single();
 
         const allowedRoles = ['admin', 'president', 'secretary'];
-        if (!allowedRoles.includes(profile?.roles?.name)) {
+        if (!member || !allowedRoles.includes(member.roles?.name)) {
             return res.status(403).json({ error: 'Unauthorized' });
         }
 
@@ -232,25 +225,27 @@ exports.update = async (req, res) => {
     const { id } = req.params;
     const { title, description, deadline, targetType, targetBlocks } = req.body;
     const token = req.headers.authorization?.split(' ')[1];
+    const communityId = req.headers['x-community-id'];
+
+    if (!communityId) return res.status(400).json({ error: 'Community ID header missing' });
 
     try {
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
         if (authError || !user) throw new Error('Unauthorized');
 
-        // Check Role
-        const { data: profile } = await supabaseAdmin
-            .from('profiles')
+        // Check Permission
+        const { data: member } = await supabaseAdmin
+            .from('community_members')
             .select('roles(name)')
-            .eq('id', user.id)
+            .eq('profile_id', user.id)
+            .eq('community_id', communityId)
             .single();
 
         const allowedRoles = ['admin', 'president', 'secretary'];
-        if (!allowedRoles.includes(profile?.roles?.name)) {
+        if (!member || !allowedRoles.includes(member.roles?.name)) {
             return res.status(403).json({ error: 'Unauthorized' });
         }
 
-        // We currently do NOT allow editing options to preserve vote integrity.
-        // Only metadata.
         const { error } = await supabaseAdmin
             .from('polls')
             .update({
