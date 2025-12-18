@@ -35,7 +35,7 @@ const CampaignProgress = ({ campaign: propCampaign }) => {
     const percentage = Math.min(100, (campaign.current_amount / campaign.target_amount) * 100);
 
     return (
-        <div className="bg-white dark:bg-neutral-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-700 mb-6">
+        <div className="glass-card p-6 shadow-sm mb-6 border border-white/20 dark:border-white/5 hover:shadow-md transition-all duration-300">
             <div className="flex justify-between items-center mb-2">
                 <h3 className="font-bold text-gray-800 dark:text-white">{campaign.name}</h3>
                 <span className="text-sm font-medium text-blue-600 dark:text-blue-500">

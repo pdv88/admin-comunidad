@@ -66,7 +66,7 @@ const ActivePollsWidget = (props) => {
                             const totalVotes = poll.total_votes || 0;
                             
                             return (
-                                <div key={poll.id} className="bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700 p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col h-full">
+                                <div key={poll.id} className="glass-card p-5 hover:shadow-md transition-shadow flex flex-col h-full border border-white/20 dark:border-white/5">
                                     <div className="flex justify-between items-start mb-2">
                                         <Link to="/app/voting" className="font-semibold text-gray-800 dark:text-white line-clamp-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                                             {poll.title}
