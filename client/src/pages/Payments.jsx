@@ -88,7 +88,7 @@ const Payments = () => {
 
                 {/* Upload Form Section (Collapsible) */}
                 {showUploadForm && (
-                     <div className="bg-white dark:bg-neutral-800 p-6 rounded-xl border border-gray-200 dark:border-neutral-700 shadow-sm animate-fade-in-down mb-6">
+                     <div className="glass-card p-6 animate-fade-in-down mb-6">
                         <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4">{t('payments.upload_title', 'Register New Payment')}</h2>
                         <PaymentUpload 
                             onSuccess={() => {
@@ -130,7 +130,7 @@ const Payments = () => {
                 <div className="space-y-8">
                      {/* 1. Community Payments (Admin View) */}
                      {isAdmin && (
-                        <div className="bg-white dark:bg-neutral-800 p-6 rounded-xl border border-gray-200 dark:border-neutral-700">
+                        <div className="glass-card p-6">
                             <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4">
                                 {activeTab === 'maintenance' 
                                     ? t('payments.list.all_maintenance', 'Community Maintenance Payments')
@@ -148,7 +148,7 @@ const Payments = () => {
                     )}
 
                     {/* 2. My Payments (Personal History) */}
-                    <div className="bg-white dark:bg-neutral-800 p-6 rounded-xl border border-gray-200 dark:border-neutral-700">
+                    <div className="glass-card p-6">
                             <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4">
                             {activeTab === 'maintenance' 
                                 ? t('payments.list.my_maintenance', 'My Monthly Fees')

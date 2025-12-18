@@ -209,7 +209,7 @@ const Voting = () => {
                         const isExpired = activeTab === 'past';
                         
                         return (
-                            <div key={poll.id} className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-700 p-6 flex flex-col relative group">
+                            <div key={poll.id} className="glass-card p-6 flex flex-col relative group">
                                 {isAdmin && (
                                     <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white dark:bg-neutral-800 p-1 rounded-lg">
                                         <button 

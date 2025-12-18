@@ -11,7 +11,8 @@ const WelcomeWidget = ({ role }) => {
     const [feeAmount, setFeeAmount] = useState(0);
     const MONTHLY_FEE = 50.00;
 
-    const isResident = role === 'resident' || role === 'neighbor';
+    const hasUnits = user?.profile?.unit_owners?.length > 0;
+    const isResident = role === 'resident' || role === 'neighbor' || hasUnits;
 
     useEffect(() => {
         if (isResident) {
@@ -48,7 +49,7 @@ const WelcomeWidget = ({ role }) => {
     };
 
     return (
-        <div className="bg-white/60 dark:bg-neutral-900/60 backdrop-blur-xl border border-white/20 dark:border-neutral-700/30 rounded-2xl shadow-lg shadow-gray-200/20 dark:shadow-black/20 p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 h-full">
+        <div className="glass-card p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 h-full">
             {/* Left: Greeting */}
             <div className="flex-1">
                  <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-400 dark:to-violet-400 mb-2">

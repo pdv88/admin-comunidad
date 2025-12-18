@@ -23,8 +23,8 @@ const DashboardLayout = ({ children }) => {
 
     const isActive = (path) => {
         return location.pathname === path ? 
-            "bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400 font-medium" : 
-            "text-gray-600 hover:bg-gray-50 dark:text-neutral-400 dark:hover:bg-neutral-700";
+            "bg-blue-600/10 text-blue-600 dark:text-blue-400 font-medium backdrop-blur-sm shadow-md border border-blue-600/10" : 
+            "text-gray-600 hover:bg-white/40 dark:text-neutral-400 dark:hover:bg-white/10 hover:shadow-md hover:backdrop-blur-sm transition-all duration-200";
     };
 
     // Helper to translate roles if needed, or just display them capitalised
@@ -52,7 +52,7 @@ const DashboardLayout = ({ children }) => {
             )}
 
             {/* Sidebar */}
-            <div className={`fixed inset-y-4 left-0 z-50 w-64 bg-white/70 backdrop-blur-xl border-r border-white/20 dark:bg-neutral-900/80 dark:border-neutral-700/50 shadow-2xl transform transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:h-[calc(100vh-2rem)] md:my-4 md:rounded-r-3xl md:inset-auto ${isSidebarOpen ? 'translate-x-0 rounded-r-3xl' : '-translate-x-full'} flex flex-col`}>
+            <div className={`fixed inset-y-4 left-0 z-50 w-64 bg-white/60 backdrop-blur-2xl border border-white/40 dark:bg-neutral-900/60 dark:border-neutral-700/50 shadow-2xl transform transition-transform duration-300 ease-in-out md:translate-x-4 md:static md:h-[calc(100vh-2rem)] md:my-4 md:rounded-3xl md:inset-auto ${isSidebarOpen ? 'translate-x-0 rounded-r-3xl' : '-translate-x-full'} flex flex-col`}>
                 <div className="p-6 flex justify-between items-center h-20 shrink-0">
                     <Link to="/" className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-400 dark:to-violet-400">
                         {t('dashboard_layout.brand')}
@@ -64,36 +64,37 @@ const DashboardLayout = ({ children }) => {
 
                 {/* Nav Links - Scrollable area */}
                 <nav className="flex-1 px-4 space-y-2 overflow-y-auto customer-scrollbar">
-                    <Link to="/app/dashboard" onClick={closeSidebar} className={`block py-3 px-4 rounded-xl transition-all duration-200 ${isActive('/app/dashboard')}`}>
+                    <Link to="/app/dashboard" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/dashboard')}`}>
                         {t('dashboard_layout.nav.dashboard')}
                     </Link>
                     {['admin', 'president', 'secretary', 'vocal'].includes(user?.profile?.roles?.name) && (
-                        <Link to="/app/notices" onClick={closeSidebar} className={`block py-3 px-4 rounded-xl transition-all duration-200 ${isActive('/app/notices')}`}>
+                        <Link to="/app/notices" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/notices')}`}>
                              {t('dashboard_layout.nav.notices')}
                         </Link>
                     )}
-                    <Link to="/app/reports" onClick={closeSidebar} className={`block py-3 px-4 rounded-xl transition-all duration-200 ${isActive('/app/reports')}`}>
+                    <Link to="/app/reports" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/reports')}`}>
                          {t('dashboard_layout.nav.reports')}
                     </Link>
-                    <Link to="/app/voting" onClick={closeSidebar} className={`block py-3 px-4 rounded-xl transition-all duration-200 ${isActive('/app/voting')}`}>
+                    <Link to="/app/voting" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/voting')}`}>
                          {t('dashboard_layout.nav.voting')}
                     </Link>
-                    <Link to="/app/payments" onClick={closeSidebar} className={`block py-3 px-4 rounded-xl transition-all duration-200 ${isActive('/app/payments')}`}>
+                    <Link to="/app/payments" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/payments')}`}>
                          {t('dashboard_layout.nav.payments')}
                     </Link>
-                    <Link to="/app/campaigns" onClick={closeSidebar} className={`block py-3 px-4 rounded-xl transition-all duration-200 ${isActive('/app/campaigns')}`}>
+                    <Link to="/app/campaigns" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/campaigns')}`}>
                         {t('dashboard_layout.nav.campaigns')}
                     </Link>
                     {(user?.profile?.roles?.name === 'admin' || user?.profile?.roles?.name === 'president') && (
                         <>
                             <div className="pt-4 pb-2">
-                                <span className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Administration</span>
+                                <div className="h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-neutral-600 to-transparent mb-3 opacity-50"></div>
+                                <span className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider italic">Administration</span>
                             </div>
-                            <Link to="/app/properties" onClick={closeSidebar} className={`block py-3 px-4 rounded-xl transition-all duration-200 ${isActive('/app/properties')}`}>
+                            <Link to="/app/properties" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/properties')}`}>
                                 {t('dashboard_layout.nav.properties')}
                             </Link>
 
-                            <Link to="/app/users" onClick={closeSidebar} className={`block py-3 px-4 rounded-xl transition-all duration-200 ${isActive('/app/users')}`}>
+                            <Link to="/app/users" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/users')}`}>
                                 {t('dashboard_layout.nav.users')}
                             </Link>
                         </>
@@ -101,7 +102,7 @@ const DashboardLayout = ({ children }) => {
                 </nav>
 
                 {/* Sidebar Footer with Profile & Logout */}
-                <div className="p-4 border-t border-white/20 dark:border-neutral-700/50 bg-white/30 dark:bg-black/20 shrink-0">
+                <div className="p-4 border-t border-white/20 dark:border-neutral-700/50 bg-white/10 dark:bg-black/10 shrink-0 backdrop-blur-sm rounded-b-3xl">
                     <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-3 overflow-hidden">
                              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-violet-500 flex items-center justify-center text-white font-bold text-sm shrink-0">

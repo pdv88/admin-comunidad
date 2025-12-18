@@ -6,6 +6,7 @@ import CampaignProgress from './CampaignProgress';
 const ActiveCampaignsWidget = (props) => {
     const { t } = useTranslation();
     const [campaigns, setCampaigns] = useState([]);
+    const [loading, setLoading] = useState(true);
     
     useEffect(() => {
         fetchCampaigns();
@@ -25,10 +26,12 @@ const ActiveCampaignsWidget = (props) => {
             }
         } catch (error) {
             console.error(error);
+        } finally {
+            setLoading(false);
         }
     };
 
-    if (campaigns.length === 0) return null;
+    if (loading) return null;
 
     return (
         <div className={props.className}>
@@ -39,11 +42,19 @@ const ActiveCampaignsWidget = (props) => {
                 </h2>
             </div>
              <div className="overflow-y-auto flex-1 pr-2 custom-scrollbar">
-                <div className="space-y-6">
-                    {campaigns.map(campaign => (
-                         <CampaignProgress key={campaign.id} campaign={campaign} />
-                    ))}
-                </div>
+                {campaigns.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full text-center text-gray-400 dark:text-neutral-500 py-8">
+                        <span className="text-4xl mb-2 opacity-50">📢</span>
+                        <p className="font-medium">{t('payments.no_active_campaigns', 'No active campaigns')}</p>
+                        <p className="text-sm opacity-75">{t('payments.check_later', 'New campaigns will appear here')}</p>
+                    </div>
+                ) : (
+                    <div className="space-y-6">
+                        {campaigns.map(campaign => (
+                             <CampaignProgress key={campaign.id} campaign={campaign} />
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );

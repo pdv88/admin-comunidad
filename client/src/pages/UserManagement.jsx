@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import { useTranslation } from 'react-i18next';
 import { API_URL } from '../config';
+import GlassSelect from '../components/GlassSelect';
 
 const UserManagement = () => {
     const [users, setUsers] = useState([]);
     const [blocks, setBlocks] = useState([]); // For assignment
     const [loading, setLoading] = useState(true);
     const [newUser, setNewUser] = useState({ email: '', fullName: '', roleName: 'neighbor', unitIds: [] });
+    const [selectedBlockId, setSelectedBlockId] = useState(''); // New state for block filter
     const [message, setMessage] = useState('');
     const [editingUser, setEditingUser] = useState(null); // User being edited
     const { t } = useTranslation();
@@ -116,6 +118,9 @@ const UserManagement = () => {
         }
 
         // 2. Filter
+        // Note: We need block ID in the unit object for filtering, but current getAvailableUnits logic flattens it with blockName.
+        // I will rely on blockName for now or update the helper.
+        // Actually, let's just assume blockName is unique enough or I can refactor getAvailableUnits to include blockId.
         return allUnits.filter(u => !assignedUnitIds.has(u.id));
     };
 
@@ -138,13 +143,13 @@ const UserManagement = () => {
                 </div>
 
                 {/* Invite Form */}
-                <div className="bg-white dark:bg-neutral-800 p-6 rounded-xl border border-gray-200 dark:border-neutral-700 mb-8">
+                <div className="glass-card p-6 mb-8 relative z-20">
                     <h2 className="font-bold mb-4 dark:text-white">{t('user_management.invite.title')}</h2>
-                    <form onSubmit={handleInvite} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <form onSubmit={handleInvite} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
                         <input 
                             type="email" 
                             placeholder={t('user_management.invite.email')} 
-                            className="rounded-lg border-gray-300 dark:bg-neutral-900 dark:border-neutral-700"
+                            className="glass-input"
                             value={newUser.email}
                             onChange={e => setNewUser({...newUser, email: e.target.value})}
                             required
@@ -152,59 +157,62 @@ const UserManagement = () => {
                         <input 
                             type="text" 
                             placeholder={t('user_management.invite.fullname')} 
-                            className="rounded-lg border-gray-300 dark:bg-neutral-900 dark:border-neutral-700"
+                            className="glass-input"
                             value={newUser.fullName}
                             onChange={e => setNewUser({...newUser, fullName: e.target.value})}
                             required
                         />
-                        <select 
-                            className="rounded-lg border-gray-300 dark:bg-neutral-900 dark:border-neutral-700"
+
+                        <GlassSelect 
                             value={newUser.roleName}
                             onChange={e => setNewUser({...newUser, roleName: e.target.value})}
-                        >
-                            <option value="neighbor">{t('user_management.roles.neighbor')}</option>
-                            <option value="president">{t('user_management.roles.president')}</option>
-                            <option value="secretary">{t('user_management.roles.secretary')}</option>
-                            <option value="vice_president">{t('user_management.roles.vice_president')}</option>
-                            <option value="admin">{t('user_management.roles.admin')}</option>
-                            <option value="treasurer">{t('user_management.roles.treasurer')}</option>
-                            <option value="maintenance">{t('user_management.roles.maintenance')}</option>
-                        </select>
-                        <div className="border border-gray-300 dark:border-neutral-700 rounded-lg p-2 h-32 overflow-y-auto bg-white dark:bg-neutral-900">
-                             <p className="text-xs text-gray-500 dark:text-neutral-400 mb-2 sticky top-0 bg-white dark:bg-neutral-900 pb-1 border-b border-gray-100 dark:border-neutral-800">
-                                {t('user_management.invite.assign_unit')}
-                             </p>
-                             <div className="space-y-1">
-                                {getAvailableUnits(null).map(u => (
-                                    <label key={u.id} className="flex items-center space-x-2 p-1 hover:bg-gray-50 dark:hover:bg-neutral-800 rounded cursor-pointer">
-                                        <input 
-                                            type="checkbox"
-                                            value={u.id}
-                                            checked={newUser.unitIds.includes(u.id)}
-                                            onChange={e => {
-                                                const id = u.id;
-                                                let newIds;
-                                                if (e.target.checked) {
-                                                    newIds = [...newUser.unitIds, id];
-                                                } else {
-                                                    newIds = newUser.unitIds.filter(uid => uid !== id);
-                                                }
-                                                setNewUser({...newUser, unitIds: newIds});
-                                            }}
-                                            className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                                        />
-                                        <span className="text-sm text-gray-700 dark:text-neutral-300">{u.blockName} - {u.unit_number}</span>
-                                    </label>
-                                ))}
-                             </div>
-                        </div>
-                        <button type="submit" className="bg-blue-600 text-white rounded-lg">{t('user_management.invite.send')}</button>
+                            options={[
+                                { value: 'neighbor', label: t('user_management.roles.neighbor') },
+                                { value: 'president', label: t('user_management.roles.president') },
+                                { value: 'secretary', label: t('user_management.roles.secretary') },
+                                { value: 'vice_president', label: t('user_management.roles.vice_president') },
+                                { value: 'admin', label: t('user_management.roles.admin') },
+                                { value: 'treasurer', label: t('user_management.roles.treasurer') },
+                                { value: 'maintenance', label: t('user_management.roles.maintenance') }
+                            ]}
+                            placeholder={t('user_management.table.role')}
+                        />
+
+                        {/* Block Selection Dropdown */}
+                        <GlassSelect
+                            value={selectedBlockId}
+                            onChange={(e) => {
+                                setSelectedBlockId(e.target.value);
+                                setNewUser({...newUser, unitIds: []}); // Reset unit when block changes
+                            }}
+                            options={[
+                                { value: '', label: t('properties.select_block', 'Select Block') }, // Option to clear/default
+                                ...(Array.isArray(blocks) ? blocks.map(block => ({ value: block.id, label: block.name })) : [])
+                            ]}
+                            placeholder={t('properties.select_block', 'Select Block')}
+                        />
+
+                        {/* Unit Selection Dropdown (Filtered) */}
+                        <GlassSelect 
+                            value={newUser.unitIds[0] || ''}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                setNewUser({...newUser, unitIds: val ? [val] : []});
+                            }}
+                            disabled={!selectedBlockId}
+                            options={getAvailableUnits(null)
+                                .filter(u => !selectedBlockId || u.blockName === blocks.find(b => b.id === selectedBlockId)?.name)
+                                .map(u => ({ value: u.id, label: u.unit_number }))
+                            }
+                            placeholder={t('user_management.invite.assign_unit')}
+                        />
+                        <button type="submit" className="glass-button self-start">{t('user_management.invite.send')}</button>
                     </form>
                     {message && <p className="mt-2 text-sm text-gray-600 dark:text-neutral-400">{message}</p>}
                 </div>
 
                 {/* User List */}
-                <div className="bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700 overflow-hidden">
+                <div className="glass-card overflow-hidden">
                     <table className="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
                         <thead className="bg-gray-50 dark:bg-neutral-700">
                             <tr>

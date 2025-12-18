@@ -174,27 +174,27 @@ const Properties = () => {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Create Block */}
-                    <div className="bg-white dark:bg-neutral-800 p-6 rounded-xl border border-gray-200 dark:border-neutral-700">
+                    <div className="glass-card p-6">
                         <h2 className="font-bold mb-4 dark:text-white">{t('properties.add_block')}</h2>
                         <form onSubmit={handleCreateBlock}>
                             <input 
                                 type="text" 
                                 placeholder={t('properties.block_placeholder')} 
-                                className="w-full mb-3 rounded-lg border-gray-300 dark:bg-neutral-900 dark:border-neutral-700 font-normal"
+                                className="glass-input mb-3"
                                 value={newBlock}
                                 onChange={(e) => setNewBlock(e.target.value)}
                                 required
                             />
-                             <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded-lg">{t('properties.add_block_btn')}</button>
+                             <button type="submit" className="glass-button w-full">{t('properties.add_block_btn')}</button>
                         </form>
                     </div>
 
                     {/* Create Unit */}
-                    <div className="bg-white dark:bg-neutral-800 p-6 rounded-xl border border-gray-200 dark:border-neutral-700 lg:col-span-2">
+                    <div className="glass-card p-6 lg:col-span-2">
                         <h2 className="font-bold mb-4 dark:text-white">{t('properties.add_unit')}</h2>
                         <form onSubmit={handleCreateUnit} className="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <select 
-                                className="rounded-lg border-gray-300 dark:bg-neutral-900 dark:border-neutral-700"
+                                className="glass-input"
                                 value={newUnit.blockId}
                                 onChange={(e) => setNewUnit({...newUnit, blockId: e.target.value})}
                                 required
@@ -205,13 +205,13 @@ const Properties = () => {
                              <input 
                                 type="text" 
                                 placeholder={t('properties.unit_placeholder')} 
-                                className="rounded-lg border-gray-300 dark:bg-neutral-900 dark:border-neutral-700"
+                                className="glass-input"
                                 value={newUnit.number}
                                 onChange={(e) => setNewUnit({...newUnit, number: e.target.value})}
                                 required
                             />
                             <select 
-                                className="rounded-lg border-gray-300 dark:bg-neutral-900 dark:border-neutral-700"
+                                className="glass-input"
                                 value={newUnit.type}
                                 onChange={(e) => setNewUnit({...newUnit, type: e.target.value})}
                             >
@@ -220,7 +220,7 @@ const Properties = () => {
                                 <option value="parking">{t('properties.unit_type.parking')}</option>
                                 <option value="storage">{t('properties.unit_type.storage')}</option>
                             </select>
-                            <button type="submit" className="bg-green-600 text-white py-2 rounded-lg">{t('properties.add_unit_btn')}</button>
+                            <button type="submit" className="glass-button bg-gradient-to-r from-emerald-500 to-teal-500 border-none shadow-emerald-500/20">{t('properties.add_unit_btn')}</button>
                         </form>
                     </div>
                 </div>
@@ -229,13 +229,13 @@ const Properties = () => {
                     <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">{t('properties.current_structure')}</h2>
                     <div className="space-y-6">
                         {Array.isArray(blocks) && blocks.map(block => (
-                            <div key={block.id} className="bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700 overflow-hidden">
-                                 <div className="bg-gray-50 dark:bg-neutral-700 px-6 py-3 border-b border-gray-200 dark:border-neutral-600 flex justify-between items-center">
+                            <div key={block.id} className="glass-card overflow-hidden">
+                                 <div className="bg-white/30 dark:bg-white/5 px-6 py-3 border-b border-white/20 dark:border-neutral-700/30 flex justify-between items-center">
                                     <h3 className="font-bold text-gray-800 dark:text-white">{block.name}</h3>
                                     <div className="flex items-center gap-2">
                                          <span className="text-xs text-gray-500">{t('properties.representative')}:</span>
                                          <select 
-                                            className="text-sm py-1 px-2 rounded border border-gray-300 dark:bg-neutral-800 dark:border-neutral-600"
+                                            className="ml-2 text-sm py-1 px-3 rounded-lg border-none bg-white/40 dark:bg-neutral-800/40 backdrop-blur-sm shadow-sm focus:ring-2 focus:ring-blue-500/50"
                                             value={block.representative_id || ''}
                                             onChange={(e) => handleAssignRep(block.id, e.target.value)}
                                          >
@@ -250,7 +250,7 @@ const Properties = () => {
                                     {block.units && block.units.length > 0 ? (
                                         <div className="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-8 gap-3">
                                             {block.units.map(unit => (
-                                                <div key={unit.id} className="relative group text-center p-2 bg-gray-100 dark:bg-neutral-900 rounded border border-gray-200 dark:border-neutral-700">
+                                                <div key={unit.id} className="relative group text-center p-2 rounded-xl bg-white/40 dark:bg-neutral-800/40 border border-white/20 dark:border-neutral-700/30 shadow-sm hover:bg-white/60 dark:hover:bg-neutral-700/60 transition-all duration-300">
                                                     <button 
                                                         onClick={() => confirmDelete('unit', unit.id)}
                                                         className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition shadow-sm z-10"

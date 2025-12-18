@@ -82,7 +82,7 @@ const PaymentList = ({ payments, isAdmin, onRefresh, showResidentInfo = false, l
                 isDangerous={true}
             />
 
-            <div className="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-xl overflow-hidden">
+            <div className="glass-card overflow-hidden">
                  <div className="px-6 py-4 border-b border-gray-200 dark:border-neutral-700">
                     <h3 className="font-bold text-lg text-gray-800 dark:text-white">
                         {/* Title is now handled by parent or generic fallback */}

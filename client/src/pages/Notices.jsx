@@ -135,9 +135,9 @@ const Notices = () => {
 
     const getPriorityColor = (priority) => {
         switch(priority) {
-            case 'urgent': return 'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300';
-            case 'high': return 'bg-orange-50 border-orange-200 text-orange-800 dark:bg-orange-900/20 dark:border-orange-800 dark:text-orange-300';
-            default: return 'bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300';
+            case 'urgent': return 'bg-red-500/10 border-red-500/20 text-red-800 dark:text-red-200';
+            case 'high': return 'bg-orange-500/10 border-orange-500/20 text-orange-800 dark:text-orange-200';
+            default: return 'glass-card border-white/40 dark:border-neutral-700/50'; 
         }
     };
 
@@ -171,7 +171,7 @@ const Notices = () => {
                     </div>
                     <button 
                         onClick={() => setShowModal(true)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2 shadow-sm"
+                        className="glass-button"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
                         {t('notices.post_notice')}
@@ -185,12 +185,12 @@ const Notices = () => {
                             {[1,2,3].map(i => <div key={i} className="h-24 bg-gray-200 dark:bg-neutral-800 rounded-xl"></div>)}
                          </div>
                     ) : notices.length === 0 ? (
-                        <div className="text-center py-12 bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700">
+                        <div className="glass-card text-center py-12">
                              <p className="text-gray-500 dark:text-neutral-400">{t('notices.no_notices')}</p>
                         </div>
                     ) : (
                         notices.map(notice => (
-                            <div key={notice.id} className={`p-5 rounded-xl border ${getPriorityColor(notice.priority)} shadow-sm hover:shadow-md transition-shadow bg-white dark:bg-neutral-800`}>
+                            <div key={notice.id} className={`p-5 rounded-2xl border backdrop-blur-md shadow-sm hover:shadow-xl transition-all duration-300 ${getPriorityColor(notice.priority)}`}>
                                 <div className="flex justify-between items-start">
                                     <div className="flex-1">
                                         <div className="flex items-center gap-2 mb-2">
@@ -232,8 +232,8 @@ const Notices = () => {
 
                 {/* Create Modal */}
                 {showModal && (
-                    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                        <div className="bg-white dark:bg-neutral-800 rounded-xl w-full max-w-lg p-6 shadow-xl animate-fade-in">
+                    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+                        <div className="glass-card w-full max-w-lg p-6 animate-fade-in bg-white/90 dark:bg-neutral-900/90">
                             <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">{t('notices.post_notice')}</h2>
                             <form onSubmit={handleCreateNotice} className="space-y-4">
                                 <div>
@@ -242,7 +242,7 @@ const Notices = () => {
                                         type="text"
                                         value={newNotice.title}
                                         onChange={(e) => setNewNotice({...newNotice, title: e.target.value})}
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                        className="glass-input"
                                         required
                                     />
                                 </div>
@@ -253,7 +253,7 @@ const Notices = () => {
                                         <select
                                             value={newNotice.priority}
                                             onChange={(e) => setNewNotice({...newNotice, priority: e.target.value})}
-                                            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white"
+                                            className="glass-input"
                                         >
                                             <option value="normal">{t('notices.priority.normal', 'Normal')}</option>
                                             <option value="high">{t('notices.priority.high', 'High')}</option>
@@ -266,7 +266,7 @@ const Notices = () => {
                                         <select
                                             value={newNotice.block_id}
                                             onChange={(e) => setNewNotice({...newNotice, block_id: e.target.value})}
-                                            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white disabled:opacity-60"
+                                            className="glass-input"
                                             disabled={isVocal && vocalBlockIds.length === 1} // Lock if Vocal has only 1 block
                                         >
                                             {isAdminOrPres && (
@@ -294,27 +294,27 @@ const Notices = () => {
                                     <textarea
                                         value={newNotice.content}
                                         onChange={(e) => setNewNotice({...newNotice, content: e.target.value})}
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                        className="glass-input rounded-2xl"
                                         rows="4"
                                         required
                                     ></textarea>
                                 </div>
 
-                                <div className="flex gap-3 pt-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowModal(false)}
-                                        className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg dark:bg-neutral-700 dark:hover:bg-neutral-600 dark:text-white"
-                                    >
-                                        {t('common.cancel')}
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
-                                    >
-                                        {t('notices.post_notice')}
-                                    </button>
-                                </div>
+                                    <div className="flex gap-3 pt-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowModal(false)}
+                                            className="glass-button-secondary flex-1"
+                                        >
+                                            {t('common.cancel')}
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            className="glass-button flex-1"
+                                        >
+                                            {t('notices.post_notice')}
+                                        </button>
+                                    </div>
                             </form>
                         </div>
                     </div>

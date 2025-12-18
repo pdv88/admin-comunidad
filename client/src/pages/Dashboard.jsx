@@ -11,17 +11,31 @@ import ActivePollsWidget from '../components/voting/ActivePollsWidget';
 import RecentNoticesWidget from '../components/notices/RecentNoticesWidget';
 import RecentReportsWidget from '../components/reports/RecentReportsWidget';
 import WelcomeWidget from '../components/dashboards/WelcomeWidget';
+import DashboardSkeleton from './DashboardSkeleton';
+import { useState, useEffect } from 'react';
 
 const Dashboard = () => {
     const { user } = useAuth();
     const { t } = useTranslation();
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        // Simulate loading check or data pre-fetch
+        const timer = setTimeout(() => setLoading(false), 1000);
+        return () => clearTimeout(timer);
+    }, []);
+
+    if (loading) {
+        return <DashboardSkeleton />;
+    }
     const role = user?.profile?.roles?.name || 'resident';
     // Determine if the user has a role that displays a top-right section
     // Temporarily exclude 'president' etc until they have content, to avoid gaps
     const hasRoleSection = ['admin'].includes(role);
 
     // Common glass card style
-    const cardClass = "bg-white/60 dark:bg-neutral-900/60 backdrop-blur-xl border border-white/20 dark:border-neutral-700/30 rounded-2xl shadow-lg shadow-gray-200/20 dark:shadow-black/20 p-6 flex flex-col h-full";
+    // Common glass card style
+    const cardClass = "glass-card p-6 flex flex-col h-full";
     // For lists that need internal scrolling
     const scrollableCardClass = `${cardClass} overflow-hidden`;
 
@@ -60,14 +74,8 @@ const Dashboard = () => {
                     </div>
 
                     {/* Reports */}
-                    <div className={`${scrollableCardClass} col-span-1`}>
-                         <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
-                             <span className="text-orange-500">🔧</span>
-                             Reports
-                         </h2>
-                         <div className="overflow-y-auto flex-1 pr-2 custom-scrollbar">
-                            <RecentReportsWidget />
-                        </div>
+                    <div className="col-span-1 h-full min-h-0">
+                        <RecentReportsWidget className={scrollableCardClass} />
                     </div>
                 </div>
             </div>

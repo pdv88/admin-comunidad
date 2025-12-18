@@ -205,12 +205,12 @@ const Reports = () => {
                     {loading ? (
                         <p className="text-gray-500">{t('common.loading', 'Loading...')}</p>
                     ) : filteredReports.length === 0 ? (
-                        <div className="text-center py-12 bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700">
+                        <div className="glass-card text-center py-12">
                              <p className="text-gray-500 dark:text-neutral-400">{t('reports.no_reports', 'No reports found.')}</p>
                         </div>
                     ) : (
                         filteredReports.map(report => (
-                            <div key={report.id} className="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-gray-200 dark:border-neutral-700 shadow-sm hover:shadow-md transition-shadow">
+                            <div key={report.id} className="glass-card p-5 hover:shadow-xl transition-shadow">
                                 <div className="flex justify-between items-start">
                                     <div className="flex-1">
                                         <div className="flex items-center gap-2 mb-1">
