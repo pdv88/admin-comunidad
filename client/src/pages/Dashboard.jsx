@@ -10,78 +10,77 @@ import ActiveCampaignsWidget from '../components/payments/ActiveCampaignsWidget'
 import ActivePollsWidget from '../components/voting/ActivePollsWidget';
 import RecentNoticesWidget from '../components/notices/RecentNoticesWidget';
 import RecentReportsWidget from '../components/reports/RecentReportsWidget';
-import MonthlyPaymentWidget from '../components/payments/MonthlyPaymentWidget';
+import WelcomeWidget from '../components/dashboards/WelcomeWidget';
 
 const Dashboard = () => {
     const { user } = useAuth();
     const { t } = useTranslation();
     const role = user?.profile?.roles?.name || 'resident';
+    // Determine if the user has a role that displays a top-right section
+    // Temporarily exclude 'president' etc until they have content, to avoid gaps
+    const hasRoleSection = ['admin'].includes(role);
+
+    // Common glass card style
+    const cardClass = "bg-white/60 dark:bg-neutral-900/60 backdrop-blur-xl border border-white/20 dark:border-neutral-700/30 rounded-2xl shadow-lg shadow-gray-200/20 dark:shadow-black/20 p-6 flex flex-col h-full";
+    // For lists that need internal scrolling
+    const scrollableCardClass = `${cardClass} overflow-hidden`;
 
     return (
         <DashboardLayout>
-            <div className="max-w-7xl mx-auto space-y-4 md:space-y-8"> 
-                {/* Notices Banner (Global) */}
-                <RecentNoticesWidget />
+            <div className="flex flex-col h-full gap-4">
+                {/* 0. Notices Bar (Full Width) */}
+                <div className="w-full shrink-0">
+                    <RecentNoticesWidget />
+                </div>
 
-                {/* Welcome Section */}
-                <div className="bg-white dark:bg-neutral-800 p-6 rounded-xl border border-gray-200 dark:border-neutral-700 shadow-sm">
-                    <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
-                        {t('dashboard.welcome', 'Welcome')}, {user?.profile?.full_name || user?.user_metadata?.full_name || user?.email}!
-                    </h1>
-                    <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-neutral-400">
-                        <div className="flex items-center gap-2">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                            <span className="font-medium">{t('dashboard.role', 'Role')}:</span> 
-                            <span className="capitalize">{user?.profile?.roles?.name || t('common.user', 'User')}</span>
+                {/* Grid Layout */}
+                <div className="grid grid-cols-1 md:grid-cols-12 md:grid-rows-6 gap-4 flex-1 min-h-0 w-full"> 
+                    
+                    {/* 1. Welcome Section (Full Width) */}
+                    <div className="md:col-span-12 md:row-span-2 md:h-full">
+                        <WelcomeWidget role={role} />
+                    </div>
+
+                     {/* 2. Role Sections (If applicable, Full Width or Grid?) */}
+                     {hasRoleSection && (
+                        <div className="md:col-span-12 md:row-span-2 md:overflow-y-auto">
+                            {role === 'admin' && <AdminSection className={cardClass} />}
+                            {/* Other roles hidden for now to prevent empty boxes */}
                         </div>
-                        {user?.profile?.unit_owners && user.profile.unit_owners.length > 0 && (
-                            <div className="flex items-center gap-2">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
-                                <span className="font-medium">{t('dashboard.unit', 'Units')}:</span>
-                                <span>
-                                    {user.profile.unit_owners.map(uo => 
-                                        `${uo.units?.unit_number}${uo.units?.blocks ? ` (${uo.units.blocks.name})` : ''}`
-                                    ).join(', ')}
-                                </span>
-                            </div>
-                        )}
+                     )}
+
+                    {/* 3, 4, 5. Bottom Row Widgets */}
+                    {/* Adjust row spans to fill remaining space. 
+                        If Welcome uses 2 rows, and we have 6 total...
+                        Residents: 6 - 2 = 4 rows left.
+                        Polls (4), Campaigns (4), Reports (4). Perfect.
+                        
+                        Admins: Welcome (2) + AdminSection (2) = 4 used.
+                        2 rows left? That's tight for lists.
+                        Maybe we increase total rows or grid height for admins?
+                        Or AdminSection shares row with Welcome? No, Welcome is full width.
+                        
+                        Let's auto-flow the height for admins (min-h-0 might cutoff).
+                        I'll stick to row-span-4 for residents.
+                    */}
+                    
+                    {/* Polls */}
+                    <ActivePollsWidget className={`${scrollableCardClass} md:col-span-4 ${hasRoleSection ? 'md:row-span-2' : 'md:row-span-4'}`} />
+
+                    {/* Campaigns */}
+                    <ActiveCampaignsWidget className={`${scrollableCardClass} md:col-span-4 ${hasRoleSection ? 'md:row-span-2' : 'md:row-span-4'}`} />
+
+                    {/* Reports */}
+                    <div className={`${scrollableCardClass} md:col-span-4 ${hasRoleSection ? 'md:row-span-2' : 'md:row-span-4'}`}>
+                         <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+                             <span className="text-orange-500">🔧</span>
+                             Reports
+                         </h2>
+                         <div className="overflow-y-auto flex-1 pr-2 custom-scrollbar">
+                            <RecentReportsWidget />
+                        </div>
                     </div>
                 </div>
-                {/* Monthly Fee Status */}
-                <div className="mb-8">
-                     <MonthlyPaymentWidget />
-                </div>
-
-                {/* 1. Global: Active Campaigns */}
-                <div>
-                     <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
-                        {t('payments.active_campaigns', 'Active Campaigns')}
-                    </h2>
-                    <ActiveCampaignsWidget />
-                </div>
-
-
-
-                <div className="mb-8">
-                     <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
-                        {t('voting.title', 'Active Polls')}
-                    </h2>
-                    <ActivePollsWidget />
-                </div>
-
-                {/* Service / Reports */}
-                <div className="mb-8">
-                     <RecentReportsWidget />
-                </div>
-
-                {/* 2. Role Specific Sections */}
-                {role === 'admin' && <AdminSection />}
-                {role === 'president' && <PresidentSection />}
-                {(role === 'vocal' || role === 'secretary' || role === 'treasurer') && <VocalSection />}
-
-                {/* 3. Base Resident Section (Everyone gets this) - Removed as per request (Quick Links) */}
-                {/* <hr className="border-gray-200 dark:border-neutral-700" /> */}
-                {/* <ResidentSection /> */}
             </div>
         </DashboardLayout>
     );

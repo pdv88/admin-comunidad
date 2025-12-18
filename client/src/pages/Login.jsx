@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import Header from '../assets/components/Header';
 import Footer from '../assets/components/Footer';
+import AnimatedBackground from '../assets/components/AnimatedBackground';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -26,84 +27,90 @@ const Login = () => {
   };
 
   return (
-    <>
-      <Header />
-      <div className="flex bg-white dark:bg-neutral-900 border border-t border-gray-200 shadow-sm rounded-xl py-4 sm:px-7 dark:border-neutral-700 min-h-[calc(100vh-140px)] items-center justify-center my-10">
-        <div className="mt-5 w-full max-w-md p-6 bg-white border border-gray-200 rounded-xl shadow-sm dark:bg-neutral-900 dark:border-neutral-700">
-          <div className="text-center">
-            <h1 className="block text-2xl font-bold text-gray-800 dark:text-white">{t('auth.signin_title')}</h1>
-            <p className="mt-2 text-sm text-gray-600 dark:text-neutral-400">
-              {t('auth.no_account')}
-              {' '}
-              <Link className="text-blue-600 decoration-2 hover:underline font-medium dark:text-blue-500" to="/register">
-                {t('auth.signup_here')}
-              </Link>
-            </p>
-          </div>
+    <div className="relative min-h-screen bg-white dark:bg-neutral-900 overflow-hidden selection:bg-indigo-500 selection:text-white">
+      <AnimatedBackground />
 
-          <div className="mt-5">
-            {/* <!-- Form --> */}
-            <form onSubmit={handleSubmit}>
-              <div className="grid gap-y-4">
-                {/* <!-- Form Group --> */}
-                <div>
-                  <label htmlFor="email" className="block text-sm mb-2 dark:text-white">{t('auth.email')}</label>
-                  <div className="relative">
-                    <input 
-                      type="email" 
-                      id="email" 
-                      name="email" 
-                      className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" 
-                      required 
-                      aria-describedby="email-error"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                    />
-                    <div className="hidden absolute inset-y-0 end-0 flex items-center pointer-events-none pe-3">
-                      <svg className="size-5 text-red-500" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
-                        <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/>
-                      </svg>
+      <div className="relative z-10 flex flex-col min-h-screen">
+        <Header />
+        
+        <main className="flex-grow flex items-center justify-center p-4">
+          <div className="w-full max-w-md p-6 bg-white/40 backdrop-blur-md border border-gray-200 rounded-3xl shadow-lg dark:bg-neutral-900/40 dark:border-neutral-700">
+            <div className="text-center">
+              <h1 className="block text-2xl font-bold text-gray-800 dark:text-white">{t('auth.signin_title')}</h1>
+              <p className="mt-2 text-sm text-gray-600 dark:text-neutral-400">
+                {t('auth.no_account')}
+                {' '}
+                <Link className="text-blue-600 decoration-2 hover:underline font-medium dark:text-blue-500" to="/register">
+                  {t('auth.signup_here')}
+                </Link>
+              </p>
+            </div>
+
+            <div className="mt-5">
+              {/* <!-- Form --> */}
+              <form onSubmit={handleSubmit}>
+                <div className="grid gap-y-4">
+                  {/* <!-- Form Group --> */}
+                  <div>
+                    <label htmlFor="email" className="block text-sm mb-2 dark:text-white">{t('auth.email')}</label>
+                    <div className="relative">
+                      <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        className="py-3 px-4 block w-full bg-white/30 shadow-2xl backdrop-blur-md border-gray-200 rounded-full text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" 
+                        required 
+                        aria-describedby="email-error"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                      />
+                      <div className="hidden absolute inset-y-0 end-0 flex items-center pointer-events-none pe-3">
+                        <svg className="size-5 text-red-500" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                          <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/>
+                        </svg>
+                      </div>
+                    </div>
+                    {error && <p className="text-xs text-red-600 mt-2" id="email-error">{error}</p>}
+                  </div>
+                  {/* <!-- End Form Group --> */}
+
+                  {/* <!-- Form Group --> */}
+                  <div>
+                    <div className="flex justify-between items-center">
+                      <label htmlFor="password" className="block text-sm mb-2 dark:text-white">{t('auth.password')}</label>
+                      <Link className="text-sm text-blue-600 decoration-2 hover:underline font-medium dark:text-blue-500" to="/forgot-password">{t('auth.forgot_password')}</Link>
+                    </div>
+                    <div className="relative">
+                      <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        className="py-3 px-4 block w-full bg-white/30 shadow-2xl backdrop-blur-md border-gray-200 rounded-full text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" 
+                        required 
+                        aria-describedby="password-error"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                      />
+                      <div className="hidden absolute inset-y-0 end-0 flex items-center pointer-events-none pe-3">
+                        <svg className="size-5 text-red-500" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                          <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/>
+                        </svg>
+                      </div>
                     </div>
                   </div>
-                  {error && <p className="text-xs text-red-600 mt-2" id="email-error">{error}</p>}
-                </div>
-                {/* <!-- End Form Group --> */}
+                  {/* <!-- End Form Group --> */}
 
-                {/* <!-- Form Group --> */}
-                <div>
-                  <div className="flex justify-between items-center">
-                    <label htmlFor="password" className="block text-sm mb-2 dark:text-white">{t('auth.password')}</label>
-                    <Link className="text-sm text-blue-600 decoration-2 hover:underline font-medium dark:text-blue-500" to="/forgot-password">{t('auth.forgot_password')}</Link>
-                  </div>
-                  <div className="relative">
-                    <input 
-                      type="password" 
-                      id="password" 
-                      name="password" 
-                      className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" 
-                      required 
-                      aria-describedby="password-error"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
-                    <div className="hidden absolute inset-y-0 end-0 flex items-center pointer-events-none pe-3">
-                      <svg className="size-5 text-red-500" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
-                        <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/>
-                      </svg>
-                    </div>
-                  </div>
+                  <button type="submit" className="w-full inline-flex justify-center items-center gap-x-3 text-center bg-gradient-to-r from-blue-600 via-violet-600 to-blue-600 bg-[length:200%_auto] text-white text-sm font-semibold rounded-full hover:shadow-lg hover:bg-right active:scale-95 transition-all duration-500 py-3 px-6 shadow-lg shadow-blue-500/30 disabled:opacity-50 disabled:pointer-events-none">{t('auth.signin_btn')}</button>
                 </div>
-                {/* <!-- End Form Group --> */}
-
-                <button type="submit" className="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">{t('auth.signin_btn')}</button>
-              </div>
-            </form>
-            {/* <!-- End Form --> */}
+              </form>
+              {/* <!-- End Form --> */}
+            </div>
           </div>
-        </div>
+        </main>
+        
+        <Footer />
       </div>
-      <Footer />
-    </>
+    </div>
   );
 };
 

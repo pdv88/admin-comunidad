@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { API_URL } from '../../config';
 
-const ActivePollsWidget = () => {
+const ActivePollsWidget = (props) => {
     const { t } = useTranslation();
     const [polls, setPolls] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -47,8 +47,16 @@ const ActivePollsWidget = () => {
     ];
 
     return (
-        <div className="grid gap-4 grid-cols-1">
-            {polls.map(poll => {
+        <div className={props.className}>
+            <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                    <span className="text-blue-500">🗳️</span>
+                    {t('voting.title', 'Active Polls')}
+                </h2>
+            </div>
+            <div className="overflow-y-auto flex-1 pr-2 custom-scrollbar">
+                <div className="grid gap-4 grid-cols-1">
+                    {polls.map(poll => {
                 const totalVotes = poll.total_votes || 0;
                 
                 return (
@@ -119,6 +127,8 @@ const ActivePollsWidget = () => {
                     </div>
                 );
             })}
+                </div>
+            </div>
         </div>
     );
 };

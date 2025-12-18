@@ -19,7 +19,7 @@ function Header() {
   return (
     <header className="fixed top-4 inset-x-0 flex flex-wrap md:justify-start md:flex-nowrap z-50 w-full text-sm">
       <nav
-        className={`relative w-[95%] lg:w-[80%] mx-auto px-4 md:flex md:items-center md:justify-between md:px-6 lg:px-8 bg-white/20 backdrop-blur-xl border border-white/20 shadow-lg shadow-gray-200/30 p-2 dark:bg-neutral-900/60 dark:border-neutral-700/50 dark:shadow-black/20 transition-all duration-300 ${isMenuOpen ? 'rounded-3xl' : 'rounded-full'}`}
+        className={`relative w-[95%] lg:w-[80%] mx-auto px-4 md:flex md:items-center md:justify-between md:px-6 lg:px-8 bg-white/40 backdrop-blur-xl border border-white/20 shadow-lg shadow-gray-200/30 p-2 dark:bg-neutral-900/60 dark:border-neutral-700/50 dark:shadow-black/20 transition-all duration-300 ${isMenuOpen ? 'rounded-3xl' : 'rounded-full'}`}
         aria-label="Global"
       >
         <div className="flex items-center justify-between w-full md:w-auto">
@@ -115,7 +115,7 @@ function Header() {
                 </Link>
                 <Link
                   to="/register"
-                  className="inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-full border border-transparent bg-gradient-to-r from-blue-600 via-violet-600 to-blue-600 bg-[length:200%_auto] text-white hover:shadow-lg hover:bg-right transition-all duration-500 py-2.5 px-6"
+                  className="inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-full border border-transparent bg-gradient-to-r from-blue-600 via-violet-600 to-blue-600 bg-[length:200%_auto] text-white hover:shadow-lg hover:bg-right active:scale-95 transition-all duration-500 py-2.5 px-6"
                 >
                   {t("header.register")}
                 </Link>

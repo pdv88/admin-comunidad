@@ -34,11 +34,11 @@ function Hero() {
 
               {/* Buttons */}
               <div className="mt-8 gap-3 flex justify-start">
-                <Link to="/register" className="inline-flex justify-center items-center gap-x-3 text-center bg-gradient-to-r from-blue-600 via-violet-600 to-blue-600 bg-[length:200%_auto] text-white text-sm font-semibold rounded-full hover:shadow-lg hover:bg-right transition-all duration-500 py-3 px-6 shadow-lg shadow-blue-500/30">
+                <Link to="/register" className="inline-flex justify-center items-center gap-x-3 text-center bg-gradient-to-r from-blue-600 via-violet-600 to-blue-600 bg-[length:200%_auto] text-white text-sm font-semibold rounded-full hover:shadow-lg hover:bg-right active:scale-95 transition-all duration-500 py-3 px-6 shadow-lg shadow-blue-500/30">
                   {t('hero.cta_primary') || 'Get Started'}
                   <svg className="flex-shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
                 </Link>
-                <Link to="/login" className="inline-flex justify-center items-center gap-x-3 text-center bg-white hover:bg-gray-100 border border-gray-200 text-gray-700 text-sm font-medium rounded-full py-3 px-6 dark:bg-transparent dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800 transition-colors">
+                <Link to="/login" className="inline-flex justify-center items-center gap-x-3 text-center bg-white hover:bg-gray-100 border border-gray-200 text-gray-700 text-sm font-medium rounded-full py-3 px-6 dark:bg-transparent dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800 hover:shadow-lg active:scale-95 transition-all">
                    {t('common.login', 'Log In')}
                 </Link>
               </div>

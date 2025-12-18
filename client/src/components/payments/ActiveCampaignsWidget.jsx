@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { API_URL } from '../../config';
 import CampaignProgress from './CampaignProgress';
 
-const ActiveCampaignsWidget = () => {
+const ActiveCampaignsWidget = (props) => {
     const { t } = useTranslation();
     const [campaigns, setCampaigns] = useState([]);
     
@@ -31,10 +31,20 @@ const ActiveCampaignsWidget = () => {
     if (campaigns.length === 0) return null;
 
     return (
-        <div className="space-y-6">
-            {campaigns.map(campaign => (
-                <CampaignProgress key={campaign.id} campaign={campaign} />
-            ))}
+        <div className={props.className}>
+             <div className="flex items-center justify-between mb-4">
+                 <h2 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                    <span className="text-emerald-500">📢</span>
+                    {t('payments.active_campaigns', 'Campaigns')}
+                </h2>
+            </div>
+             <div className="overflow-y-auto flex-1 pr-2 custom-scrollbar">
+                <div className="space-y-6">
+                    {campaigns.map(campaign => (
+                         <CampaignProgress key={campaign.id} campaign={campaign} />
+                    ))}
+                </div>
+            </div>
         </div>
     );
 };
