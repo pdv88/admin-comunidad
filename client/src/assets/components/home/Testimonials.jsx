@@ -9,19 +9,19 @@ function Testimonials() {
       {
           quote: t('testimonials.t1.quote', "Since switching to this platform, our community meetings are shorter and more productive. The voting system is a game changer."),
           author: "Maria Gonzalez",
-          role: "Community President",
+          role: t('testimonials.roles.president', "Community President"),
           avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
       },
       {
           quote: t('testimonials.t2.quote', "I love being able to pay my fees from my phone. No more bank transfers or lost receipts!"),
           author: "Carlos Rodriguez",
-          role: "Resident",
+          role: t('testimonials.roles.resident', "Resident"),
           avatar: "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
       },
       {
           quote: t('testimonials.t3.quote', "Reporting maintenance issues is so easy now. I take a photo, upload it, and it gets fixed."),
           author: "Sarah Johnson",
-          role: "Resident",
+          role: t('testimonials.roles.resident', "Resident"),
           avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
       } 
   ];
@@ -63,19 +63,19 @@ function Testimonials() {
        <FadeIn delay={0.4} className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8 border-t border-gray-200 dark:border-neutral-700 pt-10">
           <div className="text-center">
               <h4 className="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-500">45k+</h4>
-              <p className="text-sm text-gray-500 dark:text-neutral-500 mt-2">Active Users</p>
+              <p className="text-sm text-gray-500 dark:text-neutral-500 mt-2">{t('testimonials.stats.active_users')}</p>
           </div>
           <div className="text-center">
               <h4 className="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-500">99%</h4>
-              <p className="text-sm text-gray-500 dark:text-neutral-500 mt-2">Uptime</p>
+              <p className="text-sm text-gray-500 dark:text-neutral-500 mt-2">{t('testimonials.stats.uptime')}</p>
           </div>
            <div className="text-center">
               <h4 className="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-500">€2M+</h4>
-              <p className="text-sm text-gray-500 dark:text-neutral-500 mt-2">Processed</p>
+              <p className="text-sm text-gray-500 dark:text-neutral-500 mt-2">{t('testimonials.stats.processed')}</p>
           </div>
            <div className="text-center">
               <h4 className="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-500">500+</h4>
-              <p className="text-sm text-gray-500 dark:text-neutral-500 mt-2">Communities</p>
+              <p className="text-sm text-gray-500 dark:text-neutral-500 mt-2">{t('testimonials.stats.communities')}</p>
           </div>
        </FadeIn>
     </div>

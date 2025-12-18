@@ -50,15 +50,15 @@ function Pricing() {
            <ul className="mt-7 space-y-4 text-sm text-start">
              <li className="flex gap-x-3">
                <CheckIcon />
-               <span className="text-gray-800 dark:text-neutral-200">Up to 20 Units</span>
+               <span className="text-gray-800 dark:text-neutral-200">{t('pricing.plan_features.units_20')}</span>
              </li>
               <li className="flex gap-x-3">
                <CheckIcon />
-               <span className="text-gray-800 dark:text-neutral-200">Basic Reports</span>
+               <span className="text-gray-800 dark:text-neutral-200">{t('pricing.plan_features.basic_reports')}</span>
              </li>
               <li className="flex gap-x-3">
                <CheckIcon />
-               <span className="text-gray-800 dark:text-neutral-200">Community Board</span>
+               <span className="text-gray-800 dark:text-neutral-200">{t('pricing.plan_features.community_board')}</span>
              </li>
            </ul>
 
@@ -71,7 +71,7 @@ function Pricing() {
         <StaggerItem className="relative flex flex-col text-center rounded-2xl p-8 bg-gradient-to-br from-violet-600 to-blue-600/40 text-white shadow-xl scale-105 z-10">
             <div className="absolute top-0 right-0 p-4">
                <span className="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-lg text-xs font-bold uppercase tracking-wide text-blue-600 bg-white shadow-sm">
-                  Most Popular
+                  {t('pricing.most_popular')}
                </span>
             </div>
             
@@ -86,19 +86,19 @@ function Pricing() {
            <ul className="mt-7 space-y-4 text-sm text-start">
              <li className="flex gap-x-3 text-white/90">
                <CheckIcon className="text-white" />
-               <span>Up to 100 Units</span>
+               <span>{t('pricing.plan_features.units_100')}</span>
              </li>
               <li className="flex gap-x-3 text-white/90">
                <CheckIcon className="text-white" />
-               <span>Voting & Polling</span>
+               <span>{t('pricing.plan_features.voting')}</span>
              </li>
               <li className="flex gap-x-3 text-white/90">
                <CheckIcon className="text-white" />
-               <span>Payment Gateway</span>
+               <span>{t('pricing.plan_features.payment_gateway')}</span>
              </li>
              <li className="flex gap-x-3 text-white/90">
                <CheckIcon className="text-white" />
-               <span>Priority Support</span>
+               <span>{t('pricing.plan_features.priority_support')}</span>
              </li>
            </ul>
 
@@ -119,15 +119,15 @@ function Pricing() {
            <ul className="mt-7 space-y-4 text-sm text-start">
              <li className="flex gap-x-3">
                <CheckIcon />
-               <span className="text-gray-700 dark:text-neutral-200">Unlimited Units</span>
+               <span className="text-gray-700 dark:text-neutral-200">{t('pricing.plan_features.unlimited_units')}</span>
              </li>
               <li className="flex gap-x-3">
                <CheckIcon />
-               <span className="text-gray-700 dark:text-neutral-200">Multi-Community</span>
+               <span className="text-gray-700 dark:text-neutral-200">{t('pricing.plan_features.multi_community')}</span>
              </li>
               <li className="flex gap-x-3">
                <CheckIcon />
-               <span className="text-gray-700 dark:text-neutral-200">Dedicated Manager</span>
+               <span className="text-gray-700 dark:text-neutral-200">{t('pricing.plan_features.dedicated_manager')}</span>
              </li>
            </ul>
 

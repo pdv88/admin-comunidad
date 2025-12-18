@@ -13,14 +13,38 @@
         "subtitle": "Simplify the administration of condominiums and buildings. Control payments, residents, and common areas in a single platform.",
         "cta_primary": "Get Started Free",
         "cta_secondary": "Contact Sales",
-        "reviews": "4.8 / 5 - from 5k reviews"
+        "reviews": "4.8 / 5 - from 5k reviews",
+        "badge": "✨ Smart Community Management",
+        "metrics": {
+            "satisfaction": "Satisfaction",
+            "availability": "Availability",
+            "votes_cast": "Votes Cast",
+            "secure": "Secure",
+            "payments": "Payments"
+        }
     },
     "features": {
-        "title": "Collaborative tools for community management",
-        "description": "Use our tools to improve communication, manage incidents, and optimize resources.",
-        "item1": "Less management – more community",
-        "item2": "Time and resource savings",
-        "item3": "Scale your administration efficiently"
+        "main_title": "Everything you need to manage your community",
+        "main_desc": "Experience a platform designed to bring neighbors together and make administrative tasks effortless.",
+        "benefit1": "Reduce delinquency with automated reminders",
+        "benefit2": "Increase participation in community decisions",
+        "benefit3": "Transparent and auditable record keeping",
+        "voting": {
+            "title": "Secure Voting",
+            "desc": "Make decisions democratically with secure, transparent digital voting."
+        },
+        "payments": {
+            "title": "Transparent Finances",
+            "desc": "Track monthly fees, campaign contributions, and community expenses."
+        },
+        "notices": {
+            "title": "Instant Notices",
+            "desc": "Stay updated with real-time alerts for meetings, repairs, and news."
+        },
+        "reports": {
+            "title": "Easy Reporting",
+            "desc": "Report maintenance issues directly from your phone and track their status."
+        }
     },
     "faqs": {
         "title": "Frequently Asked Questions",
@@ -71,7 +95,20 @@
             "multi": "Multi-community",
             "api": "API Integration",
             "priority": "24/7 Priority support"
-        }
+        },
+        "plan_features": {
+            "units_20": "Up to 20 Units",
+            "basic_reports": "Basic Reports",
+            "community_board": "Community Board",
+            "units_100": "Up to 100 Units",
+            "voting": "Voting & Polling",
+            "payment_gateway": "Payment Gateway",
+            "priority_support": "Priority Support",
+            "unlimited_units": "Unlimited Units",
+            "multi_community": "Multi-Community",
+            "dedicated_manager": "Dedicated Manager"
+        },
+        "most_popular": "Most Popular"
     },
     "testimonials": {
         "title": "Efficiency and Speed",
@@ -83,7 +120,24 @@
             "users_desc": "from small communities to large companies",
             "efficiency": "increase in management efficiency",
             "satisfaction": "increase in neighbor satisfaction",
-            "faster": "faster than other management methods"
+            "faster": "faster than other management methods",
+            "active_users": "Active Users",
+            "uptime": "Uptime",
+            "processed": "Processed",
+            "communities": "Communities"
+        },
+        "roles": {
+            "president": "Community President",
+            "resident": "Resident"
+        },
+        "t1": {
+            "quote": "Since switching to this platform, our community meetings are shorter and more productive. The voting system is a game changer."
+        },
+        "t2": {
+            "quote": "I love being able to pay my fees from my phone. No more bank transfers or lost receipts!"
+        },
+        "t3": {
+            "quote": "Reporting maintenance issues is so easy now. I take a photo, upload it, and it gets fixed."
         }
     },
     "footer": {
@@ -164,7 +218,13 @@
             "vote": "Vote",
             "reserve": "Reserve Area",
             "directory": "Directory"
-        }
+        },
+        "monthly_fee": "Monthly Fee",
+        "pay": "Pay",
+        "visit": "Visit",
+        "report_btn": "Report",
+        "recent_reports": "Recent Reports",
+        "my_reports": "My Reports"
     },
     "dashboard_layout": {
         "brand": "Admin Community",
@@ -176,7 +236,9 @@
             "properties": "Properties",
             "payments": "Payments",
             "campaigns": "Campaigns",
-            "users": "Users"
+            "users": "Users",
+            "administration": "Administration",
+            "community_settings": "Community Settings"
         },
         "sign_out": "Sign out"
     },
@@ -282,18 +344,35 @@
         "loading": "Loading polls...",
         "ends": "Ends:",
         "votes": "votes",
-        "vote_now": "Vote Now"
+        "vote_now": "Vote Now",
+        "no_active_polls": "No active polls",
+        "check_later": "Check back later for new votes",
+        "your_vote": "You",
+        "active_polls": "Active Polls",
+        "past_polls": "Past Polls",
+        "total_votes": "Total Votes",
+        "edit_poll": "Edit Poll",
+        "poll_title": "Poll Title",
+        "poll_desc": "Description",
+        "options": "Options",
+        "add_option": "Add Option",
+        "edit_warning": "Options cannot be edited to preserve vote integrity.",
+        "deadline": "Deadline",
+        "target_audience": "Target Audience",
+        "delete_confirm_title": "Delete Poll?",
+        "confirm_delete": "Are you sure you want to delete this poll? This action cannot be undone.",
+        "no_polls": "No polls found."
     },
     "user_management": {
         "title": "User Management",
         "loading": "Loading users...",
         "invite": {
             "title": "Invite New User",
-            "email": "Email",
+            "email": "Email Address",
             "fullname": "Full Name",
             "role": "Role",
             "assign_unit": "Assign Unit (Optional)",
-            "send": "Send Invite"
+            "send": "Send Invitation"
         },
         "table": {
             "name": "Name",
@@ -314,6 +393,15 @@
             "title": "Edit User",
             "cancel": "Cancel",
             "save": "Save Changes"
+        },
+        "messages": {
+            "updating": "Updating user...",
+            "update_success": "User updated successfully!",
+            "update_error": "Error updating user",
+            "sending_invite": "Sending invitation...",
+            "invite_success": "Invitation sent successfully!",
+            "invite_error": "Error sending invitation",
+            "error_prefix": "Error: "
         }
     },
     "update_password": {
@@ -371,12 +459,21 @@
         "voted": "Voted",
         "view_results": "View Results",
         "confirm_delete_notice": "Are you sure you want to delete this notice?",
-        "unauthorized": "Unauthorized access"
+        "unauthorized": "Unauthorized access",
+        "learn_more": "Learn more"
     },
     "payments": {
         "title": "Payments & Contributions",
         "success": "Payment registered successfully",
         "error": "Error registering payment",
+        "target_all": "All Community",
+        "target_blocks": "Specific Blocks",
+        "new_payment": "New Payment",
+        "upload_title": "Register New Payment",
+        "tabs": {
+            "maintenance": "Monthly Fees",
+            "campaigns": "Campaigns"
+        },
         "campaign": {
             "funded": "Funded"
         },
@@ -394,7 +491,11 @@
             "title_admin": "Review Payments",
             "title_community": "Community Payments (By Block)",
             "my_title": "My Payment History",
-            "empty": "No payments found."
+            "empty": "No payments found.",
+            "all_maintenance": "Community Maintenance Payments",
+            "all_campaigns": "Community Campaign Contributions",
+            "my_maintenance": "My Monthly Fees",
+            "my_campaigns": "My Campaign Contributions"
         },
         "table": {
             "date": "Date",
@@ -412,6 +513,7 @@
         },
         "campaigns": {
             "title": "Funding Campaigns",
+            "active_campaigns": "Campaigns",
             "create_title": "Create New Campaign",
             "name": "Campaign Name",
             "goal": "Goal Amount (€)",
@@ -422,11 +524,70 @@
             "error": "Error creating campaign",
             "no_desc": "No description provided",
             "collected": "Collected",
-            "empty": "No active campaigns found."
+            "empty": "No active campaigns found.",
+            "no_active_campaigns": "No active campaigns",
+            "check_later": "New campaigns will appear here"
         }
+    },
+    "campaigns": {
+        "title": "Funding Campaigns",
+        "create_btn": "Create Campaign",
+        "create_title": "Create New Campaign",
+        "success": "Campaign created successfully!",
+        "error": "Error creating campaign",
+        "update_success": "Campaign updated successfully!",
+        "update_error": "Error updating campaign",
+        "name": "Campaign Name",
+        "goal": "Goal Amount (€)",
+        "description": "Description",
+        "deadline": "Deadline",
+        "deadline_label": "Deadline",
+        "target_audience": "Target Audience",
+        "target_all": "All Community",
+        "target_blocks": "Specific Blocks",
+        "select_blocks": "Select Blocks",
+        "active": "Active",
+        "closed": "Closed",
+        "no_desc": "No description provided.",
+        "collected": "Collected",
+        "edit_title": "Edit Campaign",
+        "ongoing_hint": "Leave empty for ongoing",
+        "is_active": "Active Campaign"
     },
     "cookies": {
         "message": "We use cookies to ensure you get the best experience on our website.",
         "accept": "Accept Cookies"
+    },
+    "community_settings": {
+        "title": "Community Settings",
+        "name": "Community Name",
+        "address": "Address",
+        "bank_accounts": "Bank Accounts",
+        "add_account": "+ Add Account",
+        "no_accounts": "No bank accounts added yet.",
+        "bank_name": "Bank Name",
+        "account_number": "Account Number",
+        "account_holder": "Account Holder",
+        "placeholders": {
+            "bank_name": "e.g. Bank of America",
+            "account_number": "e.g. 1234567890",
+            "account_holder": "e.g. Community HOA"
+        },
+        "saving": "Saving...",
+        "save": "Save Changes",
+        "success": "Community settings updated successfully!",
+        "error": "Failed to update settings.",
+        "error_prefix": "Error: "
+    },
+    "community_switcher": {
+        "switch_title": "Switch Community",
+        "create_new": "Create New Community",
+        "modal_title": "Create Community",
+        "name_label": "Community Name",
+        "name_placeholder": "My New Community",
+        "cancel": "Cancel",
+        "create": "Create",
+        "error": "Failed to create community",
+        "loading": "Loading..."
     }
 }

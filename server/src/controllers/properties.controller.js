@@ -115,9 +115,14 @@ exports.createUnit = async (req, res) => {
 
         // Ensure the block belongs to this community
         const { block_id } = req.body;
+        console.log(`[CreateUnit] CommunityID: ${communityId}, BlockID: ${block_id}`);
+
         if (block_id) {
             const { data: block } = await supabaseAdmin.from('blocks').select('community_id').eq('id', block_id).single();
+            console.log(`[CreateUnit] Fetched Block:`, block);
+
             if (!block || block.community_id !== communityId) {
+                console.error(`[CreateUnit] Mismatch! Block Comm: ${block?.community_id} vs Header Comm: ${communityId}`);
                 return res.status(400).json({ error: 'Invalid block or community mismatch' });
             }
         }

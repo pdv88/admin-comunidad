@@ -81,9 +81,8 @@ const Settings = () => {
 
   return (
     <DashboardLayout>
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm dark:bg-neutral-900 dark:border-neutral-700">
-          <div className="p-4 sm:p-7">
+      <div className="max-w-4xl mx-auto space-y-6">
+        <div className="glass-card p-4 sm:p-7">
             <div className="text-center mb-6">
               <h1 className="block text-2xl font-bold text-gray-800 dark:text-white">
                 {t('settings.title', 'Account Settings')}
@@ -96,19 +95,19 @@ const Settings = () => {
           <div className="mt-5">
             <div className="space-y-4">
               <div>
-                <label htmlFor="fullName" className="block text-sm font-medium mb-2 dark:text-white">{t('settings.fullname', 'Full Name')}</label>
+                <label htmlFor="fullName" className="block text-sm font-medium mb-2 dark:text-gray-300">{t('settings.fullname', 'Full Name')}</label>
                 <div className="flex gap-4">
                     <input 
                         type="text" 
                         id="fullName"
-                        className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" 
+                        className="glass-input" 
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
                     />
                     <button 
                         onClick={handleUpdateProfile}
                         disabled={loading}
-                        className="py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:pointer-events-none"
+                        className="glass-button whitespace-nowrap"
                     >
                         {loading ? '...' : t('settings.save', 'Save')}
                     </button>
@@ -118,15 +117,15 @@ const Settings = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2 dark:text-white">{t('settings.email', 'Email Address')}</label>
-                <div className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm bg-gray-100 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400">
+                <label className="block text-sm font-medium mb-2 dark:text-gray-300">{t('settings.email', 'Email Address')}</label>
+                <div className="py-2.5 px-4 block w-full bg-gray-50/50 dark:bg-neutral-900/50 border border-gray-200 dark:border-neutral-700/50 rounded-full text-sm dark:text-neutral-400">
                   {user?.email || 'N/A'}
                 </div>
               </div>
               
               <div>
-                <label className="block text-sm font-medium mb-2 dark:text-white">{t('settings.role', 'Role')}</label>
-                 <div className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm bg-gray-100 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400">
+                <label className="block text-sm font-medium mb-2 dark:text-gray-300">{t('settings.role', 'Role')}</label>
+                 <div className="py-2.5 px-4 block w-full bg-gray-50/50 dark:bg-neutral-900/50 border border-gray-200 dark:border-neutral-700/50 rounded-full text-sm dark:text-neutral-400 capitalize">
                   {user?.profile?.roles?.name || 'User'}
                 </div>
               </div>
@@ -135,9 +134,9 @@ const Settings = () => {
               <div className="pt-6 border-t border-gray-200 dark:border-neutral-700">
                   <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4">{t('settings.preferences.title', 'Preferences')}</h2>
                   <div>
-                      <label className="block text-sm font-medium mb-2 dark:text-white">{t('settings.preferences.language', 'Language')}</label>
+                      <label className="block text-sm font-medium mb-2 dark:text-gray-300">{t('settings.preferences.language', 'Language')}</label>
                       <select
-                          className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400"
+                          className="glass-input"
                           value={i18n.language}
                           onChange={(e) => i18n.changeLanguage(e.target.value)}
                       >
@@ -151,22 +150,22 @@ const Settings = () => {
               {user?.profile?.roles?.name === 'admin' && (
                   <>
                   <div className="mt-8 pt-8 border-t border-gray-200 dark:border-neutral-700">
-                    <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4">{t('auth.community_name', 'Community Settings')}</h2>
+                    <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4">{t('settings.community_settings', 'Community Settings')}</h2>
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium mb-2 dark:text-white">{t('auth.community_name', 'Community Name')}</label>
+                            <label className="block text-sm font-medium mb-2 dark:text-gray-300">{t('community_settings.name', 'Community Name')}</label>
                             <input 
                                 type="text"
-                                className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400"
+                                className="glass-input"
                                 value={commName}
                                 onChange={(e) => setCommName(e.target.value)}
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium mb-2 dark:text-white">{t('auth.community_address', 'Address')}</label>
+                            <label className="block text-sm font-medium mb-2 dark:text-gray-300">{t('community_settings.address', 'Address')}</label>
                             <input 
                                 type="text"
-                                className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400"
+                                className="glass-input"
                                 value={commAddress}
                                 onChange={(e) => setCommAddress(e.target.value)}
                             />
@@ -174,7 +173,7 @@ const Settings = () => {
                         <button 
                             onClick={handleUpdateCommunity}
                             disabled={commLoading}
-                            className="py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:pointer-events-none"
+                            className="glass-button"
                         >
                             {commLoading ? '...' : t('settings.save', 'Save Changes')}
                         </button>
@@ -185,7 +184,7 @@ const Settings = () => {
 
                   <div className="mt-8 pt-8 border-t border-gray-200 dark:border-neutral-700">
                       <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4">{t('settings.subscription.title', 'Subscription & Payment')}</h2>
-                      <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 dark:bg-neutral-800 dark:border-neutral-700">
+                      <div className="bg-gray-50/50 border border-gray-200 rounded-xl p-4 dark:bg-neutral-900 dark:border-neutral-700">
                           <div className="flex justify-between items-center mb-4">
                               <div>
                                   <p className="text-sm font-medium text-gray-500 dark:text-neutral-400">{t('settings.subscription.plan', 'Current Plan')}</p>
@@ -197,7 +196,7 @@ const Settings = () => {
                           </div>
                           <div className="space-y-2">
                               <p className="text-sm text-gray-600 dark:text-neutral-400">{t('settings.subscription.next_billing', 'Next billing date')}: <span className="font-semibold text-gray-800 dark:text-white">August 15, 2025</span></p>
-                              <button className="py-2 px-3 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800">
+                              <button className="glass-button-secondary">
                                   {t('settings.subscription.manage', 'Manage Subscription')}
                               </button>
                           </div>
@@ -208,7 +207,6 @@ const Settings = () => {
               )}
 
             </div>
-          </div>
           </div>
         </div>
       </div>

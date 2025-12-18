@@ -26,7 +26,7 @@ const UserManagement = () => {
 
     const handleUpdateUser = async (e) => {
         e.preventDefault();
-        setMessage('Updating user...');
+        setMessage(t('user_management.messages.updating'));
         try {
             const res = await fetch(`${API_URL}/api/users/${editingUser.id}`, {
                 method: 'PUT',
@@ -38,14 +38,14 @@ const UserManagement = () => {
             });
             const data = await res.json();
             if (res.ok) {
-                setMessage('User updated successfully!');
+                setMessage(t('user_management.messages.update_success'));
                 setEditingUser(null);
                 fetchData();
             } else {
-                setMessage('Error: ' + data.error);
+                setMessage(t('user_management.messages.error_prefix') + data.error);
             }
         } catch (error) {
-            setMessage('Error updating user');
+            setMessage(t('user_management.messages.update_error'));
         }
     };
 
@@ -74,7 +74,7 @@ const UserManagement = () => {
 
     const handleInvite = async (e) => {
         e.preventDefault();
-        setMessage('Sending invitation...');
+        setMessage(t('user_management.messages.sending_invite'));
         try {
             const res = await fetch(`${API_URL}/api/users/invite`, {
                 method: 'POST',
@@ -86,14 +86,14 @@ const UserManagement = () => {
             });
             const data = await res.json();
             if (res.ok) {
-                setMessage('Invitation sent successfully!');
+                setMessage(t('user_management.messages.invite_success'));
                 setNewUser({ email: '', fullName: '', roleName: 'neighbor', unitIds: [] });
                 fetchData();
             } else {
-                setMessage('Error: ' + data.error);
+                setMessage(t('user_management.messages.error_prefix') + data.error);
             }
         } catch (error) {
-            setMessage('Error sending invitation');
+            setMessage(t('user_management.messages.invite_error'));
         }
     };
 
@@ -246,7 +246,7 @@ const UserManagement = () => {
                                             onClick={() => handleEditClick(user)}
                                             className="text-blue-600 hover:text-blue-900 dark:text-blue-500 dark:hover:text-blue-400"
                                         >
-                                            Edit
+                                            {t('common.edit', 'Edit')}
                                         </button>
                                     </td>
                                 </tr>

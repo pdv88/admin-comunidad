@@ -38,15 +38,15 @@ const ActiveCampaignsWidget = (props) => {
              <div className="flex items-center justify-between mb-4">
                  <h2 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2">
                     <span className="text-emerald-500">📢</span>
-                    {t('payments.active_campaigns', 'Campaigns')}
+                    {t('payments.campaigns.active_campaigns', 'Campaigns')}
                 </h2>
             </div>
              <div className="overflow-y-auto flex-1 pr-2 custom-scrollbar">
                 {campaigns.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full text-center text-gray-400 dark:text-neutral-500 py-8">
                         <span className="text-4xl mb-2 opacity-50">📢</span>
-                        <p className="font-medium">{t('payments.no_active_campaigns', 'No active campaigns')}</p>
-                        <p className="text-sm opacity-75">{t('payments.check_later', 'New campaigns will appear here')}</p>
+                        <p className="font-medium">{t('payments.campaigns.no_active_campaigns', 'No active campaigns')}</p>
+                        <p className="text-sm opacity-75">{t('payments.campaigns.check_later', 'New campaigns will appear here')}</p>
                     </div>
                 ) : (
                     <div className="space-y-6">

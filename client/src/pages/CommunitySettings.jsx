@@ -57,12 +57,12 @@ const CommunitySettings = () => {
             });
 
             if (res.ok) {
-                setMessage('Community settings updated successfully!');
+                setMessage(t('community_settings.success'));
             } else {
-                setMessage('Failed to update settings.');
+                setMessage(t('community_settings.error'));
             }
         } catch (error) {
-            setMessage('Error: ' + error.message);
+            setMessage(t('community_settings.error_prefix') + error.message);
         } finally {
             setSaving(false);
         }
@@ -94,7 +94,7 @@ const CommunitySettings = () => {
     if (loading) {
         return (
             <DashboardLayout>
-                <div className="p-6 text-center dark:text-gray-300">Loading...</div>
+                <div className="p-6 text-center dark:text-gray-300">{t('common.loading')}</div>
             </DashboardLayout>
         );
     }
@@ -103,7 +103,7 @@ const CommunitySettings = () => {
         <DashboardLayout>
             <div className="max-w-7xl mx-auto space-y-8">
                 <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Community Settings</h1>
+                    <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t('community_settings.title')}</h1>
                 </div>
                 
                 <div className="glass-card p-6 rounded-xl">
@@ -112,7 +112,7 @@ const CommunitySettings = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    Community Name
+                                    {t('community_settings.name')}
                                 </label>
                                 <input
                                     type="text"
@@ -124,7 +124,7 @@ const CommunitySettings = () => {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    Address
+                                    {t('community_settings.address')}
                                 </label>
                                 <input
                                     type="text"
@@ -137,18 +137,18 @@ const CommunitySettings = () => {
 
                         <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
                             <div className="flex justify-between items-center mb-4">
-                                <h2 className="text-lg font-semibold dark:text-white">Bank Accounts</h2>
+                                <h2 className="text-lg font-semibold dark:text-white">{t('community_settings.bank_accounts')}</h2>
                                 <button 
                                     type="button" 
                                     onClick={addBankAccount}
                                     className="glass-button-secondary py-2 px-4 text-xs"
                                 >
-                                    + Add Account
+                                    {t('community_settings.add_account')}
                                 </button>
                             </div>
 
                             {community.bank_details.length === 0 && (
-                                <p className="text-sm text-gray-500 italic">No bank accounts added yet.</p>
+                                <p className="text-sm text-gray-500 italic">{t('community_settings.no_accounts')}</p>
                             )}
 
                             <div className="space-y-4">
@@ -158,7 +158,7 @@ const CommunitySettings = () => {
                                             type="button"
                                             onClick={() => removeBankAccount(index)}
                                             className="absolute top-2 right-2 text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity p-1"
-                                            title="Remove account"
+                                            title={t('common.delete')}
                                         >
                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                                 <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -166,31 +166,31 @@ const CommunitySettings = () => {
                                         </button>
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                             <div>
-                                                <label className="block text-xs text-gray-500 mb-1">Bank Name</label>
+                                                <label className="block text-xs text-gray-500 mb-1">{t('community_settings.bank_name')}</label>
                                                 <input
                                                     type="text"
                                                     className="glass-input w-full text-sm"
-                                                    placeholder="e.g. Bank of America"
+                                                    placeholder={t('community_settings.placeholders.bank_name')}
                                                     value={bank.bank_name}
                                                     onChange={(e) => updateBankAccount(index, 'bank_name', e.target.value)}
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-xs text-gray-500 mb-1">Account Number</label>
+                                                <label className="block text-xs text-gray-500 mb-1">{t('community_settings.account_number')}</label>
                                                 <input
                                                     type="text"
                                                     className="glass-input w-full text-sm"
-                                                    placeholder="e.g. 1234567890"
+                                                    placeholder={t('community_settings.placeholders.account_number')}
                                                     value={bank.account_number}
                                                     onChange={(e) => updateBankAccount(index, 'account_number', e.target.value)}
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-xs text-gray-500 mb-1">Account Holder</label>
+                                                <label className="block text-xs text-gray-500 mb-1">{t('community_settings.account_holder')}</label>
                                                 <input
                                                     type="text"
                                                     className="glass-input w-full text-sm"
-                                                    placeholder="e.g. Community HOA"
+                                                    placeholder={t('community_settings.placeholders.account_holder')}
                                                     value={bank.account_holder}
                                                     onChange={(e) => updateBankAccount(index, 'account_holder', e.target.value)}
                                                 />
@@ -208,7 +208,7 @@ const CommunitySettings = () => {
                                 disabled={saving}
                                 className="glass-button"
                             >
-                                {saving ? 'Saving...' : 'Save Changes'}
+                                {saving ? t('community_settings.saving') : t('community_settings.save')}
                             </button>
                         </div>
                     </form>

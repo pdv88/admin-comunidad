@@ -15,7 +15,7 @@ function Hero() {
             {/* Left Column: Content */}
             <div className="max-w-2xl text-start">
               <p className="inline-block text-sm font-medium bg-clip-text bg-gradient-to-l from-blue-600 to-violet-500 text-transparent dark:from-blue-400 dark:to-violet-400">
-                 ✨ Smart Community Management
+                 {t('hero.badge', '✨ Smart Community Management')}
               </p>
 
               {/* Title */}
@@ -47,19 +47,19 @@ function Hero() {
                <div className="mt-12 grid grid-cols-2 sm:grid-cols-4 gap-8 opacity-80 text-start">
                   <div className="flex flex-col items-start">
                       <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-violet-600">98%</span>
-                      <span className="text-xs text-gray-500 uppercase tracking-wide">Satisfaction</span>
+                      <span className="text-xs text-gray-500 uppercase tracking-wide">{t('hero.metrics.satisfaction')}</span>
                   </div>
                   <div className="flex flex-col items-start">
                       <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-violet-600">24/7</span>
-                      <span className="text-xs text-gray-500 uppercase tracking-wide">Availability</span>
+                      <span className="text-xs text-gray-500 uppercase tracking-wide">{t('hero.metrics.availability')}</span>
                   </div>
                   <div className="flex flex-col items-start">
                       <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-violet-600">10k+</span>
-                      <span className="text-xs text-gray-500 uppercase tracking-wide">Votes Cast</span>
+                      <span className="text-xs text-gray-500 uppercase tracking-wide">{t('hero.metrics.votes_cast')}</span>
                   </div>
                    <div className="flex flex-col items-start">
-                      <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-violet-600">Secure</span>
-                      <span className="text-xs text-gray-500 uppercase tracking-wide">Payments</span>
+                      <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-violet-600">{t('hero.metrics.secure')}</span>
+                      <span className="text-xs text-gray-500 uppercase tracking-wide">{t('hero.metrics.payments')}</span>
                   </div>
                </div>
             </div>

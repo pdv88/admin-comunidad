@@ -92,7 +92,7 @@ const DashboardLayout = ({ children }) => {
                         <>
                             <div className="pt-4 pb-2">
                                 <div className="h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-neutral-600 to-transparent mb-3 opacity-50"></div>
-                                <span className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider italic">Administration</span>
+                                <span className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider italic">{t('dashboard_layout.nav.administration', 'Administration')}</span>
                             </div>
                             <Link to="/app/properties" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/properties')}`}>
                                 {t('dashboard_layout.nav.properties')}
@@ -103,7 +103,7 @@ const DashboardLayout = ({ children }) => {
                             </Link>
 
                             <Link to="/app/community" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/community')}`}>
-                                Community Settings
+                                {t('dashboard_layout.nav.community_settings', 'Community Settings')}
                             </Link>
                         </>
                     )}

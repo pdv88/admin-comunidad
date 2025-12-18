@@ -159,7 +159,7 @@ const Campaigns = () => {
 
     return (
         <DashboardLayout>
-            <div className="space-y-4 md:space-y-8">
+            <div className="max-w-7xl mx-auto space-y-4 md:space-y-8">
                 <div className="flex justify-between items-center">
                     <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t('campaigns.title', 'Funding Campaigns')}</h1>
                     {canCreate && (
@@ -174,7 +174,7 @@ const Campaigns = () => {
 
                 {/* Create Campaign Form */}
                 {showCreateForm && (
-                     <div className="bg-white dark:bg-neutral-800 p-6 rounded-xl border border-gray-200 dark:border-neutral-700 shadow-sm animate-fade-in-down">
+                     <div className="glass-card p-6 animate-fade-in-down mb-6">
                         <h2 className="text-lg font-bold mb-4 text-gray-800 dark:text-white">{t('campaigns.create_title', 'Create New Campaign')}</h2>
                         <form onSubmit={handleCreate} className="space-y-4">
                         <div className="grid sm:grid-cols-2 gap-4">
@@ -290,7 +290,7 @@ const Campaigns = () => {
                 {/* List of campaigns */}
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {campaigns.map(campaign => (
-                         <div key={campaign.id} className="bg-white dark:bg-neutral-800 p-5 rounded-xl border border-gray-200 dark:border-neutral-700 shadow-sm flex flex-col justify-between">
+                         <div key={campaign.id} className="glass-card p-5 flex flex-col justify-between">
                             <div>
                                 <div className="flex justify-between items-start mb-2">
                                     <h3 className="font-bold text-lg text-gray-800 dark:text-white">{campaign.name}</h3>

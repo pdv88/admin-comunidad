@@ -89,7 +89,7 @@ const WelcomeWidget = ({ role }) => {
                                 <span className={`text-xs font-bold uppercase tracking-wider ${
                                      feeStatus === 'paid' ? 'text-green-700 dark:text-green-400' : 'text-orange-700 dark:text-orange-400'
                                 }`}>
-                                    Monthly Fee
+                                    {t('dashboard.monthly_fee')}
                                 </span>
                                 <div className="flex items-baseline gap-1">
                                     <span className="font-bold text-gray-900 dark:text-white">€{feeAmount.toFixed(0)}</span>
@@ -106,15 +106,15 @@ const WelcomeWidget = ({ role }) => {
                     <div className="grid grid-cols-3 gap-3">
                          <Link to="/app/payments" className="flex flex-col items-center justify-center gap-1 p-3 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 dark:text-blue-400 transition-colors">
                             <span className="text-xl">💳</span>
-                            <span className="text-[10px] font-bold uppercase">Pay</span>
+                            <span className="text-[10px] font-bold uppercase">{t('dashboard.pay')}</span>
                         </Link>
                          <Link to="/app/notices" className="flex flex-col items-center justify-center gap-1 p-3 rounded-xl bg-violet-50 text-violet-600 hover:bg-violet-100 dark:bg-violet-900/20 dark:hover:bg-violet-900/30 dark:text-violet-400 transition-colors">
                             <span className="text-xl">🔑</span>
-                            <span className="text-[10px] font-bold uppercase">Visit</span>
+                            <span className="text-[10px] font-bold uppercase">{t('dashboard.visit')}</span>
                         </Link>
                          <Link to="/app/reports" className="flex flex-col items-center justify-center gap-1 p-3 rounded-xl bg-orange-50 text-orange-600 hover:bg-orange-100 dark:bg-orange-900/20 dark:hover:bg-orange-900/30 dark:text-orange-400 transition-colors">
                             <span className="text-xl">⚠️</span>
-                            <span className="text-[10px] font-bold uppercase">Report</span>
+                            <span className="text-[10px] font-bold uppercase">{t('dashboard.report_btn')}</span>
                         </Link>
                     </div>
                 </div>
