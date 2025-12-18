@@ -33,45 +33,34 @@ const Dashboard = () => {
                     <RecentNoticesWidget />
                 </div>
 
-                {/* Grid Layout */}
-                <div className="grid grid-cols-1 md:grid-cols-12 md:grid-rows-6 gap-4 flex-1 min-h-0 w-full"> 
-                    
-                    {/* 1. Welcome Section (Full Width) */}
-                    <div className="md:col-span-12 md:row-span-2 md:h-full">
-                        <WelcomeWidget role={role} />
+                {/* 1. Welcome Section (Auto Height) */}
+                <div className="w-full shrink-0">
+                    <WelcomeWidget role={role} />
+                </div>
+
+                 {/* 2. Role Sections (Auto Height) */}
+                 {hasRoleSection && (
+                    <div className="w-full shrink-0">
+                        {role === 'admin' && <AdminSection className={cardClass} />}
+                        {/* Other roles hidden for now */}
                     </div>
+                 )}
 
-                     {/* 2. Role Sections (If applicable, Full Width or Grid?) */}
-                     {hasRoleSection && (
-                        <div className="md:col-span-12 md:row-span-2 md:overflow-y-auto">
-                            {role === 'admin' && <AdminSection className={cardClass} />}
-                            {/* Other roles hidden for now to prevent empty boxes */}
-                        </div>
-                     )}
-
-                    {/* 3, 4, 5. Bottom Row Widgets */}
-                    {/* Adjust row spans to fill remaining space. 
-                        If Welcome uses 2 rows, and we have 6 total...
-                        Residents: 6 - 2 = 4 rows left.
-                        Polls (4), Campaigns (4), Reports (4). Perfect.
-                        
-                        Admins: Welcome (2) + AdminSection (2) = 4 used.
-                        2 rows left? That's tight for lists.
-                        Maybe we increase total rows or grid height for admins?
-                        Or AdminSection shares row with Welcome? No, Welcome is full width.
-                        
-                        Let's auto-flow the height for admins (min-h-0 might cutoff).
-                        I'll stick to row-span-4 for residents.
-                    */}
+                {/* 3. Action Center & Reports (Fills remaining space) */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1 min-h-0 w-full"> 
                     
                     {/* Polls */}
-                    <ActivePollsWidget className={`${scrollableCardClass} md:col-span-4 ${hasRoleSection ? 'md:row-span-2' : 'md:row-span-4'}`} />
+                    <div className="col-span-1 h-full min-h-0">
+                       <ActivePollsWidget className={scrollableCardClass} />
+                    </div>
 
                     {/* Campaigns */}
-                    <ActiveCampaignsWidget className={`${scrollableCardClass} md:col-span-4 ${hasRoleSection ? 'md:row-span-2' : 'md:row-span-4'}`} />
+                    <div className="col-span-1 h-full min-h-0">
+                        <ActiveCampaignsWidget className={scrollableCardClass} />
+                    </div>
 
                     {/* Reports */}
-                    <div className={`${scrollableCardClass} md:col-span-4 ${hasRoleSection ? 'md:row-span-2' : 'md:row-span-4'}`}>
+                    <div className={`${scrollableCardClass} col-span-1`}>
                          <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
                              <span className="text-orange-500">🔧</span>
                              Reports
