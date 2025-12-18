@@ -52,7 +52,7 @@ const DashboardLayout = ({ children }) => {
             )}
 
             {/* Sidebar */}
-            <div className={`fixed inset-y-4 left-0 z-50 w-64 bg-white/60 backdrop-blur-2xl border border-white/40 dark:bg-neutral-900/60 dark:border-neutral-700/50 shadow-2xl transform transition-transform duration-300 ease-in-out md:translate-x-4 md:static md:h-[calc(100vh-2rem)] md:my-4 md:rounded-3xl md:inset-auto ${isSidebarOpen ? 'translate-x-0 rounded-r-3xl' : '-translate-x-full'} flex flex-col`}>
+            <div className={`fixed inset-y-4 left-0 z-50 w-64 bg-gradient-to-b from-white/50 to-white/20 backdrop-blur-2xl border border-white/40 dark:from-neutral-900/80 dark:to-neutral-900/40 dark:border-neutral-700/50 shadow-2xl transform transition-transform duration-300 ease-in-out md:translate-x-4 md:static md:h-[calc(100vh-2rem)] md:my-4 md:rounded-3xl md:inset-auto ${isSidebarOpen ? 'translate-x-0 rounded-r-3xl' : '-translate-x-full'} flex flex-col`}>
                 <div className="p-6 flex justify-between items-center h-20 shrink-0">
                     <Link to="/" className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-400 dark:to-violet-400">
                         {t('dashboard_layout.brand')}

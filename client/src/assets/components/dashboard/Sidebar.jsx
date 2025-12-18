@@ -13,7 +13,7 @@ function Sidebar() {
   w-[260px]
   hidden
   fixed inset-y-0 start-0 z-[60]
-  bg-white/30 border-e border-gray-200
+  bg-white/10 border-e border-gray-200
   lg:block lg:translate-x-0 lg:end-auto lg:bottom-0
   dark:bg-neutral-800 dark:border-neutral-700
  "
