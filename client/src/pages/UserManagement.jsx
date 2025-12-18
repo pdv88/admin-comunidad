@@ -76,7 +76,10 @@ const UserManagement = () => {
         try {
             const res = await fetch(`${API_URL}/api/users/invite`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
                 body: JSON.stringify(newUser)
             });
             const data = await res.json();
@@ -213,8 +216,8 @@ const UserManagement = () => {
 
                 {/* User List */}
                 <div className="glass-card overflow-hidden">
-                    <table className="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
-                        <thead className="bg-gray-50 dark:bg-neutral-700">
+                    <table className="min-w-full divide-y divide-gray-300 dark:divide-neutral-700">
+                        <thead className="bg-gray-50/60 dark:bg-neutral-700">
                             <tr>
                                 <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-400">{t('user_management.table.name')}</th>
                                 <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-400">{t('user_management.table.role')}</th>

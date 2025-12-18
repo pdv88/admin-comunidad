@@ -19,6 +19,7 @@ import Properties from "./pages/Properties";
 import UserManagement from "./pages/UserManagement";
 import UpdatePassword from "./pages/UpdatePassword";
 import Settings from "./pages/Settings"; 
+import CommunitySettings from "./pages/CommunitySettings";
 import Payments from "./pages/Payments";
 import Campaigns from "./pages/Campaigns";
 import PrivacyNotice from "./components/PrivacyNotice"; // Import PrivacyNotice
@@ -46,7 +47,9 @@ function App() {
              {/* Admin/President Only Routes */}
              <Route element={<ProtectedRoute allowedRoles={['admin', 'president']} />}>
                 <Route path="/app/properties" element={<Properties />} />
+                <Route path="/app/properties" element={<Properties />} />
                 <Route path="/app/users" element={<UserManagement />} />
+                <Route path="/app/community" element={<CommunitySettings />} />
              </Route>
 
              <Route path="/app/settings" element={<Settings />} /> 

@@ -19,6 +19,11 @@ exports.getAll = async (req, res) => {
         if (!profile) throw new Error('Profile not found');
         const communityId = profile.community_id;
 
+        if (!communityId) {
+            // New users might not have a community_id yet, return empty to avoid UUID error
+            return res.json([]);
+        }
+
         // Get user's block IDs (could be multiple if multiple units)
         const userBlockIds = profile.unit_owners?.map(uo => uo.units?.block_id).filter(Boolean) || [];
 

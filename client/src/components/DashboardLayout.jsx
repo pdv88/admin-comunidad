@@ -97,6 +97,10 @@ const DashboardLayout = ({ children }) => {
                             <Link to="/app/users" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/users')}`}>
                                 {t('dashboard_layout.nav.users')}
                             </Link>
+
+                            <Link to="/app/community" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/community')}`}>
+                                Community Settings
+                            </Link>
                         </>
                     )}
                 </nav>

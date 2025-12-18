@@ -104,6 +104,7 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
     const { email, password } = req.body;
+    console.log(`Login attempt for: ${email}`); // DEBUG
 
     try {
         const { data, error } = await supabase.auth.signInWithPassword({
@@ -111,7 +112,10 @@ exports.login = async (req, res) => {
             password,
         });
 
-        if (error) throw error;
+        if (error) {
+            console.error("Supabase Login Error:", error); // DEBUG
+            throw error;
+        }
 
         // Fetch user profile with role
         // Fetch user profile with role using Admin client to bypass RLS
@@ -175,10 +179,26 @@ exports.updatePassword = async (req, res) => {
     if (!token) return res.status(401).json({ error: 'No token provided' });
 
     try {
-        const { error: updateError } = await supabase.auth.updateUser({ password: password });
-        if (updateError) throw updateError;
-        res.json({ message: 'Password updated' });
+        // 1. Verify the token and get the user
+        const { data: { user }, error } = await supabase.auth.getUser(token);
+
+        if (error || !user) throw new Error('Invalid or expired token');
+
+        console.log(`Updating password for user: ${user.email} (${user.id})`); // DEBUG
+
+        // 2. Update the password using Admin client (secure)
+        const { error: updateError } = await require('../config/supabaseAdmin').auth.admin.updateUserById(
+            user.id,
+            { password: password }
+        );
+
+        if (updateError) {
+            console.error("Update User By ID Error:", updateError); // DEBUG
+            throw updateError;
+        }
+        res.json({ message: 'Password updated successfully' });
     } catch (err) {
+        console.error("Update password error:", err);
         res.status(400).json({ error: err.message });
     }
 };

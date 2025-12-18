@@ -16,20 +16,38 @@ exports.inviteUser = async (req, res) => {
     const { email, fullName, roleName, unitIds } = req.body;
 
     try {
-        // 1. Generate a temp password (or rely on magic link, but creating user requires password usually)
+        // 1. Get Inviter's Community ID
+        const token = req.headers.authorization?.split(' ')[1];
+        if (!token) throw new Error('No token provided');
+
+        const { data: { user: inviterUser }, error: authError } = await supabase.auth.getUser(token);
+        if (authError || !inviterUser) throw new Error('Invalid token');
+
+        const { data: inviterProfile } = await supabase
+            .from('profiles')
+            .select('community_id')
+            .eq('id', inviterUser.id)
+            .single();
+
+        if (!inviterProfile?.community_id) {
+            throw new Error('Inviter does not belong to a community.');
+        }
+
+        // 2. Generate a temp password (or rely on magic link, but creating user requires password usually)
         // With inviteUserByEmail we don't need password.
 
         const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
             data: {
                 full_name: fullName,
-                is_admin_registration: false // It's an invitation, not a direct admin signup
+                is_admin_registration: false,
+                community_id: inviterProfile.community_id // Metadata backup
             },
             redirectTo: (process.env.CLIENT_URL || 'http://localhost:5173') + '/update-password'
         });
 
         if (error) throw error;
 
-        // 2. We need to assign the role and unit to this new user.
+        // 3. We need to assign the role and unit to this new user.
         // The trigger 'handle_new_user' might run on insert to auth.users.
         // The default trigger assigns 'neighbor'. We can update it now.
 
@@ -44,11 +62,12 @@ exports.inviteUser = async (req, res) => {
 
         if (roleError) throw roleError;
 
-        // Update profile role
-        const { error: updateError } = await supabase
+        // Update profile role AND community_id
+        const { error: updateError } = await supabaseAdmin
             .from('profiles')
             .update({
-                role_id: roleData.id
+                role_id: roleData.id,
+                community_id: inviterProfile.community_id // Explicitly set community ID
             })
             .eq('id', userId);
 

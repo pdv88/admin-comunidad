@@ -3,6 +3,6 @@ const router = express.Router();
 const communitiesController = require('../controllers/communities.controller');
 
 router.get('/my', communitiesController.getMyCommunity);
-router.put('/my', communitiesController.updateCommunity);
+router.put('/update', communitiesController.updateCommunity);
 
 module.exports = router;

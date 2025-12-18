@@ -11,6 +11,18 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const checkUserLoggedIn = async () => {
+      // 1. Check for Hash Fragment (Supabase Redirect)
+      const hash = window.location.hash;
+      if (hash && hash.includes('access_token')) {
+        const params = new URLSearchParams(hash.substring(1)); // remove #
+        const accessToken = params.get('access_token');
+        if (accessToken) {
+            localStorage.setItem('token', accessToken);
+            // Optional: clean URL
+            window.history.replaceState(null, '', window.location.pathname);
+        }
+      }
+
       const token = localStorage.getItem('token');
       if (token) {
         try {
