@@ -40,7 +40,7 @@ const DashboardLayout = ({ children }) => {
     const closeSidebar = () => setIsSidebarOpen(false);
 
     return (
-        <div className="relative flex h-screen bg-gray-50 dark:bg-neutral-900 overflow-hidden">
+        <div className="relative flex h-screen bg-slate-300 dark:bg-slate-950 overflow-hidden">
             <AnimatedBackground />
             
             {/* Mobile Sidebar Overlay */}

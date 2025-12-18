@@ -36,18 +36,14 @@ const RecentNoticesWidget = () => {
     const tickerItems = [...notices, ...notices]; 
 
     return (
-        <div className="relative overflow-hidden rounded-lg shadow-lg mb-1 transition-all duration-500 ease-in-out bg-gradient-to-r from-indigo-600 to-blue-600 dark:from-indigo-900 dark:to-blue-900">
-            {/* Background Pattern */}
-            <div className="absolute top-0 right-0 -mt-2 -mr-2 w-24 h-24 bg-white opacity-10 rounded-full blur-xl transform rotate-45"></div>
-            <div className="absolute bottom-0 left-0 -mb-2 -ml-2 w-16 h-16 bg-black opacity-10 rounded-full blur-lg"></div>
-
+        <div className="glass-card relative overflow-hidden mb-1 transition-all duration-500 ease-in-out border border-blue-500/20 shadow-sm hover:shadow-md bg-gradient-to-r from-blue-600/40 to-indigo-600/40 dark:from-blue-500/20 dark:to-indigo-500/20">
             <div className="relative flex items-center px-4 py-3 md:px-6 h-14">
                 {/* Static Icon Badge */}
-                <div className="flex items-center gap-3 shrink-0 z-10 bg-inherit pr-4 shadow-xl shadow-transparent">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm shrink-0">
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" /></svg>
+                <div className="flex items-center gap-3 shrink-0 z-10 pr-4">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 shrink-0">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" /></svg>
                     </span>
-                    <span className="bg-white/20 backdrop-blur-sm text-xs font-bold uppercase px-2 py-0.5 rounded-full whitespace-nowrap border border-white/10 text-white">
+                    <span className="text-xs font-bold uppercase px-2 py-0.5 rounded-full whitespace-nowrap bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/10">
                         {t('notices.latest', 'Latest')}
                     </span>
                 </div>
@@ -56,9 +52,9 @@ const RecentNoticesWidget = () => {
                 <div className="flex-1 overflow-hidden relative h-full flex items-center mask-image-linear-gradient">
                      <div className="flex items-center gap-8 animate-marquee whitespace-nowrap">
                         {tickerItems.map((notice, idx) => (
-                            <div key={`${notice.id}-${idx}`} className="flex items-center gap-3 text-white">
+                            <div key={`${notice.id}-${idx}`} className="flex items-center gap-3 text-gray-800 dark:text-gray-200">
                                 {notice.priority === 'urgent' && (
-                                     <span className="bg-red-500/80 text-white text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">
+                                     <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm">
                                         FLASH
                                     </span>
                                 )}
@@ -69,7 +65,7 @@ const RecentNoticesWidget = () => {
                                     {notice.content}
                                 </span>
                                 {/* Separator */}
-                                <span className="text-white/40 mx-2">•</span>
+                                <span className="text-blue-500/40 mx-2">•</span>
                             </div>
                         ))}
                     </div>
