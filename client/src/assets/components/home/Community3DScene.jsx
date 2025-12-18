@@ -72,7 +72,9 @@ function Scene() {
             <DataOrb position={[-2.5, 1.5, 0]} color="#10b981" speed={0.6} />
 
             {/* Environment lighting */}
-            <Environment preset="city" />
+            {/* Environment lighting - Removed to prevent fetch errors
+            <Environment preset="city" /> 
+            */}
 
             <ambientLight intensity={1} />
             <directionalLight position={[5, 10, 7]} intensity={2} />
