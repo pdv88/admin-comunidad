@@ -24,7 +24,7 @@ exports.inviteUser = async (req, res) => {
                 full_name: fullName,
                 is_admin_registration: false // It's an invitation, not a direct admin signup
             },
-            // redirectTo: process.env.CLIENT_URL + '/update-password' // Redirect flow
+            redirectTo: (process.env.CLIENT_URL || 'http://localhost:5173') + '/update-password'
         });
 
         if (error) throw error;
