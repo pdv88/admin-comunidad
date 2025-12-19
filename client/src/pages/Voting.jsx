@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import DashboardLayout from '../components/DashboardLayout';
 import { useTranslation } from 'react-i18next';
 import { API_URL } from '../config';
+import ModalPortal from '../components/ModalPortal';
 
 const Voting = () => {
     const { user } = useAuth();
@@ -278,9 +279,9 @@ const Voting = () => {
                 </div>
             </div>
 
-            {/* Poll Modal (Create/Edit) */}
             {showPollModal && (
-                <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
+                <ModalPortal>
+                    <div className="fixed inset-0 z-[60] overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
                     <div className="bg-white dark:bg-neutral-800 rounded-xl max-w-lg w-full p-6">
                         <h2 className="text-xl font-bold mb-4 dark:text-white">
                             {editingPoll ? t('voting.edit_poll', 'Edit Poll') : t('voting.create_poll')}
@@ -387,11 +388,12 @@ const Voting = () => {
                         </form>
                     </div>
                 </div>
+                </ModalPortal>
             )}
 
-            {/* Custom Delete Confirmation Modal */}
             {deleteId && (
-                <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
+                <ModalPortal>
+                    <div className="fixed inset-0 z-[60] overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
                     <div className="bg-white dark:bg-neutral-800 rounded-xl max-w-sm w-full p-6 text-center">
                         <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/30 mb-4">
                             <svg className="h-6 w-6 text-red-600 dark:text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -418,6 +420,7 @@ const Voting = () => {
                         </div>
                     </div>
                 </div>
+                </ModalPortal>
             )}
         </DashboardLayout>
     );

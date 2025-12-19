@@ -23,8 +23,8 @@ function Building({ position, scale, color, delay = 0 }) {
       <boxGeometry args={[1, 1, 1]} />
       <meshStandardMaterial 
         color={color} 
-        roughness={0.2}
-        metalness={0.8}
+        roughness={0.5}
+        metalness={0.1}
         emissive={color}
         emissiveIntensity={0.2}
         transparent
@@ -82,13 +82,16 @@ function Scene() {
     )
 }
 
-export default function Community3DScene() {
+function Community3DSceneComponent() {
   return (
     <div className="w-full h-[500px] cursor-pointer">
-      <Canvas>
+      <Canvas dpr={[1, 2]} gl={{ antialias: true, preserveDrawingBuffer: true }}>
         <PerspectiveCamera makeDefault position={[6, 3, 6]} fov={45} />
         <Scene />
       </Canvas>
     </div>
   )
 }
+
+const Community3DScene = React.memo(Community3DSceneComponent);
+export default Community3DScene;

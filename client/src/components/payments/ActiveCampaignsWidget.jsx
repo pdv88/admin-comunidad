@@ -31,7 +31,24 @@ const ActiveCampaignsWidget = (props) => {
         }
     };
 
-    if (loading) return null;
+    if (loading) return (
+        <div className={props.className}>
+             <div className="flex items-center justify-between mb-4">
+                 <div className="h-6 w-32 bg-gray-200 dark:bg-neutral-800 rounded animate-pulse"></div>
+            </div>
+             <div className="space-y-6">
+                {[1, 2, 3].map(i => (
+                     <div key={i} className="space-y-2">
+                        <div className="flex justify-between">
+                            <div className="h-4 w-1/3 bg-gray-200 dark:bg-neutral-800 rounded animate-pulse"></div>
+                            <div className="h-4 w-16 bg-gray-200 dark:bg-neutral-800 rounded animate-pulse"></div>
+                        </div>
+                        <div className="h-2 w-full bg-gray-200 dark:bg-neutral-800 rounded-full animate-pulse"></div>
+                     </div>
+                ))}
+            </div>
+        </div>
+    );
 
     return (
         <div className={props.className}>

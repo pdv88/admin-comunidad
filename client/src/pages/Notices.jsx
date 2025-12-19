@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { API_URL } from '../config';
 import ConfirmationModal from '../components/ConfirmationModal';
+import ModalPortal from '../components/ModalPortal';
 
 const Notices = () => {
     const { user, activeCommunity } = useAuth();
@@ -235,6 +236,7 @@ const Notices = () => {
 
                 {/* Create Modal */}
                 {showModal && (
+                    <ModalPortal>
                     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
                         <div className="glass-card w-full max-w-lg p-6 animate-fade-in bg-white/90 dark:bg-neutral-900/90">
                             <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">{t('notices.post_notice')}</h2>
@@ -321,6 +323,7 @@ const Notices = () => {
                             </form>
                         </div>
                     </div>
+                    </ModalPortal>
                 )}
 
                 <ConfirmationModal

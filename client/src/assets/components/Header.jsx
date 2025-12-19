@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
+import logo from "../../assets/logos/habiio_logo_header_nobg.webp";
 
 function Header() {
   const { t, i18n } = useTranslation();
@@ -24,11 +25,11 @@ function Header() {
       >
         <div className="flex items-center justify-between w-full md:w-auto">
           <Link
-            className="flex-none text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-400 dark:to-violet-400 px-2"
+            className="flex items-center gap-2 text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-400 dark:to-violet-400 px-2"
             to="/"
             aria-label="Brand"
           >
-            {t("header.brand")}
+            <img src={logo} alt="Logo" className="h-10 rounded-full" />
           </Link>
           <div className="md:hidden">
             <button

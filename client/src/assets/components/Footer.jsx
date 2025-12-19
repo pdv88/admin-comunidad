@@ -7,7 +7,7 @@ function Footer() {
 
   return (
     <>
-      <footer className="mt-auto w-[95%] lg:w-[80%] py-10 px-4 sm:px-6 lg:px-8 mx-auto -mb-10 relative z-20">
+      <footer className="mt-auto w-[95%] lg:w-[80%] pt-10 pb-0 px-4 sm:px-6 lg:px-8 mx-auto relative z-20">
         <div className="bg-white/60 backdrop-blur-xl border border-white/20 rounded-t-3xl p-10 dark:bg-neutral-900/60 dark:border-neutral-700/50 shadow-sm">
           {/* <!-- Grid --> */}
           <div className="grid grid-cols-1 md:grid-cols-3 items-center gap-5">

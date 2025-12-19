@@ -115,11 +115,26 @@ exports.login = async (req, res) => {
 
         if (commError) console.error("Community fetch error:", commError);
 
+        // Fetch Units for this user
+        const { data: units, error: unitsError } = await require('../config/supabaseAdmin')
+            .from('unit_owners')
+            .select('*, units(*, blocks(community_id))')
+            .eq('profile_id', data.user.id);
+
+        // Join units to communities
+        const communitiesWithUnits = communities?.map(cm => {
+            const communityUnits = units?.filter(u => u.units?.blocks?.community_id === cm.community_id) || [];
+            return {
+                ...cm,
+                unit_owners: communityUnits
+            };
+        }) || [];
+
         res.status(200).json({
             message: 'Login successful',
             token: data.session.access_token,
             user: { ...data.user, profile },
-            communities: communities || [] // Return list of communities
+            communities: communitiesWithUnits // Return list of communities with units attached
         });
 
     } catch (error) {
@@ -154,12 +169,28 @@ exports.getMe = async (req, res) => {
             .select('*, communities(*), roles(*)')
             .eq('profile_id', user.id);
 
+        // Fetch Units for this user
+        const { data: units, error: unitsError } = await supabase
+            .from('unit_owners')
+            .select('*, units(*, blocks(community_id))')
+            .eq('profile_id', user.id);
+
+        // Join units to communities
+        const communitiesWithUnits = communities?.map(cm => {
+            const communityUnits = units?.filter(u => u.units?.blocks?.community_id === cm.community_id) || [];
+            return {
+                ...cm,
+                unit_owners: communityUnits
+            };
+        }) || [];
+
         res.status(200).json({
             user: { ...user, profile },
-            communities: communities || []
+            communities: communitiesWithUnits
         });
 
     } catch (error) {
+        console.error("GetMe Error:", error);
         res.status(401).json({ error: 'Session expired or invalid' });
     }
 };

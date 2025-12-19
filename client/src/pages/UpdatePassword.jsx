@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next';
 import { API_URL } from '../config';
 import Header from '../assets/components/Header';
 import Footer from '../assets/components/Footer';
-import AnimatedBackground from '../assets/components/AnimatedBackground';
 
 const UpdatePassword = () => {
     const [password, setPassword] = useState('');
@@ -47,13 +46,10 @@ const UpdatePassword = () => {
     };
 
     return (
-        <div className="relative min-h-screen bg-white dark:bg-neutral-900 overflow-hidden selection:bg-indigo-500 selection:text-white">
-            <AnimatedBackground />
+        <div className="relative flex flex-col min-h-screen">
+            <Header />
 
-            <div className="relative z-10 flex flex-col min-h-screen">
-                <Header />
-
-                <main className="flex-grow flex items-center justify-center p-4">
+            <main className="flex-grow flex items-center justify-center p-4">
                     <div className="w-full max-w-md p-6 bg-white/40 backdrop-blur-md border border-gray-200 rounded-3xl shadow-lg dark:bg-neutral-900/40 dark:border-neutral-700">
                         <div className="text-center">
                             <h1 className="block text-2xl font-bold text-gray-800 dark:text-white">{t('update_password.title')}</h1>
@@ -89,7 +85,6 @@ const UpdatePassword = () => {
                 </main>
 
                 <Footer />
-            </div>
         </div>
     );
 };

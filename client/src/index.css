@@ -4,8 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-white text-gray-800 dark:bg-neutral-900 dark:text-neutral-200;
-    height: 100dvh;
+    @apply bg-white text-gray-800 dark:bg-neutral-900 dark:text-neutral-200 overflow-x-hidden;
   }
 }
 

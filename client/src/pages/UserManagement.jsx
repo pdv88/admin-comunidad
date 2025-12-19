@@ -3,6 +3,7 @@ import DashboardLayout from '../components/DashboardLayout';
 import { useTranslation } from 'react-i18next';
 import { API_URL } from '../config';
 import GlassSelect from '../components/GlassSelect';
+import ModalPortal from '../components/ModalPortal';
 
 const UserManagement = () => {
     const [users, setUsers] = useState([]);
@@ -257,7 +258,8 @@ const UserManagement = () => {
             </div>
             {/* Edit User Modal */}
             {editingUser && (
-                <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                <ModalPortal>
+                    <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
                     <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
                         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onClick={() => setEditingUser(null)}></div>
                         <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
@@ -337,6 +339,7 @@ const UserManagement = () => {
                         </div>
                     </div>
                 </div>
+                </ModalPortal>
             )}
         </DashboardLayout>
     );

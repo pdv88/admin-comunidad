@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { API_URL } from '../config';
 
 import ConfirmationModal from '../components/ConfirmationModal';
+import ModalPortal from '../components/ModalPortal';
 
 const Reports = () => {
     const { user } = useAuth();
@@ -275,6 +276,7 @@ const Reports = () => {
 
                 {/* Create Modal */}
                 {showModal && (
+                    <ModalPortal>
                     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
                         <div className="bg-white dark:bg-neutral-800 rounded-xl w-full max-w-md p-6 shadow-xl animate-fade-in">
                             <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">{t('reports.form.title', 'Report Issue')}</h2>
@@ -354,6 +356,7 @@ const Reports = () => {
                             </form>
                         </div>
                     </div>
+                    </ModalPortal>
                 )}
                 
                 {/* Delete Confirmation Modal */}

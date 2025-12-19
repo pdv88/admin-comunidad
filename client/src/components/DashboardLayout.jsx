@@ -2,6 +2,7 @@ import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import logo from '../assets/logos/habiio_logo_header_nobg.webp';
 
 import AnimatedBackground from '../assets/components/AnimatedBackground';
 import CommunitySwitcher from './CommunitySwitcher';
@@ -55,8 +56,8 @@ const DashboardLayout = ({ children }) => {
             {/* Sidebar */}
             <div className={`fixed inset-y-4 left-0 z-50 w-64 bg-gradient-to-b from-white/50 to-white/20 backdrop-blur-2xl border border-white/40 dark:from-neutral-900/80 dark:to-neutral-900/40 dark:border-neutral-700/50 shadow-2xl transform transition-transform duration-300 ease-in-out md:translate-x-4 md:static md:h-[calc(100vh-2rem)] md:my-4 md:rounded-3xl md:inset-auto ${isSidebarOpen ? 'translate-x-0 rounded-r-3xl' : '-translate-x-full'} flex flex-col`}>
                 <div className="p-6 flex justify-between items-center h-20 shrink-0">
-                    <Link to="/" className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-400 dark:to-violet-400">
-                        {t('dashboard_layout.brand')}
+                    <Link to="/" className="flex items-center gap-2 text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-400 dark:to-violet-400">
+                        <img src={logo} alt="Logo" className="w-full rounded-full" />
                     </Link>
                     <button onClick={closeSidebar} className="md:hidden text-gray-500 hover:text-gray-700 dark:text-neutral-400">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -135,10 +136,18 @@ const DashboardLayout = ({ children }) => {
 
             {/* Main Content */}
             <div className="flex-1 flex flex-col overflow-hidden relative">
-                 {/* Mobile Header (Toggle only) - visible only on mobile */}
-                <div className="md:hidden absolute top-4 left-4 z-20">
-                    <button 
-                        className="p-2 bg-white/80 backdrop-blur-md rounded-lg shadow-sm text-gray-500 hover:text-gray-600 dark:bg-neutral-900/80 dark:text-neutral-400"
+                 {/* Mobile Header - Visible only on mobile */}
+                {/* Mobile Header - Visible only on mobile */}
+                <div className="md:hidden flex items-center justify-between px-4 py-1 bg-white/40 dark:bg-black/20 backdrop-blur-md border-b border-white/20 dark:border-white/5 shrink-0 z-20">
+                     {/* Logo Left */}
+                     <span className="font-bold text-lg bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-400 dark:to-violet-400 flex items-center gap-2">
+                        <img src={logo} alt="Logo" className="h-10 rounded-full" />
+                        
+                    </span>
+                     
+                     {/* Burger Right */}
+                     <button 
+                        className="p-2 -mr-2 text-gray-600 hover:text-blue-600 dark:text-neutral-400 dark:hover:text-blue-400 rounded-lg transition-colors"
                         onClick={() => setIsSidebarOpen(true)}
                     >
                         <span className="sr-only">Open sidebar</span>
@@ -148,7 +157,7 @@ const DashboardLayout = ({ children }) => {
 
 
                 {/* Page Content */}
-                <main className="relative flex-1 overflow-x-hidden overflow-y-auto bg-transparent p-4 md:p-6 z-10 w-full h-full">
+                <main className="relative flex-1 overflow-x-hidden overflow-y-auto bg-transparent p-3 md:p-6 z-10 w-full h-full">
                     {children}
                 </main>
             </div>

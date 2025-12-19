@@ -21,7 +21,8 @@ const Dashboard = () => {
 
     useEffect(() => {
         // Simulate loading check or data pre-fetch
-        const timer = setTimeout(() => setLoading(false), 1000);
+        // Extended to 2000ms to allow widgets to start fetching, ensuring their skeletons are ready if global skeleton unmounts
+        const timer = setTimeout(() => setLoading(false), 2000);
         return () => clearTimeout(timer);
     }, []);
 
@@ -35,13 +36,13 @@ const Dashboard = () => {
 
     // Common glass card style
     // Common glass card style
-    const cardClass = "glass-card p-6 flex flex-col h-full";
+    const cardClass = "glass-card p-4 md:p-6 flex flex-col h-full";
     // For lists that need internal scrolling
     const scrollableCardClass = `${cardClass} overflow-hidden`;
 
     return (
         <DashboardLayout>
-            <div className="flex flex-col h-full gap-4">
+            <div className="flex flex-col min-h-full md:h-full gap-4">
                 {/* 0. Notices Bar (Full Width) */}
                 <div className="w-full shrink-0">
                     <RecentNoticesWidget />
@@ -60,21 +61,21 @@ const Dashboard = () => {
                     </div>
                  )}
 
-                {/* 3. Action Center & Reports (Fills remaining space) */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1 min-h-0 w-full"> 
+                {/* 3. Action Center & Reports (Fills remaining space on desktop, stacks on mobile) */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full md:flex-1 md:min-h-0"> 
                     
                     {/* Polls */}
-                    <div className="col-span-1 h-full min-h-0">
+                    <div className="col-span-1 h-96 md:h-full md:min-h-0">
                        <ActivePollsWidget className={scrollableCardClass} />
                     </div>
 
                     {/* Campaigns */}
-                    <div className="col-span-1 h-full min-h-0">
+                    <div className="col-span-1 h-96 md:h-full md:min-h-0">
                         <ActiveCampaignsWidget className={scrollableCardClass} />
                     </div>
 
                     {/* Reports */}
-                    <div className="col-span-1 h-full min-h-0">
+                    <div className="col-span-1 h-96 md:h-full md:min-h-0">
                         <RecentReportsWidget className={scrollableCardClass} />
                     </div>
                 </div>

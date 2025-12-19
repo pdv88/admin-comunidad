@@ -6,12 +6,12 @@ import { API_URL } from '../../config';
 
 const WelcomeWidget = ({ role }) => {
     const { t } = useTranslation();
-    const { user } = useAuth();
+    const { user, activeCommunity } = useAuth();
     const [feeStatus, setFeeStatus] = useState('loading');
     const [feeAmount, setFeeAmount] = useState(0);
     const MONTHLY_FEE = 50.00;
 
-    const hasUnits = user?.profile?.unit_owners?.length > 0;
+    const hasUnits = activeCommunity?.unit_owners?.length > 0;
     const isResident = role === 'resident' || role === 'neighbor' || hasUnits;
 
     useEffect(() => {
@@ -49,20 +49,20 @@ const WelcomeWidget = ({ role }) => {
     };
 
     return (
-        <div className="glass-card p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 h-full">
+        <div className="glass-card p-4 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 h-full">
             {/* Left: Greeting */}
             <div className="flex-1">
                  <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-400 dark:to-violet-400 mb-2">
                     {t('dashboard.welcome', 'Welcome')}, <br className="md:hidden"/>
                     <span className="text-gray-800 dark:text-white text-3xl block md:inline md:ml-2">
-                        {user?.profile?.full_name || user?.user_metadata?.full_name || user?.email}
+                        {user?.user_metadata?.full_name || user?.email}
                     </span>
                 </h1>
                 <div className="flex flex-wrap gap-2 text-sm text-gray-600 dark:text-neutral-400 items-center">
                     <span className="px-2 py-0.5 rounded-md bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 text-xs font-bold uppercase tracking-wider">
-                        {user?.profile?.roles?.name || t('common.user', 'User')}
+                        {activeCommunity?.roles?.name || t('common.user', 'User')}
                     </span>
-                     {user?.profile?.unit_owners?.map((uo, idx) => (
+                     {activeCommunity?.unit_owners?.map((uo, idx) => (
                         <span key={idx} className="bg-gray-100 dark:bg-neutral-800 px-2 py-0.5 rounded text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-neutral-700 text-xs">
                             {uo.units?.unit_number}
                         </span>
@@ -74,7 +74,7 @@ const WelcomeWidget = ({ role }) => {
             {isResident && (
                 <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center">
                     {/* Monthly Fee Status Pill */}
-                    {feeStatus !== 'loading' && (
+                    {feeStatus !== 'loading' ? (
                         <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${
                             feeStatus === 'paid' 
                             ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800/50' 
@@ -95,6 +95,14 @@ const WelcomeWidget = ({ role }) => {
                                     <span className="font-bold text-gray-900 dark:text-white">€{feeAmount.toFixed(0)}</span>
                                     <span className="text-xs text-gray-500">/ {MONTHLY_FEE.toFixed(0)}</span>
                                 </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-white/50 dark:bg-white/5">
+                            <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-white/10 animate-pulse"></div>
+                            <div className="flex flex-col gap-2">
+                                <div className="h-3 w-20 bg-gray-200 dark:bg-white/10 rounded animate-pulse"></div>
+                                <div className="h-4 w-12 bg-gray-200 dark:bg-white/10 rounded animate-pulse"></div>
                             </div>
                         </div>
                     )}

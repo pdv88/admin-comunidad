@@ -7,38 +7,51 @@ exports.listUsers = async (req, res) => {
         const communityId = req.headers['x-community-id'];
         if (!communityId) return res.status(400).json({ error: 'Community ID header missing' });
 
-        // Fetch members of the specific community
-        // Note: unit_owners is related to profiles, not community_members directly.
-        const { data, error } = await supabase
+        // 1. Fetch community members
+        const { data: members, error: memberError } = await supabase
             .from('community_members')
             .select(`
                 *,
-                profiles (
-                    *,
-                    unit_owners (
-                        unit_id,
-                        units ( * )
-                    )
-                ),
+                profiles (*),
                 roles ( name )
             `)
             .eq('community_id', communityId);
 
-        if (error) throw error;
+        if (memberError) throw memberError;
 
-        // Flatten structure for frontend compatibility
-        const users = data.map(member => {
+        if (!members || members.length === 0) {
+            return res.json([]);
+        }
+
+        const profileIds = members.map(m => m.profile_id);
+
+        // 2. Fetch Unit Owners (and Units) for these profiles
+        const { data: ownerships, error: unitsError } = await supabase
+            .from('unit_owners')
+            .select(`
+                *,
+                units (
+                    *,
+                    blocks ( community_id )
+                )
+            `)
+            .in('profile_id', profileIds);
+
+        if (unitsError) throw unitsError;
+
+        // 3. Map structure
+        const users = members.map(member => {
             const profile = member.profiles || {};
-            const rawUnits = profile.unit_owners || [];
-
-            // Filter units to only show ones belonging to this community
-            // (Assuming units table has community_id populated)
-            const communityUnits = rawUnits.filter(uo => uo.units && uo.units.community_id === communityId);
+            // Find ownerships for this profile AND filter by community via blocks
+            const userOwnerships = ownerships?.filter(uo =>
+                uo.profile_id === member.profile_id &&
+                uo.units?.blocks?.community_id === communityId
+            ) || [];
 
             return {
                 ...profile,   // Profile details
                 roles: member.roles,  // Role details
-                unit_owners: communityUnits, // Frontend expects 'unit_owners' array on the user object for the table mapping
+                unit_owners: userOwnerships,
                 community_member_id: member.id,
                 role_id: member.role_id
             };
@@ -46,6 +59,7 @@ exports.listUsers = async (req, res) => {
 
         res.json(users);
     } catch (err) {
+        console.error("List users error:", err);
         res.status(500).json({ error: err.message });
     }
 }

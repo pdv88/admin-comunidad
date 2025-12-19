@@ -55,7 +55,28 @@ const RecentReportsWidget = (props) => {
         }
     };
 
-    if (loading) return null;
+    if (loading) return (
+        <div className={props.className}>
+            <div className="flex justify-between items-center mb-4">
+                <div className="h-6 w-32 bg-gray-200 dark:bg-neutral-800 rounded animate-pulse"></div>
+                <div className="h-4 w-16 bg-gray-200 dark:bg-neutral-800 rounded animate-pulse"></div>
+            </div>
+            
+            <div className="space-y-4">
+                {[1, 2, 3].map(i => (
+                    <div key={i} className="flex items-start justify-between p-4 glass-card border border-white/20 dark:border-white/5">
+                        <div className="flex items-center gap-3 overflow-hidden w-full">
+                                <div className="flex-shrink-0 w-8 h-8 bg-gray-200 dark:bg-neutral-800 rounded-full animate-pulse"></div>
+                                <div className="min-w-0 flex-1 space-y-2">
+                                <div className="h-4 w-3/4 bg-gray-200 dark:bg-neutral-800 rounded animate-pulse"></div>
+                                <div className="h-3 w-1/2 bg-gray-200 dark:bg-neutral-800 rounded animate-pulse"></div>
+                                </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
 
     return (
         <div className={props.className}>

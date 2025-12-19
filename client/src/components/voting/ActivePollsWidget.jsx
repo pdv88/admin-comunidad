@@ -31,7 +31,26 @@ const ActivePollsWidget = (props) => {
         }
     };
 
-    if (loading) return null;
+    if (loading) return (
+        <div className={props.className}>
+             <div className="flex items-center justify-between mb-4">
+                 <div className="h-6 w-32 bg-gray-200 dark:bg-neutral-800 rounded animate-pulse"></div>
+             </div>
+             <div className="space-y-4">
+                {[1, 2].map(i => (
+                    <div key={i} className="glass-card p-5 border border-white/20 dark:border-white/5 space-y-3">
+                         <div className="h-4 w-3/4 bg-gray-200 dark:bg-neutral-800 rounded animate-pulse"></div>
+                         <div className="h-3 w-full bg-gray-200 dark:bg-neutral-800 rounded animate-pulse"></div>
+                         <div className="h-3 w-full bg-gray-200 dark:bg-neutral-800 rounded-full animate-pulse mt-4"></div>
+                         <div className="flex justify-between pt-2">
+                             <div className="h-3 w-16 bg-gray-200 dark:bg-neutral-800 rounded animate-pulse"></div>
+                             <div className="h-3 w-16 bg-gray-200 dark:bg-neutral-800 rounded animate-pulse"></div>
+                         </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
 
     // Helper to get vote count for an option
     const getVoteCount = (poll, optionId) => {
