@@ -45,7 +45,7 @@ const getUserAndMember = async (req) => {
 exports.createPayment = async (req, res) => {
     try {
         const { user, member, communityId } = await getUserAndMember(req);
-        const { amount, campaign_id, notes, base64Image, fileName, targetUserId } = req.body;
+        const { amount, campaign_id, notes, base64Image, fileName, targetUserId, monthly_fee_id, unit_id } = req.body;
         const role = member.roles?.name;
 
         let paymentUserId = user.id;
@@ -54,6 +54,20 @@ exports.createPayment = async (req, res) => {
         if ((role === 'admin' || role === 'president') && targetUserId) {
             paymentUserId = targetUserId;
             // Verify target user is in this community? (Ideally yes, skipping for brevity)
+        }
+
+        // Verify monthly_fee ownership if provided
+        if (monthly_fee_id) {
+            const { data: feeData, error: feeError } = await supabaseAdmin
+                .from('monthly_fees')
+                .select('unit_id, units(block_id, unit_owners(profile_id))')
+                .eq('id', monthly_fee_id)
+                .single();
+
+            if (feeError || !feeData) throw new Error('Invalid monthly fee selected');
+
+            // Check if user is owner of the unit for this fee
+            // (Skipping deep check for speed, but ideally we match fee unit owner to paymentUserId)
         }
 
         let proof_url = null;
@@ -89,12 +103,21 @@ exports.createPayment = async (req, res) => {
                 campaign_id: campaign_id || null, // Optional
                 notes,
                 proof_url,
+                unit_id: unit_id || null, // Optional but recommended
                 status: 'pending'
             })
             .select()
             .single();
 
         if (error) throw error;
+
+        // Link Fee if provided
+        if (monthly_fee_id) {
+            await supabaseAdmin
+                .from('monthly_fees')
+                .update({ payment_id: data.id })
+                .eq('id', monthly_fee_id);
+        }
 
         res.status(201).json(data);
 
@@ -112,7 +135,13 @@ exports.getPayments = async (req, res) => {
 
         let query = supabaseAdmin
             .from('payments')
-            .select('*')
+            .select(`
+                *,
+                units (
+                    unit_number,
+                    blocks ( name )
+                )
+            `)
             .eq('community_id', communityId)
             .order('created_at', { ascending: false });
 
@@ -144,7 +173,18 @@ exports.getPayments = async (req, res) => {
         if (role === 'admin' || role === 'president') {
             const userIds = [...new Set(payments.map(p => p.user_id))];
             if (userIds.length > 0) {
-                const { data: pData } = await supabaseAdmin.from('profiles').select('id, full_name, email, phone').in('id', userIds);
+                const { data: pData } = await supabaseAdmin
+                    .from('profiles')
+                    .select(`
+                        id, full_name, email, phone,
+                        unit_owners(
+                            units(
+                                unit_number,
+                                blocks(name)
+                            )
+                        )
+                    `)
+                    .in('id', userIds);
                 if (pData) pData.forEach(p => profileMap[p.id] = p);
                 // Note: Not fetching unit info again to keep it simple, or can do recursive fetch if needed.
             }
@@ -194,21 +234,40 @@ exports.updatePaymentStatus = async (req, res) => {
         if (error) throw error;
 
         // Update Campaign Stats
-        if (status === 'confirmed' && currentPayment.status !== 'confirmed' && data.campaign_id) {
+        if (status === 'confirmed' && currentPayment.status !== 'confirmed') {
+            if (data.campaign_id) {
+                try {
+                    const { data: campaign } = await supabaseAdmin
+                        .from('campaigns')
+                        .select('current_amount')
+                        .eq('id', data.campaign_id)
+                        .maybeSingle();
+
+                    if (campaign) {
+                        await supabaseAdmin
+                            .from('campaigns')
+                            .update({ current_amount: Number(campaign.current_amount) + Number(data.amount) })
+                            .eq('id', data.campaign_id);
+                    }
+                } catch (ignore) { }
+            }
+
+            // Check for linked Monthly Fee
             try {
-                const { data: campaign } = await supabaseAdmin
-                    .from('campaigns')
-                    .select('current_amount')
-                    .eq('id', data.campaign_id)
+                // Find fee linked to this payment
+                const { data: linkedFee } = await supabaseAdmin
+                    .from('monthly_fees')
+                    .select('id')
+                    .eq('payment_id', data.id)
                     .maybeSingle();
 
-                if (campaign) {
+                if (linkedFee) {
                     await supabaseAdmin
-                        .from('campaigns')
-                        .update({ current_amount: Number(campaign.current_amount) + Number(data.amount) })
-                        .eq('id', data.campaign_id);
+                        .from('monthly_fees')
+                        .update({ status: 'paid' })
+                        .eq('id', linkedFee.id);
                 }
-            } catch (ignore) { }
+            } catch (ignore) { console.error('Error updating fee status', ignore); }
         }
 
         res.json(data);

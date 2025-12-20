@@ -6,19 +6,21 @@ import { API_URL } from '../config';
 import CampaignProgress from '../components/payments/CampaignProgress';
 import PaymentUpload from '../components/payments/PaymentUpload';
 import PaymentList from '../components/payments/PaymentList';
+import ModalPortal from '../components/ModalPortal';
 
 const Payments = () => {
     const { t } = useTranslation();
-    const { user } = useAuth();
+    const { user, activeCommunity } = useAuth();
     const [myPayments, setMyPayments] = useState([]);
     const [allPayments, setAllPayments] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const role = user?.profile?.roles?.name || 'resident';
-    const isAdmin = role === 'admin' || role === 'president';
-    // Relaxed rule: Allow president to upload too if needed, or simply debug.
-    // Also include 'vice_president', 'secretary' etc just in case.
-    const canUpload = ['resident', 'neighbor', 'president', 'vice_president', 'secretary', 'treasurer', 'vocal'].includes(role); 
+    const role = activeCommunity?.roles?.name || 'resident';
+    const isAdmin = ['admin', 'president', 'secretary'].includes(role);
+    const hasUnit = activeCommunity?.unit_owners?.length > 0;
+    
+    // Allow upload if resident (has unit) OR if admin (can upload for others)
+    const canUpload = hasUnit || isAdmin; 
     
     // Spec:
     // Residente: Registra, ve estatus.
@@ -77,27 +79,31 @@ const Payments = () => {
                      {/* New Payment Button (Toggles Form) */}
                      {(canUpload || role === 'admin') && (
                         <button 
-                            onClick={() => setShowUploadForm(!showUploadForm)}
-                            className="py-2 px-4 inline-flex justify-center items-center gap-2 rounded-lg border border-transparent font-semibold bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all text-sm"
+                            onClick={() => setShowUploadForm(true)}
+                            className="glass-button"
                         >
-                            <svg className={`w-4 h-4 transition-transform ${showUploadForm ? 'rotate-45' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
-                            {showUploadForm ? t('common.cancel', 'Cancel') : t('payments.new_payment', 'New Payment')}
+                            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
+                            {t('payments.new_payment', 'New Payment')}
                         </button>
                     )}
                 </div>
 
-                {/* Upload Form Section (Collapsible) */}
+                {/* Upload Modal */}
                 {showUploadForm && (
-                     <div className="glass-card p-6 animate-fade-in-down mb-6">
-                        <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4">{t('payments.upload_title', 'Register New Payment')}</h2>
-                        <PaymentUpload 
-                            onSuccess={() => {
-                                fetchData();
-                                setShowUploadForm(false);
-                            }} 
-                            isAdmin={isAdmin} 
-                        />
-                    </div>
+                     <ModalPortal>
+                        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+                            <div className="w-full max-w-lg">
+                                <PaymentUpload 
+                                    onSuccess={() => {
+                                        fetchData();
+                                        setShowUploadForm(false);
+                                    }} 
+                                    onCancel={() => setShowUploadForm(false)}
+                                    isAdmin={isAdmin} 
+                                />
+                            </div>
+                        </div>
+                     </ModalPortal>
                 )}
 
                 {/* Tabs */}
@@ -147,22 +153,24 @@ const Payments = () => {
                         </div>
                     )}
 
-                    {/* 2. My Payments (Personal History) */}
-                    <div className="glass-card p-6">
-                            <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4">
-                            {activeTab === 'maintenance' 
-                                ? t('payments.list.my_maintenance', 'My Monthly Fees')
-                                : t('payments.list.my_campaigns', 'My Campaign Contributions')
-                            }
-                        </h2>
-                        <PaymentList 
-                            payments={filteredMyPayments} 
-                            isAdmin={false} // Even if admin, for THIS list we behave like user
-                            onRefresh={fetchData} 
-                            showResidentInfo={false}
-                            loading={loading}
-                        />
-                    </div>
+                    {/* 2. My Payments (Personal History) - Only if they have a unit */}
+                    {hasUnit && (
+                        <div className="glass-card p-6">
+                                <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4">
+                                {activeTab === 'maintenance' 
+                                    ? t('payments.list.my_maintenance', 'My Monthly Fees')
+                                    : t('payments.list.my_campaigns', 'My Campaign Contributions')
+                                }
+                            </h2>
+                            <PaymentList 
+                                payments={filteredMyPayments} 
+                                isAdmin={false} // Even if admin, for THIS list we behave like user
+                                onRefresh={fetchData} 
+                                showResidentInfo={false}
+                                loading={loading}
+                            />
+                        </div>
+                    )}
                 </div>
             </div>
         </DashboardLayout>

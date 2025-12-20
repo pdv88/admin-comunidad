@@ -10,11 +10,19 @@
 
 @layer components {
   .glass-card {
-    @apply bg-white/30 dark:bg-neutral-900/60 backdrop-blur-xl border border-white/20 dark:border-neutral-700/30 rounded-2xl shadow-lg shadow-gray-200/20 dark:shadow-black/20;
+    @apply bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-2xl shadow-xl shadow-gray-200/20 dark:shadow-black/40;
   }
 
   .glass-input {
-    @apply py-2.5 px-4 block w-full bg-white/50 dark:bg-neutral-900/50 backdrop-blur-md border-gray-200 dark:border-neutral-700/50 rounded-full text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:text-neutral-200 dark:placeholder-neutral-500;
+    @apply py-3 px-4 block w-full bg-white/30 dark:bg-neutral-800/40 backdrop-blur-md border border-gray-200 dark:border-neutral-700/50 rounded-full text-sm shadow-2xl focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:text-neutral-200 dark:placeholder-neutral-500 transition-all duration-300;
+  }
+
+  select.glass-input {
+    @apply appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-[right_1rem_center] bg-[length:1em_auto] bg-no-repeat pr-10;
+  }
+
+  select.glass-input option {
+    @apply bg-white dark:bg-neutral-800 text-gray-800 dark:text-gray-200;
   }
 
   .glass-button {

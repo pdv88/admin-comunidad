@@ -6,6 +6,7 @@ import { API_URL } from '../config';
 
 import ConfirmationModal from '../components/ConfirmationModal';
 import ModalPortal from '../components/ModalPortal';
+import GlassSelect from '../components/GlassSelect';
 
 const Reports = () => {
     const { user } = useAuth();
@@ -168,7 +169,7 @@ const Reports = () => {
                     <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t('reports.title', 'Issues & Maintenance')}</h1>
                     <button 
                         onClick={() => setShowModal(true)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                        className="glass-button gap-2"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
                         {t('reports.report_issue', 'Report Issue')}
@@ -277,27 +278,27 @@ const Reports = () => {
                 {/* Create Modal */}
                 {showModal && (
                     <ModalPortal>
-                    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                        <div className="bg-white dark:bg-neutral-800 rounded-xl w-full max-w-md p-6 shadow-xl animate-fade-in">
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                        <div className="glass-card w-full max-w-md p-6 shadow-xl animate-fade-in">
                             <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">{t('reports.form.title', 'Report Issue')}</h2>
                             <form onSubmit={handleCreateReport} className="space-y-4">
                                 {/* Unit Selection (if multiple) */}
                                 {userUnits.length > 1 && (
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">{t('reports.form.unit', 'Unit')}</label>
-                                        <select
+                                        <GlassSelect
                                             value={newReport.unit_id}
                                             onChange={(e) => setNewReport({ ...newReport, unit_id: e.target.value })}
-                                            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                            options={[
+                                                 { value: '', label: t('common.select', 'Select...') },
+                                                 ...userUnits.map(unit => ({
+                                                     value: unit.id,
+                                                     label: `${unit.blocks?.name ? unit.blocks.name + ' - ' : ''}${unit.unit_number}`
+                                                 }))
+                                            ]}
+                                            placeholder={t('reports.form.select_unit', 'Select Unit')}
                                             required
-                                        >
-                                            <option value="">{t('common.select', 'Select...')}</option>
-                                            {userUnits.map(unit => (
-                                                <option key={unit.id} value={unit.id}>
-                                                    {unit.blocks?.name ? `${unit.blocks.name} - ` : ''}{unit.unit_number}
-                                                </option>
-                                            ))}
-                                        </select>
+                                        />
                                     </div>
                                 )}
                                 
@@ -307,7 +308,7 @@ const Reports = () => {
                                         type="text"
                                         value={newReport.title}
                                         onChange={(e) => setNewReport({ ...newReport, title: e.target.value })}
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                        className="glass-input"
                                         required
                                         placeholder={t('reports.form.placeholder_title', 'e.g. Broken Light')}
                                     />
@@ -315,16 +316,17 @@ const Reports = () => {
                                 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">{t('reports.form.category', 'Category')}</label>
-                                    <select
+                                    <GlassSelect
                                         value={newReport.category}
                                         onChange={(e) => setNewReport({ ...newReport, category: e.target.value })}
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white focus:ring-2 focus:ring-blue-500"
-                                    >
-                                        <option value="maintenance">{t('reports.categories.maintenance', 'Maintenance')}</option>
-                                        <option value="security">{t('reports.categories.security', 'Security')}</option>
-                                        <option value="cleanliness">{t('reports.categories.cleanliness', 'Cleanliness')}</option>
-                                        <option value="other">{t('reports.categories.other', 'Other')}</option>
-                                    </select>
+                                        options={[
+                                            { value: 'maintenance', label: t('reports.categories.maintenance', 'Maintenance') },
+                                            { value: 'security', label: t('reports.categories.security', 'Security') },
+                                            { value: 'cleanliness', label: t('reports.categories.cleanliness', 'Cleanliness') },
+                                            { value: 'other', label: t('reports.categories.other', 'Other') }
+                                        ]}
+                                        placeholder={t('reports.form.select_category', 'Select Category')}
+                                    />
                                 </div>
 
                                 <div>
@@ -332,7 +334,7 @@ const Reports = () => {
                                     <textarea
                                         value={newReport.description}
                                         onChange={(e) => setNewReport({ ...newReport, description: e.target.value })}
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                        className="glass-input min-h-[100px] rounded-2xl"
                                         rows="3"
                                         placeholder={t('reports.form.placeholder_desc', 'Describe the issue...')}
                                     ></textarea>
@@ -342,13 +344,13 @@ const Reports = () => {
                                     <button
                                         type="button"
                                         onClick={() => setShowModal(false)}
-                                        className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg dark:bg-neutral-700 dark:hover:bg-neutral-600 dark:text-white transition-colors"
+                                        className="flex-1 glass-button-secondary"
                                     >
                                         {t('common.cancel', 'Cancel')}
                                     </button>
                                     <button
                                         type="submit"
-                                        className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
+                                        className="flex-1 glass-button"
                                     >
                                         {t('reports.form.submit', 'Submit Report')}
                                     </button>

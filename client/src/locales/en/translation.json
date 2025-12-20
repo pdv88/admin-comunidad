@@ -235,6 +235,7 @@
             "voting": "Voting",
             "properties": "Properties",
             "payments": "Payments",
+            "maintenance": "Maintenance Fees",
             "campaigns": "Campaigns",
             "users": "Users",
             "administration": "Administration",
@@ -589,5 +590,21 @@
         "create": "Create",
         "error": "Failed to create community",
         "loading": "Loading..."
+    },
+    "maintenance": {
+        "admin_title": "Maintenance Fee Management",
+        "resident_title": "My Maintenance Fees",
+        "generate_title": "Generate Monthly Fees",
+        "period": "Billing Period",
+        "amount": "Amount",
+        "generate_btn": "Generate Bills",
+        "community_status": "Community Status",
+        "history": "Payment History",
+        "unit": "Unit",
+        "owner": "Owner",
+        "status": "Status",
+        "no_records": "No records found.",
+        "success_gen": "Successfully generated fees.",
+        "error_gen": "Error generating fees."
     }
 }

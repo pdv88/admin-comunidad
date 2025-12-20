@@ -4,9 +4,12 @@ import { useAuth } from '../context/AuthContext';
 
 const CommunitySwitcher = () => {
     const { t } = useTranslation();
-    const { activeCommunity, userCommunities, switchCommunity } = useAuth();
+    const { activeCommunity, userCommunities, switchCommunity, user } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
+
+    // Check for Platform Admin (Super Admin)
+    const isSuperAdmin = user?.user_metadata?.is_admin_registration === true;
 
     // Click outside to close
     useEffect(() => {
@@ -105,18 +108,21 @@ const CommunitySwitcher = () => {
                                 </button>
                             ))}
                             
-                            <div className="border-t border-gray-200 dark:border-neutral-700 mt-1 pt-1">
-                                <button
-                                    onClick={() => {
-                                        setIsOpen(false);
-                                        setShowCreateModal(true);
-                                    }}
-                                    className="w-full flex items-center gap-2 px-4 py-3 text-left text-sm text-blue-600 dark:text-blue-400 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors font-medium"
-                                >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
-                                    {t('community_switcher.create_new')}
-                                </button>
-                            </div>
+                            
+                            {isSuperAdmin && (
+                                <div className="border-t border-gray-200 dark:border-neutral-700 mt-1 pt-1">
+                                    <button
+                                        onClick={() => {
+                                            setIsOpen(false);
+                                            setShowCreateModal(true);
+                                        }}
+                                        className="w-full flex items-center gap-2 px-4 py-3 text-left text-sm text-blue-600 dark:text-blue-400 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors font-medium"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
+                                        {t('community_switcher.create_new')}
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}

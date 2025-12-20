@@ -97,7 +97,8 @@ const PaymentList = ({ payments, isAdmin, onRefresh, showResidentInfo = false, l
                                 {showResidentInfo && (
                                     <>
                                         <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-400">{t('payments.table.user', 'User')}</th>
-                                        <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-400">{t('payments.table.unit', 'Unit/Block')}</th>
+                                        <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-400">{t('payments.table.block', 'Block')}</th>
+                                        <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-400">{t('payments.table.unit', 'Unit')}</th>
                                     </>
                                 )}
                                 <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-400">{t('payments.table.amount', 'Amount')}</th>
@@ -109,7 +110,7 @@ const PaymentList = ({ payments, isAdmin, onRefresh, showResidentInfo = false, l
                         <tbody className="divide-y divide-gray-200 dark:divide-neutral-700">
                             {loading ? (
                                 <tr>
-                                    <td colSpan={showResidentInfo ? 8 : 6} className="px-6 py-4 text-center text-sm text-gray-500 dark:text-neutral-400">
+                                    <td colSpan={showResidentInfo ? 9 : 6} className="px-6 py-4 text-center text-sm text-gray-500 dark:text-neutral-400">
                                         <div className="flex justify-center items-center gap-2">
                                             <svg className="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -121,7 +122,7 @@ const PaymentList = ({ payments, isAdmin, onRefresh, showResidentInfo = false, l
                                 </tr>
                             ) : payments.length === 0 ? (
                                 <tr>
-                                    <td colSpan={showResidentInfo ? 8 : 6} className="px-6 py-4 text-center text-sm text-gray-500 dark:text-neutral-400">
+                                    <td colSpan={showResidentInfo ? 9 : 6} className="px-6 py-4 text-center text-sm text-gray-500 dark:text-neutral-400">
                                         {t('payments.list.empty', 'No payments found.')}
                                     </td>
                                 </tr>
@@ -137,10 +138,10 @@ const PaymentList = ({ payments, isAdmin, onRefresh, showResidentInfo = false, l
                                                     {payment.profiles?.full_name || payment.profiles?.email || 'N/A'}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">
-                                                    {payment.profiles?.units 
-                                                        ? `${payment.profiles.units.block} - ${payment.profiles.units.number}`
-                                                        : '-'
-                                                    }
+                                                    {payment.units?.blocks?.name || payment.profiles?.unit_owners?.map(uo => uo.units?.blocks?.name).filter(Boolean).join(', ') || '-'}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">
+                                                    {payment.units?.unit_number || payment.profiles?.unit_owners?.map(uo => uo.units?.unit_number).filter(Boolean).join(', ') || '-'}
                                                 </td>
                                             </>
                                         )}

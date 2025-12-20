@@ -231,6 +231,7 @@
             "voting": "Votaciones",
             "properties": "Propiedades",
             "payments": "Pagos",
+            "maintenance": "Cuotas de Mantenimiento",
             "campaigns": "Campañas",
             "users": "Usuarios",
             "administration": "Administración",
@@ -584,5 +585,21 @@
         "create": "Crear",
         "error": "Error al crear la comunidad",
         "loading": "Cargando..."
+    },
+    "maintenance": {
+        "admin_title": "Gestión de Cuotas de Mantenimiento",
+        "resident_title": "Mis Cuotas de Mantenimiento",
+        "generate_title": "Generar Cuotas Mensuales",
+        "period": "Periodo de Facturación",
+        "amount": "Monto",
+        "generate_btn": "Generar Cobros",
+        "community_status": "Estado de la Comunidad",
+        "history": "Historial de Pagos",
+        "unit": "Unidad",
+        "owner": "Propietario",
+        "status": "Estado",
+        "no_records": "No se encontraron registros.",
+        "success_gen": "Cuotas generadas exitosamente.",
+        "error_gen": "Error al generar cuotas."
     }
 }

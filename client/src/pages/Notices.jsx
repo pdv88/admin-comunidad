@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { API_URL } from '../config';
 import ConfirmationModal from '../components/ConfirmationModal';
 import ModalPortal from '../components/ModalPortal';
+import GlassSelect from '../components/GlassSelect';
 
 const Notices = () => {
     const { user, activeCommunity } = useAuth();
@@ -238,7 +239,7 @@ const Notices = () => {
                 {showModal && (
                     <ModalPortal>
                     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-                        <div className="glass-card w-full max-w-lg p-6 animate-fade-in bg-white/90 dark:bg-neutral-900/90">
+                        <div className="glass-card w-full max-w-lg p-6 animate-fade-in">
                             <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">{t('notices.post_notice')}</h2>
                             <form onSubmit={handleCreateNotice} className="space-y-4">
                                 <div>
@@ -255,42 +256,33 @@ const Notices = () => {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">{t('notices.form.priority', 'Priority')}</label>
-                                        <select
+                                        <GlassSelect
                                             value={newNotice.priority}
                                             onChange={(e) => setNewNotice({...newNotice, priority: e.target.value})}
-                                            className="glass-input"
-                                        >
-                                            <option value="normal">{t('notices.priority.normal', 'Normal')}</option>
-                                            <option value="high">{t('notices.priority.high', 'High')}</option>
-                                            <option value="urgent">{t('notices.priority.urgent', 'Urgent')}</option>
-                                        </select>
+                                            options={[
+                                                { value: 'normal', label: t('notices.priority.normal', 'Normal') },
+                                                { value: 'high', label: t('notices.priority.high', 'High') },
+                                                { value: 'urgent', label: t('notices.priority.urgent', 'Urgent') }
+                                            ]}
+                                            placeholder={t('notices.form.select_priority', 'Select Priority')}
+                                        />
                                     </div>
 
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">{t('notices.form.target', 'Target Audience')}</label>
-                                        <select
+                                        <GlassSelect
                                             value={newNotice.block_id}
                                             onChange={(e) => setNewNotice({...newNotice, block_id: e.target.value})}
-                                            className="glass-input"
-                                            disabled={isVocal && vocalBlockIds.length === 1} // Lock if Vocal has only 1 block
-                                        >
-                                            {isAdminOrPres && (
-                                                <option value="">{t('notices.target.global', 'All Community')}</option>
-                                            )}
-                                            {/* Admin sees all blocks? Or fetched blocks */}
-                                            {isAdminOrPres && blocks.map(block => (
-                                                <option key={block.id} value={block.id}>{block.name}</option>
-                                            ))}
-                                            
-                                            {/* Vocal sees only their blocks */}
-                                            {isVocal && vocalBlockIds.length > 0 && 
-                                                // Ideally we need block names here. Vocal's unit_owners has nested units->blocks(name)
-                                                // We can extract them from userUnits unique map
-                                                [...new Map(userUnits.map(u => [u.block_id, u.blocks])).values()].map(block => (
-                                                     <option key={block.id} value={block.id}>{block.name}</option>
-                                                ))
-                                            }
-                                        </select>
+                                            disabled={isVocal && vocalBlockIds.length === 1}
+                                            options={[
+                                                ...(isAdminOrPres ? [{ value: '', label: t('notices.target.global', 'All Community') }] : []),
+                                                ...(isAdminOrPres ? blocks.map(block => ({ value: block.id, label: block.name })) : []),
+                                                ...(isVocal && vocalBlockIds.length > 0 
+                                                    ? [...new Map(userUnits.map(u => [u.block_id, u.blocks])).values()].map(block => ({ value: block?.id, label: block?.name }))
+                                                    : [])
+                                            ]}
+                                            placeholder={t('notices.form.select_target', 'Select Target')}
+                                        />
                                     </div>
                                 </div>
 

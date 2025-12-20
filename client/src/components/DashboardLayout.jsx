@@ -25,8 +25,8 @@ const DashboardLayout = ({ children }) => {
 
     const isActive = (path) => {
         return location.pathname === path ? 
-            "bg-blue-600/10 text-blue-600 dark:text-blue-400 font-medium backdrop-blur-sm shadow-md border border-blue-600/10" : 
-            "text-gray-600 hover:bg-white/40 dark:text-neutral-400 dark:hover:bg-white/10 hover:shadow-md hover:backdrop-blur-sm transition-all duration-200";
+            "bg-gradient-to-r from-blue-600/10 to-violet-600/10 text-blue-700 dark:text-blue-300 font-bold backdrop-blur-md shadow-lg border border-blue-200/50 dark:border-blue-500/20 translate-x-1" : 
+            "text-gray-600 dark:text-neutral-400 hover:bg-white/40 dark:hover:bg-white/5 hover:text-blue-600 dark:hover:text-blue-300 hover:shadow-md hover:backdrop-blur-sm hover:translate-x-1 transition-all duration-300";
     };
 
     // Helper to translate roles if needed, or just display them capitalised
@@ -85,6 +85,9 @@ const DashboardLayout = ({ children }) => {
                     </Link>
                     <Link to="/app/payments" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/payments')}`}>
                          {t('dashboard_layout.nav.payments')}
+                    </Link>
+                    <Link to="/app/maintenance" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/maintenance')}`}>
+                         {t('dashboard_layout.nav.maintenance', 'Maintenance Fees')}
                     </Link>
                     <Link to="/app/campaigns" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/campaigns')}`}>
                         {t('dashboard_layout.nav.campaigns')}

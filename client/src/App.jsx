@@ -22,6 +22,7 @@ import Settings from "./pages/Settings";
 import CommunitySettings from "./pages/CommunitySettings";
 import Payments from "./pages/Payments";
 import Campaigns from "./pages/Campaigns";
+import Maintenance from "./pages/Maintenance";
 import PrivacyNotice from "./components/PrivacyNotice";
 
 import { AuthProvider } from "./context/AuthContext";
@@ -61,6 +62,7 @@ function App() {
              <Route path="/app/settings" element={<Settings />} /> 
              <Route path="/app/payments" element={<Payments />} />
              <Route path="/app/campaigns" element={<Campaigns />} />
+             <Route path="/app/maintenance" element={<Maintenance />} />
              {/* Redirect /dashboard to /app/dashboard for backward compatibility if needed */}
              <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
           </Route>

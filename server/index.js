@@ -27,6 +27,7 @@ app.use('/api/properties', propertiesRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/communities', require('./src/routes/communities.routes'));
 app.use('/api/payments', require('./src/routes/payments.routes'));
+app.use('/api/maintenance', require('./src/routes/maintenance.routes')); // New Maintenance Routes
 
 // Base route
 app.get('/', (req, res) => {

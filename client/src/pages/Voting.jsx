@@ -6,7 +6,7 @@ import { API_URL } from '../config';
 import ModalPortal from '../components/ModalPortal';
 
 const Voting = () => {
-    const { user } = useAuth();
+    const { user, activeCommunity } = useAuth();
     const [polls, setPolls] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('active'); // 'active' or 'past'
@@ -26,7 +26,7 @@ const Voting = () => {
         targetBlocks: []
     });
 
-    const role = user?.profile?.roles?.name || 'resident';
+    const role = activeCommunity?.roles?.name || user?.profile?.roles?.name || 'resident';
     const isAdmin = ['admin', 'president', 'secretary'].includes(role);
 
     useEffect(() => {
@@ -180,7 +180,7 @@ const Voting = () => {
                     {isAdmin && (
                         <button 
                             onClick={openCreateModal}
-                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                            className="glass-button"
                         >
                             {t('voting.create_poll')}
                         </button>
@@ -281,21 +281,21 @@ const Voting = () => {
 
             {showPollModal && (
                 <ModalPortal>
-                    <div className="fixed inset-0 z-[60] overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-neutral-800 rounded-xl max-w-lg w-full p-6">
+                    <div className="fixed inset-0 z-[60] overflow-y-auto bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="glass-card max-w-lg w-full p-6">
                         <h2 className="text-xl font-bold mb-4 dark:text-white">
                             {editingPoll ? t('voting.edit_poll', 'Edit Poll') : t('voting.create_poll')}
                         </h2>
                         <form onSubmit={handleSavePoll}>
                             <input 
-                                className="w-full mb-3 p-2 rounded border dark:bg-neutral-900 dark:border-neutral-700 dark:text-white"
+                                className="glass-input mb-3"
                                 placeholder={t('voting.poll_title', 'Poll Title')}
                                 value={pollForm.title}
                                 onChange={e => setPollForm({...pollForm, title: e.target.value})}
                                 required
                             />
                             <textarea 
-                                className="w-full mb-3 p-2 rounded border dark:bg-neutral-900 dark:border-neutral-700 dark:text-white min-h-[100px]"
+                                className="glass-input mb-3 min-h-[100px] rounded-2xl"
                                 placeholder={t('voting.poll_desc', 'Description')}
                                 value={pollForm.description}
                                 onChange={e => setPollForm({...pollForm, description: e.target.value})}
@@ -307,7 +307,7 @@ const Voting = () => {
                                     {pollForm.options.map((opt, idx) => (
                                         <input 
                                             key={idx}
-                                            className="w-full mb-2 p-2 rounded border dark:bg-neutral-900 dark:border-neutral-700 dark:text-white"
+                                            className="glass-input mb-2"
                                             placeholder={`Option ${idx + 1}`}
                                             value={opt}
                                             onChange={e => handleOptionChange(idx, e.target.value)}
@@ -324,7 +324,7 @@ const Voting = () => {
                                 <label className="block text-sm font-medium mb-1 dark:text-neutral-300">{t('voting.deadline', 'Deadline')}</label>
                                 <input 
                                     type="date"
-                                    className="w-full p-2 rounded border dark:bg-neutral-900 dark:border-neutral-700 dark:text-white"
+                                    className="glass-input"
                                     value={pollForm.deadline}
                                     onChange={e => setPollForm({...pollForm, deadline: e.target.value})}
                                     required
@@ -379,9 +379,9 @@ const Voting = () => {
                                 )}
                             </div>
 
-                            <div className="flex justify-end gap-3">
-                                <button type="button" onClick={() => setShowPollModal(false)} className="px-4 py-2 text-gray-600 hover:text-gray-800 dark:text-gray-400">{t('common.cancel')}</button>
-                                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            <div className="flex justify-end gap-3 mt-6">
+                                <button type="button" onClick={() => setShowPollModal(false)} className="glass-button-secondary">{t('common.cancel')}</button>
+                                <button type="submit" className="glass-button">
                                     {editingPoll ? t('common.save') : t('voting.create_poll')}
                                 </button>
                             </div>

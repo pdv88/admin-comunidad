@@ -93,20 +93,40 @@ exports.inviteUser = async (req, res) => {
             throw new Error('Insufficient permissions to invite users');
         }
 
-        // 2. Invite User
-        const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-            data: {
-                full_name: fullName,
-                is_admin_registration: false,
-                community_id: communityId // Metadata backup
-            },
-            redirectTo: (process.env.CLIENT_URL || 'http://localhost:5173') + '/update-password'
-        });
+        // 2. Check if user already exists
+        let userId;
+        const { data: existingProfile } = await supabaseAdmin
+            .from('profiles')
+            .select('id')
+            .eq('email', email)
+            .single();
 
-        if (error) throw error;
+        if (existingProfile) {
+            userId = existingProfile.id;
+            // Optional: Send a notification email to the user saying they've been added to a new community
+        } else {
+            // 3. New User: Invite
+            const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+                data: {
+                    full_name: fullName,
+                    is_admin_registration: false,
+                    community_id: communityId // Metadata backup
+                },
+                redirectTo: (process.env.CLIENT_URL || 'http://localhost:5173') + '/update-password'
+            });
 
-        // 3. Add to community_members
-        const userId = data.user.id;
+            if (error) throw error;
+            userId = data.user.id;
+
+            // Ensure profile exists (invite hook should handle it, but safety verify)
+            await supabaseAdmin.from('profiles').upsert({
+                id: userId,
+                email: email,
+                full_name: fullName
+            });
+        }
+
+        // 4. Add to community_members
 
         // Find role ID
         const { data: roleData, error: roleError } = await supabase
