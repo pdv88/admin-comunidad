@@ -55,9 +55,9 @@ const DashboardLayout = ({ children }) => {
 
             {/* Sidebar */}
             <div className={`fixed inset-y-4 left-0 z-50 w-64 bg-gradient-to-b from-white/50 to-white/20 backdrop-blur-2xl border border-white/40 dark:from-neutral-900/80 dark:to-neutral-900/40 dark:border-neutral-700/50 shadow-2xl transform transition-transform duration-300 ease-in-out md:translate-x-4 md:static md:h-[calc(100vh-2rem)] md:my-4 md:rounded-3xl md:inset-auto ${isSidebarOpen ? 'translate-x-0 rounded-r-3xl' : '-translate-x-full'} flex flex-col`}>
-                <div className="p-6 flex justify-between items-center h-20 shrink-0">
+                <div className="p-2 flex justify-between md:justify-center items-center h-20 shrink-0">
                     <Link to="/" className="flex items-center gap-2 text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-400 dark:to-violet-400">
-                        <img src={logo} alt="Logo" className="w-full rounded-full" />
+                        <img src={logo} alt="Logo" className="h-16 w-auto drop-shadow-[0_0_1px_rgba(255,255,255,0.8)_0_0_10px_rgba(0,0,0,0.2)]" />
                     </Link>
                     <button onClick={closeSidebar} className="md:hidden text-gray-500 hover:text-gray-700 dark:text-neutral-400">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -144,7 +144,7 @@ const DashboardLayout = ({ children }) => {
                 <div className="md:hidden flex items-center justify-between px-4 py-1 bg-white/40 dark:bg-black/20 backdrop-blur-md border-b border-white/20 dark:border-white/5 shrink-0 z-20">
                      {/* Logo Left */}
                      <span className="font-bold text-lg bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-400 dark:to-violet-400 flex items-center gap-2">
-                        <img src={logo} alt="Logo" className="h-10 rounded-full" />
+                        <img src={logo} alt="Logo" className="h-10 w-auto object-contain drop-shadow-[0_0_1px_rgba(255,255,255,0.8)_0_0_10px_rgba(0,0,0,0.2)]" />
                         
                     </span>
                      

@@ -24,6 +24,8 @@ import Payments from "./pages/Payments";
 import Campaigns from "./pages/Campaigns";
 import Maintenance from "./pages/Maintenance";
 import PrivacyNotice from "./components/PrivacyNotice";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import Terms from "./pages/Terms";
 
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -43,6 +45,8 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/verifyEmail/:token" element={<EmailVerification />} />
             <Route path="/update-password" element={<UpdatePassword />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-and-conditions" element={<Terms />} />
           </Route>
           
           {/* Protected Routes */}
