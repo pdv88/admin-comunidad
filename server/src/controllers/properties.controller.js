@@ -149,20 +149,16 @@ exports.assignUnitToUser = async (req, res) => {
             return res.status(400).json({ error: 'Unit not in this community' });
         }
 
-        // Link logic... previously updated 'profiles.unit_id'.
-        // Does 'profile' still have 'unit_id'? Or is it now many-to-many?
-        // Schema migration v2 didn't remove 'unit_id' from profiles. 
-        // But if user has multiple units in multiple communities... 'unit_id' on profile is flawed for multi-tenancy.
-        // ideally should use `unit_owners` table which WAS referenced in `notices.controller.js` (suggesting it exists).
-        // Let's assume for now we still use `unit_owners` or `profile.unit_id` IF user can only own 1 unit globally (unlikely).
-        // But `notices` controller used `profile.unit_owners`. This implies `unit_owners` table Exists.
-        // The previous code in `properties.controller.js` used: `update({ unit_id: unitId }).eq('id', userId)` on `profiles`.
-        // This contradicts `notices` using `unit_owners`.
-        // I should switch to `unit_owners` if it exists.
-        // My `check_tables.js` didn't check `unit_owners`.
-        // `notices.controller.js` explicitly selects: `unit_owners(unit_id, units(...))`
-        // So `unit_owners` DEFINITELY exists.
-        // Updating `profiles.unit_id` is likely legacy and wrong.
+        // Check if unit is already assigned
+        const { data: existingOwner } = await supabaseAdmin
+            .from('unit_owners')
+            .select('*')
+            .eq('unit_id', unitId)
+            .single();
+
+        if (existingOwner && existingOwner.profile_id !== userId) {
+            return res.status(400).json({ error: 'This unit is already assigned to another user.' });
+        }
 
         // I will switch to `unit_owners` insertion.
         const { data, error } = await supabaseAdmin

@@ -68,7 +68,16 @@ const ActiveCampaignsWidget = (props) => {
                 ) : (
                     <div className="space-y-6">
                         {campaigns.map(campaign => (
-                             <CampaignProgress key={campaign.id} campaign={campaign} />
+                             <div key={campaign.id}>
+                                <div className="flex justify-between items-center mb-1">
+                                    <h3 className="font-bold text-gray-800 dark:text-white text-sm">{campaign.name}</h3>
+                                </div>
+                                <CampaignProgress campaign={campaign} />
+                                <div className="flex justify-between text-xs text-gray-500 dark:text-neutral-400 mt-1">
+                                    <span>{t('campaigns.stats.raised', 'Raised')}: €{campaign.current_amount}</span>
+                                    <span>{t('campaigns.stats.goal', 'Goal')}: €{campaign.target_amount}</span>
+                                </div>
+                             </div>
                         ))}
                     </div>
                 )}

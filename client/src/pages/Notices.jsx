@@ -6,6 +6,7 @@ import { API_URL } from '../config';
 import ConfirmationModal from '../components/ConfirmationModal';
 import ModalPortal from '../components/ModalPortal';
 import GlassSelect from '../components/GlassSelect';
+import GlassLoader from '../components/GlassLoader';
 
 const Notices = () => {
     const { user, activeCommunity } = useAuth();
@@ -149,9 +150,7 @@ const Notices = () => {
     if (loading) {
         return (
             <DashboardLayout>
-                <div className="p-6 text-center text-gray-400">
-                    {t('common.loading', 'Loading...')}
-                </div>
+                <GlassLoader />
             </DashboardLayout>
         );
     }

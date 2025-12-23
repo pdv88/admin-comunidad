@@ -475,6 +475,7 @@
         },
         "upload": {
             "title": "Registrar Pago",
+            "date": "Fecha del Pago",
             "amount": "Monto (€)",
             "notes": "Notas (Opcional)",
             "receipt": "Comprobante (Imagen)",
@@ -548,7 +549,8 @@
         "collected": "Recaudado",
         "edit_title": "Editar Campaña",
         "ongoing_hint": "Dejar vacío para indefinida",
-        "is_active": "Campaña Activa"
+        "is_active": "Campaña Activa",
+        "contribute": "Contribuir"
     },
     "cookies": {
         "message": "Utilizamos cookies para asegurar que tengas la mejor experiencia en nuestro sitio web.",
@@ -598,8 +600,10 @@
         "unit": "Unidad",
         "owner": "Propietario",
         "status": "Estado",
+        "processing": "Procesando",
         "no_records": "No se encontraron registros.",
         "success_gen": "Cuotas generadas exitosamente.",
-        "error_gen": "Error al generar cuotas."
+        "error_gen": "Error al generar cuotas.",
+        "pay": "Pagar"
     }
 }

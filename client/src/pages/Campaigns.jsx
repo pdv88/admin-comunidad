@@ -1,19 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { API_URL } from '../config';
 import { useAuth } from '../context/AuthContext';
 import CampaignProgress from '../components/payments/CampaignProgress';
 import DashboardLayout from '../components/DashboardLayout';
 import ModalPortal from '../components/ModalPortal';
+import PaymentUpload from '../components/payments/PaymentUpload';
+import GlassLoader from '../components/GlassLoader';
 
 const Campaigns = () => {
     const { t } = useTranslation();
-    const { user } = useAuth(); 
-    const role = user?.profile?.roles?.name;
+    const { user, activeCommunity } = useAuth(); 
+    const role = activeCommunity?.roles?.name;
     const canCreate = role === 'admin' || role === 'president';
     
     const [campaigns, setCampaigns] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState('active'); // 'active' | 'closed'
 
     // Form State
     const [name, setName] = useState('');
@@ -28,6 +32,15 @@ const Campaigns = () => {
     const [availableBlocks, setAvailableBlocks] = useState([]);
     const [targetType, setTargetType] = useState('all'); // 'all' or 'blocks'
     const [selectedBlocks, setSelectedBlocks] = useState([]); // Array of block IDs
+    
+    // Payment State
+    const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+    const [selectedCampaignForPayment, setSelectedCampaignForPayment] = useState(null);
+
+    const handleContributeClick = (campaign) => {
+        setSelectedCampaignForPayment(campaign);
+        setPaymentModalOpen(true);
+    };
 
     // Edit State
     const [editingCampaign, setEditingCampaign] = useState(null);
@@ -158,6 +171,14 @@ const Campaigns = () => {
         }
     };
 
+    if (loading) {
+        return (
+            <DashboardLayout>
+                <GlassLoader />
+            </DashboardLayout>
+        );
+    }
+
     return (
         <DashboardLayout>
             <div className="max-w-7xl mx-auto space-y-4 md:space-y-8">
@@ -165,136 +186,179 @@ const Campaigns = () => {
                     <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t('campaigns.title', 'Funding Campaigns')}</h1>
                     {canCreate && (
                         <button 
-                            onClick={() => setShowCreateForm(!showCreateForm)}
-                            className="py-2 px-4 inline-flex justify-center items-center gap-2 rounded-lg border border-transparent font-semibold bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all text-sm"
+                            onClick={() => setShowCreateForm(true)}
+                            className="glass-button"
                         >
-                            {showCreateForm ? t('common.cancel', 'Cancel') : t('campaigns.create_btn', 'Create Campaign')}
+                            {t('campaigns.create_btn', 'Create Campaign')}
                         </button>
                     )}
                 </div>
 
-                {/* Create Campaign Form */}
+                {/* Create Campaign Modal */}
                 {showCreateForm && (
-                     <div className="glass-card p-6 animate-fade-in-down mb-6">
-                        <h2 className="text-lg font-bold mb-4 text-gray-800 dark:text-white">{t('campaigns.create_title', 'Create New Campaign')}</h2>
-                        <form onSubmit={handleCreate} className="space-y-4">
-                        <div className="grid sm:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.name', 'Campaign Name')}</label>
-                                <input 
-                                    type="text" 
-                                    required 
-                                    className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-white"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                />
+                     <ModalPortal>
+                        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-sm" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                            <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                                <div className="fixed inset-0 transition-opacity" aria-hidden="true" onClick={() => setShowCreateForm(false)}></div>
+                                <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                                <div className="inline-block align-bottom glass-card text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full p-6">
+                                        <h3 className="text-lg leading-6 font-bold text-gray-800 dark:text-white mb-4" id="modal-title">
+                                            {t('campaigns.create_title', 'Create New Campaign')}
+                                        </h3>
+                                        <form onSubmit={handleCreate} className="space-y-4">
+                                            <div className="grid sm:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.name', 'Campaign Name')}</label>
+                                                    <input 
+                                                        type="text" 
+                                                        required 
+                                                        className="glass-input"
+                                                        value={name}
+                                                        onChange={(e) => setName(e.target.value)}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.goal', 'Goal Amount (€)')}</label>
+                                                    <input 
+                                                        type="number" 
+                                                        step="0.01" 
+                                                        required 
+                                                        className="glass-input"
+                                                        value={goal}
+                                                        onChange={(e) => setGoal(e.target.value)}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                 <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.description', 'Description')}</label>
+                                                 <textarea 
+                                                    className="glass-input !rounded-3xl"
+                                                    rows="3"
+                                                    value={desc}
+                                                    onChange={(e) => setDesc(e.target.value)}
+                                                 ></textarea>
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.deadline', 'Deadline')} <span className="text-gray-400 font-normal">({t('common.optional', 'Optional')})</span></label>
+                                                <input 
+                                                    type="date" 
+                                                    className="glass-input"
+                                                    value={deadline}
+                                                    onChange={(e) => setDeadline(e.target.value)}
+                                                />
+                                            </div>
+            
+                                             {/* Targeting Options */}
+                                             <div className="pt-2">
+                                                 <label className="block text-sm font-medium mb-2 dark:text-gray-300">{t('campaigns.target_audience', 'Target Audience')}</label>
+                                                 <div className="flex gap-4 mb-3">
+                                                     <label className="flex items-center gap-2 cursor-pointer">
+                                                         <input 
+                                                             type="radio" 
+                                                             name="targetType" 
+                                                             value="all"
+                                                             checked={targetType === 'all'}
+                                                             onChange={() => setTargetType('all')}
+                                                             className="text-indigo-600 focus:ring-indigo-500"
+                                                         />
+                                                         <span className="text-sm dark:text-gray-300">{t('campaigns.target_all', 'All Community')}</span>
+                                                     </label>
+                                                     <label className="flex items-center gap-2 cursor-pointer">
+                                                         <input 
+                                                             type="radio" 
+                                                             name="targetType" 
+                                                             value="blocks"
+                                                             checked={targetType === 'blocks'}
+                                                             onChange={() => setTargetType('blocks')}
+                                                             className="text-indigo-600 focus:ring-indigo-500"
+                                                         />
+                                                         <span className="text-sm dark:text-gray-300">{t('campaigns.target_blocks', 'Specific Blocks')}</span>
+                                                     </label>
+                                                 </div>
+            
+                                                 {targetType === 'blocks' && (
+                                                     <div className="mt-2 p-3 bg-gray-50/50 dark:bg-neutral-900/50 rounded-lg border border-gray-200 dark:border-neutral-700 max-h-40 overflow-y-auto backdrop-blur-sm">
+                                                         <label className="block text-xs font-semibold text-gray-500 uppercase mb-2">{t('campaigns.select_blocks', 'Select Blocks')}</label>
+                                                         <div className="grid grid-cols-2 gap-2">
+                                                             {availableBlocks.map(block => (
+                                                                 <label key={block.id} className="flex items-center gap-2 cursor-pointer p-2 hover:bg-white/50 dark:hover:bg-neutral-800/50 rounded transition-colors">
+                                                                     <input 
+                                                                         type="checkbox"
+                                                                         value={block.id}
+                                                                         checked={selectedBlocks.includes(block.id)}
+                                                                         onChange={(e) => {
+                                                                             if(e.target.checked) {
+                                                                                 setSelectedBlocks([...selectedBlocks, block.id]);
+                                                                             } else {
+                                                                                 setSelectedBlocks(selectedBlocks.filter(id => id !== block.id));
+                                                                             }
+                                                                         }}
+                                                                         className="rounded text-indigo-600 focus:ring-indigo-500"
+                                                                     />
+                                                                     <span className="text-sm text-gray-700 dark:text-gray-300">{block.name}</span>
+                                                                 </label>
+                                                             ))}
+                                                         </div>
+                                                     </div>
+                                                 )}
+                                             </div>
+                                            
+                                            {message && <p className={`text-sm ${message.includes('success') ? 'text-green-600' : 'text-red-600'}`}>{message}</p>}
+                                            
+                                            <div className="flex gap-3 mt-6">
+                                                <button 
+                                                    type="button" 
+                                                    onClick={() => setShowCreateForm(false)}
+                                                    className="glass-button-secondary flex-1"
+                                                >
+                                                    {t('common.cancel', 'Cancel')}
+                                                </button>
+                                                <button 
+                                                    type="submit" 
+                                                    disabled={creating}
+                                                    className="glass-button flex-1"
+                                                >
+                                                    {creating ? t('common.loading', 'Loading...') : t('campaigns.create_btn', 'Create Campaign')}
+                                                </button>
+                                            </div>
+                                        </form>
+                                </div>
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.goal', 'Goal Amount (€)')}</label>
-                                <input 
-                                    type="number" 
-                                    step="0.01" 
-                                    required 
-                                    className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-white"
-                                    value={goal}
-                                    onChange={(e) => setGoal(e.target.value)}
-                                />
-                            </div>
                         </div>
-                        <div>
-                             <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.description', 'Description')}</label>
-                             <textarea 
-                                className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-white"
-                                rows="2"
-                                value={desc}
-                                onChange={(e) => setDesc(e.target.value)}
-                             ></textarea>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.deadline', 'Deadline')} <span className="text-gray-400 font-normal">({t('common.optional', 'Optional')})</span></label>
-                            <input 
-                                type="date" 
-                                className="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-white"
-                                value={deadline}
-                                onChange={(e) => setDeadline(e.target.value)}
-                            />
-                        </div>
-
-                         {/* Targeting Options */}
-                         <div className="pt-2">
-                             <label className="block text-sm font-medium mb-2 dark:text-gray-300">{t('campaigns.target_audience', 'Target Audience')}</label>
-                             <div className="flex gap-4 mb-3">
-                                 <label className="flex items-center gap-2 cursor-pointer">
-                                     <input 
-                                         type="radio" 
-                                         name="targetType" 
-                                         value="all"
-                                         checked={targetType === 'all'}
-                                         onChange={() => setTargetType('all')}
-                                         className="text-indigo-600 focus:ring-indigo-500"
-                                     />
-                                     <span className="text-sm dark:text-gray-300">{t('campaigns.target_all', 'All Community')}</span>
-                                 </label>
-                                 <label className="flex items-center gap-2 cursor-pointer">
-                                     <input 
-                                         type="radio" 
-                                         name="targetType" 
-                                         value="blocks"
-                                         checked={targetType === 'blocks'}
-                                         onChange={() => setTargetType('blocks')}
-                                         className="text-indigo-600 focus:ring-indigo-500"
-                                     />
-                                     <span className="text-sm dark:text-gray-300">{t('campaigns.target_blocks', 'Specific Blocks')}</span>
-                                 </label>
-                             </div>
- 
-                             {targetType === 'blocks' && (
-                                 <div className="mt-2 p-3 bg-gray-50 dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-700">
-                                     <label className="block text-xs font-semibold text-gray-500 uppercase mb-2">{t('campaigns.select_blocks', 'Select Blocks')}</label>
-                                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                                         {availableBlocks.map(block => (
-                                             <label key={block.id} className="flex items-center gap-2 cursor-pointer p-2 hover:bg-gray-100 dark:hover:bg-neutral-800 rounded">
-                                                 <input 
-                                                     type="checkbox"
-                                                     value={block.id}
-                                                     checked={selectedBlocks.includes(block.id)}
-                                                     onChange={(e) => {
-                                                         if(e.target.checked) {
-                                                             setSelectedBlocks([...selectedBlocks, block.id]);
-                                                         } else {
-                                                             setSelectedBlocks(selectedBlocks.filter(id => id !== block.id));
-                                                         }
-                                                     }}
-                                                     className="rounded text-indigo-600 focus:ring-indigo-500"
-                                                 />
-                                                 <span className="text-sm text-gray-700 dark:text-gray-300">{block.name}</span>
-                                             </label>
-                                         ))}
-                                     </div>
-                                 </div>
-                             )}
-                         </div>
-                        
-                        {message && <p className={`text-sm ${message.includes('success') ? 'text-green-600' : 'text-red-600'}`}>{message}</p>}
-
-                        <button 
-                            type="submit" 
-                            disabled={creating}
-                            className="py-2 px-4 inline-flex justify-center items-center gap-2 rounded-lg border border-transparent font-semibold bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all text-sm disabled:opacity-50"
-                        >
-                            {creating ? t('common.loading', 'Loading...') : t('campaigns.create_btn', 'Create Campaign')}
-                        </button>
-                    </form>
-                </div>
+                    </ModalPortal>
                 )}
+
+                {/* Tabs */}
+                <div className="flex p-1 rounded-full items-center backdrop-blur-md bg-white/30 border border-white/40 shadow-sm dark:bg-neutral-800/40 dark:border-white/10 mb-6 w-fit">
+                    <button 
+                        className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === 'active' 
+                            ? 'bg-white text-blue-600 shadow-md dark:bg-neutral-700 dark:text-blue-400' 
+                            : 'text-gray-600 hover:bg-white/20 dark:text-gray-300 dark:hover:bg-white/10'}`}
+                        onClick={() => setActiveTab('active')}
+                    >
+                        {t('campaigns.tab_active', 'Active')}
+                    </button>
+                    <button 
+                        className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === 'closed' 
+                            ? 'bg-white text-blue-600 shadow-md dark:bg-neutral-700 dark:text-blue-400' 
+                            : 'text-gray-600 hover:bg-white/20 dark:text-gray-300 dark:hover:bg-white/10'}`}
+                        onClick={() => setActiveTab('closed')}
+                    >
+                        {t('campaigns.tab_closed', 'Closed')}
+                    </button>
+                </div>
 
                 {/* List of campaigns */}
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {campaigns.map(campaign => (
+                    {campaigns
+                        .filter(c => activeTab === 'active' ? c.is_active : !c.is_active)
+                        .map(campaign => (
                          <div key={campaign.id} className="glass-card p-5 flex flex-col justify-between">
                             <div>
                                 <div className="flex justify-between items-start mb-2">
-                                    <h3 className="font-bold text-lg text-gray-800 dark:text-white">{campaign.name}</h3>
+                                    <Link to={`/app/campaigns/${campaign.id}`} className="hover:underline">
+                                        <h3 className="font-bold text-lg text-gray-800 dark:text-white">{campaign.name}</h3>
+                                    </Link>
                                     <span className={`inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-xs font-medium ${campaign.is_active ? 'bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-500' : 'bg-gray-100 text-gray-800 dark:bg-gray-800/30 dark:text-gray-500'}`}>
                                         {campaign.is_active ? t('campaigns.active', 'Active') : t('campaigns.closed', 'Closed')}
                                     </span>
@@ -320,9 +384,20 @@ const Campaigns = () => {
                                 {canCreate && (
                                     <button 
                                         onClick={() => handleEditClick(campaign)}
-                                        className="w-full py-2 px-3 inline-flex justify-center items-center gap-2 rounded-lg border font-medium bg-white text-gray-700 shadow-sm align-middle hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-blue-600 transition-all text-sm dark:bg-neutral-800 dark:hover:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400 dark:hover:text-white dark:focus:ring-offset-gray-800"
+                                        className="w-full glass-button-secondary"
                                     >
                                         {t('common.edit', 'Edit')}
+                                    </button>
+                                )}
+                                
+                                {/* Contribute Button (if active) */}
+                                {campaign.is_active && (
+                                    <button 
+                                        onClick={() => handleContributeClick(campaign)}
+                                        className="mt-3 w-full glass-button"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
+                                        {t('campaigns.contribute', 'Contribute')}
                                     </button>
                                 )}
                             </div>
@@ -333,88 +408,107 @@ const Campaigns = () => {
                 {/* Edit Modal */}
                 {editingCampaign && (
                     <ModalPortal>
-                     <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-                        <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onClick={() => setEditingCampaign(null)}></div>
-                            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                            <div className="inline-block align-bottom bg-white dark:bg-neutral-900 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                                <div className="bg-white dark:bg-neutral-900 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                                    <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white" id="modal-title">
-                                        {t('campaigns.edit_title', 'Edit Campaign')}
-                                    </h3>
-                                    <form onSubmit={handleUpdate} className="mt-4 space-y-4">
-                                        <div>
-                                            <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.name', 'Campaign Name')}</label>
-                                            <input 
-                                                type="text" 
-                                                required 
-                                                className="py-2 px-3 block w-full border-gray-200 rounded-lg text-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-neutral-800 dark:border-neutral-700 dark:text-white"
-                                                value={editForm.name}
-                                                onChange={(e) => setEditForm({...editForm, name: e.target.value})}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.goal', 'Goal Amount (€)')}</label>
-                                            <input 
-                                                type="number" 
-                                                step="0.01" 
-                                                required 
-                                                className="py-2 px-3 block w-full border-gray-200 rounded-lg text-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-neutral-800 dark:border-neutral-700 dark:text-white"
-                                                value={editForm.goal_amount}
-                                                onChange={(e) => setEditForm({...editForm, goal_amount: e.target.value})}
-                                            />
-                                        </div>
-                                        <div>
-                                             <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.description', 'Description')}</label>
-                                             <textarea 
-                                                className="py-2 px-3 block w-full border-gray-200 rounded-lg text-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-neutral-800 dark:border-neutral-700 dark:text-white"
-                                                rows="3"
-                                                value={editForm.description}
-                                                onChange={(e) => setEditForm({...editForm, description: e.target.value})}
-                                             ></textarea>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.deadline', 'Deadline')} <span className="text-gray-400 font-normal">({t('campaigns.ongoing_hint', 'Leave empty for ongoing')})</span></label>
-                                            <input 
-                                                type="date" 
-                                                className="py-2 px-3 block w-full border-gray-200 rounded-lg text-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-neutral-800 dark:border-neutral-700 dark:text-white"
-                                                value={editForm.deadline}
-                                                onChange={(e) => setEditForm({...editForm, deadline: e.target.value})}
-                                            />
-                                        </div>
-                                        <div className="flex items-center">
-                                            <input 
-                                                id="is_active" 
-                                                name="is_active" 
-                                                type="checkbox" 
-                                                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                                                checked={editForm.is_active}
-                                                onChange={(e) => setEditForm({...editForm, is_active: e.target.checked})}
-                                            />
-                                            <label htmlFor="is_active" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
-                                                {t('campaigns.is_active', 'Active Campaign')}
-                                            </label>
-                                        </div>
-                                        <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
-                                            <button 
-                                                type="submit" 
-                                                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:col-start-2 sm:text-sm"
-                                            >
-                                                {t('common.save', 'Save Changes')}
-                                            </button>
-                                            <button 
-                                                type="button" 
-                                                onClick={() => setEditingCampaign(null)}
-                                                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:col-start-1 sm:text-sm dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-700"
-                                            >
-                                                {t('common.cancel', 'Cancel')}
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
+                        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-sm" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                            <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                                <div className="fixed inset-0 transition-opacity" aria-hidden="true" onClick={() => setEditingCampaign(null)}></div>
+                                <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                                <div className="inline-block align-bottom glass-card text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full p-6">
+                                        <h3 className="text-lg leading-6 font-bold text-gray-800 dark:text-white mb-4" id="modal-title">
+                                            {t('campaigns.edit_title', 'Edit Campaign')}
+                                        </h3>
+                                        <form onSubmit={handleUpdate} className="space-y-4">
+                                            <div>
+                                                <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.name', 'Campaign Name')}</label>
+                                                <input 
+                                                    type="text" 
+                                                    required 
+                                                    className="glass-input"
+                                                    value={editForm.name}
+                                                    onChange={(e) => setEditForm({...editForm, name: e.target.value})}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.goal', 'Goal Amount (€)')}</label>
+                                                <input 
+                                                    type="number" 
+                                                    step="0.01" 
+                                                    required 
+                                                    className="glass-input"
+                                                    value={editForm.goal_amount}
+                                                    onChange={(e) => setEditForm({...editForm, goal_amount: e.target.value})}
+                                                />
+                                            </div>
+                                            <div>
+                                                 <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.description', 'Description')}</label>
+                                                 <textarea 
+                                                    className="glass-input !rounded-3xl"
+                                                    rows="3"
+                                                    value={editForm.description}
+                                                    onChange={(e) => setEditForm({...editForm, description: e.target.value})}
+                                                 ></textarea>
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.deadline', 'Deadline')} <span className="text-gray-400 font-normal">({t('campaigns.ongoing_hint', 'Leave empty for ongoing')})</span></label>
+                                                <input 
+                                                    type="date" 
+                                                    className="glass-input"
+                                                    value={editForm.deadline}
+                                                    onChange={(e) => setEditForm({...editForm, deadline: e.target.value})}
+                                                />
+                                            </div>
+                                            <div className="flex items-center">
+                                                <input 
+                                                    id="is_active" 
+                                                    name="is_active" 
+                                                    type="checkbox" 
+                                                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                                    checked={editForm.is_active}
+                                                    onChange={(e) => setEditForm({...editForm, is_active: e.target.checked})}
+                                                />
+                                                <label htmlFor="is_active" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
+                                                    {t('campaigns.is_active', 'Active Campaign')}
+                                                </label>
+                                            </div>
+                                            <div className="flex gap-3 mt-6">
+                                                <button 
+                                                    type="button" 
+                                                    onClick={() => setEditingCampaign(null)}
+                                                    className="glass-button-secondary flex-1"
+                                                >
+                                                    {t('common.cancel', 'Cancel')}
+                                                </button>
+                                                <button 
+                                                    type="submit" 
+                                                    className="glass-button flex-1"
+                                                >
+                                                    {t('common.save', 'Save Changes')}
+                                                </button>
+                                            </div>
+                                        </form>
+                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </ModalPortal>
+                )}
+
+                {/* Payment Modal */}
+                {paymentModalOpen && (
+                    <ModalPortal>
+                        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+                            <div className="w-full max-w-lg">
+                                <PaymentUpload 
+                                    onSuccess={() => {
+                                        setPaymentModalOpen(false);
+                                        fetchCampaigns();
+                                        setMessage(t('campaigns.payment_success', 'Contribution registered!'));
+                                    }} 
+                                    onCancel={() => setPaymentModalOpen(false)}
+                                    initialType="campaign"
+                                    initialCampaignId={selectedCampaignForPayment?.id}
+                                    isAdmin={false}
+                                />
+                            </div>
+                        </div>
                     </ModalPortal>
                 )}
             </div>

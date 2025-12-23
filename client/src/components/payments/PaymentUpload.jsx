@@ -5,28 +5,29 @@ import { API_URL } from '../../config';
 import GlassSelect from '../GlassSelect';
 import { useAuth } from '../../context/AuthContext';
 
-const PaymentUpload = ({ onSuccess, onCancel, isAdmin }) => {
+const PaymentUpload = ({ onSuccess, onCancel, isAdmin, initialType, initialFeeId, initialCampaignId, initialAmount, initialUnitId }) => {
     const { user: currentUser, activeCommunity } = useAuth();
     const { t } = useTranslation();
-    const [amount, setAmount] = useState('');
+    const [amount, setAmount] = useState(initialAmount ? String(initialAmount) : '');
+    const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
     const [notes, setNotes] = useState('');
     const [file, setFile] = useState(null);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
     const [users, setUsers] = useState([]);
     const [selectedUserId, setSelectedUserId] = useState('');
-    const [selectedCampaignId, setSelectedCampaignId] = useState('');
+    const [selectedCampaignId, setSelectedCampaignId] = useState(initialCampaignId || '');
     const [campaigns, setCampaigns] = useState([]);
     
     // New state for units
     const [userUnits, setUserUnits] = useState([]);
-    const [selectedUnitId, setSelectedUnitId] = useState('');
+    const [selectedUnitId, setSelectedUnitId] = useState(initialUnitId || '');
     
     // New state for payment categorization
-    const [paymentType, setPaymentType] = useState('maintenance'); // 'maintenance' or 'campaign'
+    const [paymentType, setPaymentType] = useState(initialType || 'maintenance'); // 'maintenance' or 'campaign'
     const [pendingFees, setPendingFees] = useState([]);
     const [filteredFees, setFilteredFees] = useState([]); // Filtered by selected unit
-    const [selectedFeeId, setSelectedFeeId] = useState('');
+    const [selectedFeeId, setSelectedFeeId] = useState(initialFeeId || '');
 
     React.useEffect(() => {
         if (isAdmin) {
@@ -56,17 +57,34 @@ const PaymentUpload = ({ onSuccess, onCancel, isAdmin }) => {
         } 
         // If Admin selected 'Myself' (empty string) OR NOT Admin (Resident)
         else {
-            // Use activeCommunity units
             if (activeCommunity?.unit_owners) {
                  const units = activeCommunity.unit_owners.map(uo => ({
                     id: uo.unit_id,
                     name: `${uo.units?.blocks?.name || 'Block'} - ${uo.units?.unit_number}`
                 }));
                 setUserUnits(units);
-                if (units.length === 1) setSelectedUnitId(units[0].id);
-                else setSelectedUnitId('');
+                
+                // Logic to set default unit:
+                // 1. If only 1 unit exists, select it.
+                // 2. If initialUnitId is provided and valid, keep it (don't clear it).
+                // 3. Otherwise, if multiple units and no valid initial selection, clear it logic is handled by NOT setting it here if we want to respect existing state, 
+                // BUT we usually want to reset if user changes.
+                // Since this runs on mount/updates, we should be careful.
+                
+                if (units.length === 1) {
+                    setSelectedUnitId(units[0].id);
+                } else if (initialUnitId && units.some(u => u.id === initialUnitId)) {
+                    // Do nothing, respect initial state
+                } else {
+                     // Only clear if we are not in a pre-filled context for that unit?
+                     // Actually, if we are switching users (admin), we WANT to clear.
+                     // If we are just mounting component as resident, initialUnitId is set in state.
+                     // So we just need to avoid overwriting it with ''.
+                     if (!initialUnitId) setSelectedUnitId('');
+                }
             }
         }
+
     }, [selectedUserId, isAdmin, users, activeCommunity]);
 
     // Effect to filter fees when unit changes
@@ -76,7 +94,8 @@ const PaymentUpload = ({ onSuccess, onCancel, isAdmin }) => {
         } else {
             setFilteredFees([]);
         }
-        setSelectedFeeId(''); // Reset selection when unit changes
+        // Don't auto-reset selectedFeeId here, it wipes initialFeeId on load.
+        // We handle reset on manual unit change.
     }, [selectedUnitId, pendingFees]);
 
     const fetchPendingFees = async () => {
@@ -180,7 +199,8 @@ const PaymentUpload = ({ onSuccess, onCancel, isAdmin }) => {
                 fileName: file ? file.name : null,
                 campaign_id: paymentType === 'campaign' ? selectedCampaignId : null,
                 monthly_fee_id: paymentType === 'maintenance' ? selectedFeeId : null,
-                unit_id: selectedUnitId || null
+                unit_id: selectedUnitId || null,
+                payment_date: paymentDate
             };
 
             // If admin and filtered user, send userId
@@ -236,13 +256,16 @@ const PaymentUpload = ({ onSuccess, onCancel, isAdmin }) => {
                     </div>
                 )}
 
-                {/* Unit Selection - Show if User has units */}
-                {userUnits.length > 0 && (
+                {/* Unit Selection - Hide if initialUnitId provided or no units */}
+                {userUnits.length > 0 && !initialUnitId && (
                      <div>
                         <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('payments.upload.unit_select', 'Select Unit')} <span className="text-red-500">*</span></label>
                         <GlassSelect 
                             value={selectedUnitId}
-                            onChange={(e) => setSelectedUnitId(e.target.value)}
+                            onChange={(e) => {
+                                setSelectedUnitId(e.target.value);
+                                setSelectedFeeId(''); // Explicitly reset fee on unit change
+                            }}
                             options={[
                                 { value: '', label: t('common.select', 'Select Unit...') },
                                 ...userUnits.map(u => ({ value: u.id, label: u.name }))
@@ -255,19 +278,36 @@ const PaymentUpload = ({ onSuccess, onCancel, isAdmin }) => {
                     </div>
                 )}
 
+                {!initialType && (
                 <div>
                     <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('payments.upload.category', 'Payment Category')}</label>
                     <div className="grid sm:grid-cols-2 gap-2">
-                        <label className={`flex items-center p-3 w-full backdrop-blur-md rounded-xl border cursor-pointer transition-all ${paymentType === 'maintenance' ? 'bg-blue-500/10 border-blue-500/50 shadow-lg shadow-blue-500/10' : 'bg-white/30 dark:bg-neutral-800/40 border-white/20 dark:border-white/5 hover:bg-white/40'}`}>
-                            <input type="radio" name="payment-type" value="maintenance" className="hidden" checked={paymentType === 'maintenance'} onChange={() => setPaymentType('maintenance')} />
+                        <label className={`flex items-center p-3 w-full backdrop-blur-md rounded-xl border transition-all ${paymentType === 'maintenance' ? 'bg-blue-500/10 border-blue-500/50 shadow-lg shadow-blue-500/10' : 'bg-white/30 dark:bg-neutral-800/40 border-white/20 dark:border-white/5 hover:bg-white/40'} ${initialType ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'}`}>
+                            <input 
+                                type="radio" 
+                                name="payment-type" 
+                                value="maintenance" 
+                                className="hidden" 
+                                checked={paymentType === 'maintenance'} 
+                                onChange={() => !initialType && setPaymentType('maintenance')} 
+                                disabled={!!initialType}
+                            />
                             <div className={`w-4 h-4 rounded-full border flex items-center justify-center mr-3 ${paymentType === 'maintenance' ? 'border-blue-500' : 'border-gray-400'}`}>
                                 {paymentType === 'maintenance' && <div className="w-2 h-2 rounded-full bg-blue-500"></div>}
                             </div>
                             <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{t('payments.upload.type_maintenance', 'Monthly Maintenance')}</span>
                         </label>
 
-                        <label className={`flex items-center p-3 w-full backdrop-blur-md rounded-xl border cursor-pointer transition-all ${paymentType === 'campaign' ? 'bg-blue-500/10 border-blue-500/50 shadow-lg shadow-blue-500/10' : 'bg-white/30 dark:bg-neutral-800/40 border-white/20 dark:border-white/5 hover:bg-white/40'}`}>
-                            <input type="radio" name="payment-type" value="campaign" className="hidden" checked={paymentType === 'campaign'} onChange={() => setPaymentType('campaign')} />
+                        <label className={`flex items-center p-3 w-full backdrop-blur-md rounded-xl border transition-all ${paymentType === 'campaign' ? 'bg-blue-500/10 border-blue-500/50 shadow-lg shadow-blue-500/10' : 'bg-white/30 dark:bg-neutral-800/40 border-white/20 dark:border-white/5 hover:bg-white/40'} ${initialType ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'}`}>
+                            <input 
+                                type="radio" 
+                                name="payment-type" 
+                                value="campaign" 
+                                className="hidden" 
+                                checked={paymentType === 'campaign'} 
+                                onChange={() => !initialType && setPaymentType('campaign')} 
+                                disabled={!!initialType}
+                            />
                             <div className={`w-4 h-4 rounded-full border flex items-center justify-center mr-3 ${paymentType === 'campaign' ? 'border-blue-500' : 'border-gray-400'}`}>
                                 {paymentType === 'campaign' && <div className="w-2 h-2 rounded-full bg-blue-500"></div>}
                             </div>
@@ -275,10 +315,11 @@ const PaymentUpload = ({ onSuccess, onCancel, isAdmin }) => {
                         </label>
                     </div>
                 </div>
+                )}
 
 
 
-                {paymentType === 'maintenance' && !isAdmin && (
+                {paymentType === 'maintenance' && !isAdmin && !initialFeeId && (
                     <div>
                          <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('payments.upload.select_fee', 'Select Pending Month (Optional)')}</label>
                          
@@ -308,7 +349,7 @@ const PaymentUpload = ({ onSuccess, onCancel, isAdmin }) => {
                     </div>
                 )}
 
-                {paymentType === 'campaign' && (
+                {paymentType === 'campaign' && !initialCampaignId && (
                     <div>
                         <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('payments.upload.select_campaign', 'Select Campaign')}</label>
                          <GlassSelect 
@@ -323,15 +364,38 @@ const PaymentUpload = ({ onSuccess, onCancel, isAdmin }) => {
                     </div>
                 )}
 
+
+
+
+                
+                {/* Amount - Input if variable, Display if fixed */}
+                {!initialAmount ? (
+                    <div>
+                        <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('payments.upload.amount', 'Amount (€)')}</label>
+                        <input 
+                            type="number" 
+                            step="0.01"
+                            required
+                            className="glass-input"
+                            value={amount}
+                            onChange={(e) => setAmount(e.target.value)}
+                        />
+                    </div>
+                ) : (
+                    <div className="p-4 bg-blue-50/50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800 text-center">
+                        <p className="text-xs text-blue-600 dark:text-blue-400 font-semibold uppercase tracking-wider mb-1">{t('payments.upload.amount', 'Amount to Pay')}</p>
+                        <p className="text-3xl font-bold text-gray-800 dark:text-white">{amount}€</p>
+                    </div>
+                )}
                 <div>
-                    <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('payments.upload.amount', 'Amount (€)')}</label>
-                    <input 
-                        type="number" 
-                        step="0.01"
+                     <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('payments.upload.date', 'Payment Date')}</label>
+                     <input 
+                        type="date" 
                         required
                         className="glass-input"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
+                        value={paymentDate}
+                        onChange={(e) => setPaymentDate(e.target.value)}
+                        max={new Date().toISOString().split('T')[0]}
                     />
                 </div>
                 <div>

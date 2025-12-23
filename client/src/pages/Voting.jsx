@@ -4,6 +4,7 @@ import DashboardLayout from '../components/DashboardLayout';
 import { useTranslation } from 'react-i18next';
 import { API_URL } from '../config';
 import ModalPortal from '../components/ModalPortal';
+import GlassLoader from '../components/GlassLoader';
 
 const Voting = () => {
     const { user, activeCommunity } = useAuth();
@@ -169,7 +170,7 @@ const Voting = () => {
     });
 
     if (loading) {
-        return <DashboardLayout><div className="p-6">{t('common.loading')}</div></DashboardLayout>;
+        return <DashboardLayout><GlassLoader /></DashboardLayout>;
     }
 
     return (
@@ -188,15 +189,19 @@ const Voting = () => {
                 </div>
 
                 {/* Tabs */}
-                <div className="flex border-b border-gray-200 dark:border-neutral-700 mb-6">
+                <div className="flex p-1 rounded-full items-center backdrop-blur-md bg-white/30 border border-white/40 shadow-sm dark:bg-neutral-800/40 dark:border-white/10 mb-6 w-fit">
                     <button 
-                        className={`px-4 py-2 font-medium ${activeTab === 'active' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
+                        className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === 'active' 
+                            ? 'bg-white text-blue-600 shadow-md dark:bg-neutral-700 dark:text-blue-400' 
+                            : 'text-gray-600 hover:bg-white/20 dark:text-gray-300 dark:hover:bg-white/10'}`}
                         onClick={() => setActiveTab('active')}
                     >
                         {t('voting.active_polls', 'Active Polls')}
                     </button>
                     <button 
-                        className={`px-4 py-2 font-medium ${activeTab === 'past' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
+                        className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === 'past' 
+                            ? 'bg-white text-blue-600 shadow-md dark:bg-neutral-700 dark:text-blue-400' 
+                            : 'text-gray-600 hover:bg-white/20 dark:text-gray-300 dark:hover:bg-white/10'}`}
                         onClick={() => setActiveTab('past')}
                     >
                         {t('voting.past_polls', 'Past Polls')}
@@ -242,7 +247,7 @@ const Voting = () => {
                                             <div key={option.id} className="relative">
                                                 {/* Visual Bar for results */}
                                                 {(hasVoted || isExpired || isAdmin) && (
-                                                    <div className={`absolute inset-0 rounded-lg overflow-hidden ${isMyVote ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-gray-50 dark:bg-neutral-700/50'}`}>
+                                                    <div className={`absolute inset-0 rounded-full overflow-hidden ${isMyVote ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-gray-50 dark:bg-neutral-700/50'}`}>
                                                         <div 
                                                             className={`h-full transition-all duration-500 ${isMyVote ? 'bg-blue-200 dark:bg-blue-800/40' : 'bg-gray-200 dark:bg-neutral-600'}`} 
                                                             style={{ width: `${percentage}%` }}
@@ -250,21 +255,27 @@ const Voting = () => {
                                                     </div>
                                                 )}
                                                 
-                                                <button 
-                                                    disabled={isExpired || isMyVote}
-                                                    onClick={() => handleVote(poll.id, option.id)}
-                                                    className={`relative w-full text-left px-4 py-3 rounded-lg border transition-colors flex justify-between items-center z-10
-                                                        ${isExpired || isMyVote ? 'border-transparent cursor-default' : 'border-gray-200 hover:bg-gray-50 dark:border-neutral-700 dark:hover:bg-neutral-700'}
-                                                        ${isMyVote ? 'ring-2 ring-blue-500' : ''}
-                                                    `}
-                                                >
-                                                    <span className="font-medium text-gray-800 dark:text-white">
-                                                        {option.option_text} {isMyVote && <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded ml-2">{t('voting.your_vote', 'You')}</span>}
-                                                    </span>
-                                                    {(hasVoted || isExpired || isAdmin) && (
-                                                        <span className="text-sm text-gray-500 dark:text-neutral-400 font-semibold">{percentage}% ({voteCount})</span>
-                                                    )}
-                                                </button>
+                                                <div className={`relative w-full rounded-full transition-all ${isMyVote ? 'p-[2px] bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 shadow-lg' : ''}`}>
+                                                    <button 
+                                                        disabled={isExpired || isMyVote}
+                                                        onClick={() => handleVote(poll.id, option.id)}
+                                                        className={`relative w-full text-left px-6 py-3 rounded-full border transition-all flex justify-between items-center z-10 h-full
+                                                            ${isExpired 
+                                                                ? 'border-transparent cursor-default' 
+                                                                : isMyVote
+                                                                    ? 'border-transparent bg-white/90 dark:bg-neutral-800/90 cursor-default'
+                                                                    : 'backdrop-blur-md bg-white/70 border-white/60 shadow-sm hover:bg-white/90 hover:shadow-md dark:bg-neutral-800/70 dark:border-white/20 dark:hover:bg-neutral-800/90'
+                                                            }
+                                                        `}
+                                                    >
+                                                        <span className="font-medium text-gray-800 dark:text-white flex items-center">
+                                                            {option.option_text} {isMyVote && <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded ml-2">{t('voting.your_vote', 'You')}</span>}
+                                                        </span>
+                                                        {(hasVoted || isExpired || isAdmin) && (
+                                                            <span className="text-sm text-gray-500 dark:text-neutral-400 font-semibold">{percentage}% ({voteCount})</span>
+                                                        )}
+                                                    </button>
+                                                </div>
                                             </div>
                                         );
                                     })}

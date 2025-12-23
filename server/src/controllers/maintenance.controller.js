@@ -4,12 +4,27 @@ const supabaseAdmin = require('../config/supabaseAdmin');
 // Helper to get user and their role
 const getUserAndMember = async (req) => {
     const token = req.headers.authorization?.split(' ')[1];
-    const communityId = req.headers['x-community-id'];
+    let communityId = req.headers['x-community-id'];
+
+    if (communityId && communityId.includes(',')) {
+        const potentialIds = communityId.split(',').map(id => id.trim());
+        // Verify which ID actually exists in the DB
+        const { data: validComms } = await supabaseAdmin
+            .from('communities')
+            .select('id')
+            .in('id', potentialIds);
+
+        if (validComms && validComms.length > 0) {
+            communityId = validComms[0].id; // Use the first VALID ID found
+            communityId = potentialIds[0]; // Fallback
+        }
+    }
 
     if (!token) throw new Error('No token provided');
     if (!communityId) throw new Error('Community ID header missing');
 
     const { data: { user }, error } = await supabase.auth.getUser(token);
+
     if (error || !user) throw new Error('Invalid token');
 
     const { data: member, error: memberError } = await supabaseAdmin
@@ -19,6 +34,7 @@ const getUserAndMember = async (req) => {
         .eq('community_id', communityId)
         .single();
 
+    // memberError usually means row not found or duplicate, failing strictly is safer
     if (memberError || !member) throw new Error('Not a member of this community');
 
     return { user, member, communityId };
@@ -39,34 +55,51 @@ exports.generateMonthlyFees = async (req, res) => {
             return res.status(400).json({ error: 'Period and Amount are required' });
         }
 
-        // 1. Get all units in the community
+        // 1. Get all occupied units in the community (must have at least one owner)
         const { data: units, error: unitsError } = await supabaseAdmin
             .from('units')
-            .select('id, block_id, blocks!inner(community_id)') // Filter via inner join on blocks
+            .select('id, block_id, blocks!inner(community_id), unit_owners!inner(id)') // Inner join on unit_owners ensures occupancy
             .eq('blocks.community_id', communityId);
 
         if (unitsError) throw unitsError;
-        if (!units || units.length === 0) return res.status(400).json({ error: 'No units found in this community' });
+        if (!units || units.length === 0) return res.status(400).json({ error: 'No occupied units found in this community' });
 
-        // 2. Prepare inserts
-        const feeRecords = units.map(unit => ({
+        // 2. Check for existing fees for this period
+        const { data: existingFees, error: existingError } = await supabaseAdmin
+            .from('monthly_fees')
+            .select('unit_id')
+            .eq('community_id', communityId)
+            .eq('period', period);
+
+        if (existingError) throw existingError;
+
+        const existingUnitIds = new Set(existingFees.map(f => f.unit_id));
+
+        // 3. Filter units that don't have a fee yet
+        const unitsToBill = units.filter(unit => !existingUnitIds.has(unit.id));
+
+        if (unitsToBill.length === 0) {
+            return res.status(200).json({ message: 'All units already have fees for this period.', count: 0 });
+        }
+
+        // 4. Prepare inserts for new fees only
+        const feeRecords = unitsToBill.map(unit => ({
             community_id: communityId,
             unit_id: unit.id,
-            period: period, // Ensure YYYY-MM-01 format from client
+            period: period, // YYYY-MM-01
             amount: amount,
             status: 'pending'
         }));
 
-        // 3. Upsert (Insert or Do Nothing if exists)
-        // We rely on UNIQUE(unit_id, period) constraint
+        // 5. Insert new records
         const { data, error } = await supabaseAdmin
             .from('monthly_fees')
-            .upsert(feeRecords, { onConflict: 'unit_id, period', ignoreDuplicates: true })
+            .insert(feeRecords)
             .select();
 
         if (error) throw error;
 
-        res.status(201).json({ message: `Fees generated for ${data.length} new records (duplicates ignored)`, count: data.length });
+        res.status(201).json({ message: `Generated ${data.length} new fees. (${existingUnitIds.size} already existed)`, count: data.length });
 
     } catch (error) {
         console.error('Generate fees error:', error);
@@ -118,6 +151,7 @@ exports.getCommunityStatus = async (req, res) => {
                 period: fee.period,
                 amount: fee.amount,
                 status: fee.status,
+                payment_id: fee.payment_id, // include payment link
                 unit_number: fee.units?.unit_number,
                 block_name: fee.units?.blocks?.name,
                 owner_name: owner.full_name,
@@ -211,6 +245,43 @@ exports.markAsPaid = async (req, res) => {
         if (error) throw error;
 
         res.json(data);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+};
+
+exports.deleteFee = async (req, res) => {
+    try {
+        const { member, communityId } = await getUserAndMember(req);
+        const role = member.roles?.name;
+
+        if (role !== 'admin' && role !== 'president' && role !== 'treasurer') {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        const { feeId } = req.params;
+
+        // Check if fee has payments
+        const { data: fee } = await supabaseAdmin
+            .from('monthly_fees')
+            .select('payment_id')
+            .eq('id', feeId)
+            .eq('community_id', communityId)
+            .single();
+
+        if (fee?.payment_id) {
+            return res.status(400).json({ error: 'Cannot delete a fee with a registered payment.' });
+        }
+
+        const { error } = await supabaseAdmin
+            .from('monthly_fees')
+            .delete()
+            .eq('id', feeId)
+            .eq('community_id', communityId);
+
+        if (error) throw error;
+
+        res.json({ message: 'Fee deleted successfully' });
 
     } catch (error) {
         res.status(400).json({ error: error.message });

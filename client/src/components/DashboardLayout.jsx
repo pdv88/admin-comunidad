@@ -83,9 +83,6 @@ const DashboardLayout = ({ children }) => {
                     <Link to="/app/voting" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/voting')}`}>
                          {t('dashboard_layout.nav.voting')}
                     </Link>
-                    <Link to="/app/payments" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/payments')}`}>
-                         {t('dashboard_layout.nav.payments')}
-                    </Link>
                     <Link to="/app/maintenance" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/maintenance')}`}>
                          {t('dashboard_layout.nav.maintenance', 'Maintenance Fees')}
                     </Link>

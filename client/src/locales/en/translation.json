@@ -480,6 +480,7 @@
         },
         "upload": {
             "title": "Register Payment",
+            "date": "Payment Date",
             "amount": "Amount (€)",
             "notes": "Notes (Optional)",
             "receipt": "Receipt (Image)",
@@ -553,7 +554,8 @@
         "collected": "Collected",
         "edit_title": "Edit Campaign",
         "ongoing_hint": "Leave empty for ongoing",
-        "is_active": "Active Campaign"
+        "is_active": "Active Campaign",
+        "contribute": "Contribute"
     },
     "cookies": {
         "message": "We use cookies to ensure you get the best experience on our website.",
@@ -603,8 +605,10 @@
         "unit": "Unit",
         "owner": "Owner",
         "status": "Status",
+        "processing": "Processing",
         "no_records": "No records found.",
         "success_gen": "Successfully generated fees.",
-        "error_gen": "Error generating fees."
+        "error_gen": "Error generating fees.",
+        "pay": "Pay"
     }
 }

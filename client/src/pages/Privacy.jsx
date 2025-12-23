@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import Footer from '../assets/components/Footer';
 import Header from '../assets/components/Header';
 
-const PrivacyPolicy = () => {
+const Privacy = () => {
   const { t } = useTranslation();
 
   return (
@@ -64,4 +64,4 @@ const PrivacyPolicy = () => {
   );
 };
 
-export default PrivacyPolicy;
+export default Privacy;

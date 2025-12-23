@@ -61,7 +61,12 @@ const ActivePollsWidget = (props) => {
 
     // Colors for the stacked bar
     const colors = [
-        'bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-yellow-500', 'bg-pink-500', 'bg-indigo-500'
+        'bg-gradient-to-r from-blue-400 to-blue-600 shadow-md shadow-blue-500/20', 
+        'bg-gradient-to-r from-green-400 to-green-600 shadow-md shadow-green-500/20', 
+        'bg-gradient-to-r from-purple-400 to-purple-600 shadow-md shadow-purple-500/20', 
+        'bg-gradient-to-r from-yellow-400 to-yellow-600 shadow-md shadow-yellow-500/20', 
+        'bg-gradient-to-r from-pink-400 to-pink-600 shadow-md shadow-pink-500/20', 
+        'bg-gradient-to-r from-indigo-400 to-indigo-600 shadow-md shadow-indigo-500/20'
     ];
 
     return (
@@ -100,7 +105,7 @@ const ActivePollsWidget = (props) => {
                                     
                                     {/* Unified Progress Bar */}
                                     <div className="mb-4 space-y-3">
-                                        <div className="flex h-3 w-full bg-gray-100 dark:bg-neutral-700 rounded-full overflow-hidden">
+                                        <div className="flex h-2.5 w-full bg-gray-100 dark:bg-neutral-700/50 rounded-full overflow-hidden">
                                             {totalVotes > 0 ? (
                                                 poll.poll_options?.map((option, index) => {
                                                     const count = getVoteCount(poll, option.id);
@@ -110,7 +115,7 @@ const ActivePollsWidget = (props) => {
                                                         <div 
                                                             key={option.id}
                                                             style={{ width: `${percentage}%` }}
-                                                            className={`h-full ${colors[index % colors.length]}`}
+                                                            className={`h-full ${colors[index % colors.length]} transition-all duration-500`}
                                                             title={`${option.option_text}: ${count} votes (${Math.round(percentage)}%)`}
                                                         />
                                                     );

@@ -20,11 +20,11 @@ import UserManagement from "./pages/UserManagement";
 import UpdatePassword from "./pages/UpdatePassword";
 import Settings from "./pages/Settings"; 
 import CommunitySettings from "./pages/CommunitySettings";
-import Payments from "./pages/Payments";
 import Campaigns from "./pages/Campaigns";
+import CampaignDetails from "./pages/CampaignDetails";
 import Maintenance from "./pages/Maintenance";
 import PrivacyNotice from "./components/PrivacyNotice";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
+import Privacy from './pages/Privacy';
 import Terms from "./pages/Terms";
 
 import { AuthProvider } from "./context/AuthContext";
@@ -45,7 +45,7 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/verifyEmail/:token" element={<EmailVerification />} />
             <Route path="/update-password" element={<UpdatePassword />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/privacy-policy" element={<Privacy />} />
             <Route path="/terms-and-conditions" element={<Terms />} />
           </Route>
           
@@ -64,8 +64,8 @@ function App() {
              </Route>
 
              <Route path="/app/settings" element={<Settings />} /> 
-             <Route path="/app/payments" element={<Payments />} />
              <Route path="/app/campaigns" element={<Campaigns />} />
+             <Route path="/app/campaigns/:id" element={<CampaignDetails />} />
              <Route path="/app/maintenance" element={<Maintenance />} />
              {/* Redirect /dashboard to /app/dashboard for backward compatibility if needed */}
              <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />

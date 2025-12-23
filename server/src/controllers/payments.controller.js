@@ -45,7 +45,7 @@ const getUserAndMember = async (req) => {
 exports.createPayment = async (req, res) => {
     try {
         const { user, member, communityId } = await getUserAndMember(req);
-        const { amount, campaign_id, notes, base64Image, fileName, targetUserId, monthly_fee_id, unit_id } = req.body;
+        const { amount, campaign_id, notes, base64Image, fileName, targetUserId, monthly_fee_id, unit_id, payment_date } = req.body;
         const role = member.roles?.name;
 
         let paymentUserId = user.id;
@@ -94,6 +94,9 @@ exports.createPayment = async (req, res) => {
             proof_url = publicUrlData.publicUrl;
         }
 
+        // Determine initial status: 'pending' for users, 'confirmed' for admins
+        const initialStatus = ['admin', 'president', 'treasurer'].includes(role) ? 'confirmed' : 'pending';
+
         const { data, error } = await supabaseAdmin
             .from('payments')
             .insert({
@@ -104,7 +107,8 @@ exports.createPayment = async (req, res) => {
                 notes,
                 proof_url,
                 unit_id: unit_id || null, // Optional but recommended
-                status: 'pending'
+                payment_date: payment_date || new Date().toISOString(), // Default to now if missing
+                status: initialStatus
             })
             .select()
             .single();
@@ -113,10 +117,43 @@ exports.createPayment = async (req, res) => {
 
         // Link Fee if provided
         if (monthly_fee_id) {
-            await supabaseAdmin
+            console.log(`Linking payment ${data.id} to fee ${monthly_fee_id}`);
+            const updatePayload = { payment_id: data.id };
+            if (initialStatus === 'confirmed') updatePayload.status = 'paid';
+
+            const { error: updateError } = await supabaseAdmin
                 .from('monthly_fees')
-                .update({ payment_id: data.id })
+                .update(updatePayload)
                 .eq('id', monthly_fee_id);
+
+            if (updateError) {
+                console.error("Error linking fee:", updateError);
+            } else {
+                console.log("Fee linked successfully.");
+            }
+        } else if (campaign_id) {
+            console.log(`Campaign contribution recorded for campaign ${campaign_id}`);
+            // If auto-confirmed (admin), update campaign stats immediately
+            if (initialStatus === 'confirmed') {
+                try {
+                    const { data: campaign } = await supabaseAdmin
+                        .from('campaigns')
+                        .select('current_amount')
+                        .eq('id', campaign_id)
+                        .maybeSingle();
+
+                    if (campaign) {
+                        await supabaseAdmin
+                            .from('campaigns')
+                            .update({ current_amount: Number(campaign.current_amount) + Number(amount) })
+                            .eq('id', campaign_id);
+                    }
+                } catch (err) {
+                    console.error("Error auto-updating campaign stats:", err);
+                }
+            }
+        } else {
+            console.log(`General payment recorded (ID: ${data.id})`);
         }
 
         res.status(201).json(data);
@@ -132,6 +169,7 @@ exports.getPayments = async (req, res) => {
         const { user, member, communityId } = await getUserAndMember(req);
         const role = member.roles?.name;
         const type = req.query.type; // 'own' or 'all'
+        const campaign_id = req.query.campaign_id;
 
         let query = supabaseAdmin
             .from('payments')
@@ -147,6 +185,10 @@ exports.getPayments = async (req, res) => {
 
         if ((role !== 'admin' && role !== 'president') || type === 'own') {
             query = query.eq('user_id', user.id);
+        }
+
+        if (campaign_id) {
+            query = query.eq('campaign_id', campaign_id);
         }
 
         const { data: payments, error: paymentsError } = await query;
@@ -172,8 +214,10 @@ exports.getPayments = async (req, res) => {
         let profileMap = {};
         if (role === 'admin' || role === 'president') {
             const userIds = [...new Set(payments.map(p => p.user_id))];
+
+
             if (userIds.length > 0) {
-                const { data: pData } = await supabaseAdmin
+                const { data: pData, error: pError } = await supabaseAdmin
                     .from('profiles')
                     .select(`
                         id, full_name, email, phone,
@@ -185,15 +229,18 @@ exports.getPayments = async (req, res) => {
                         )
                     `)
                     .in('id', userIds);
-                if (pData) pData.forEach(p => profileMap[p.id] = p);
-                // Note: Not fetching unit info again to keep it simple, or can do recursive fetch if needed.
+
+                if (pError) console.error("Error fetching profiles:", pError);
+                if (pData) {
+                    pData.forEach(p => profileMap[p.id] = p);
+                }
             }
         }
 
         result = payments.map(p => ({
             ...p,
             campaigns: p.campaign_id ? campaignMap[p.campaign_id] : null,
-            profiles: profileMap[p.user_id] || { full_name: 'Me' } // Simplified
+            profiles: profileMap[p.user_id] || (p.user_id === user.id ? member.profile : null)
         }));
 
         res.json(result);
@@ -201,6 +248,58 @@ exports.getPayments = async (req, res) => {
     } catch (error) {
         console.error('Get payments error:', error);
         res.status(401).json({ error: error.message });
+    }
+};
+
+exports.getPaymentById = async (req, res) => {
+    try {
+        console.log(`Getting payment by ID... Params:`, req.params);
+        const { user, member, communityId } = await getUserAndMember(req);
+        const { id } = req.params;
+        const role = member.roles?.name;
+
+        console.log(`User: ${user.id}, Role: ${role}, Community: ${communityId}, Target Payment: ${id}`);
+
+        // Fetch payment
+        const { data: payment, error } = await supabaseAdmin
+            .from('payments')
+            .select(`
+                *,
+                units (unit_number, blocks(name)),
+                monthly_fees(period)
+            `)
+            .eq('id', id)
+            .eq('community_id', communityId)
+            .maybeSingle();
+
+        console.log("Supabase Result - Error:", error);
+        console.log("Supabase Result - Payment found:", !!payment);
+
+        if (error || !payment) {
+            return res.status(404).json({ error: 'Payment not found or DB error' });
+        }
+
+        // Access Control: Admin/President OR Owner
+        if (role !== 'admin' && role !== 'president' && payment.user_id !== user.id) {
+            return res.status(403).json({ error: 'Unauthorized to view this payment' });
+        }
+
+        // Manual Join for Profile
+        const { data: profile } = await supabaseAdmin
+            .from('profiles')
+            .select('full_name, email')
+            .eq('id', payment.user_id)
+            .single();
+
+        const paymentWithProfile = {
+            ...payment,
+            profile: profile || { full_name: 'Unknown User', email: '' }
+        };
+
+        res.json(paymentWithProfile);
+
+    } catch (error) {
+        res.status(400).json({ error: error.message });
     }
 };
 
@@ -412,6 +511,44 @@ exports.getCampaigns = async (req, res) => {
 
         res.json(visibleCampaigns);
 
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+};
+
+exports.getCampaignById = async (req, res) => {
+    try {
+        const { member, communityId } = await getUserAndMember(req);
+        const { id } = req.params;
+
+        const { data, error } = await supabaseAdmin
+            .from('campaigns')
+            .select('*')
+            .eq('id', id)
+            .eq('community_id', communityId)
+            .single();
+
+        if (error || !data) return res.status(404).json({ error: 'Campaign not found' });
+
+        // Self-Healing: Recalculate total collected
+        const { data: payments } = await supabaseAdmin
+            .from('payments')
+            .select('amount')
+            .eq('campaign_id', id)
+            .eq('status', 'confirmed');
+
+        const realTotal = payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
+
+        if (Number(data.current_amount) !== realTotal) {
+            console.log(`Fixing Campaign ${id} amount: ${data.current_amount} -> ${realTotal}`);
+            await supabaseAdmin
+                .from('campaigns')
+                .update({ current_amount: realTotal })
+                .eq('id', id);
+            data.current_amount = realTotal;
+        }
+
+        res.json(data);
     } catch (error) {
         res.status(400).json({ error: error.message });
     }

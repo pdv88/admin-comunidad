@@ -7,9 +7,10 @@ import { API_URL } from '../config';
 import ConfirmationModal from '../components/ConfirmationModal';
 import ModalPortal from '../components/ModalPortal';
 import GlassSelect from '../components/GlassSelect';
+import GlassLoader from '../components/GlassLoader';
 
 const Reports = () => {
-    const { user } = useAuth();
+    const { user, activeCommunity } = useAuth();
     const { t } = useTranslation();
     const [reports, setReports] = useState([]);
     const [filteredReports, setFilteredReports] = useState([]);
@@ -20,8 +21,13 @@ const Reports = () => {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [reportToDelete, setReportToDelete] = useState(null);
 
-    const [activeTab, setActiveTab] = useState('my'); // 'my', 'block', 'all'
-    
+    const role = activeCommunity?.roles?.name || user?.profile?.roles?.name;
+    const isVocal = role === 'vocal';
+    const isAdminOrPres = ['admin', 'president', 'secretary', 'treasurer'].includes(role); //Added treasurer just in case
+    const isMaintenance = role === 'maintenance';
+
+    const [activeTab, setActiveTab] = useState(isAdminOrPres ? 'all' : 'my'); // 'my', 'block', 'all'
+
     // New Report State
     const [newReport, setNewReport] = useState({ 
         title: '', 
@@ -29,11 +35,6 @@ const Reports = () => {
         category: 'maintenance',
         unit_id: '' 
     });
-
-    const role = user?.profile?.roles?.name;
-    const isVocal = role === 'vocal';
-    const isAdminOrPres = ['admin', 'president', 'secretary'].includes(role);
-    const isMaintenance = role === 'maintenance';
 
     // Get User Units for Dropdown
     const userUnits = user?.profile?.unit_owners?.map(uo => uo.units) || [];
@@ -177,17 +178,21 @@ const Reports = () => {
                 </div>
 
                 {/* Tabs */}
-                <div className="flex space-x-1 bg-gray-100 dark:bg-neutral-800 p-1 rounded-xl mb-6 w-fit">
+                <div className="flex bg-white/30 backdrop-blur-md border border-white/40 shadow-sm dark:bg-neutral-800/40 dark:border-white/10 p-1 rounded-full mb-6 w-fit items-center">
                     <button
                         onClick={() => setActiveTab('my')}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'my' ? 'bg-white dark:bg-neutral-700 text-gray-800 dark:text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:text-neutral-400 dark:hover:text-neutral-200'}`}
+                        className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === 'my' 
+                            ? 'bg-white text-blue-600 shadow-md dark:bg-neutral-700 dark:text-blue-400' 
+                            : 'text-gray-600 hover:bg-white/20 dark:text-gray-300 dark:hover:bg-white/10'}`}
                     >
                         {t('reports.tabs.my', 'My Reports')}
                     </button>
                     {(isVocal || isAdminOrPres) && (
                         <button
                             onClick={() => setActiveTab('block')}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'block' ? 'bg-white dark:bg-neutral-700 text-gray-800 dark:text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:text-neutral-400 dark:hover:text-neutral-200'}`}
+                            className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === 'block' 
+                                ? 'bg-white text-blue-600 shadow-md dark:bg-neutral-700 dark:text-blue-400' 
+                                : 'text-gray-600 hover:bg-white/20 dark:text-gray-300 dark:hover:bg-white/10'}`}
                         >
                             {t('reports.tabs.block', 'Block Reports')}
                         </button>
@@ -195,7 +200,9 @@ const Reports = () => {
                     {isAdminOrPres && (
                         <button
                             onClick={() => setActiveTab('all')}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'all' ? 'bg-white dark:bg-neutral-700 text-gray-800 dark:text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:text-neutral-400 dark:hover:text-neutral-200'}`}
+                            className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === 'all' 
+                                ? 'bg-white text-blue-600 shadow-md dark:bg-neutral-700 dark:text-blue-400' 
+                                : 'text-gray-600 hover:bg-white/20 dark:text-gray-300 dark:hover:bg-white/10'}`}
                         >
                             {t('reports.tabs.all', 'All Reports')}
                         </button>
@@ -205,7 +212,7 @@ const Reports = () => {
                 {/* Reports List */}
                 <div className="grid gap-4">
                     {loading ? (
-                        <p className="text-gray-500">{t('common.loading', 'Loading...')}</p>
+                        <GlassLoader />
                     ) : filteredReports.length === 0 ? (
                         <div className="glass-card text-center py-12">
                              <p className="text-gray-500 dark:text-neutral-400">{t('reports.no_reports', 'No reports found.')}</p>

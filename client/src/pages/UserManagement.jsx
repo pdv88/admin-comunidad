@@ -101,14 +101,12 @@ const UserManagement = () => {
     // Helper to get available units
     // For new user (excludeUserId = null): Show only unassigned units
     // For editing user: Show unassigned units + units assigned to THIS user
-    const getAvailableUnits = (excludeUserId = null) => {
+    const getAvailableUnits = (excludeUserId = null, currentUserUnitIds = []) => {
         // 1. Collect all assigned unit IDs from all users
         const assignedUnitIds = new Set();
         users.forEach(u => {
             // If we are looking for available units for a specific user, 
             // we skip their own assignments so they remain in the list (as "assigned to them")
-            // Wait, logic: We want to show units that are (Free OR Owned by CurrentUser).
-            // So we collect IDs owned by EVERYONE ELSE.
             if (u.id !== excludeUserId && u.unit_owners) {
                 u.unit_owners.forEach(uo => assignedUnitIds.add(uo.unit_id));
             }
@@ -124,10 +122,8 @@ const UserManagement = () => {
         }
 
         // 2. Filter
-        // Note: We need block ID in the unit object for filtering, but current getAvailableUnits logic flattens it with blockName.
-        // I will rely on blockName for now or update the helper.
-        // Actually, let's just assume blockName is unique enough or I can refactor getAvailableUnits to include blockId.
-        return allUnits.filter(u => !assignedUnitIds.has(u.id));
+        // Include if it's NOT assigned to others OR matches one of our current units (to allow unchecking even if double assigned)
+        return allUnits.filter(u => !assignedUnitIds.has(u.id) || currentUserUnitIds.includes(u.id));
     };
 
     if (loading) {
@@ -292,7 +288,7 @@ const UserManagement = () => {
                                                     <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300">{t('user_management.table.unit')}</label>
                                                     <div className="mt-1 border border-gray-300 dark:border-neutral-700 rounded-md p-2 h-48 overflow-y-auto bg-white dark:bg-neutral-900">
                                                         <div className="space-y-1">
-                                                            {getAvailableUnits(editingUser.id).map(u => (
+                                                            {getAvailableUnits(editingUser.id, editingUser.unitIds || []).map(u => (
                                                                 <label key={u.id} className="flex items-center space-x-2 p-1 hover:bg-gray-50 dark:hover:bg-neutral-800 rounded cursor-pointer">
                                                                     <input 
                                                                         type="checkbox"

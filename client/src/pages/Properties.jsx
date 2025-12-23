@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { API_URL } from '../config';
 import ConfirmationModal from '../components/ConfirmationModal';
 import ModalPortal from '../components/ModalPortal';
+import GlassLoader from '../components/GlassLoader';
 
 const Properties = () => {
     const [blocks, setBlocks] = useState([]);
@@ -158,9 +159,7 @@ const Properties = () => {
     if (loading) {
         return (
             <DashboardLayout>
-                 <div className="p-6">
-                    <div>{t('properties.loading')}</div>
-                </div>
+                <GlassLoader />
             </DashboardLayout>
         );
     }

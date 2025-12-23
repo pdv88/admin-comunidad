@@ -8,10 +8,22 @@ async function check() {
         else if (notices && notices.length > 0) console.log('Notices keys:', Object.keys(notices[0]));
         else console.log('Notices table found but empty or no access.');
 
-        const { data: reports, error: rError } = await supabaseAdmin.from('reports').select('*').limit(1);
-        if (rError) console.error('Reports Error:', rError.message);
-        else if (reports && reports.length > 0) console.log('Reports keys:', Object.keys(reports[0]));
-        else console.log('Reports table found but empty or no access.');
+        // Reports check removed for brevity
+
+
+        const { data: payments, error: pError } = await supabaseAdmin.from('payments').select('*').limit(1);
+        if (pError) console.error('Payments Error:', pError.message);
+        else if (payments && payments.length > 0) {
+            console.log('Payments keys:', Object.keys(payments[0]));
+            // Test Join
+            const { data: joinTest, error: jError } = await supabaseAdmin
+                .from('payments')
+                .select('*, profile:profiles(full_name)')
+                .limit(1);
+            if (jError) console.error('Join Test Error:', jError);
+            else console.log('Join Test Success:', !!joinTest);
+        }
+        else console.log('Payments table found but empty.');
 
     } catch (e) {
         console.error(e);
