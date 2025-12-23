@@ -176,10 +176,20 @@ exports.inviteUser = async (req, res) => {
 exports.updateUser = async (req, res) => {
     const { id } = req.params; // potentially the community_member_id or profile_id
     // Ideally we pass profile_id. Let's assume ID is profile_id for now as it's standard.
-    const { roleName, unitIds } = req.body;
+    const { roleName, unitIds, fullName } = req.body;
     const communityId = req.headers['x-community-id'];
 
     try {
+        // Update Profile Name if provided
+        if (fullName) {
+            const { error: profileError } = await supabaseAdmin
+                .from('profiles')
+                .update({ full_name: fullName })
+                .eq('id', id);
+
+            if (profileError) throw profileError;
+        }
+
         // Find role ID if roleName is provided
         let roleId = null;
         if (roleName) {

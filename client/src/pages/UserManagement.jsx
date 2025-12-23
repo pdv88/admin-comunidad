@@ -33,6 +33,7 @@ const UserManagement = () => {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                    fullName: editingUser.fullName,
                     roleName: editingUser.roleName,
                     unitIds: editingUser.unitIds
                 })
@@ -215,30 +216,30 @@ const UserManagement = () => {
 
                 {/* User List */}
                 <div className="glass-card overflow-hidden">
-                    <table className="min-w-full divide-y divide-gray-300 dark:divide-neutral-700">
-                        <thead className="bg-gray-50/60 dark:bg-neutral-700">
+                    <table className="glass-table">
+                        <thead>
                             <tr>
-                                <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-400">{t('user_management.table.name')}</th>
-                                <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-400">{t('user_management.table.role')}</th>
-                                <th className="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase dark:text-neutral-400">{t('user_management.table.unit')}</th>
-                                <th className="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase dark:text-neutral-400">{t('user_management.table.actions')}</th>
+                                <th>{t('user_management.table.name')}</th>
+                                <th>{t('user_management.table.role')}</th>
+                                <th>{t('user_management.table.unit')}</th>
+                                <th className="text-end">{t('user_management.table.actions')}</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-200 dark:divide-neutral-700">
+                        <tbody>
                             {users.map(user => (
                                 <tr key={user.id}>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-neutral-200">{user.full_name}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">
+                                    <td className="font-medium text-gray-800 dark:text-neutral-200">{user.full_name}</td>
+                                    <td>
                                         <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-800">
                                             {t(`user_management.roles.${user.roles?.name}`) !== `user_management.roles.${user.roles?.name}` ? t(`user_management.roles.${user.roles?.name}`) : user.roles?.name || 'N/A'}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-neutral-200">
+                                    <td>
                                         {user.unit_owners && user.unit_owners.length > 0 
                                             ? user.unit_owners.map(uo => uo.units ? uo.units.unit_number : '').join(', ') 
                                             : '-'}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-end text-sm font-medium">
+                                    <td className="text-end font-medium">
                                         <button 
                                             onClick={() => handleEditClick(user)}
                                             className="text-blue-600 hover:text-blue-900 dark:text-blue-500 dark:hover:text-blue-400"
@@ -269,9 +270,18 @@ const UserManagement = () => {
                                         <div className="mt-4">
                                             <form onSubmit={handleUpdateUser} className="space-y-4">
                                                 <div>
+                                                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300">{t('user_management.table.name')}</label>
+                                                    <input 
+                                                        type="text" 
+                                                        className="glass-input"
+                                                        value={editingUser.fullName}
+                                                        onChange={e => setEditingUser({...editingUser, fullName: e.target.value})}
+                                                    />
+                                                </div>
+                                                <div>
                                                     <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300">{t('user_management.table.role')}</label>
                                                     <select 
-                                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-white"
+                                                        className="glass-input"
                                                         value={editingUser.roleName}
                                                         onChange={e => setEditingUser({...editingUser, roleName: e.target.value})}
                                                     >
@@ -312,17 +322,17 @@ const UserManagement = () => {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div className="flex justify-end pt-4">
+                                                <div className="flex justify-end pt-4 space-x-3">
                                                     <button 
                                                         type="button" 
-                                                        className="mr-2 inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm dark:bg-neutral-700 dark:text-white dark:border-neutral-600 dark:hover:bg-neutral-600"
+                                                        className="glass-button-secondary"
                                                         onClick={() => setEditingUser(null)}
                                                     >
                                                         {t('user_management.edit.cancel')}
                                                     </button>
                                                     <button 
                                                         type="submit" 
-                                                        className="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
+                                                        className="glass-button"
                                                     >
                                                         {t('user_management.edit.save')}
                                                     </button>

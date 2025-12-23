@@ -85,14 +85,21 @@ const Maintenance = () => {
             const adminRole = ['admin', 'president', 'treasurer'].includes(roleName);
             setIsAdmin(adminRole);
             
+            const hasUnits = activeCommunity?.unit_owners?.length > 0;
+
             // If not admin and trying to view community, force personal
-            // Only force if we are SURE (auth loaded)
             if (!adminRole && activeTab === 'community') {
                 console.log("Maintenance: Unauthorized for community view, switching to personal.");
                 setActiveTab('personal');
             }
+
+            // If admin but NO units, force community (cannot view personal)
+            if (adminRole && !hasUnits && activeTab === 'personal') {
+                 console.log("Maintenance: Admin has no units, switching to community view.");
+                 setActiveTab('community');
+            }
         }
-    }, [activeCommunity, user, authLoading]);
+    }, [activeCommunity, user, authLoading, activeTab]); // Added activeTab to dependency array to catch state changes
 
     // Fetch when relevant state changes (tab or admin status)
     useEffect(() => {
@@ -191,6 +198,8 @@ const Maintenance = () => {
         }
     };
 
+    const hasUnits = activeCommunity?.unit_owners?.length > 0;
+
     return (
         <DashboardLayout>
             <div className="max-w-7xl mx-auto space-y-6">
@@ -199,8 +208,8 @@ const Maintenance = () => {
                         {t('maintenance.title', 'Maintenance Fees')}
                     </h1>
                     
-                    {/* Tab Switcher for Admins */}
-                    {isAdmin && (
+                    {/* Tab Switcher for Admins (Only if they have units) */}
+                    {isAdmin && hasUnits && (
                         <div className="p-1 rounded-full flex items-center backdrop-blur-md bg-white/30 border border-white/40 shadow-sm dark:bg-neutral-800/40 dark:border-white/10">
                             <button
                                 onClick={() => setActiveTab('community')}
@@ -280,41 +289,41 @@ const Maintenance = () => {
                         <GlassLoader />
                     ) : (
                         <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200 dark:divide-neutral-700">
-                                <thead className="bg-gray-50 dark:bg-neutral-800">
+                            <table className="glass-table">
+                                <thead>
                                     <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-neutral-400">{t('maintenance.period', 'Period')}</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-neutral-400">{t('maintenance.unit', 'Unit')}</th>
-                                        {isAdmin && activeTab === 'community' && <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-neutral-400">{t('maintenance.owner', 'Owner')}</th>}
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-neutral-400">{t('maintenance.amount', 'Amount')}</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-neutral-400">{t('maintenance.status', 'Status')}</th>
-                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-neutral-400">{t('common.actions', 'Actions')}</th>
+                                        <th>{t('maintenance.period', 'Period')}</th>
+                                        <th>{t('maintenance.unit', 'Unit')}</th>
+                                        {isAdmin && activeTab === 'community' && <th>{t('maintenance.owner', 'Owner')}</th>}
+                                        <th>{t('maintenance.amount', 'Amount')}</th>
+                                        <th>{t('maintenance.status', 'Status')}</th>
+                                        <th className="text-right">{t('common.actions', 'Actions')}</th>
                                     </tr>
                                 </thead>
-                                <tbody className="bg-white divide-y divide-gray-200 dark:bg-neutral-900 dark:divide-neutral-700">
+                                <tbody>
                                     {fees.map(fee => (
                                         <tr key={fee.id}>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                            <td className="text-gray-900 dark:text-white">
                                                 {new Date(fee.period + 'T12:00:00').toLocaleDateString(undefined, { year: 'numeric', month: 'long', timeZone: 'UTC' })}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-neutral-400">
+                                            <td className="text-gray-500 dark:text-neutral-400">
                                                 {(fee.block_name || fee.units?.blocks?.name) ? `${fee.block_name || fee.units?.blocks?.name} - ` : ''}
                                                 {fee.unit_number || fee.units?.unit_number}
                                             </td>
                                             {isAdmin && activeTab === 'community' && (
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-neutral-400">
+                                                <td className="text-gray-500 dark:text-neutral-400">
                                                     {fee.owner_name}
                                                 </td>
                                             )}
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                            <td className="text-gray-900 dark:text-white">
                                                 {fee.amount}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
+                                            <td>
                                                 <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(fee.status, fee.payment_id)}`}>
                                                     {(fee.status === 'pending' && fee.payment_id) ? t('maintenance.processing', 'Processing') : fee.status}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <td className="text-right font-medium">
                                                 {/* Review Button (Admin Community View + Pending + HAS payment_id) */}
                                                 {isAdmin && activeTab === 'community' && fee.status === 'pending' && fee.payment_id && (
                                                     <button

@@ -46,8 +46,10 @@ exports.getAllBlocks = async (req, res) => {
             .select(`
         *,
         units(
-                    *,
-            profiles(*)
+            *,
+            unit_owners(
+                profiles(*)
+            )
         )
             `)
             .eq('community_id', communityId)

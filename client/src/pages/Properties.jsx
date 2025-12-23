@@ -260,11 +260,11 @@ const Properties = () => {
                                                     </button>
                                                     <span className="block font-bold text-gray-800 dark:text-white">{unit.unit_number}</span>
                                                     <div className="text-xs mt-1 truncate max-w-[100px] mx-auto text-left">
-                                                        {unit.profiles && unit.profiles.length > 0 ? (
-                                                            <div title={t('properties.owner') + ': ' + unit.profiles[0].full_name}>
+                                                        {unit.unit_owners && unit.unit_owners.length > 0 && unit.unit_owners[0].profiles ? (
+                                                            <div title={t('properties.owner') + ': ' + unit.unit_owners[0].profiles.full_name}>
                                                                 <span className="text-gray-500 font-semibold">{t('properties.owner')}: </span>
                                                                 <span className="text-blue-600 dark:text-blue-400 font-medium">
-                                                                    {unit.profiles[0].full_name.split(' ')[0]}
+                                                                    {unit.unit_owners[0].profiles.full_name.split(' ')[0]}
                                                                 </span>
                                                             </div>
                                                         ) : (
@@ -339,7 +339,7 @@ const Properties = () => {
                                         <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300">{t('properties.tenant_name', 'Tenant Name')}</label>
                                         <input 
                                             type="text" 
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-white"
+                                            className="glass-input"
                                             value={editUnitModal.unit.tenant_name || ''}
                                             onChange={e => setEditUnitModal({ ...editUnitModal, unit: { ...editUnitModal.unit, tenant_name: e.target.value } })}
                                         />
@@ -348,7 +348,7 @@ const Properties = () => {
                                         <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300">{t('properties.tenant_email', 'Tenant Email')}</label>
                                         <input 
                                             type="email" 
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-white"
+                                            className="glass-input"
                                             value={editUnitModal.unit.tenant_email || ''}
                                             onChange={e => setEditUnitModal({ ...editUnitModal, unit: { ...editUnitModal.unit, tenant_email: e.target.value } })}
                                         />
@@ -357,22 +357,22 @@ const Properties = () => {
                                         <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300">{t('properties.tenant_phone', 'Tenant Phone')}</label>
                                         <input 
                                             type="text" 
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-white"
+                                            className="glass-input"
                                             value={editUnitModal.unit.tenant_phone || ''}
                                             onChange={e => setEditUnitModal({ ...editUnitModal, unit: { ...editUnitModal.unit, tenant_phone: e.target.value } })}
                                         />
                                     </div>
-                                    <div className="flex justify-end pt-4">
+                                    <div className="flex justify-end pt-4 space-x-3">
                                         <button 
                                             type="button" 
-                                            className="mr-2 inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 dark:bg-neutral-700 dark:text-white dark:border-neutral-600 dark:hover:bg-neutral-600 sm:mt-0 sm:w-auto sm:text-sm"
+                                            className="glass-button-secondary"
                                             onClick={() => setEditUnitModal({ isOpen: false, unit: null })}
                                         >
                                             {t('common.cancel', 'Cancel')}
                                         </button>
                                         <button 
                                             type="submit" 
-                                            className="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
+                                            className="glass-button"
                                         >
                                             {t('common.save', 'Save')}
                                         </button>
