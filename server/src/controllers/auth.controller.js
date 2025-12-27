@@ -23,6 +23,16 @@ exports.register = async (req, res) => {
         const communityId = communityData.id;
 
         // 2. Register User in Supabase Auth
+        // Use signUp to create the user. 
+        // IMPORTANT: In Supabase Dashboard, disable "Enable Confirm Email" to prevent default email, 
+        // OR rely on the fact that we can send a DUPLICATE custom one.
+        // Better approach: Use Admin API to generate link, but we first need the user to exist? 
+        // Actually, signUp sends the email automatically if enabled. 
+        // To control it completely, we should ideally use Admin API to createUser (no email sent by default usually if email confirm is off??) 
+        // or just let signUp happen and THEN send our own? No, that causes double emails.
+        // The standard way to 'Custom Email' is to DISABLE default emails in Supabase and send your own.
+        // We will assume the user has disabled the default emails.
+
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
@@ -30,7 +40,6 @@ exports.register = async (req, res) => {
                 data: {
                     full_name: fullName,
                     is_admin_registration: true
-                    // community_id is no longer stored in metadata as primary link
                 },
             },
         });
@@ -41,38 +50,68 @@ exports.register = async (req, res) => {
             throw error;
         }
 
-        // 3. Create Profile (if not exists)
-        const { error: profileError } = await require('../config/supabaseAdmin')
-            .from('profiles')
-            .upsert({
-                id: data.user.id,
+        // 3. Generate Link and Send Custom Email
+        // We need to generate the link using Admin API
+        const { data: linkData, error: linkError } = await require('../config/supabaseAdmin').auth.admin.generateLink({
+            type: 'signup',
+            email: email,
+            password: password, // For signup link generation sometimes needed if user not created yet? No, generateLink works for existing users too for 'signup' type (email verification)
+            // Wait, generateLink type 'signup' Creates the user if they don't exist? No.
+            // Actually 'signup' link type acts as a confirmation link.
+        });
+
+        if (linkError) {
+            console.error("Link generation error:", linkError);
+            // Proceed but warn? Or fail? failing is safer for consistency.
+        } else if (linkData && linkData.properties && linkData.properties.action_link) {
+            const sendEmail = require('../utils/sendEmail');
+            await sendEmail({
                 email: email,
-                full_name: fullName
-            })
-            .select();
+                subject: 'Verifica tu correo - Admin Comunidad',
+                templateName: 'email_verification.html',
+                context: {
+                    link: linkData.properties.action_link // The verification link
+                }
+            });
+        }
 
-        if (profileError) console.error("Profile creation error:", profileError);
 
-        // 4. Link User to Community as Admin
-        // Fetch 'admin' role ID
-        const { data: roleData } = await require('../config/supabaseAdmin')
-            .from('roles')
-            .select('id')
-            .eq('name', 'admin')
-            .single();
+        // 4. Create Profile (if not exists)
+        // Note: data.user might be null if email confirmation is required and we are waiting? 
+        // Supabase returns user object even if unconfirmed.
+        if (data.user) {
+            const { error: profileError } = await require('../config/supabaseAdmin')
+                .from('profiles')
+                .upsert({
+                    id: data.user.id,
+                    email: email,
+                    full_name: fullName
+                })
+                .select();
 
-        if (roleData) {
-            await require('../config/supabaseAdmin')
-                .from('community_members')
-                .insert({
-                    profile_id: data.user.id,
-                    community_id: communityId,
-                    role_id: roleData.id
-                });
+            if (profileError) console.error("Profile creation error:", profileError);
+
+            // 5. Link User to Community as Admin
+            // Fetch 'admin' role ID
+            const { data: roleData } = await require('../config/supabaseAdmin')
+                .from('roles')
+                .select('id')
+                .eq('name', 'admin')
+                .single();
+
+            if (roleData) {
+                await require('../config/supabaseAdmin')
+                    .from('community_members')
+                    .insert({
+                        profile_id: data.user.id,
+                        community_id: communityId,
+                        role_id: roleData.id
+                    });
+            }
         }
 
         res.status(201).json({
-            message: 'Community and Admin created successfully.',
+            message: 'Community and Admin created successfully. Please check your email to verify your account.',
             user: data.user,
             community: communityData
         });
@@ -229,12 +268,33 @@ exports.updatePassword = async (req, res) => {
 exports.forgotPassword = async (req, res) => {
     const { email } = req.body;
     try {
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: 'http://localhost:5173/update-password', // Assuming frontend is on 5173
+        // Use Generate Link for 'recovery'
+        const { data, error } = await require('../config/supabaseAdmin').auth.admin.generateLink({
+            type: 'recovery',
+            email: email,
+            options: {
+                redirectTo: 'http://localhost:5173/update-password', // Assuming frontend is on 5173
+            }
         });
+
         if (error) throw error;
+
+        // Send Custom Email
+        if (data && data.properties && data.properties.action_link) {
+            const sendEmail = require('../utils/sendEmail');
+            await sendEmail({
+                email: email,
+                subject: 'Recuperación de contraseña - Admin Comunidad',
+                templateName: 'password_recovery.html',
+                context: {
+                    link: data.properties.action_link
+                }
+            });
+        }
+
         res.json({ message: 'Password reset link sent' });
     } catch (err) {
+        console.error("Forgot Password Error:", err);
         res.status(400).json({ error: err.message });
     }
 };

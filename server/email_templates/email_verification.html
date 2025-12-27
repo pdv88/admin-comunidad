@@ -1,97 +1,103 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Verificación de correo</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,100..700;1,100..700&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-  </head>
-  <body
-    style="
-    text-align: center;
-      background-color: #1c2326;
-      width: 100%;
-      justify-content: center;
-      align-items: center;
-      color: aliceblue;
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verificación de correo</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap');
+  </style>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Outfit', sans-serif; background: #f9fafb; color: #1f2937;">
+  
+  <!-- Main Container: Light Background (gray-50) with subtle gradient blob effect -->
+  <div style="
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    background-color: #f9fafb;
+    background-image: 
+      radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.1) 0%, transparent 40%),
+      radial-gradient(circle at 90% 80%, rgba(79, 70, 229, 0.1) 0%, transparent 40%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  ">
+    
+    <!-- Glass Card: Light Mode (.glass-card: bg-white/70, border-white/40, shadow-xl shadow-gray-200/20) -->
+    <div style="
+      width: 90%;
+      max-width: 600px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      border-radius: 16px; 
       padding: 3rem;
-      box-sizing: border-box;
-      margin: 0;
-      font-family: Montserrat, sans-serif;
-    "
-  >
-    <div style="display: block; margin: auto; width: 100%; height: 5rem; text-align: center;">
-      <h1>VIDEAPP</h1>
-      <!-- <img
-        src="https://www.suitpi.com/assets/logo_simpi2-y4US5-uA.png"
-        alt=""
-        style="
-          width: 6rem;
-          margin: 1rem;
-          box-sizing: border-box;
-        "
-      /> -->
+      text-align: center;
+      box-shadow: 0 20px 25px -5px rgba(229, 231, 235, 0.6), 0 8px 10px -6px rgba(229, 231, 235, 0.6); /* shadow-gray-200/60 approx */
+      backdrop-filter: blur(24px); /* backdrop-blur-xl */
+      -webkit-backdrop-filter: blur(24px);
+    ">
+      
+      <!-- Brand -->
+      <div style="margin-bottom: 2rem;">
+        <img src="https://habiio.com/assets/habiio_logo_header_nobg-KEmvXxNA.webp" alt="Habiio" style="max-width: 180px; height: auto; display: block; margin: 0 auto;">
+      </div>
+
+
+
+      <h2 style="
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #1f2937; /* gray-800 */
+      ">Verifica tu correo</h2>
+      
+      <p style="
+        font-size: 1rem;
+        line-height: 1.6;
+        color: #4b5563; /* gray-600 */
+        margin-bottom: 2.5rem;
+      ">
+        Gracias por registrarte. Para completar la configuración de tu cuenta y acceder a la plataforma, por favor confirma tu correo electrónico.
+      </p>
+
+      <!-- Glass Button: Matches .glass-button (gradient blue-indigo-blue primary) -->
+      <a href="{{link}}" style="
+        display: inline-block;
+        padding: 0.875rem 2.5rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        text-decoration: none;
+        color: #ffffff;
+        background: linear-gradient(to right, #2563eb, #4f46e5, #2563eb);
+        background-size: 200% auto;
+        border-radius: 9999px; /* rounded-full */
+        box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3); /* shadow-blue-500/30 */
+        transition: all 0.3s ease;
+      ">Confirmar Correo</a>
+
+      <!-- Link Backup -->
+      <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid rgba(0,0,0,0.05);">
+        <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 0.5rem;">o copia este enlace en tu navegador:</p>
+        <div style="
+          background: rgba(255, 255, 255, 0.5);
+          padding: 0.75rem;
+          border-radius: 8px;
+          word-break: break-all;
+          font-size: 0.75rem;
+          color: #4f46e5; /* indigo-600 */
+          font-family: monospace;
+          border: 1px solid rgba(0,0,0,0.05);
+        ">{{link}}</div>
+      </div>
+      
+      <div style="margin-top: 2rem; font-size: 0.75rem; color: #9ca3af;">
+        &copy; Admin Comunidad. Todos los derechos reservados.
+      </div>
+
     </div>
-    <h1
-      style="
-        display: block;
-        text-align: center;
-        font-size: 2rem;
-        margin: 1rem;
-        box-sizing: border-box;
-        font-family: Josefin Sans, sans-serif;
-      "
-    >
-      Verifica tu correo
-    </h1>
-    <p style="margin: 2rem 0; display: block; text-align: center;">
-      Haz click en el link para verificar tu correo.
-    </p>
-    <div
-      style="
-        box-sizing: border-box;
-        width: 100%;
-        max-width: 60rem;
-        border-radius: 2rem;
-        padding: .5rem .5rem 1rem .5rem;
-        box-shadow: 20px 20px 60px #101416, -20px -20px 60px #334047;
-        display: block;
-        margin: 0 auto 3rem auto;
-      "
-    >
-      <h2
-        style="
-          box-sizing: border-box;
-          font-weight: bold;
-          text-align: center;
-          width: 100%;
-          padding: 1rem;
-          margin: 0;
-          font-family: Josefin Sans, sans-serif;
-        "
-      >
-        Link
-      </h2>
-      <a 
-        href="{{link}}"
-        style="
-          box-sizing: border-box;
-          color: aliceblue;
-          font-weight: bold;
-          text-align: center;
-          width: 100%;
-          padding: 1rem;
-          margin: 0;
-          font-family: Josefin Sans, sans-serif;
-        "
-      >
-        {{link}}
-    </a>
-    </div>
-    <p style="text-align: center; font-size: small;">
-      Si no solicitaste este correo, haz caso omiso a este mensaje.
-    </p>
-  </body>
+  </div>
+</body>
 </html>

@@ -4,6 +4,7 @@ import { API_URL } from '../config';
 import { useAuth } from '../context/AuthContext';
 
 import DashboardLayout from '../components/DashboardLayout';
+import GlassLoader from '../components/GlassLoader';
 
 const CommunitySettings = () => {
     const { t } = useTranslation();
@@ -16,6 +17,15 @@ const CommunitySettings = () => {
         bank_details: [] // Array of { bank_name, account_number, etc }
     });
     const [message, setMessage] = useState('');
+
+    useEffect(() => {
+        if (message) {
+            const timer = setTimeout(() => {
+                setMessage('');
+            }, 10000);
+            return () => clearTimeout(timer);
+        }
+    }, [message]);
 
     useEffect(() => {
         fetchCommunity();
@@ -94,7 +104,7 @@ const CommunitySettings = () => {
     if (loading) {
         return (
             <DashboardLayout>
-                <div className="p-6 text-center dark:text-gray-300">{t('common.loading')}</div>
+                <GlassLoader />
             </DashboardLayout>
         );
     }

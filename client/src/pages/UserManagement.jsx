@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { API_URL } from '../config';
 import GlassSelect from '../components/GlassSelect';
 import ModalPortal from '../components/ModalPortal';
+import GlassLoader from '../components/GlassLoader';
 
 const UserManagement = () => {
     const [users, setUsers] = useState([]);
@@ -130,9 +131,7 @@ const UserManagement = () => {
     if (loading) {
          return (
             <DashboardLayout>
-                <div className="p-6">
-                    <div>{t('user_management.loading')}</div>
-                </div>
+                <GlassLoader />
             </DashboardLayout>
         );
     }

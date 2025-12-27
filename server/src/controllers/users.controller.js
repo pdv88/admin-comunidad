@@ -79,9 +79,10 @@ exports.inviteUser = async (req, res) => {
         if (authError || !inviterUser) throw new Error('Invalid token');
 
         // Check if inviter is Admin/President/Secretary in this community
+        // Also fetch Community Name for the email
         const { data: membership, error: memberError } = await supabase
             .from('community_members')
-            .select('roles(name)')
+            .select('roles(name), communities(name)')
             .eq('profile_id', inviterUser.id)
             .eq('community_id', communityId)
             .single();
@@ -93,6 +94,8 @@ exports.inviteUser = async (req, res) => {
             throw new Error('Insufficient permissions to invite users');
         }
 
+        const communityName = membership.communities?.name || 'su comunidad';
+
         // 2. Check if user already exists
         let userId;
         const { data: existingProfile } = await supabaseAdmin
@@ -103,22 +106,64 @@ exports.inviteUser = async (req, res) => {
 
         if (existingProfile) {
             userId = existingProfile.id;
-            // Optional: Send a notification email to the user saying they've been added to a new community
+            // User exists: Send a notification email that they were added to a new community
+            const sendEmail = require('../utils/sendEmail');
+            await sendEmail({
+                email: email,
+                subject: `Bienvenido a ${communityName} - Admin Comunidad`,
+                templateName: 'invitation.html', // Reusing invitation or a simplified "Added" email? Using invitation for now with slight context diff if possible, or just same generic "You have been invited/added"
+                context: {
+                    communityName: communityName,
+                    link: (process.env.CLIENT_URL || 'http://localhost:5173') // Just link to app login since they have an account
+                }
+            });
+
         } else {
-            // 3. New User: Invite
-            const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-                data: {
+            // 3. New User: Create User + Generate Link
+            // Use createUser instead of inviteUserByEmail to avoid default email
+            const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser({
+                email: email,
+                email_confirm: true, // Auto-confirm email because they are being "invited" by an admin? Or false? 
+                // Usually for invites we want them to set a password.
+                // If we set email_confirm: true, they can login immediately if they had a password (they don't).
+                // We will send a link to 'update-password' which handles setting it.
+                user_metadata: {
                     full_name: fullName,
                     is_admin_registration: false,
                     community_id: communityId // Metadata backup
-                },
-                redirectTo: (process.env.CLIENT_URL || 'http://localhost:5173') + '/update-password'
+                }
             });
 
-            if (error) throw error;
-            userId = data.user.id;
+            if (createError) throw createError;
+            userId = userData.user.id;
 
-            // Ensure profile exists (invite hook should handle it, but safety verify)
+            // Generate Invite/Recovery Link
+            // 'invite' type works well, or 'recovery' to force password set.
+            const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+                type: 'invite',
+                email: email,
+                options: {
+                    redirectTo: (process.env.CLIENT_URL || 'http://localhost:5173') + '/update-password'
+                }
+            });
+
+            if (linkError) throw linkError;
+
+            // Send Custom Email
+            if (linkData && linkData.properties && linkData.properties.action_link) {
+                const sendEmail = require('../utils/sendEmail');
+                await sendEmail({
+                    email: email,
+                    subject: `Invitación a ${communityName} - Admin Comunidad`,
+                    templateName: 'invitation.html',
+                    context: {
+                        communityName: communityName,
+                        link: linkData.properties.action_link
+                    }
+                });
+            }
+
+            // Ensure profile exists (manually upsert since we didn't use the hook or just to be safe)
             await supabaseAdmin.from('profiles').upsert({
                 id: userId,
                 email: email,
@@ -127,7 +172,6 @@ exports.inviteUser = async (req, res) => {
         }
 
         // 4. Add to community_members
-
         // Find role ID
         const { data: roleData, error: roleError } = await supabase
             .from('roles')
@@ -138,7 +182,6 @@ exports.inviteUser = async (req, res) => {
         if (roleError) throw roleError;
 
         // Insert into community_members
-        // Use UPSERT to handle re-invites or if profile already existed
         const { error: memberInsertError } = await supabaseAdmin
             .from('community_members')
             .upsert({

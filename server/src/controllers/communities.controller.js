@@ -70,9 +70,9 @@ exports.updateCommunity = async (req, res) => {
 
         // 3. Update Community
         const updates = {};
-        if (name) updates.name = name;
-        if (address) updates.address = address;
-        if (bank_details) updates.bank_details = bank_details;
+        if (name !== undefined) updates.name = name;
+        if (address !== undefined) updates.address = address;
+        if (bank_details !== undefined) updates.bank_details = bank_details;
 
         const { data, error } = await supabaseAdmin
             .from('communities')
