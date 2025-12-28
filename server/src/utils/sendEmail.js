@@ -3,18 +3,28 @@ const handlebars = require('handlebars');
 const fs = require('fs');
 const path = require('path');
 
+// Create reusable transporter object using the default SMTP transport
+const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT || '587'),
+    secure: parseInt(process.env.SMTP_PORT) === 465, // true for 465, false for other ports
+    auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+    },
+});
+
+// Verify connection configuration on startup
+transporter.verify(function (error, success) {
+    if (error) {
+        console.error('❌ SMTP Connection Error:', error);
+    } else {
+        console.log('✅ SMTP Connection Established');
+    }
+});
+
 const sendEmail = async ({ email, subject, templateName, context }) => {
     try {
-        const transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST,
-            port: process.env.SMTP_PORT,
-            secure: process.env.SMTP_PORT == 465, // true for 465, false for other ports
-            auth: {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS,
-            },
-        });
-
         // Read template
         const templatePath = path.join(__dirname, `../../email_templates/${templateName}`);
         const source = fs.readFileSync(templatePath, 'utf8');
@@ -31,9 +41,8 @@ const sendEmail = async ({ email, subject, templateName, context }) => {
             html: html,
         });
 
-
         // Preview only available when sending through an Ethereal account
-        if (process.env.SMTP_HOST.includes('ethereal')) {
+        if (process.env.SMTP_HOST && process.env.SMTP_HOST.includes('ethereal')) {
             console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
         }
 
