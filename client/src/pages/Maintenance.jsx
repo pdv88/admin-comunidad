@@ -45,6 +45,29 @@ const Maintenance = () => {
         setDeleteModalOpen(true);
     };
 
+    const handleResendEmail = async (fee) => {
+        try {
+            setMessage(t('maintenance.sending_email', 'Sending email...'));
+            const res = await fetch(`${API_URL}/api/maintenance/${fee.id}/email`, {
+                method: 'POST',
+                headers: { 
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'X-Community-ID': activeCommunity.community_id
+                }
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                setMessage(t('maintenance.email_sent', 'Email sent successfully'));
+            } else {
+                setMessage(t('maintenance.email_error', `Error: ${data.error}`));
+            }
+        } catch (error) {
+            console.error(error);
+            setMessage('Network error');
+        }
+    };
+
     const handleConfirmDelete = async () => {
         if (!feeToDelete) return;
         
@@ -324,6 +347,20 @@ const Maintenance = () => {
                                                 </span>
                                             </td>
                                             <td className="text-right font-medium">
+                                                {/* Resend Email Button (Admin Community View) */}
+                                                {isAdmin && activeTab === 'community' && (
+                                                    <button
+                                                        onClick={() => handleResendEmail(fee)}
+                                                        className="mr-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-300 transition-colors inline-flex items-center"
+                                                        title={t('maintenance.resend_email', 'Resend Email')}
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                            <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                                                            <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                                                        </svg>
+                                                    </button>
+                                                )}
+
                                                 {/* Review Button (Admin Community View + Pending + HAS payment_id) */}
                                                 {isAdmin && activeTab === 'community' && fee.status === 'pending' && fee.payment_id && (
                                                     <button

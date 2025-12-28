@@ -192,7 +192,7 @@ exports.getMe = async (req, res) => {
         if (error || !user) throw new Error('Invalid token');
 
         // Fetch profile
-        const { data: profile, error: profileError } = await supabase
+        const { data: profile, error: profileError } = await require('../config/supabaseAdmin')
             .from('profiles')
             .select('*')
             .eq('id', user.id)
@@ -203,25 +203,27 @@ exports.getMe = async (req, res) => {
         }
 
         // Fetch Communities
-        const { data: communities, error: commError } = await supabase
+        const { data: communities, error: commError } = await require('../config/supabaseAdmin')
             .from('community_members')
             .select('*, communities(*), roles(*)')
             .eq('profile_id', user.id);
 
         // Fetch Units for this user
-        const { data: units, error: unitsError } = await supabase
+        const { data: units, error: unitsError } = await require('../config/supabaseAdmin')
             .from('unit_owners')
             .select('*, units(*, blocks(community_id))')
             .eq('profile_id', user.id);
 
         // Join units to communities
-        const communitiesWithUnits = communities?.map(cm => {
-            const communityUnits = units?.filter(u => u.units?.blocks?.community_id === cm.community_id) || [];
-            return {
-                ...cm,
-                unit_owners: communityUnits
-            };
-        }) || [];
+        const communitiesWithUnits = communities
+            ?.filter(cm => cm.communities)
+            .map(cm => {
+                const communityUnits = units?.filter(u => u.units?.blocks?.community_id === cm.community_id) || [];
+                return {
+                    ...cm,
+                    unit_owners: communityUnits
+                };
+            }) || [];
 
         res.status(200).json({
             user: { ...user, profile },

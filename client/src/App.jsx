@@ -67,6 +67,8 @@ function App() {
              <Route path="/app/campaigns" element={<Campaigns />} />
              <Route path="/app/campaigns/:id" element={<CampaignDetails />} />
              <Route path="/app/maintenance" element={<Maintenance />} />
+             {/* Redirect /app/payments to /app/maintenance */}
+             <Route path="/app/payments" element={<Navigate to="/app/maintenance" replace />} />
              {/* Redirect /dashboard to /app/dashboard for backward compatibility if needed */}
              <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
           </Route>

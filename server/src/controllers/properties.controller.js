@@ -102,8 +102,43 @@ exports.updateBlock = async (req, res) => {
             .select();
 
         if (error) throw error;
+
+        // AUTO-ASSIGN VOCAL ROLE LOGIC
+        if (representative_id) {
+            // 1. Get the Vocal Role ID
+            const { data: vocalRole, error: roleError } = await supabaseAdmin
+                .from('roles')
+                .select('id')
+                .eq('name', 'vocal')
+                .single();
+
+            if (!roleError && vocalRole) {
+                // 2. Check the user's current role
+                const { data: targetMember, error: targetError } = await supabaseAdmin
+                    .from('community_members')
+                    .select('roles(name)')
+                    .eq('profile_id', representative_id)
+                    .eq('community_id', communityId)
+                    .single();
+
+                // 3. If they are just a neighbor (or null/undefined role), promote to vocal
+                // We avoid demoting admins, presidents, etc.
+                const currentRoleName = targetMember?.roles?.name;
+                const privilegedRoles = ['admin', 'president', 'vice_president', 'secretary', 'treasurer'];
+
+                if (!targetError && (!currentRoleName || !privilegedRoles.includes(currentRoleName))) {
+                    await supabaseAdmin
+                        .from('community_members')
+                        .update({ role_id: vocalRole.id })
+                        .eq('profile_id', representative_id)
+                        .eq('community_id', communityId);
+                }
+            }
+        }
+
         res.json(data[0]);
     } catch (err) {
+        console.error("Error updating block:", err);
         res.status(400).json({ error: err.message });
     }
 };

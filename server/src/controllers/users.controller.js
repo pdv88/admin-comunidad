@@ -82,7 +82,7 @@ exports.inviteUser = async (req, res) => {
         // Also fetch Community Name for the email
         const { data: membership, error: memberError } = await supabase
             .from('community_members')
-            .select('roles(name), communities(name)')
+            .select('roles(name), communities(name, logo_url)')
             .eq('profile_id', inviterUser.id)
             .eq('community_id', communityId)
             .single();
@@ -95,6 +95,7 @@ exports.inviteUser = async (req, res) => {
         }
 
         const communityName = membership.communities?.name || 'su comunidad';
+        const communityLogo = membership.communities?.logo_url;
 
         // 2. Check if user already exists
         let userId;
@@ -111,46 +112,76 @@ exports.inviteUser = async (req, res) => {
             await sendEmail({
                 email: email,
                 subject: `Bienvenido a ${communityName} - Admin Comunidad`,
-                templateName: 'invitation.html', // Reusing invitation or a simplified "Added" email? Using invitation for now with slight context diff if possible, or just same generic "You have been invited/added"
+                templateName: 'invitation.html',
                 context: {
                     communityName: communityName,
-                    link: (process.env.CLIENT_URL || 'http://localhost:5173') // Just link to app login since they have an account
+                    communityLogo: communityLogo,
+                    link: (process.env.CLIENT_URL || 'http://localhost:5173')
                 }
             });
 
         } else {
-            // 3. New User: Create User + Generate Link
-            // Use createUser instead of inviteUserByEmail to avoid default email
-            const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser({
-                email: email,
-                email_confirm: true, // Auto-confirm email because they are being "invited" by an admin? Or false? 
-                // Usually for invites we want them to set a password.
-                // If we set email_confirm: true, they can login immediately if they had a password (they don't).
-                // We will send a link to 'update-password' which handles setting it.
-                user_metadata: {
-                    full_name: fullName,
-                    is_admin_registration: false,
-                    community_id: communityId // Metadata backup
+            // User not in profiles. Check if in Auth (Zombie user?) or Brand new.
+            let isNewUser = false;
+            let linkActionLink = null;
+
+            // Attempt to get user via generateLink (invite/recovery) to check existence.
+            try {
+                const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.generateLink({
+                    type: 'invite', // 'invite' creates a link to confirm/set password
+                    email: email,
+                    options: { redirectTo: (process.env.CLIENT_URL || 'http://localhost:5173') + '/update-password' }
+                });
+
+                if (inviteError || !inviteData.user) {
+                    throw new Error('User not found');
                 }
-            });
 
-            if (createError) throw createError;
-            userId = userData.user.id;
+                // User FOUND in Auth!
+                userId = inviteData.user.id;
+                linkActionLink = inviteData.properties.action_link;
 
-            // Generate Invite/Recovery Link
-            // 'invite' type works well, or 'recovery' to force password set.
-            const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-                type: 'invite',
-                email: email,
-                options: {
-                    redirectTo: (process.env.CLIENT_URL || 'http://localhost:5173') + '/update-password'
+            } catch (checkErr) {
+                // User really doesn't exist (or generateLink failed), create them.
+                isNewUser = true;
+
+                try {
+                    // Standard create user with email_confirm: true (as it likely was before)
+                    const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser({
+                        email: email,
+                        email_confirm: true,
+                        user_metadata: {
+                            full_name: fullName,
+                            is_admin_registration: false,
+                            community_id: communityId
+                        }
+                    });
+
+                    if (createError) throw createError;
+                    userId = userData.user.id;
+
+                    // Generate Link
+                    const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+                        type: 'invite',
+                        email: email,
+                        options: {
+                            redirectTo: (process.env.CLIENT_URL || 'http://localhost:5173') + '/update-password'
+                        }
+                    });
+
+                    if (linkError) throw linkError;
+                    linkActionLink = linkData.properties.action_link;
+
+                } catch (creationError) {
+                    console.error("Create User Failed:", creationError);
+                    // If creation failed but it was a duplicate error that generateLink missed?
+                    // We can't do much if both failed. Rethrow.
+                    throw creationError;
                 }
-            });
-
-            if (linkError) throw linkError;
+            }
 
             // Send Custom Email
-            if (linkData && linkData.properties && linkData.properties.action_link) {
+            if (linkActionLink) {
                 const sendEmail = require('../utils/sendEmail');
                 await sendEmail({
                     email: email,
@@ -158,17 +189,20 @@ exports.inviteUser = async (req, res) => {
                     templateName: 'invitation.html',
                     context: {
                         communityName: communityName,
-                        link: linkData.properties.action_link
+                        communityLogo: communityLogo,
+                        link: linkActionLink
                     }
                 });
             }
 
-            // Ensure profile exists (manually upsert since we didn't use the hook or just to be safe)
-            await supabaseAdmin.from('profiles').upsert({
-                id: userId,
-                email: email,
-                full_name: fullName
-            });
+            // Ensure profile exists
+            if (userId) {
+                await supabaseAdmin.from('profiles').upsert({
+                    id: userId,
+                    email: email,
+                    full_name: fullName
+                });
+            }
         }
 
         // 4. Add to community_members
@@ -208,7 +242,7 @@ exports.inviteUser = async (req, res) => {
             if (ownersError) throw ownersError;
         }
 
-        res.status(201).json({ message: `Invitation sent to ${email}`, user: data.user });
+        res.status(201).json({ message: `Invitation sent to ${email}`, userId: userId });
 
     } catch (err) {
         console.error("Invite error:", err);
@@ -236,6 +270,21 @@ exports.updateUser = async (req, res) => {
         // Find role ID if roleName is provided
         let roleId = null;
         if (roleName) {
+            // CHECK PRIVILEGES: Only Super Admin (is_admin_registration) can change roles
+            const token = req.headers.authorization?.split(' ')[1];
+            if (!token) throw new Error('No token provided');
+
+            const { data: { user: requester }, error: authError } = await supabase.auth.getUser(token);
+            if (authError || !requester) throw new Error('Invalid token');
+
+            if (requester.user_metadata?.is_admin_registration !== true) {
+                // If not super admin, check if they are trying to change role
+                // Fetch current role to see if it's actually changing? 
+                // Or just blanket deny any roleName field presence?
+                // For simplicity, strict restriction: explicit role change requires privileges.
+                return res.status(403).json({ error: 'Only the Super Admin can change user roles.' });
+            }
+
             const { data: roleData, error: roleError } = await supabase
                 .from('roles')
                 .select('id')
@@ -261,45 +310,84 @@ exports.updateUser = async (req, res) => {
         if (unitIds !== undefined) {
             // 1. Get IDs of units in this community to identify which ownerships to delete
             // We want to delete ownerships where unit -> block -> community_id = current
-            // Since we can't do complex joins in delete, we fetch relevant ownership IDs first.
+            // Update Units if provided (handle assignment/unassignment logic?)
+            // For simplicity, we might just wipe and re-insert or diff.
+            // Current logic in frontend sends FULL list of assigned unit IDs.
+            // So we can: delete all *for this community* and re-insert.
 
-            // Or safer: Fetch all unit_owners for this profile, verify which belong to this community, then delete specific IDs.
-            const { data: userOwnerships } = await supabaseAdmin
-                .from('unit_owners')
-                .select('id, units(block_id, blocks(community_id))')
-                .eq('profile_id', id);
+            // CAUTION: Removing all unit_owners for this user might remove units from OTHER communities if we don't filter by community units.
+            // Ideally we check which units belong to this community.
+            if (unitIds) {
+                const { data: communityUnits } = await supabaseAdmin
+                    .from('units')
+                    .select('id, blocks!inner(community_id)')
+                    .eq('blocks.community_id', communityId);
 
-            if (userOwnerships) {
-                const idsToDelete = userOwnerships
-                    .filter(uo => uo.units?.blocks?.community_id === communityId)
-                    .map(uo => uo.id);
+                const communityUnitIds = communityUnits.map(u => u.id);
 
-                if (idsToDelete.length > 0) {
-                    const { error: delError } = await supabaseAdmin
-                        .from('unit_owners')
-                        .delete()
-                        .in('id', idsToDelete);
-                    if (delError) throw delError;
-                }
-            }
-
-            // Insert new
-            if (unitIds.length > 0) {
-                const unitInserts = unitIds.map(uid => ({
-                    profile_id: id,
-                    unit_id: uid
-                }));
-                const { error: insError } = await supabaseAdmin
+                // Delete existing for this user AND this community's units
+                await supabaseAdmin
                     .from('unit_owners')
-                    .insert(unitInserts);
+                    .delete()
+                    .eq('profile_id', id)
+                    .in('unit_id', communityUnitIds);
 
-                if (insError) throw insError;
+                if (unitIds.length > 0) {
+                    const inserts = unitIds.map(uid => ({
+                        profile_id: id,
+                        unit_id: uid,
+                        is_primary: false // default
+                    }));
+                    await supabaseAdmin.from('unit_owners').insert(inserts);
+                }
             }
         }
 
-        res.json({ message: 'User updated' });
+        res.json({ message: 'User updated successfully' });
+
     } catch (err) {
         console.error("Update user error:", err);
+        res.status(400).json({ error: err.message });
+    }
+}
+
+exports.deleteUser = async (req, res) => {
+    const { id } = req.params;
+    const communityId = req.headers['x-community-id'];
+
+    if (!communityId) {
+        return res.status(400).json({ error: 'Community ID is required' });
+    }
+
+    try {
+        // 1. Unassign units belonging to this community
+        const { data: communityUnits } = await supabaseAdmin
+            .from('units')
+            .select('id, blocks!inner(community_id)')
+            .eq('blocks.community_id', communityId);
+
+        if (communityUnits && communityUnits.length > 0) {
+            const communityUnitIds = communityUnits.map(u => u.id);
+            await supabaseAdmin
+                .from('unit_owners')
+                .delete()
+                .eq('profile_id', id)
+                .in('unit_id', communityUnitIds);
+        }
+
+        // 2. Remove from community_members
+        const { error: memberError } = await supabaseAdmin
+            .from('community_members')
+            .delete()
+            .eq('profile_id', id)
+            .eq('community_id', communityId);
+
+        if (memberError) throw memberError;
+
+        res.json({ message: 'User removed from community successfully' });
+
+    } catch (err) {
+        console.error("Delete user error:", err);
         res.status(400).json({ error: err.message });
     }
 }

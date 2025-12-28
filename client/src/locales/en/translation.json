@@ -285,7 +285,7 @@
             "storage": "Storage"
         },
         "current_structure": "Current Structure",
-        "representative": "Representative",
+        "representative": "Block Vocal",
         "none": "None",
         "no_units": "No units in this block yet.",
         "delete_block": "Delete Block",
@@ -388,7 +388,8 @@
             "vice_president": "Vice President",
             "admin": "Administrator",
             "treasurer": "Treasurer",
-            "maintenance": "Maintenance"
+            "maintenance": "Maintenance",
+            "vocal": "Block Representative"
         },
         "edit": {
             "title": "Edit User",

@@ -280,7 +280,7 @@
             "storage": "Trastero"
         },
         "current_structure": "Estructura Actual",
-        "representative": "Representante",
+        "representative": "Vocal de Bloque",
         "none": "Ninguno",
         "no_units": "Aún no hay unidades en este bloque.",
         "delete_block": "Eliminar Bloque",
@@ -383,7 +383,8 @@
             "vice_president": "Vicepresidente",
             "admin": "Administrador",
             "treasurer": "Tesorero",
-            "maintenance": "Mantenimiento"
+            "maintenance": "Mantenimiento",
+            "vocal": "Vocal"
         },
         "edit": {
             "title": "Editar Usuario",

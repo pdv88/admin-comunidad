@@ -12,8 +12,8 @@ exports.getMyCommunity = async (req, res) => {
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
         if (authError || !user) throw new Error('Invalid token');
 
-        // Verify membership
-        const { data: member, error: memberError } = await supabase
+        // Verify membership (Bypass RLS to be safe)
+        const { data: member, error: memberError } = await supabaseAdmin
             .from('community_members')
             .select('community_id')
             .eq('profile_id', user.id)
@@ -24,8 +24,8 @@ exports.getMyCommunity = async (req, res) => {
             return res.status(404).json({ error: 'Not a member of this community.' });
         }
 
-        // Fetch community details
-        const { data: community, error: commError } = await supabase
+        // Fetch community details (Bypass RLS)
+        const { data: community, error: commError } = await supabaseAdmin
             .from('communities')
             .select('*')
             .eq('id', communityId)
@@ -36,6 +36,7 @@ exports.getMyCommunity = async (req, res) => {
         res.json(community);
 
     } catch (err) {
+        console.error("Get My Community Error:", err);
         res.status(500).json({ error: err.message });
     }
 };
@@ -66,13 +67,51 @@ exports.updateCommunity = async (req, res) => {
             return res.status(403).json({ error: 'Unauthorized to update community settings.' });
         }
 
-        const { name, address, bank_details } = req.body;
+        const { name, address, bank_details, base64Logo } = req.body;
 
         // 3. Update Community
         const updates = {};
         if (name !== undefined) updates.name = name;
         if (address !== undefined) updates.address = address;
         if (bank_details !== undefined) updates.bank_details = bank_details;
+
+        // Handle Logo Upload
+        if (base64Logo) {
+            try {
+                // Ensure bucket exists
+                const { data: buckets } = await supabaseAdmin.storage.listBuckets();
+                const bucketName = 'community-assets';
+                if (!buckets.find(b => b.name === bucketName)) {
+                    await supabaseAdmin.storage.createBucket(bucketName, { public: true });
+                }
+
+                const buffer = Buffer.from(base64Logo.split(',')[1], 'base64');
+                const fileName = `logo_${communityId}_${Date.now()}.png`;
+                const filePath = `${communityId}/${fileName}`;
+
+                const { error: uploadError } = await supabaseAdmin
+                    .storage
+                    .from(bucketName)
+                    .upload(filePath, buffer, {
+                        contentType: 'image/png',
+                        upsert: true
+                    });
+
+                if (uploadError) throw uploadError;
+
+                const { data: publicUrlData } = supabaseAdmin
+                    .storage
+                    .from(bucketName)
+                    .getPublicUrl(filePath);
+
+                updates.logo_url = publicUrlData.publicUrl;
+            } catch (logoErr) {
+                console.error("Logo upload failed:", logoErr);
+                // Don't fail the whole request, just log it? Or throw?
+                // Let's throw to warn user
+                throw new Error('Failed to upload logo: ' + logoErr.message);
+            }
+        }
 
         const { data, error } = await supabaseAdmin
             .from('communities')
@@ -132,7 +171,44 @@ exports.createCommunity = async (req, res) => {
         res.status(201).json(community);
 
     } catch (err) {
-        console.error("Create Community Error:", err);
         res.status(400).json({ error: err.message });
+    }
+};
+
+exports.deleteCommunity = async (req, res) => {
+    const token = req.headers.authorization?.split(' ')[1];
+    const { id } = req.params;
+
+    if (!token) return res.status(401).json({ error: 'No token' });
+    if (!id) return res.status(400).json({ error: 'Community ID is required' });
+
+    try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+        if (authError || !user) throw new Error('Invalid token');
+
+        // Check for Super Admin (Registration Account)
+        // Adjust logic if needed: user_metadata might need to be refreshed or we trust the token.
+        // We will trust user found from getUser which includes metadata.
+        const isSuperAdmin = user.user_metadata?.is_admin_registration === true;
+
+        if (!isSuperAdmin) {
+            return res.status(403).json({ error: 'Only the account that registered the app can delete communities.' });
+        }
+
+        // Delete Community using Admin Client (Cascades should handle members/units if DB configured, 
+        // otherwise we might need manual cleanup. Assuming DB constraints are set to CASCADE or we want to force it).
+        // Safest is to try delete. 
+        const { error: deleteError } = await supabaseAdmin
+            .from('communities')
+            .delete()
+            .eq('id', id);
+
+        if (deleteError) throw deleteError;
+
+        res.json({ message: 'Community deleted successfully' });
+
+    } catch (err) {
+        console.error("Delete Community Error:", err);
+        res.status(500).json({ error: err.message });
     }
 };

@@ -111,8 +111,8 @@ const WelcomeWidget = ({ role }) => {
                     <div className="hidden md:block w-px h-12 bg-gray-200 dark:bg-gray-700 mx-2"></div>
 
                     {/* Quick Buttons */}
-                    <div className="grid grid-cols-3 gap-3">
-                         <Link to="/app/payments" className="flex flex-col items-center justify-center gap-1 p-3 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 dark:text-blue-400 transition-colors">
+                     <div className="grid grid-cols-3 gap-3">
+                         <Link to="/app/maintenance" className="flex flex-col items-center justify-center gap-1 p-3 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 dark:text-blue-400 transition-colors">
                             <span className="text-xl">💳</span>
                             <span className="text-[10px] font-bold uppercase">{t('dashboard.pay')}</span>
                         </Link>

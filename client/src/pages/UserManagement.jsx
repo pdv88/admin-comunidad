@@ -5,6 +5,8 @@ import { API_URL } from '../config';
 import GlassSelect from '../components/GlassSelect';
 import ModalPortal from '../components/ModalPortal';
 import GlassLoader from '../components/GlassLoader';
+import ConfirmationModal from '../components/ConfirmationModal';
+import { useAuth } from '../context/AuthContext';
 
 const UserManagement = () => {
     const [users, setUsers] = useState([]);
@@ -14,7 +16,10 @@ const UserManagement = () => {
     const [selectedBlockId, setSelectedBlockId] = useState(''); // New state for block filter
     const [message, setMessage] = useState('');
     const [editingUser, setEditingUser] = useState(null); // User being edited
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [userToDelete, setUserToDelete] = useState(null);
     const { t } = useTranslation();
+    const { user } = useAuth();
 
     const handleEditClick = (user) => {
         setEditingUser({
@@ -24,6 +29,36 @@ const UserManagement = () => {
             roleName: user.roles?.name || 'neighbor',
             unitIds: user.unit_owners ? user.unit_owners.map(uo => uo.unit_id) : []
         });
+    };
+
+    const handleDeleteClick = (user) => {
+        setUserToDelete(user);
+        setDeleteModalOpen(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!userToDelete) return;
+        setMessage(t('user_management.messages.deleting', 'Deleting user...'));
+        try {
+            const res = await fetch(`${API_URL}/api/users/${userToDelete.id}`, {
+                method: 'DELETE',
+                headers: { 
+                    'Authorization': `Bearer ${localStorage.getItem('token')}` 
+                }
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setMessage(t('user_management.messages.delete_success', 'User deleted successfully'));
+                fetchData();
+            } else {
+                setMessage(t('user_management.messages.error_prefix') + data.error);
+            }
+        } catch (error) {
+            setMessage(t('user_management.messages.delete_error', 'Error deleting user'));
+        } finally {
+            setDeleteModalOpen(false);
+            setUserToDelete(null);
+        }
     };
 
     const handleUpdateUser = async (e) => {
@@ -245,6 +280,12 @@ const UserManagement = () => {
                                         >
                                             {t('common.edit', 'Edit')}
                                         </button>
+                                        <button 
+                                            onClick={() => handleDeleteClick(user)}
+                                            className="ml-3 text-red-600 hover:text-red-900 dark:text-red-500 dark:hover:text-red-400"
+                                        >
+                                            {t('common.delete', 'Delete')}
+                                        </button>
                                     </td>
                                 </tr>
                             ))}
@@ -280,9 +321,10 @@ const UserManagement = () => {
                                                 <div>
                                                     <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300">{t('user_management.table.role')}</label>
                                                     <select 
-                                                        className="glass-input"
+                                                        className="glass-input disabled:opacity-50 disabled:cursor-not-allowed"
                                                         value={editingUser.roleName}
                                                         onChange={e => setEditingUser({...editingUser, roleName: e.target.value})}
+                                                        disabled={user?.user_metadata?.is_admin_registration !== true}
                                                     >
                                                         <option value="neighbor">{t('user_management.roles.neighbor')}</option>
                                                         <option value="president">{t('user_management.roles.president')}</option>
@@ -290,8 +332,12 @@ const UserManagement = () => {
                                                         <option value="vice_president">{t('user_management.roles.vice_president')}</option>
                                                         <option value="admin">{t('user_management.roles.admin')}</option>
                                                         <option value="treasurer">{t('user_management.roles.treasurer')}</option>
+                                                        <option value="vocal">{t('user_management.roles.vocal')}</option>
                                                         <option value="maintenance">{t('user_management.roles.maintenance')}</option>
                                                     </select>
+                                                    {user?.user_metadata?.is_admin_registration !== true && (
+                                                        <p className="text-xs text-gray-500 mt-1 dark:text-neutral-400">{t('user_management.role_change_restricted', 'Only Super Admin can change roles.')}</p>
+                                                    )}
                                                 </div>
                                                 <div>
                                                     <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300">{t('user_management.table.unit')}</label>
@@ -346,6 +392,16 @@ const UserManagement = () => {
                 </div>
                 </ModalPortal>
             )}
+
+            <ConfirmationModal
+                isOpen={deleteModalOpen}
+                onClose={() => setDeleteModalOpen(false)}
+                onConfirm={handleConfirmDelete}
+                title={t('user_management.delete.title', 'Delete User')}
+                message={t('user_management.delete.confirm', 'Are you sure you want to remove this user from the community? This action cannot be undone.')}
+                confirmText={t('common.delete', 'Delete')}
+                isDangerous={true}
+            />
         </DashboardLayout>
     );
 };

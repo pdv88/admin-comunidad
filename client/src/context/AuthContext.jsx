@@ -13,10 +13,15 @@ export const AuthProvider = ({ children }) => {
 
   // Helper to set active community
   const selectCommunity = (communityId, communitiesList = userCommunities) => {
+
       const selected = communitiesList.find(c => c.community_id === communityId) || communitiesList[0];
+      
       if (selected) {
+
           setActiveCommunity(selected);
           localStorage.setItem('active_community_id', selected.community_id);
+      } else {
+
       }
       return selected;
   };
@@ -38,6 +43,7 @@ export const AuthProvider = ({ children }) => {
       const token = localStorage.getItem('token');
       if (token) {
         try {
+
             const response = await fetch(`${API_URL}/api/auth/me`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -46,6 +52,7 @@ export const AuthProvider = ({ children }) => {
             
             if (response.ok) {
                 const data = await response.json();
+
                 setUser({ ...data.user, token }); 
                 
                 // Handle Communities
@@ -54,8 +61,9 @@ export const AuthProvider = ({ children }) => {
 
                 // Restore active community
                 const savedCommunityId = localStorage.getItem('active_community_id');
-                selectCommunity(savedCommunityId, communities);
 
+                selectCommunity(savedCommunityId, communities);
+ 
             } else {
                 // If token is invalid or expired (401), remove it
                 localStorage.removeItem('token');
@@ -204,9 +212,46 @@ export const AuthProvider = ({ children }) => {
   };
 
   const switchCommunity = (communityId) => {
+
       selectCommunity(communityId);
       // Reload to ensure all components fetch fresh data
       window.location.reload(); 
+  };
+
+  const deleteCommunity = async (communityId) => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/api/communities/${communityId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to delete community');
+        }
+
+        // Remove from local state
+        const updatedCommunities = userCommunities.filter(c => c.community_id !== communityId);
+        setUserCommunities(updatedCommunities);
+
+        // If active community was deleted, switch to another or clear
+        if (activeCommunity?.community_id === communityId) {
+            if (updatedCommunities.length > 0) {
+                switchCommunity(updatedCommunities[0].community_id);
+            } else {
+                setActiveCommunity(null);
+                localStorage.removeItem('active_community_id');
+                window.location.reload();
+            }
+        }
+        return true;
+      } catch (error) {
+          console.error("Delete community error:", error);
+          throw error;
+      }
   };
 
   const value = {
@@ -217,6 +262,7 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     updateProfile,
+    deleteCommunity,
     loading
   };
 

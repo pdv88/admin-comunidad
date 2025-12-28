@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
+import ModalPortal from './ModalPortal';
 
 const CommunitySwitcher = () => {
     const { t } = useTranslation();
-    const { activeCommunity, userCommunities, switchCommunity, user } = useAuth();
+    const { activeCommunity, userCommunities, switchCommunity, user, loading } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
 
@@ -28,7 +29,19 @@ const CommunitySwitcher = () => {
     // For now, if <= 1, just show the current block but static?
     // Let's show it anyway for consistency of "Where am I".
     
-    const communityName = activeCommunity?.communities?.name || t('community_switcher.loading');
+    // Determine label: Loading -> Name -> Fallback
+    let displayLabel = t('community_switcher.loading');
+    if (!loading) {
+        if (activeCommunity?.communities?.name) {
+            displayLabel = activeCommunity.communities.name;
+        } else if (userCommunities.length === 0) {
+            displayLabel = t('community_switcher.no_community', 'No Community');
+        } else {
+            // Communities exist but active one is weird/missing name
+             displayLabel = t('community_switcher.select_community', 'Select Community');
+        }
+    }
+    const communityName = displayLabel;
 
     // Create State
     const [showCreateModal, setShowCreateModal] = useState(false);
@@ -130,40 +143,42 @@ const CommunitySwitcher = () => {
 
             {/* Create Modal */}
             {showCreateModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl p-6 w-full max-w-sm animate-in zoom-in-95">
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">{t('community_switcher.modal_title')}</h3>
-                        <form onSubmit={handleCreate}>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                {t('community_switcher.name_label')}
-                            </label>
-                            <input 
-                                type="text" 
-                                className="w-full rounded-xl border-gray-300 bg-gray-50 dark:bg-neutral-800 dark:border-neutral-700 dark:text-white focus:ring-blue-500 focus:border-blue-500 mb-4"
-                                placeholder={t('community_switcher.name_placeholder')}
-                                value={newCommunityName}
-                                onChange={e => setNewCommunityName(e.target.value)}
-                                required
-                                autoFocus
-                            />
-                            <div className="flex gap-3 justify-end">
-                                <button 
-                                    type="button" 
-                                    onClick={() => setShowCreateModal(false)}
-                                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
-                                >
-                                    {t('community_switcher.cancel')}
-                                </button>
-                                <button 
-                                    type="submit" 
-                                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-lg shadow-blue-500/30"
-                                >
-                                    {t('community_switcher.create')}
-                                </button>
-                            </div>
-                        </form>
+                <ModalPortal>
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                        <div className="glass-card w-full max-w-lg p-6 animate-in zoom-in-95">
+                            <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">{t('community_switcher.modal_title')}</h3>
+                            <form onSubmit={handleCreate}>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {t('community_switcher.name_label')}
+                                </label>
+                                <input 
+                                    type="text" 
+                                    className="glass-input mb-6"
+                                    placeholder={t('community_switcher.name_placeholder')}
+                                    value={newCommunityName}
+                                    onChange={e => setNewCommunityName(e.target.value)}
+                                    required
+                                    autoFocus
+                                />
+                                <div className="flex gap-3 justify-end">
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setShowCreateModal(false)}
+                                        className="glass-button-secondary flex-1"
+                                    >
+                                        {t('community_switcher.cancel')}
+                                    </button>
+                                    <button 
+                                        type="submit" 
+                                        className="glass-button flex-1"
+                                    >
+                                        {t('community_switcher.create')}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                </div>
+                </ModalPortal>
             )}
         </div>
     );

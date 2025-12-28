@@ -1,6 +1,8 @@
 const supabase = require('../config/supabaseClient');
 const supabaseAdmin = require('../config/supabaseAdmin');
 
+const sendEmail = require('../utils/sendEmail');
+
 // Helper to get user and their role
 const getUserAndMember = async (req) => {
     const token = req.headers.authorization?.split(' ')[1];
@@ -58,7 +60,7 @@ exports.generateMonthlyFees = async (req, res) => {
         // 1. Get all occupied units in the community (must have at least one owner)
         const { data: units, error: unitsError } = await supabaseAdmin
             .from('units')
-            .select('id, block_id, blocks!inner(community_id), unit_owners!inner(id)') // Inner join on unit_owners ensures occupancy
+            .select('id, unit_number, block_id, blocks!inner(community_id, name), unit_owners!inner(id, profile:profile_id(email, full_name))') // Inner join on unit_owners ensures occupancy
             .eq('blocks.community_id', communityId);
 
         if (unitsError) throw unitsError;
@@ -98,6 +100,51 @@ exports.generateMonthlyFees = async (req, res) => {
             .select();
 
         if (error) throw error;
+
+        // Fetch Community Name and Logo
+        const { data: communityData } = await supabaseAdmin
+            .from('communities')
+            .select('name, logo_url')
+            .eq('id', communityId)
+            .single();
+        const communityName = communityData?.name || 'Su Comunidad';
+        const communityLogo = communityData?.logo_url;
+
+        // 6. Send Email Notifications (Async, don't block response)
+        (async () => {
+            const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+            const link = `${clientUrl}/app/payments`;
+
+            for (const fee of data) {
+                try {
+                    // Find unit info for this fee
+                    const unit = units.find(u => u.id === fee.unit_id);
+                    if (unit && unit.unit_owners && unit.unit_owners.length > 0) {
+                        // Notify all owners? Or just the first one? Let's notify primary (0) for now.
+                        const ownerProfile = unit.unit_owners[0].profile;
+                        if (ownerProfile && ownerProfile.email) {
+                            await sendEmail({
+                                email: ownerProfile.email,
+                                subject: `Nuevo Recibo de Mantenimiento - ${communityName} - ${period}`,
+                                templateName: 'monthly_fee_bill.html',
+                                context: {
+                                    period: period,
+                                    amount: fee.amount,
+                                    unit_details: `${unit.blocks?.name} - ${unit.unit_number}`,
+                                    link: link,
+                                    community_name: communityName,
+                                    community_logo: communityLogo,
+                                    user_name: ownerProfile.full_name || 'Vecino'
+                                }
+                            });
+
+                        }
+                    }
+                } catch (emailErr) {
+                    console.error(`Failed to send email for fee ${fee.id}:`, emailErr);
+                }
+            }
+        })();
 
         res.status(201).json({ message: `Generated ${data.length} new fees. (${existingUnitIds.size} already existed)`, count: data.length });
 
@@ -284,6 +331,97 @@ exports.deleteFee = async (req, res) => {
         res.json({ message: 'Fee deleted successfully' });
 
     } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+};
+
+exports.resendFeeEmail = async (req, res) => {
+    try {
+        const { member, communityId } = await getUserAndMember(req);
+        const role = member.roles?.name;
+
+        if (role !== 'admin' && role !== 'president' && role !== 'treasurer') {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        const { feeId } = req.params;
+
+        // 1. Fetch Fee with Unit details
+        const { data: fee, error: feeError } = await supabaseAdmin
+            .from('monthly_fees')
+            .select(`
+                *,
+                units (
+                    id,
+                    unit_number,
+                    blocks (name),
+                    unit_owners (
+                        profile_id,
+                        profile:profile_id (email, full_name)
+                    )
+                )
+            `)
+            .eq('id', feeId)
+            .eq('community_id', communityId)
+            .single();
+
+        if (feeError || !fee) return res.status(404).json({ error: 'Fee not found' });
+
+        // 2. Identify Owner Email (with Fallback)
+        const unitOwnerLink = fee.units?.unit_owners?.[0];
+        const ownerProfile = unitOwnerLink?.profile;
+        let ownerEmail = ownerProfile?.email;
+
+        // Fallback: If profile has no email, try fetching from Auth
+        if (!ownerEmail && unitOwnerLink?.profile_id) {
+            try {
+                const { data: { user }, error: userError } = await supabaseAdmin.auth.admin.getUserById(unitOwnerLink.profile_id);
+                if (user && user.email) {
+                    ownerEmail = user.email;
+                    // Optional: Self-heal profile
+                    await supabaseAdmin.from('profiles').update({ email: user.email }).eq('id', unitOwnerLink.profile_id);
+                }
+            } catch (authErr) {
+                console.error("Auth fetch failed:", authErr);
+            }
+        }
+
+        if (!ownerEmail) {
+            return res.status(400).json({ error: 'No owner email found for this unit (Profile incomplete).' });
+        }
+
+        // 3. Send Email
+        const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+        const link = `${clientUrl}/app/maintenance`;
+
+        // Fetch Community Name and Logo
+        const { data: communityData } = await supabaseAdmin
+            .from('communities')
+            .select('name, logo_url')
+            .eq('id', communityId)
+            .single();
+        const communityName = communityData?.name || 'Su Comunidad';
+        const communityLogo = communityData?.logo_url;
+
+        await sendEmail({
+            email: ownerEmail,
+            subject: `Recordatorio: Recibo de Mantenimiento - ${communityName} - ${fee.period}`,
+            templateName: 'monthly_fee_bill.html',
+            context: {
+                period: fee.period,
+                amount: fee.amount,
+                unit_details: `${fee.units?.blocks?.name} - ${fee.units?.unit_number}`,
+                link: link,
+                community_name: communityName,
+                community_logo: communityLogo,
+                user_name: ownerProfile?.full_name || 'Vecino'
+            }
+        });
+
+        res.json({ message: `Email resent to ${ownerEmail}` });
+
+    } catch (error) {
+        console.error("Resend email error:", error);
         res.status(400).json({ error: error.message });
     }
 };

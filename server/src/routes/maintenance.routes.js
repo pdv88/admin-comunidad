@@ -11,4 +11,6 @@ router.delete('/:feeId', maintenanceController.deleteFee);
 // Resident Routes
 router.get('/my-statement', maintenanceController.getMyStatement);
 
+router.post('/:feeId/email', maintenanceController.resendFeeEmail);
+
 module.exports = router;

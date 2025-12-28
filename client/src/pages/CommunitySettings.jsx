@@ -5,18 +5,23 @@ import { useAuth } from '../context/AuthContext';
 
 import DashboardLayout from '../components/DashboardLayout';
 import GlassLoader from '../components/GlassLoader';
+import ConfirmationModal from '../components/ConfirmationModal';
 
 const CommunitySettings = () => {
     const { t } = useTranslation();
-    const { user } = useAuth();
+    const { user, deleteCommunity } = useAuth();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [community, setCommunity] = useState({
         name: '',
         address: '',
-        bank_details: [] // Array of { bank_name, account_number, etc }
+        bank_details: [],
+        logo_url: '' // New field
     });
+    const [logoFile, setLogoFile] = useState(null);
+    const [logoPreview, setLogoPreview] = useState('');
     const [message, setMessage] = useState('');
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
 
     useEffect(() => {
         if (message) {
@@ -38,11 +43,14 @@ const CommunitySettings = () => {
             });
             if (res.ok) {
                 const data = await res.json();
-                // Ensure bank_details is an array if null
                 setCommunity({ 
                     ...data, 
-                    bank_details: Array.isArray(data.bank_details) ? data.bank_details : [] 
+                    bank_details: Array.isArray(data.bank_details) ? data.bank_details : [],
+                    logo_url: data.logo_url || ''
                 });
+                if (data.logo_url) {
+                    setLogoPreview(data.logo_url);
+                }
             }
         } catch (error) {
             console.error(error);
@@ -51,25 +59,79 @@ const CommunitySettings = () => {
         }
     };
 
+    const handleLogoChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Resize Image Logic (Max 300px width)
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Calculate new dimensions
+                const MAX_WIDTH = 300;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > MAX_WIDTH) {
+                    height *= MAX_WIDTH / width;
+                    width = MAX_WIDTH;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
+
+                const dataUrl = canvas.toDataURL('image/png');
+                setLogoPreview(dataUrl);
+                // We'll send this dataUrl (base64) to backend
+                setLogoFile(dataUrl); 
+            };
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    };
+
     const handleSave = async (e) => {
         e.preventDefault();
         setSaving(true);
         setMessage('');
 
         try {
+            const payload = { ...community };
+            if (logoFile) {
+                payload.base64Logo = logoFile;
+            }
+
             const res = await fetch(`${API_URL}/api/communities/update`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 },
-                body: JSON.stringify(community)
+                body: JSON.stringify(payload)
             });
+            // ... (rest remains same)
 
             if (res.ok) {
                 setMessage(t('community_settings.success'));
+                const updatedCommunity = await res.json();
+                setCommunity(prev => ({
+                    ...prev,
+                    ...updatedCommunity,
+                    bank_details: Array.isArray(updatedCommunity.bank_details) ? updatedCommunity.bank_details : [],
+                    logo_url: updatedCommunity.logo_url || ''
+                }));
+                if (updatedCommunity.logo_url) {
+                    setLogoPreview(updatedCommunity.logo_url);
+                }
+                setLogoFile(null); // Clear the file after successful upload
             } else {
-                setMessage(t('community_settings.error'));
+                const errorData = await res.json();
+                setMessage(t('community_settings.error') + ': ' + (errorData.message || 'Unknown error'));
             }
         } catch (error) {
             setMessage(t('community_settings.error_prefix') + error.message);
@@ -101,6 +163,19 @@ const CommunitySettings = () => {
         });
     };
 
+    const handleDeleteCommunity = async () => {
+        setLoading(true);
+        try {
+            await deleteCommunity(community.id);
+            // Context handles redirection, but just in case:
+            setShowDeleteModal(false);
+        } catch (err) {
+            setLoading(false);
+            setShowDeleteModal(false);
+            setMessage(t('community_settings.delete_error', 'Failed to delete community: ') + err.message);
+        }
+    };
+
     if (loading) {
         return (
             <DashboardLayout>
@@ -120,6 +195,35 @@ const CommunitySettings = () => {
                     <form onSubmit={handleSave} className="space-y-6">
                         {/* Basic Info */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="md:col-span-2 flex flex-col items-center justify-center p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl hover:border-blue-500 transition-colors">
+                                <label className="cursor-pointer flex flex-col items-center space-y-2 w-full">
+                                    <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{t('community_settings.logo', 'Community Logo')}</span>
+                                    {logoPreview || community.logo_url ? (
+                                        <div className="relative group">
+                                            <img 
+                                                src={logoPreview || community.logo_url} 
+                                                alt="Logo Preview" 
+                                                className="h-20 object-contain rounded-lg shadow-sm"
+                                            />
+                                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <span className="text-white text-xs">{t('common.change')}</span>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="h-16 w-16 bg-gray-100 dark:bg-gray-700/50 rounded-full flex items-center justify-center text-gray-400">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                                        </div>
+                                    )}
+                                    <input 
+                                        type="file" 
+                                        accept="image/*" 
+                                        className="hidden" 
+                                        onChange={handleLogoChange}
+                                    />
+                                    <span className="text-xs text-gray-500">{t('community_settings.logo_hint', 'Click to upload (max 300px)')}</span>
+                                </label>
+                            </div>
+
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     {t('community_settings.name')}
@@ -223,7 +327,35 @@ const CommunitySettings = () => {
                         </div>
                     </form>
                 </div>
+
+                {/* Delete Community Button (Super Admin Only) */}
+                 {user?.user_metadata?.is_admin_registration === true && (
+                    <div className="flex justify-end mt-8 border-t border-gray-200 dark:border-gray-700 pt-6">
+                         <button
+                            type="button"
+                            onClick={() => setShowDeleteModal(true)}
+                            disabled={!community?.id}
+                            className="text-red-600 hover:text-red-700 font-medium text-sm flex items-center gap-2 px-4 py-2 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                            {t('community_settings.delete_community', 'Delete Community')}
+                        </button>
+                    </div>
+                )}
             </div>
+
+            <ConfirmationModal
+                isOpen={showDeleteModal}
+                onClose={() => setShowDeleteModal(false)}
+                onConfirm={handleDeleteCommunity}
+                title={t('community_settings.delete_community_title', 'Delete Community?')}
+                message={t('community_settings.delete_warning_modal', 'This action cannot be undone. This will permanently delete the community, all members, units, and associated data.')}
+                confirmText={t('common.delete', 'Delete')}
+                isDangerous={true}
+                inputConfirmation="DELETE"
+            />
         </DashboardLayout>
     );
 };
