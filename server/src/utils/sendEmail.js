@@ -17,9 +17,9 @@ const transporter = nodemailer.createTransport({
 // Verify connection configuration on startup
 transporter.verify(function (error, success) {
     if (error) {
-        console.error('❌ SMTP Connection Error:', error);
+        console.error(`❌ SMTP Connection Error (${process.env.SMTP_HOST}:${process.env.SMTP_PORT || '587'}):`, error);
     } else {
-        console.log('✅ SMTP Connection Established');
+        console.log(`✅ SMTP Connection Established (${process.env.SMTP_HOST}:${process.env.SMTP_PORT || '587'})`);
     }
 });
 
