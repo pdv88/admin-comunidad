@@ -140,7 +140,17 @@ exports.inviteUser = async (req, res) => {
         const communityName = finalCommunityName || 'su comunidad';
         const communityLogo = finalCommunityLogo;
 
+        // Determine the Base URL
+        // Force https://habiio.com in production to avoid accidentally using localhost from a leaked .env file
+        // Check for NODE_ENV, or Railway specific variables (RAILWAY_ENVIRONMENT, RAILWAY_GIT_COMMIT_SHA)
+        const isProduction = process.env.NODE_ENV === 'production' ||
+            !!process.env.RAILWAY_ENVIRONMENT ||
+            !!process.env.RAILWAY_GIT_COMMIT_SHA;
+
+        const baseUrl = isProduction ? 'https://habiio.com' : (process.env.CLIENT_URL || 'https://habiio.com');
+
         fs.appendFileSync(logPath, `Derived Community Data - Name: "${communityName}", Logo: "${communityLogo}"\n`);
+        fs.appendFileSync(logPath, `Environment CLIENT_URL: "${process.env.CLIENT_URL}", NODE_ENV: "${process.env.NODE_ENV}" -> Final BaseUrl: "${baseUrl}"\n`);
 
 
 
@@ -161,11 +171,11 @@ exports.inviteUser = async (req, res) => {
                 type: 'magiclink',
                 email: email,
                 options: {
-                    redirectTo: (process.env.CLIENT_URL || 'https://habiio.com') + '/update-password'
+                    redirectTo: baseUrl + '/update-password'
                 }
             });
 
-            const link = magicLinkData?.properties?.action_link || ((process.env.CLIENT_URL || 'https://habiio.com') + '/login');
+            const link = magicLinkData?.properties?.action_link || (baseUrl + '/login');
 
             // User exists: Send a notification email that they were added to a new community
             const sendEmail = require('../utils/sendEmail');
@@ -225,7 +235,7 @@ exports.inviteUser = async (req, res) => {
                         type: 'invite',
                         email: email,
                         options: {
-                            redirectTo: (process.env.CLIENT_URL || 'https://habiio.com') + '/update-password'
+                            redirectTo: baseUrl + '/update-password'
                         }
                     });
 
@@ -241,7 +251,7 @@ exports.inviteUser = async (req, res) => {
                                 type: 'magiclink',
                                 email: email,
                                 options: {
-                                    redirectTo: (process.env.CLIENT_URL || 'https://habiio.com') + '/update-password'
+                                    redirectTo: baseUrl + '/update-password'
                                 }
                             });
 
