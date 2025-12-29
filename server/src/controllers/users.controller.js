@@ -95,6 +95,7 @@ exports.inviteUser = async (req, res) => {
 
         fs.appendFileSync(logPath, `\n\n--- [${new Date().toISOString()}] Invite User Start ---\n`);
         fs.appendFileSync(logPath, `Inviter: ${inviterUser.id}, Community: ${communityId}\n`);
+        fs.appendFileSync(logPath, `Environment CLIENT_URL: "${process.env.CLIENT_URL}"\n`);
 
         console.log('InviteUser Membership Data:', JSON.stringify(membership, null, 2));
         fs.appendFileSync(logPath, `Membership Query Result: ${JSON.stringify(membership, null, 2)}\n`);
