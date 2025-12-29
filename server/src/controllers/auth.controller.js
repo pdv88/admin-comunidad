@@ -275,7 +275,7 @@ exports.forgotPassword = async (req, res) => {
             type: 'recovery',
             email: email,
             options: {
-                redirectTo: 'http://localhost:5173/update-password', // Assuming frontend is on 5173
+                redirectTo: `${process.env.CLIENT_URL || 'http://localhost:5173'}/update-password`,
             }
         });
 
