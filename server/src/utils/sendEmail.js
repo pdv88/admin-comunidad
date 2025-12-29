@@ -1,30 +1,10 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const handlebars = require('handlebars');
 const fs = require('fs');
 const path = require('path');
 
-// Create reusable transporter object using the default SMTP transport
-const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: parseInt(process.env.SMTP_PORT) === 465, // true for 465, false for other ports
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-        tls: {
-            rejectUnauthorized: false
-        }
-    },
-});
-
-// Verify connection configuration on startup
-transporter.verify(function (error, success) {
-    if (error) {
-        console.error(`❌ SMTP Connection Error (${process.env.SMTP_HOST}:${process.env.SMTP_PORT || '587'}):`, error);
-    } else {
-        console.log(`✅ SMTP Connection Established (${process.env.SMTP_HOST}:${process.env.SMTP_PORT || '587'})`);
-    }
-});
+// Initialize Resend with API Key
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const sendEmail = async ({ email, subject, templateName, context }) => {
     try {
@@ -36,22 +16,24 @@ const sendEmail = async ({ email, subject, templateName, context }) => {
         const template = handlebars.compile(source);
         const html = template(context);
 
-        // Send email
-        const info = await transporter.sendMail({
-            from: process.env.SMTP_FROM,
+        // Send email using Resend API (HTTP)
+        const data = await resend.emails.send({
+            from: process.env.EMAIL_FROM || 'Admin Comunidad <onboarding@resend.dev>',
             to: email,
             subject: subject,
             html: html,
         });
 
-        // Preview only available when sending through an Ethereal account
-        if (process.env.SMTP_HOST && process.env.SMTP_HOST.includes('ethereal')) {
-            console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+        if (data.error) {
+            console.error("Resend API Error:", data.error);
+            throw new Error(data.error.message);
         }
 
-        return info;
+        console.log(`✅ Email sent via API to ${email} (ID: ${data.data?.id})`);
+        return data;
+
     } catch (error) {
-        console.error("Error sending email:", error);
+        console.error("Error sending email via API:", error);
         throw new Error('Email sending failed');
     }
 };
