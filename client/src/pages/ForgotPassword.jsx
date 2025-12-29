@@ -4,11 +4,12 @@ import { useTranslation } from 'react-i18next';
 import { API_URL } from '../config';
 import Header from '../assets/components/Header';
 import Footer from '../assets/components/Footer';
+import Toast from '../components/Toast';
 
 const ForgotPassword = () => {
     const [email, setEmail] = useState('');
-    const [message, setMessage] = useState(null);
-    const [error, setError] = useState(null);
+
+    const [toast, setToast] = useState({ message: '', type: 'success' });
     const [loading, setLoading] = useState(false);
     const [cooldown, setCooldown] = useState(0);
     const { t } = useTranslation();
@@ -28,8 +29,7 @@ const ForgotPassword = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        setMessage(null);
-        setError(null);
+        setToast({ message: '', type: 'success' });
 
         try {
             const res = await fetch(`${API_URL}/api/auth/forgot-password`, {
@@ -41,13 +41,13 @@ const ForgotPassword = () => {
             const data = await res.json();
 
             if (res.ok) {
-                setMessage(t('auth.check_email'));
+                setToast({ message: t('auth.check_email'), type: 'success' });
                 setCooldown(60); // 60 seconds cooldown
             } else {
                 throw new Error(data.error || 'Failed to send reset email');
             }
         } catch (err) {
-            setError(err.message);
+            setToast({ message: err.message, type: 'error' });
         } finally {
             setLoading(false);
         }
@@ -55,6 +55,11 @@ const ForgotPassword = () => {
 
     return (
         <div className="relative flex flex-col min-h-screen">
+            <Toast 
+                message={toast.message} 
+                type={toast.type} 
+                onClose={() => setToast({ ...toast, message: '' })} 
+            />
             <Header />
 
             <main className="flex-grow flex items-center justify-center p-4">
@@ -85,8 +90,6 @@ const ForgotPassword = () => {
                                                 placeholder={t('auth.enter_email_placeholder')}
                                             />
                                         </div>
-                                        {error && <p className="text-xs text-red-600 mt-2">{error}</p>}
-                                        {message && <p className="text-xs text-green-600 mt-2">{message}</p>}
                                     </div>
 
                                     <button 

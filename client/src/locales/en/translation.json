@@ -265,7 +265,9 @@
         },
         "target": {
             "global": "Entire Community"
-        }
+        },
+        "create_success": "Notice posted successfully!",
+        "delete_success": "Notice deleted successfully!"
     },
     "properties": {
         "title": "Property Structure",
@@ -298,7 +300,11 @@
         "tenant_email": "Tenant Email",
         "tenant_phone": "Tenant Phone",
         "tenant": "Tenant",
-        "owner": "Owner"
+        "owner": "Owner",
+        "block_created": "Block created successfully",
+        "unit_created": "Unit created successfully",
+        "update_success": "Tenant info updated",
+        "delete_success": "Deleted successfully"
     },
     "reports": {
         "title": "Issues & Maintenance",
@@ -337,7 +343,10 @@
             "placeholder_title": "e.g. Broken Light",
             "placeholder_desc": "Describe the issue...",
             "submit": "Submit Report"
-        }
+        },
+        "create_success": "Report created successfully",
+        "delete_success": "Report deleted successfully",
+        "status_updated": "Status updated"
     },
     "voting": {
         "title": "Active Polls",

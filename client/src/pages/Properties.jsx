@@ -5,6 +5,7 @@ import { API_URL } from '../config';
 import ConfirmationModal from '../components/ConfirmationModal';
 import ModalPortal from '../components/ModalPortal';
 import GlassLoader from '../components/GlassLoader';
+import Toast from '../components/Toast';
 
 const Properties = () => {
     const [blocks, setBlocks] = useState([]);
@@ -12,6 +13,8 @@ const Properties = () => {
     const [loading, setLoading] = useState(true);
     const [newBlock, setNewBlock] = useState('');
     const [newUnit, setNewUnit] = useState({ blockId: '', number: '', type: 'apartment' });
+
+    const [toast, setToast] = useState({ message: '', type: 'success' });
     const { t } = useTranslation();
 
     // Modal State
@@ -57,12 +60,17 @@ const Properties = () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: newBlock })
             });
+
             if (res.ok) {
                 setNewBlock('');
                 fetchData();
+                setToast({ message: t('properties.block_created', 'Block created successfully'), type: 'success' });
+            } else {
+                setToast({ message: t('common.error', 'Error creating block'), type: 'error' });
             }
         } catch (error) {
             console.error(error);
+            setToast({ message: t('common.error', 'Error creating block'), type: 'error' });
         }
     };
 
@@ -78,12 +86,17 @@ const Properties = () => {
                     type: newUnit.type
                 })
             });
+
             if (res.ok) {
                 setNewUnit({ blockId: '', number: '', type: 'apartment' });
                 fetchData();
+                setToast({ message: t('properties.unit_created', 'Unit created successfully'), type: 'success' });
+            } else {
+                 setToast({ message: t('common.error', 'Error creating unit'), type: 'error' });
             }
         } catch (error) {
             console.error(error);
+            setToast({ message: t('common.error', 'Error creating unit'), type: 'error' });
         }
     };
 
@@ -121,11 +134,13 @@ const Properties = () => {
             if (res.ok) {
                 fetchData();
                 setEditUnitModal({ isOpen: false, unit: null });
+                setToast({ message: t('properties.update_success', 'Tenant info updated'), type: 'success' });
             } else {
-                alert(t('common.error_occurred'));
+                setToast({ message: t('common.error_occurred', 'An error occurred'), type: 'error' });
             }
         } catch (error) {
             console.error(error);
+            setToast({ message: t('common.error_occurred', 'An error occurred'), type: 'error' });
         }
     };
 
@@ -148,11 +163,13 @@ const Properties = () => {
             if (res.ok) {
                 fetchData();
                 setDeleteModal({ isOpen: false, type: null, id: null });
+                setToast({ message: t('properties.delete_success', 'Deleted successfully'), type: 'success' });
             } else {
-                alert(t('common.error_occurred', 'An error occurred'));
+                setToast({ message: t('common.error_occurred', 'An error occurred'), type: 'error' });
             }
         } catch (error) {
             console.error(error);
+            setToast({ message: t('common.error_occurred', 'An error occurred'), type: 'error' });
         }
     };
 
@@ -166,6 +183,11 @@ const Properties = () => {
 
     return (
         <DashboardLayout>
+            <Toast 
+                message={toast.message} 
+                type={toast.type} 
+                onClose={() => setToast({ ...toast, message: '' })} 
+            />
             <div className="max-w-7xl mx-auto space-y-4 md:space-y-8">
                  {/* ... existing content ... */}
                  <div className="flex justify-between items-center mb-6">

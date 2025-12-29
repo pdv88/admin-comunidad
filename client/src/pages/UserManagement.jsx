@@ -6,6 +6,7 @@ import GlassSelect from '../components/GlassSelect';
 import ModalPortal from '../components/ModalPortal';
 import GlassLoader from '../components/GlassLoader';
 import ConfirmationModal from '../components/ConfirmationModal';
+import Toast from '../components/Toast';
 import { useAuth } from '../context/AuthContext';
 
 const UserManagement = () => {
@@ -14,7 +15,7 @@ const UserManagement = () => {
     const [loading, setLoading] = useState(true);
     const [newUser, setNewUser] = useState({ email: '', fullName: '', roleName: 'neighbor', unitIds: [] });
     const [selectedBlockId, setSelectedBlockId] = useState(''); // New state for block filter
-    const [message, setMessage] = useState('');
+    const [toast, setToast] = useState({ message: '', type: 'success' }); // Changed from message string
     const [editingUser, setEditingUser] = useState(null); // User being edited
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [userToDelete, setUserToDelete] = useState(null);
@@ -38,7 +39,7 @@ const UserManagement = () => {
 
     const handleConfirmDelete = async () => {
         if (!userToDelete) return;
-        setMessage(t('user_management.messages.deleting', 'Deleting user...'));
+        // setMessage(t('user_management.messages.deleting', 'Deleting user...'));
         try {
             const res = await fetch(`${API_URL}/api/users/${userToDelete.id}`, {
                 method: 'DELETE',
@@ -48,13 +49,13 @@ const UserManagement = () => {
             });
             const data = await res.json();
             if (res.ok) {
-                setMessage(t('user_management.messages.delete_success', 'User deleted successfully'));
+                setToast({ message: t('user_management.messages.delete_success', 'User deleted successfully'), type: 'success' });
                 fetchData();
             } else {
-                setMessage(t('user_management.messages.error_prefix') + data.error);
+                setToast({ message: t('user_management.messages.error_prefix') + data.error, type: 'error' });
             }
         } catch (error) {
-            setMessage(t('user_management.messages.delete_error', 'Error deleting user'));
+            setToast({ message: t('user_management.messages.delete_error', 'Error deleting user'), type: 'error' });
         } finally {
             setDeleteModalOpen(false);
             setUserToDelete(null);
@@ -63,7 +64,7 @@ const UserManagement = () => {
 
     const handleUpdateUser = async (e) => {
         e.preventDefault();
-        setMessage(t('user_management.messages.updating'));
+        // setMessage(t('user_management.messages.updating'));
         try {
             const res = await fetch(`${API_URL}/api/users/${editingUser.id}`, {
                 method: 'PUT',
@@ -76,14 +77,14 @@ const UserManagement = () => {
             });
             const data = await res.json();
             if (res.ok) {
-                setMessage(t('user_management.messages.update_success'));
+                setToast({ message: t('user_management.messages.update_success'), type: 'success' });
                 setEditingUser(null);
                 fetchData();
             } else {
-                setMessage(t('user_management.messages.error_prefix') + data.error);
+                setToast({ message: t('user_management.messages.error_prefix') + data.error, type: 'error' });
             }
         } catch (error) {
-            setMessage(t('user_management.messages.update_error'));
+            setToast({ message: t('user_management.messages.update_error'), type: 'error' });
         }
     };
 
@@ -112,7 +113,7 @@ const UserManagement = () => {
 
     const handleInvite = async (e) => {
         e.preventDefault();
-        setMessage(t('user_management.messages.sending_invite'));
+        // setMessage(t('user_management.messages.sending_invite')); // Optional: Show loading toast or spinner
         try {
             const res = await fetch(`${API_URL}/api/users/invite`, {
                 method: 'POST',
@@ -124,14 +125,14 @@ const UserManagement = () => {
             });
             const data = await res.json();
             if (res.ok) {
-                setMessage(t('user_management.messages.invite_success'));
+                setToast({ message: t('user_management.messages.invite_success'), type: 'success' });
                 setNewUser({ email: '', fullName: '', roleName: 'neighbor', unitIds: [] });
                 fetchData();
             } else {
-                setMessage(t('user_management.messages.error_prefix') + data.error);
+                setToast({ message: t('user_management.messages.error_prefix') + data.error, type: 'error' });
             }
         } catch (error) {
-            setMessage(t('user_management.messages.invite_error'));
+            setToast({ message: t('user_management.messages.invite_error'), type: 'error' });
         }
     };
 
@@ -173,6 +174,11 @@ const UserManagement = () => {
 
     return (
         <DashboardLayout>
+            <Toast 
+                message={toast.message} 
+                type={toast.type} 
+                onClose={() => setToast({ ...toast, message: '' })} 
+            />
             <div className="max-w-7xl mx-auto space-y-4 md:space-y-8">
                  {/* ... existing content ... */}
                  <div className="flex justify-between items-center mb-6">
@@ -245,7 +251,6 @@ const UserManagement = () => {
                         />
                         <button type="submit" className="glass-button self-start">{t('user_management.invite.send')}</button>
                     </form>
-                    {message && <p className="mt-2 text-sm text-gray-600 dark:text-neutral-400">{message}</p>}
                 </div>
 
                 {/* User List */}

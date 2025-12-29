@@ -7,6 +7,7 @@ import ConfirmationModal from '../components/ConfirmationModal';
 import ModalPortal from '../components/ModalPortal';
 import GlassSelect from '../components/GlassSelect';
 import GlassLoader from '../components/GlassLoader';
+import Toast from '../components/Toast';
 
 const Notices = () => {
     const { user, activeCommunity } = useAuth();
@@ -15,6 +16,7 @@ const Notices = () => {
     const [loading, setLoading] = useState(true);
     const [blocks, setBlocks] = useState([]);
     const [showModal, setShowModal] = useState(false);
+    const [toast, setToast] = useState({ message: '', type: 'success' });
     
     // Create Form State
     const [newNotice, setNewNotice] = useState({
@@ -107,12 +109,14 @@ const Notices = () => {
                 setShowModal(false);
                 setNewNotice({ title: '', content: '', priority: 'normal', block_id: isVocal && vocalBlockIds.length > 0 ? vocalBlockIds[0] : '' });
                 fetchNotices();
+                setToast({ message: t('notices.create_success', 'Notice posted successfully'), type: 'success' });
             } else {
                  const d = await res.json();
-                 alert(d.error);
+                 setToast({ message: d.error || t('common.error', 'Error creating notice'), type: 'error' });
             }
         } catch (error) {
             console.error('Error creating notice:', error);
+            setToast({ message: t('common.error', 'Error creating notice'), type: 'error' });
         }
     };
 
@@ -133,9 +137,13 @@ const Notices = () => {
                 fetchNotices();
                 setShowDeleteModal(false);
                 setNoticeToDelete(null);
+                setToast({ message: t('notices.delete_success', 'Notice deleted'), type: 'success' });
+            } else {
+                setToast({ message: t('common.error', 'Error deleting notice'), type: 'error' });
             }
         } catch (error) {
             console.error('Error deleting notice:', error);
+            setToast({ message: t('common.error', 'Error deleting notice'), type: 'error' });
         }
     };
 
@@ -167,6 +175,11 @@ const Notices = () => {
 
     return (
         <DashboardLayout>
+            <Toast 
+                message={toast.message} 
+                type={toast.type} 
+                onClose={() => setToast({ ...toast, message: '' })} 
+            />
              <div className="max-w-5xl mx-auto space-y-4 md:space-y-8">
                 <div className="flex justify-between items-center mb-6">
                     <div>

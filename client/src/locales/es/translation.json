@@ -261,7 +261,9 @@
         },
         "target": {
             "global": "Toda la Comunidad"
-        }
+        },
+        "create_success": "¡Aviso publicado exitosamente!",
+        "delete_success": "¡Aviso eliminado exitosamente!"
     },
     "properties": {
         "title": "Estructura de Propiedad",
@@ -293,7 +295,11 @@
         "tenant_email": "Correo del Inquilino",
         "tenant_phone": "Teléfono del Inquilino",
         "tenant": "Inquilino",
-        "owner": "Propietario"
+        "owner": "Propietario",
+        "block_created": "Bloque creado exitosamente",
+        "unit_created": "Unidad creada exitosamente",
+        "update_success": "Información del inquilino actualizada",
+        "delete_success": "Eliminado exitosamente"
     },
     "reports": {
         "title": "Incidencias y Mantenimiento",
@@ -332,7 +338,10 @@
             "placeholder_title": "ej. Luz rota",
             "placeholder_desc": "Describe el problema...",
             "submit": "Enviar Reporte"
-        }
+        },
+        "create_success": "Reporte creado exitosamente",
+        "delete_success": "Reporte eliminado exitosamente",
+        "status_updated": "Estado actualizado"
     },
     "voting": {
         "title": "Votaciones Activas",

@@ -8,11 +8,13 @@ import PaymentUpload from '../components/payments/PaymentUpload';
 import PaymentReviewModal from '../components/payments/PaymentReviewModal';
 import ModalPortal from '../components/ModalPortal';
 import GlassLoader from '../components/GlassLoader';
+import Toast from '../components/Toast';
 
 const Maintenance = () => {
     const { t } = useTranslation();
     const { user, activeCommunity, loading: authLoading } = useAuth();
     const [loading, setLoading] = useState(true);
+    const [actionLoading, setActionLoading] = useState(false);
     const [fees, setFees] = useState([]);
     const [blocks, setBlocks] = useState([]); // State for block dropdown
     const [isAdmin, setIsAdmin] = useState(false);
@@ -23,33 +25,18 @@ const Maintenance = () => {
     const [genPeriod, setGenPeriod] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
     const [genAmount, setGenAmount] = useState('50');
     const [generating, setGenerating] = useState(false);
-    const [genMessage, setGenMessage] = useState('');
-    const [message, setMessage] = useState('');
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [feeToDelete, setFeeToDelete] = useState(null);
     const [paymentModalOpen, setPaymentModalOpen] = useState(false);
     const [selectedFeeForPayment, setSelectedFeeForPayment] = useState(null);
     const [reviewModalOpen, setReviewModalOpen] = useState(false);
     const [selectedReviewId, setSelectedReviewId] = useState(null);
+    const [toast, setToast] = useState({ message: '', type: 'success' });
 
     // Filters & Pagination State
-    const [filters, setFilters] = useState({
-        page: 1,
-        limit: 10,
-        sortBy: 'period',
-        sortOrder: 'desc',
-        period: '',
-        status: '',
-        sortOrder: 'desc',
-        period: '',
-        status: '',
-        search: '', // Unit Search
-        block: ''   // Block Search
-    });
-    const [pagination, setPagination] = useState({
-        totalPages: 1,
-        totalCount: 0
-    });
+    const [filters, setFilters] = useState({ page: 1, limit: 10, period: '', status: '', search: '', block: '', sortBy: 'period', sortOrder: 'desc' });
+    const [sortConfig, setSortConfig] = useState({ key: 'period', direction: 'desc' });
+    const [pagination, setPagination] = useState({ totalDocs: 0, totalPages: 1 });
 
     // Debounce Search
     useEffect(() => {
@@ -76,7 +63,7 @@ const Maintenance = () => {
 
     const handleResendEmail = async (fee) => {
         try {
-            setMessage(t('maintenance.sending_email', 'Sending email...'));
+            setToast({ message: t('maintenance.sending_email', 'Sending email...'), type: 'info' });
             const res = await fetch(`${API_URL}/api/maintenance/${fee.id}/email`, {
                 method: 'POST',
                 headers: { 
@@ -87,13 +74,13 @@ const Maintenance = () => {
 
             const data = await res.json();
             if (res.ok) {
-                setMessage(t('maintenance.email_sent', 'Email sent successfully'));
+                setToast({ message: t('maintenance.email_sent', 'Email sent successfully'), type: 'success' });
             } else {
-                setMessage(t('maintenance.email_error', `Error: ${data.error}`));
+                setToast({ message: t('maintenance.email_error', `Error: ${data.error}`), type: 'error' });
             }
         } catch (error) {
             console.error(error);
-            setMessage('Network error');
+            setToast({ message: 'Network error', type: 'error' });
         }
     };
 
@@ -103,19 +90,22 @@ const Maintenance = () => {
         try {
             const res = await fetch(`${API_URL}/api/maintenance/${feeToDelete.id}`, {
                 method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'X-Community-ID': activeCommunity.community_id
+                }
             });
 
             if (res.ok) {
-                setMessage(t('maintenance.delete_success', 'Fee deleted successfully'));
+                setToast({ message: t('maintenance.delete_success', 'Fee deleted successfully'), type: 'success' });
                 fetchFees();
             } else {
                 const data = await res.json();
-                setMessage(t('maintenance.delete_error', `Error deleting: ${data.error}`));
+                setToast({ message: t('maintenance.delete_error', `Error deleting: ${data.error}`), type: 'error' });
             }
         } catch (error) {
             console.error("Delete error:", error);
-            setMessage('Network error');
+            setToast({ message: 'Network error', type: 'error' });
         } finally {
             setDeleteModalOpen(false);
             setFeeToDelete(null);
@@ -161,21 +151,6 @@ const Maintenance = () => {
         }
     }, [activeTab, isAdmin, activeCommunity]);
 
-    // Auto-clear messages
-    useEffect(() => {
-        if (message) {
-            const timer = setTimeout(() => setMessage(''), 10000);
-            return () => clearTimeout(timer);
-        }
-    }, [message]);
-
-    useEffect(() => {
-        if (genMessage) {
-            const timer = setTimeout(() => setGenMessage(''), 10000);
-            return () => clearTimeout(timer);
-        }
-    }, [genMessage]);
-
     const fetchFees = async () => {
         if (!activeCommunity) return;
 
@@ -210,7 +185,12 @@ const Maintenance = () => {
                 endpoint = `${baseUrl}/my-statement`;
             }
 
-            const res = await fetch(endpoint);
+            const res = await fetch(endpoint, {
+                headers: { 
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'X-Community-ID': activeCommunity.community_id
+                }
+            });
 
             if (res.ok) {
                 const data = await res.json();
@@ -225,9 +205,13 @@ const Maintenance = () => {
                     // Personal view returns direct array
                     setFees(Array.isArray(data) ? data : []);
                 }
+            } else {
+                const errorData = await res.json();
+                setToast({ message: errorData.error || t('common.error_fetching_data', 'Error fetching data'), type: 'error' });
             }
         } catch (error) {
             console.error("Error fetching fees:", error);
+            setToast({ message: t('common.network_error', 'Network error'), type: 'error' });
         } finally {
             setLoading(false);
         }
@@ -262,8 +246,7 @@ const Maintenance = () => {
                 const { data } = await res.json();
                 
                 if (!data || data.length === 0) {
-                    setMessage(t('maintenance.no_records_export', 'No records to export.'));
-                    setTimeout(() => setMessage(''), 3000);
+                    setToast({ message: t('maintenance.no_records_export', 'No records to export.'), type: 'error' });
                     return;
                 }
 
@@ -294,10 +277,13 @@ const Maintenance = () => {
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
+            } else {
+                const errorData = await res.json();
+                setToast({ message: errorData.error || t('common.error_exporting_data', 'Error exporting data'), type: 'error' });
             }
         } catch (error) {
             console.error("Export error:", error);
-            setMessage(t('common.error_occurred', 'An error occurred'));
+            setToast({ message: t('common.error_occurred', 'An error occurred'), type: 'error' });
         }
     };
 
@@ -314,9 +300,13 @@ const Maintenance = () => {
             if (res.ok) {
                 const data = await res.json();
                 setBlocks(data);
+            } else {
+                const errorData = await res.json();
+                setToast({ message: errorData.error || t('common.error_fetching_blocks', 'Error fetching blocks'), type: 'error' });
             }
         } catch (error) {
             console.error("Error fetching blocks:", error);
+            setToast({ message: t('common.network_error', 'Network error'), type: 'error' });
         }
     };
 
@@ -341,14 +331,15 @@ const Maintenance = () => {
     const handleGenerate = async (e) => {
         e.preventDefault();
         setGenerating(true);
-        setGenMessage('');
 
         try {
             const token = localStorage.getItem('token');
             const res = await fetch(`${API_URL}/api/maintenance/generate`, {
                 method: 'POST',
                 headers: { 
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                    'X-Community-ID': activeCommunity.community_id
                 },
                 body: JSON.stringify({ period: `${genPeriod}-01`, amount: parseFloat(genAmount) })
             });
@@ -356,17 +347,17 @@ const Maintenance = () => {
             const data = await res.json();
             if (res.ok) {
                 if (data.count === 0) {
-                    setGenMessage(t('maintenance.warning_gen_zero', 'Warning: No new fees generated. All occupied units may already be billed for this period.'));
+                    setToast({ message: t('maintenance.warning_gen_zero', 'Warning: No new fees generated. All occupied units may already be billed for this period.'), type: 'warning' });
                 } else {
-                    setGenMessage(t('maintenance.success_gen', `Success: Generated ${data.count} fees successfully.`));
+                    setToast({ message: t('maintenance.success_gen', `Success: Generated ${data.count} fees successfully.`), type: 'success' });
                 }
                 fetchFees();
             } else {
-                setGenMessage(t('maintenance.error_gen', `Error: ${data.error}`));
+                setToast({ message: t('maintenance.error_gen', `Error: ${data.error}`), type: 'error' });
             }
         } catch (error) {
             console.error(error);
-            setGenMessage('Network error');
+            setToast({ message: 'Network error', type: 'error' });
         } finally {
             setGenerating(false);
         }
@@ -386,6 +377,11 @@ const Maintenance = () => {
 
     return (
         <DashboardLayout>
+            <Toast 
+                message={toast.message} 
+                type={toast.type} 
+                onClose={() => setToast({ ...toast, message: '' })} 
+            />
             <div className="max-w-7xl mx-auto space-y-6">
                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                     <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
@@ -452,11 +448,6 @@ const Maintenance = () => {
                                 {generating ? t('common.processing', 'Generating...') : t('maintenance.generate_btn', 'Generate Bills')}
                             </button>
                         </form>
-
-                        {genMessage && <p className={`mt-2 text-sm ${
-                            genMessage.includes('Error') ? 'text-red-500' : 
-                            genMessage.includes('Warning') ? 'text-yellow-600 dark:text-yellow-400' : 'text-green-500'
-                        }`}>{genMessage}</p>}
                     </div>
                 )}
 
@@ -464,7 +455,9 @@ const Maintenance = () => {
                 <div className="glass-card p-6">
                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                         <h2 className="text-lg font-bold text-gray-800 dark:text-white">
-                            {isAdmin ? t('maintenance.community_status', 'Community Status') : t('maintenance.history', 'Payment History')}
+                            {isAdmin && activeTab === 'community' 
+                                ? t('maintenance.community_status', 'Community Status') 
+                                : t('maintenance.history', 'Payment History')}
                         </h2>
                         
                         {/* Filters Toggle & Export (Admin Only) */}

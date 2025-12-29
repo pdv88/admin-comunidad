@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import DashboardLayout from '../components/DashboardLayout';
 import GlassLoader from '../components/GlassLoader';
 import ConfirmationModal from '../components/ConfirmationModal';
+import Toast from '../components/Toast';
 
 const CommunitySettings = () => {
     const { t } = useTranslation();
@@ -20,17 +21,8 @@ const CommunitySettings = () => {
     });
     const [logoFile, setLogoFile] = useState(null);
     const [logoPreview, setLogoPreview] = useState('');
-    const [message, setMessage] = useState('');
+    const [toast, setToast] = useState({ message: '', type: 'success' });
     const [showDeleteModal, setShowDeleteModal] = useState(false);
-
-    useEffect(() => {
-        if (message) {
-            const timer = setTimeout(() => {
-                setMessage('');
-            }, 10000);
-            return () => clearTimeout(timer);
-        }
-    }, [message]);
 
     useEffect(() => {
         fetchCommunity();
@@ -98,7 +90,6 @@ const CommunitySettings = () => {
     const handleSave = async (e) => {
         e.preventDefault();
         setSaving(true);
-        setMessage('');
 
         try {
             const payload = { ...community };
@@ -117,7 +108,7 @@ const CommunitySettings = () => {
             // ... (rest remains same)
 
             if (res.ok) {
-                setMessage(t('community_settings.success'));
+                setToast({ message: t('community_settings.success'), type: 'success' });
                 const updatedCommunity = await res.json();
                 setCommunity(prev => ({
                     ...prev,
@@ -131,10 +122,10 @@ const CommunitySettings = () => {
                 setLogoFile(null); // Clear the file after successful upload
             } else {
                 const errorData = await res.json();
-                setMessage(t('community_settings.error') + ': ' + (errorData.message || 'Unknown error'));
+                setToast({ message: t('community_settings.error') + ': ' + (errorData.message || 'Unknown error'), type: 'error' });
             }
         } catch (error) {
-            setMessage(t('community_settings.error_prefix') + error.message);
+            setToast({ message: t('community_settings.error_prefix') + error.message, type: 'error' });
         } finally {
             setSaving(false);
         }
@@ -172,7 +163,7 @@ const CommunitySettings = () => {
         } catch (err) {
             setLoading(false);
             setShowDeleteModal(false);
-            setMessage(t('community_settings.delete_error', 'Failed to delete community: ') + err.message);
+            setToast({ message: t('community_settings.delete_error', 'Failed to delete community: ') + err.message, type: 'error' });
         }
     };
 
@@ -190,6 +181,12 @@ const CommunitySettings = () => {
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t('community_settings.title')}</h1>
                 </div>
+                
+                <Toast 
+                    message={toast.message} 
+                    type={toast.type} 
+                    onClose={() => setToast({ ...toast, message: '' })} 
+                />
                 
                 <div className="glass-card p-6 rounded-xl">
                     <form onSubmit={handleSave} className="space-y-6">
@@ -316,7 +313,6 @@ const CommunitySettings = () => {
                         </div>
 
                         <div className="pt-4 flex items-center justify-end gap-3">
-                            {message && <span className={`text-sm ${message.includes('Error') || message.includes('Failed') ? 'text-red-600' : 'text-green-600'}`}>{message}</span>}
                             <button 
                                 type="submit" 
                                 disabled={saving}

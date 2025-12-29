@@ -8,6 +8,7 @@ import DashboardLayout from '../components/DashboardLayout';
 import ModalPortal from '../components/ModalPortal';
 import PaymentUpload from '../components/payments/PaymentUpload';
 import GlassLoader from '../components/GlassLoader';
+import Toast from '../components/Toast';
 
 const Campaigns = () => {
     const { t } = useTranslation();
@@ -25,7 +26,7 @@ const Campaigns = () => {
     const [desc, setDesc] = useState('');
     const [deadline, setDeadline] = useState('');
     const [creating, setCreating] = useState(false);
-    const [message, setMessage] = useState('');
+    const [toast, setToast] = useState({ message: '', type: 'success' });
     const [showCreateForm, setShowCreateForm] = useState(false);
 
     // Targeting State
@@ -91,7 +92,6 @@ const Campaigns = () => {
     const handleCreate = async (e) => {
         e.preventDefault();
         setCreating(true);
-        setMessage('');
 
         try {
             const token = localStorage.getItem('token');
@@ -113,7 +113,7 @@ const Campaigns = () => {
 
             if (!res.ok) throw new Error('Failed to create');
 
-            setMessage(t('campaigns.success', 'Campaign created successfully!'));
+            setToast({ message: t('campaigns.success', 'Campaign created successfully!'), type: 'success' });
             setName('');
             setGoal('');
             setDesc('');
@@ -126,7 +126,7 @@ const Campaigns = () => {
 
         } catch (error) {
             console.error(error);
-            setMessage(t('campaigns.error', 'Error creating campaign.'));
+            setToast({ message: t('campaigns.error', 'Error creating campaign.'), type: 'error' });
         } finally {
             setCreating(false);
         }
@@ -161,13 +161,13 @@ const Campaigns = () => {
 
             if (!res.ok) throw new Error('Failed to update');
 
-            setMessage(t('campaigns.update_success', 'Campaign updated successfully!'));
+            setToast({ message: t('campaigns.update_success', 'Campaign updated successfully!'), type: 'success' });
             setEditingCampaign(null);
             fetchCampaigns();
 
         } catch (error) {
             console.error(error);
-            setMessage(t('campaigns.update_error', 'Error updating campaign.'));
+            setToast({ message: t('campaigns.update_error', 'Error updating campaign.'), type: 'error' });
         }
     };
 
@@ -181,6 +181,11 @@ const Campaigns = () => {
 
     return (
         <DashboardLayout>
+            <Toast 
+                message={toast.message} 
+                type={toast.type} 
+                onClose={() => setToast({ ...toast, message: '' })} 
+            />
             <div className="max-w-7xl mx-auto space-y-4 md:space-y-8">
                 <div className="flex justify-between items-center">
                     <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t('campaigns.title', 'Funding Campaigns')}</h1>
@@ -303,8 +308,7 @@ const Campaigns = () => {
                                                  )}
                                              </div>
                                             
-                                            {message && <p className={`text-sm ${message.includes('success') ? 'text-green-600' : 'text-red-600'}`}>{message}</p>}
-                                            
+                                             
                                             <div className="flex gap-3 mt-6">
                                                 <button 
                                                     type="button" 
@@ -500,7 +504,7 @@ const Campaigns = () => {
                                     onSuccess={() => {
                                         setPaymentModalOpen(false);
                                         fetchCampaigns();
-                                        setMessage(t('campaigns.payment_success', 'Contribution registered!'));
+                                        setToast({ message: t('campaigns.payment_success', 'Contribution registered!'), type: 'success' });
                                     }} 
                                     onCancel={() => setPaymentModalOpen(false)}
                                     initialType="campaign"

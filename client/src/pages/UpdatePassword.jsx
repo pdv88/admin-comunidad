@@ -5,11 +5,12 @@ import { useTranslation } from 'react-i18next';
 import { API_URL } from '../config';
 import Header from '../assets/components/Header';
 import Footer from '../assets/components/Footer';
+import Toast from '../components/Toast';
 
 const UpdatePassword = () => {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState('');
+    const [toast, setToast] = useState({ message: '', type: 'success' });
     const { user } = useAuth(); // If session is established from URL
     const navigate = useNavigate();
     const { t } = useTranslation();
@@ -20,7 +21,7 @@ const UpdatePassword = () => {
     const handleUpdate = async (e) => {
         e.preventDefault();
         setLoading(true);
-        setMessage('');
+        setToast({ message: '', type: 'success' });
 
         try {
             const res = await fetch(`${API_URL}/api/auth/update-password`, {
@@ -33,13 +34,13 @@ const UpdatePassword = () => {
             });
 
             if (res.ok) {
-                 setMessage(t('update_password.success_login', 'Password updated! Redirecting to login...'));
+                 setToast({ message: t('update_password.success_login', 'Password updated! Redirecting to login...'), type: 'success' });
                  setTimeout(() => navigate('/login'), 2000);
             } else {
                 throw new Error(t('update_password.error'));
             }
         } catch (error) {
-            setMessage(error.message);
+            setToast({ message: error.message, type: 'error' });
         } finally {
             setLoading(false);
         }
@@ -47,6 +48,11 @@ const UpdatePassword = () => {
 
     return (
         <div className="relative flex flex-col min-h-screen">
+            <Toast 
+                message={toast.message} 
+                type={toast.type} 
+                onClose={() => setToast({ ...toast, message: '' })} 
+            />
             <Header />
 
             <main className="flex-grow flex items-center justify-center p-4">
@@ -77,7 +83,7 @@ const UpdatePassword = () => {
                                         {loading ? t('update_password.updating') : t('update_password.btn')}
                                     </button>
                                     
-                                    {message && <p className="mt-4 text-center text-sm dark:text-white">{message}</p>}
+                                    
                                 </div>
                             </form>
                         </div>

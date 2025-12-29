@@ -8,6 +8,7 @@ import ConfirmationModal from '../components/ConfirmationModal';
 import ModalPortal from '../components/ModalPortal';
 import GlassSelect from '../components/GlassSelect';
 import GlassLoader from '../components/GlassLoader';
+import Toast from '../components/Toast';
 
 const Reports = () => {
     const { user, activeCommunity } = useAuth();
@@ -20,6 +21,7 @@ const Reports = () => {
     // Delete Confirmation State
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [reportToDelete, setReportToDelete] = useState(null);
+    const [toast, setToast] = useState({ message: '', type: 'success' });
 
     const role = activeCommunity?.roles?.name || user?.profile?.roles?.name;
     const isVocal = role === 'vocal';
@@ -99,9 +101,13 @@ const Reports = () => {
                 setShowModal(false);
                 setNewReport({ title: '', description: '', category: 'maintenance', unit_id: userUnits.length === 1 ? userUnits[0].id : '' });
                 fetchReports();
+                setToast({ message: t('reports.create_success', 'Report created successfully'), type: 'success' });
+            } else {
+                 setToast({ message: t('common.error', 'Error creating report'), type: 'error' });
             }
         } catch (error) {
             console.error('Error creating report:', error);
+            setToast({ message: t('common.error', 'Error creating report'), type: 'error' });
         }
     };
 
@@ -124,12 +130,14 @@ const Reports = () => {
                 fetchReports();
                 setShowDeleteModal(false);
                 setReportToDelete(null);
+                setToast({ message: t('reports.delete_success', 'Report deleted successfully'), type: 'success' });
             } else {
                 const data = await res.json();
-                alert(data.error);
+                setToast({ message: data.error || t('common.error', 'Error deleting report'), type: 'error' });
             }
         } catch (error) {
             console.error('Error deleting report:', error);
+            setToast({ message: t('common.error', 'Error deleting report'), type: 'error' });
         }
     };
 
@@ -147,9 +155,13 @@ const Reports = () => {
 
             if (res.ok) {
                 fetchReports();
+                setToast({ message: t('reports.status_updated', 'Status updated'), type: 'success' });
+            } else {
+                setToast({ message: t('common.error', 'Error updating status'), type: 'error' });
             }
         } catch (error) {
             console.error('Error updating status:', error);
+            setToast({ message: t('common.error', 'Error updating status'), type: 'error' });
         }
     };
 
@@ -165,6 +177,11 @@ const Reports = () => {
 
     return (
         <DashboardLayout>
+            <Toast 
+                message={toast.message} 
+                type={toast.type} 
+                onClose={() => setToast({ ...toast, message: '' })} 
+            />
             <div className="max-w-7xl mx-auto space-y-4 md:space-y-8">
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t('reports.title', 'Issues & Maintenance')}</h1>
