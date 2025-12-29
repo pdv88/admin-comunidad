@@ -2,6 +2,10 @@ const express = require('express');
 const router = express.Router();
 const maintenanceController = require('../controllers/maintenance.controller');
 
+const authMiddleware = require('../middleware/auth.middleware');
+
+router.use(authMiddleware);
+
 // Admin Routes
 router.post('/generate', maintenanceController.generateMonthlyFees);
 router.get('/status', maintenanceController.getCommunityStatus);

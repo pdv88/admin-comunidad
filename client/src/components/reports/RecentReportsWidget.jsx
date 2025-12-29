@@ -99,7 +99,7 @@ const RecentReportsWidget = (props) => {
                 ) : (
                     <div className="space-y-4">
                         {reports.map(report => (
-                            <div key={report.id} className="flex items-start justify-between p-4 glass-card border border-white/20 dark:border-white/5 group hover:shadow-md transition-all">
+                            <div key={report.id} className="flex items-start justify-between p-4 rounded-xl border border-white/20 dark:border-white/10 bg-white/40 dark:bg-white/5 transition-all hover:shadow-lg group">
                                 <div className="flex items-center gap-3 overflow-hidden">
                                      <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-white dark:bg-neutral-600 rounded-full text-lg shadow-sm">
                                         {report.category === 'maintenance' ? '🔧' : 

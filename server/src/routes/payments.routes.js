@@ -2,6 +2,10 @@ const express = require('express');
 const router = express.Router();
 const paymentsController = require('../controllers/payments.controller');
 
+const authMiddleware = require('../middleware/auth.middleware');
+
+router.use(authMiddleware);
+
 router.post('/', paymentsController.createPayment);
 router.get('/', paymentsController.getPayments);
 router.put('/:id', paymentsController.updatePaymentStatus);

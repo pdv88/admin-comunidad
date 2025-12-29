@@ -343,7 +343,9 @@ const Maintenance = () => {
                                             </td>
                                             <td>
                                                 <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(fee.status, fee.payment_id)}`}>
-                                                    {(fee.status === 'pending' && fee.payment_id) ? t('maintenance.processing', 'Processing') : fee.status}
+                                                    {(fee.status === 'pending' && fee.payment_id) 
+                                                        ? t('maintenance.statuses.processing', 'Processing') 
+                                                        : (t(`maintenance.statuses.${fee.status}`, fee.status))}
                                                 </span>
                                             </td>
                                             <td className="text-right font-medium">

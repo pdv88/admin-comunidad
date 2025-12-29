@@ -601,6 +601,12 @@
         "unit": "Unidad",
         "owner": "Propietario",
         "status": "Estado",
+        "statuses": {
+            "paid": "Pagado",
+            "pending": "Pendiente",
+            "overdue": "Vencido",
+            "processing": "Procesando"
+        },
         "processing": "Procesando",
         "no_records": "No se encontraron registros.",
         "success_gen": "Cuotas generadas exitosamente.",

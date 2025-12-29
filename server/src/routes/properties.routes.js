@@ -2,6 +2,10 @@ const express = require('express');
 const router = express.Router();
 const propertiesController = require('../controllers/properties.controller');
 
+const authMiddleware = require('../middleware/auth.middleware');
+
+router.use(authMiddleware);
+
 router.get('/blocks', propertiesController.getAllBlocks);
 router.post('/blocks', propertiesController.createBlock);
 router.put('/blocks/:id', propertiesController.updateBlock); // New route for assigning rep

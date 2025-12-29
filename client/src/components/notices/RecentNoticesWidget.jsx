@@ -36,7 +36,7 @@ const RecentNoticesWidget = () => {
     const tickerItems = [...notices, ...notices]; 
 
     return (
-        <div className="glass-card relative overflow-hidden mb-1 transition-all duration-500 ease-in-out border border-blue-500/20 shadow-sm hover:shadow-md bg-gradient-to-r from-blue-600/40 to-indigo-600/40 dark:from-blue-500/20 dark:to-indigo-500/20">
+        <div className="relative overflow-hidden mb-1 transition-all duration-500 ease-in-out border border-white/20 dark:border-white/10 shadow-sm hover:shadow-lg rounded-2xl backdrop-blur-md bg-white/40 dark:bg-white/5">
             <div className="relative flex items-center px-4 py-3 md:px-6 h-14">
                 {/* Static Icon Badge */}
                 <div className="flex items-center gap-3 shrink-0 z-10 pr-4">
@@ -50,22 +50,26 @@ const RecentNoticesWidget = () => {
 
                 {/* Marquee Container */}
                 <div className="flex-1 overflow-hidden relative h-full flex items-center mask-image-linear-gradient">
-                     <div className="flex items-center gap-8 animate-marquee whitespace-nowrap">
-                        {tickerItems.map((notice, idx) => (
-                            <div key={`${notice.id}-${idx}`} className="flex items-center gap-3 text-gray-800 dark:text-gray-200">
-                                {notice.priority === 'urgent' && (
-                                     <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm">
-                                        FLASH
-                                    </span>
-                                )}
-                                <span className="text-sm font-bold md:text-base">
-                                    {notice.title}:
-                                </span>
-                                <span className="text-sm md:text-base font-normal opacity-90">
-                                    {notice.content}
-                                </span>
-                                {/* Separator */}
-                                <span className="text-blue-500/40 mx-2">•</span>
+                     <div className="flex animate-marquee whitespace-nowrap">
+                        {[...Array(10)].map((_, iteration) => (
+                            <div key={iteration} className="flex items-center gap-8 pr-8 shrink-0">
+                                {notices.map((notice, idx) => (
+                                    <div key={`${iteration}-${notice.id}-${idx}`} className="flex items-center gap-3 text-gray-800 dark:text-gray-200">
+                                        {notice.priority === 'urgent' && (
+                                            <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm">
+                                                FLASH
+                                            </span>
+                                        )}
+                                        <span className="text-sm font-bold md:text-base">
+                                            {notice.title}:
+                                        </span>
+                                        <span className="text-sm md:text-base font-normal opacity-90">
+                                            {notice.content}
+                                        </span>
+                                        {/* Separator */}
+                                        <span className="text-blue-500/40 mx-2">•</span>
+                                    </div>
+                                ))}
                             </div>
                         ))}
                     </div>
@@ -79,7 +83,7 @@ const RecentNoticesWidget = () => {
                     100% { transform: translateX(-50%); } 
                 }
                 .animate-marquee {
-                    animation: marquee ${notices.length * 10}s linear infinite;
+                    animation: marquee ${notices.length * 40}s linear infinite;
                     will-change: transform;
                 }
                 /* Add a mask to fade out the edges of the text area if supported */

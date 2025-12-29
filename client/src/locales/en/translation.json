@@ -606,6 +606,12 @@
         "unit": "Unit",
         "owner": "Owner",
         "status": "Status",
+        "statuses": {
+            "paid": "Paid",
+            "pending": "Pending",
+            "overdue": "Overdue",
+            "processing": "Processing"
+        },
         "processing": "Processing",
         "no_records": "No records found.",
         "success_gen": "Successfully generated fees.",

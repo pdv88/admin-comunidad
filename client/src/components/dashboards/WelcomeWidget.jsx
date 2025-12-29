@@ -23,27 +23,25 @@ const WelcomeWidget = ({ role }) => {
     const fetchPaymentStatus = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`${API_URL}/api/payments?type=own`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+            // Fetch 'my statement' which includes all monthly fees (pending and paid)
+            const res = await fetch(`${API_URL}/api/maintenance/my-statement`, {
+                headers: { 'Authorization': `Bearer ${token}`, 'x-community-id': activeCommunity?.community_id }
             });
+            
             if (res.ok) {
-                const payments = await res.json();
-                const now = new Date();
-                const currentMonth = now.getMonth();
-                const currentYear = now.getFullYear();
-                const thisMonthPayments = payments.filter(p => {
-                    const pDate = new Date(p.created_at);
-                    return pDate.getMonth() === currentMonth && 
-                           pDate.getFullYear() === currentYear &&
-                           p.status === 'confirmed' &&
-                           !p.campaign_id;
-                });
-                const total = thisMonthPayments.reduce((sum, p) => sum + Number(p.amount), 0);
-                setFeeAmount(total);
-                setFeeStatus(total >= MONTHLY_FEE ? 'paid' : 'pending');
+                const fees = await res.json();
+                
+                // Calculate total UNPAID fees
+                const pendingFees = fees.filter(f => f.status === 'pending');
+                const totalUnpaid = pendingFees.reduce((sum, f) => sum + Number(f.amount), 0);
+                
+                setFeeAmount(totalUnpaid);
+                
+                // If 0 unpaid, status is 'paid' (Up to date), otherwise 'pending'
+                setFeeStatus(totalUnpaid === 0 ? 'paid' : 'pending');
             }
         } catch (error) {
-            console.error('Error fetching payments:', error);
+            console.error('Error fetching fees:', error);
             setFeeStatus('error');
         }
     };
@@ -73,30 +71,32 @@ const WelcomeWidget = ({ role }) => {
             {/* Right: Resident Quick Actions & Status */}
             {isResident && (
                 <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center">
-                    {/* Monthly Fee Status Pill */}
+                    {/* Monthly Fee Status Pill - Clickable */}
                     {feeStatus !== 'loading' ? (
-                        <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${
-                            feeStatus === 'paid' 
-                            ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800/50' 
-                            : 'bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-800/50'
-                        }`}>
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${
-                                feeStatus === 'paid' ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'
+                        <Link to="/app/maintenance" className="flex items-center gap-3 px-4 py-3 rounded-xl border border-white/20 dark:border-white/10 backdrop-blur-md transition-all shadow-md hover:shadow-lg bg-white/40 dark:bg-white/5">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg backdrop-blur-sm shadow-inner ${
+                                feeStatus === 'paid' ? 'bg-green-500/10 text-green-600' : 'bg-orange-500/10 text-orange-600'
                             }`}>
                                 {feeStatus === 'paid' ? '✓' : '!'}
                             </div>
                             <div className="flex flex-col">
-                                <span className={`text-xs font-bold uppercase tracking-wider ${
-                                     feeStatus === 'paid' ? 'text-green-700 dark:text-green-400' : 'text-orange-700 dark:text-orange-400'
-                                }`}>
+                                <span className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                                     {t('dashboard.monthly_fee')}
                                 </span>
+                                <div className={`text-xs font-bold uppercase tracking-wider mb-0.5 ${
+                                     feeStatus === 'paid' ? 'text-green-700 dark:text-green-400' : 'text-orange-700 dark:text-orange-400'
+                                }`}>
+                                    {feeStatus === 'paid' ? t('maintenance.statuses.paid', 'Paid') : t('maintenance.statuses.pending', 'Pending')}
+                                </div>
                                 <div className="flex items-baseline gap-1">
-                                    <span className="font-bold text-gray-900 dark:text-white">€{feeAmount.toFixed(0)}</span>
-                                    <span className="text-xs text-gray-500">/ {MONTHLY_FEE.toFixed(0)}</span>
+                                    {feeStatus === 'paid' ? (
+                                        <span className="font-bold text-gray-900 dark:text-white">€0.00</span>
+                                    ) : (
+                                        <span className="font-bold text-gray-900 dark:text-white">€{feeAmount.toFixed(2)}</span>
+                                    )}
                                 </div>
                             </div>
-                        </div>
+                        </Link>
                     ) : (
                         <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-white/50 dark:bg-white/5">
                             <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-white/10 animate-pulse"></div>
@@ -108,20 +108,16 @@ const WelcomeWidget = ({ role }) => {
                     )}
 
                     {/* Separator (Desktop) */}
-                    <div className="hidden md:block w-px h-12 bg-gray-200 dark:bg-gray-700 mx-2"></div>
+                    <div className="hidden md:block w-px h-12 bg-gradient-to-b from-transparent via-gray-300 dark:via-gray-600 to-transparent mx-2"></div>
 
                     {/* Quick Buttons */}
-                     <div className="grid grid-cols-3 gap-3">
-                         <Link to="/app/maintenance" className="flex flex-col items-center justify-center gap-1 p-3 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 dark:text-blue-400 transition-colors">
-                            <span className="text-xl">💳</span>
-                            <span className="text-[10px] font-bold uppercase">{t('dashboard.pay')}</span>
-                        </Link>
-                         <Link to="/app/notices" className="flex flex-col items-center justify-center gap-1 p-3 rounded-xl bg-violet-50 text-violet-600 hover:bg-violet-100 dark:bg-violet-900/20 dark:hover:bg-violet-900/30 dark:text-violet-400 transition-colors">
-                            <span className="text-xl">🔑</span>
+                     <div className="flex gap-3">
+                         <Link to="/app/notices" className="flex flex-col items-center justify-center gap-1 p-3 rounded-xl backdrop-blur-md bg-white/40 dark:bg-white/5 border border-white/20 dark:border-white/10 text-violet-700 dark:text-violet-400 hover:shadow-md transition-all w-16 shadow-sm">
+                            <span className="text-xl drop-shadow-sm">🔑</span>
                             <span className="text-[10px] font-bold uppercase">{t('dashboard.visit')}</span>
                         </Link>
-                         <Link to="/app/reports" className="flex flex-col items-center justify-center gap-1 p-3 rounded-xl bg-orange-50 text-orange-600 hover:bg-orange-100 dark:bg-orange-900/20 dark:hover:bg-orange-900/30 dark:text-orange-400 transition-colors">
-                            <span className="text-xl">⚠️</span>
+                         <Link to="/app/reports" className="flex flex-col items-center justify-center gap-1 p-3 rounded-xl backdrop-blur-md bg-white/40 dark:bg-white/5 border border-white/20 dark:border-white/10 text-orange-700 dark:text-orange-400 hover:shadow-md transition-all w-16 shadow-sm">
+                            <span className="text-xl drop-shadow-sm">⚠️</span>
                             <span className="text-[10px] font-bold uppercase">{t('dashboard.report_btn')}</span>
                         </Link>
                     </div>

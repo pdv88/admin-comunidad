@@ -68,7 +68,7 @@ const ActiveCampaignsWidget = (props) => {
                 ) : (
                     <div className="space-y-6">
                         {campaigns.map(campaign => (
-                             <div key={campaign.id}>
+                             <div key={campaign.id} className="bg-white/40 dark:bg-white/5 border border-white/20 dark:border-white/10 rounded-xl p-4 transition-all hover:shadow-lg">
                                 <div className="flex justify-between items-center mb-1">
                                     <h3 className="font-bold text-gray-800 dark:text-white text-sm">{campaign.name}</h3>
                                 </div>
