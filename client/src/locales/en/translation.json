@@ -632,6 +632,9 @@
         "success_gen": "Successfully generated fees.",
         "error_gen": "Error generating fees.",
         "no_records_export": "No records to export.",
-        "pay": "Pay"
+        "pay": "Pay",
+        "review": "Review Payment",
+        "register": "Register",
+        "record_payment": "Record Payment"
     }
 }

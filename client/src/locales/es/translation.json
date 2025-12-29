@@ -627,6 +627,9 @@
         "success_gen": "Cuotas generadas exitosamente.",
         "error_gen": "Error al generar cuotas.",
         "no_records_export": "No hay registros para exportar.",
-        "pay": "Pagar"
+        "pay": "Pagar",
+        "review": "Revisar Pago",
+        "register": "Registrar",
+        "record_payment": "Registrar Pago"
     }
 }
