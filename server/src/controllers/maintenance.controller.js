@@ -125,6 +125,7 @@ exports.generateMonthlyFees = async (req, res) => {
                         if (ownerProfile && ownerProfile.email) {
                             await sendEmail({
                                 email: ownerProfile.email,
+                                from: `${communityName} <info@habiio.com>`,
                                 subject: `Nuevo Recibo de Mantenimiento - ${communityName} - ${period}`,
                                 templateName: 'monthly_fee_bill.html',
                                 context: {
@@ -425,6 +426,7 @@ exports.markAsPaid = async (req, res) => {
 
                     await sendEmail({
                         email: ownerEmail,
+                        from: `${communityData?.name} <info@habiio.com>`,
                         subject: `Comprobante de Pago - ${communityData?.name}`,
                         templateName: 'payment_receipt.html',
                         context: {
@@ -592,6 +594,7 @@ exports.resendFeeEmail = async (req, res) => {
 
         await sendEmail({
             email: ownerEmail,
+            from: `${communityName} <info@habiio.com>`,
             subject: emailConfig.subject,
             templateName: emailConfig.template,
             context: emailConfig.context

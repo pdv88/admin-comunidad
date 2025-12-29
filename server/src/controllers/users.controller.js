@@ -258,6 +258,7 @@ exports.inviteUser = async (req, res) => {
                 const sendEmail = require('../utils/sendEmail');
                 await sendEmail({
                     email: email,
+                    from: `${communityName} <info@habiio.com>`,
                     subject: `Invitación a ${communityName}`,
                     templateName: 'invitation.html',
                     context: {

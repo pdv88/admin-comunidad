@@ -6,7 +6,7 @@ const path = require('path');
 // Initialize Resend with API Key
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const sendEmail = async ({ email, subject, templateName, context }) => {
+const sendEmail = async ({ email, subject, templateName, context, from }) => {
     try {
         // Read template
         const templatePath = path.join(__dirname, `../../email_templates/${templateName}`);
@@ -18,7 +18,7 @@ const sendEmail = async ({ email, subject, templateName, context }) => {
 
         // Send email using Resend API (HTTP)
         const data = await resend.emails.send({
-            from: process.env.EMAIL_FROM || 'Admin Comunidad <onboarding@resend.dev>',
+            from: from || process.env.EMAIL_FROM || 'Admin Comunidad <onboarding@resend.dev>',
             to: email,
             subject: subject,
             html: html,
