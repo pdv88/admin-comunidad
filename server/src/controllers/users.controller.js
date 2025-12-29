@@ -89,13 +89,19 @@ exports.inviteUser = async (req, res) => {
 
         if (memberError || !membership) throw new Error('Inviter is not a member of this community');
 
+        // Helper to handle potential arrays from Supabase
+        const inviterRoleData = Array.isArray(membership.roles) ? membership.roles[0] : membership.roles;
+        const communityData = Array.isArray(membership.communities) ? membership.communities[0] : membership.communities;
+
+        const inviterRole = inviterRoleData?.name;
+
         const allowedRoles = ['president', 'admin', 'secretary'];
-        if (!allowedRoles.includes(membership.roles.name)) {
+        if (!allowedRoles.includes(inviterRole)) {
             throw new Error('Insufficient permissions to invite users');
         }
 
-        const communityName = membership.communities?.name || 'su comunidad';
-        const communityLogo = membership.communities?.logo_url;
+        const communityName = communityData?.name || 'su comunidad';
+        const communityLogo = communityData?.logo_url;
 
         // 2. Check if user already exists
         let userId;
@@ -116,7 +122,7 @@ exports.inviteUser = async (req, res) => {
                 context: {
                     communityName: communityName,
                     communityLogo: communityLogo,
-                    link: (process.env.CLIENT_URL || 'http://localhost:5173')
+                    link: (process.env.CLIENT_URL || 'https://habiio.com')
                 }
             });
 
@@ -130,7 +136,7 @@ exports.inviteUser = async (req, res) => {
                 const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.generateLink({
                     type: 'invite', // 'invite' creates a link to confirm/set password
                     email: email,
-                    options: { redirectTo: (process.env.CLIENT_URL || 'http://localhost:5173') + '/update-password' }
+                    options: { redirectTo: (process.env.CLIENT_URL || 'https://habiio.com') + '/update-password' }
                 });
 
                 if (inviteError || !inviteData.user) {
@@ -165,7 +171,7 @@ exports.inviteUser = async (req, res) => {
                         type: 'invite',
                         email: email,
                         options: {
-                            redirectTo: (process.env.CLIENT_URL || 'http://localhost:5173') + '/update-password'
+                            redirectTo: (process.env.CLIENT_URL || 'https://habiio.com') + '/update-password'
                         }
                     });
 
@@ -173,10 +179,30 @@ exports.inviteUser = async (req, res) => {
                     linkActionLink = linkData.properties.action_link;
 
                 } catch (creationError) {
-                    console.error("Create User Failed:", creationError);
-                    // If creation failed but it was a duplicate error that generateLink missed?
-                    // We can't do much if both failed. Rethrow.
-                    throw creationError;
+                    // Check if error is "email_exists" (user already in Auth but not in Profiles/Zombie)
+                    if (creationError?.code === 'email_exists' || creationError?.status === 422) {
+                        try {
+                            // Recover: fetch User ID by generating a magic link (which returns user object)
+                            const { data: magicData, error: magicError } = await supabaseAdmin.auth.admin.generateLink({
+                                type: 'magiclink',
+                                email: email
+                            });
+
+                            if (magicError || !magicData.user) {
+                                throw creationError; // Re-throw original if recovery fails
+                            }
+
+                            userId = magicData.user.id;
+                            linkActionLink = magicData.properties.action_link;
+
+                        } catch (recoveryError) {
+                            console.error("Recovery Failed:", recoveryError);
+                            throw creationError;
+                        }
+                    } else {
+                        console.error("Create User Failed:", creationError);
+                        throw creationError;
+                    }
                 }
             }
 
