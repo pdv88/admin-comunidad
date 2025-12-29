@@ -639,6 +639,16 @@
         "pay": "Pagar",
         "review": "Revisar Pago",
         "register": "Registrar",
-        "record_payment": "Registrar Pago"
+        "record_payment": "Registrar Pago",
+        "sending_email": "Enviando correo...",
+        "email_sent": "Correo enviado exitosamente",
+        "email_error": "Error al enviar correo",
+        "delete_success": "Cuota eliminada exitosamente",
+        "delete_error": "Error al eliminar cuota",
+        "payment_confirmed": "Pago confirmado exitosamente",
+        "payment_rejected": "Pago rechazado",
+        "delete_title": "Eliminar Cuota de Mantenimiento",
+        "delete_confirm": "¿Estás seguro de que quieres eliminar esta cuota? Esta acción no se puede deshacer.",
+        "warning_gen_zero": "Advertencia: No se generaron nuevas cuotas. Todas las unidades ocupadas ya podrían estar facturadas para este periodo."
     }
 }

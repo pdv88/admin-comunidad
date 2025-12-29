@@ -644,6 +644,16 @@
         "pay": "Pay",
         "review": "Review Payment",
         "register": "Register",
-        "record_payment": "Record Payment"
+        "record_payment": "Record Payment",
+        "sending_email": "Sending email...",
+        "email_sent": "Email sent successfully",
+        "email_error": "Error sending email",
+        "delete_success": "Fee deleted successfully",
+        "delete_error": "Error deleting fee",
+        "payment_confirmed": "Payment confirmed successfully",
+        "payment_rejected": "Payment rejected",
+        "delete_title": "Delete Maintenance Fee",
+        "delete_confirm": "Are you sure you want to delete this fee? This action cannot be undone.",
+        "warning_gen_zero": "Warning: No new fees generated. All occupied units may already be billed for this period."
     }
 }

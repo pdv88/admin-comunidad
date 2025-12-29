@@ -558,7 +558,7 @@ const Maintenance = () => {
                         </div>
                     )}
                     
-                    {message && <p className={`mb-4 text-sm ${message.includes('Error') ? 'text-red-500' : 'text-green-500'}`}>{message}</p>}
+
 
 
                     {loading ? (
@@ -774,7 +774,7 @@ const Maintenance = () => {
                                     onSuccess={() => {
                                         setPaymentModalOpen(false);
                                         fetchFees(); // Refresh status
-                                        setMessage(t('payment.success', 'Payment uploaded successfully'));
+                                        setToast({ message: t('payment.success', 'Payment uploaded successfully'), type: 'success' });
                                     }} 
                                     onCancel={() => setPaymentModalOpen(false)}
                                     // Pass pre-filled data
@@ -794,11 +794,11 @@ const Maintenance = () => {
                     onClose={() => setReviewModalOpen(false)}
                     paymentId={selectedReviewId}
                     onConfirm={() => {
-                        setMessage(t('maintenance.payment_confirmed', 'Payment confirmed successfully'));
+                        setToast({ message: t('maintenance.payment_confirmed', 'Payment confirmed successfully'), type: 'success' });
                         fetchFees();
                     }}
                     onReject={() => {
-                        setMessage(t('maintenance.payment_rejected', 'Payment rejected'));
+                        setToast({ message: t('maintenance.payment_rejected', 'Payment rejected'), type: 'info' });
                         fetchFees();
                     }}
                 />
