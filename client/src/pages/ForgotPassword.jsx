@@ -7,16 +7,29 @@ import Footer from '../assets/components/Footer';
 
 const ForgotPassword = () => {
     const [email, setEmail] = useState('');
-    const [message, setMessage] = useState('');
-    const [error, setError] = useState('');
+    const [message, setMessage] = useState(null);
+    const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [cooldown, setCooldown] = useState(0);
     const { t } = useTranslation();
+
+    useEffect(() => {
+        let interval = null;
+        if (cooldown > 0) {
+            interval = setInterval(() => {
+                setCooldown((prev) => prev - 1);
+            }, 1000);
+        } else {
+            clearInterval(interval);
+        }
+        return () => clearInterval(interval);
+    }, [cooldown]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        setMessage('');
-        setError('');
+        setMessage(null);
+        setError(null);
 
         try {
             const res = await fetch(`${API_URL}/api/auth/forgot-password`, {
@@ -28,7 +41,8 @@ const ForgotPassword = () => {
             const data = await res.json();
 
             if (res.ok) {
-                 setMessage(t('auth.check_email'));
+                setMessage(t('auth.check_email'));
+                setCooldown(60); // 60 seconds cooldown
             } else {
                 throw new Error(data.error || 'Failed to send reset email');
             }
@@ -77,10 +91,15 @@ const ForgotPassword = () => {
 
                                     <button 
                                         type="submit" 
-                                        disabled={loading} 
+                                        disabled={loading || cooldown > 0} 
                                         className="w-full inline-flex justify-center items-center gap-x-3 text-center bg-gradient-to-r from-blue-600 via-violet-600 to-blue-600 bg-[length:200%_auto] text-white text-sm font-semibold rounded-full hover:shadow-lg hover:bg-right active:scale-95 transition-all duration-500 py-3 px-6 shadow-lg shadow-blue-500/30 disabled:opacity-50 disabled:pointer-events-none"
                                     >
-                                        {loading ? t('auth.sending') : t('auth.reset_pass_btn')}
+                                        {loading 
+                                            ? t('auth.sending') 
+                                            : cooldown > 0 
+                                                ? `Reenviar en ${cooldown}s` 
+                                                : t('auth.reset_pass_btn')
+                                        }
                                     </button>
                                 </div>
                             </form>
