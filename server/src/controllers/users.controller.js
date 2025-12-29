@@ -255,20 +255,17 @@ exports.inviteUser = async (req, res) => {
 
             // Send Custom Email
             if (linkActionLink) {
-                // Send Custom Email
-                if (linkActionLink) {
-                    const sendEmail = require('../utils/sendEmail');
-                    await sendEmail({
-                        email: email,
-                        subject: `Invitación a ${communityName} - Admin Comunidad`,
-                        templateName: 'invitation.html',
-                        context: {
-                            communityName: communityName,
-                            communityLogo: communityLogo,
-                            link: linkActionLink
-                        }
-                    });
-                }
+                const sendEmail = require('../utils/sendEmail');
+                await sendEmail({
+                    email: email,
+                    subject: `Invitación a ${communityName}`,
+                    templateName: 'invitation.html',
+                    context: {
+                        communityName: communityName,
+                        communityLogo: communityLogo,
+                        link: linkActionLink
+                    }
+                });
             }
 
             // Ensure profile exists AND update metadata to ensures name is synced
