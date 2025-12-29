@@ -53,7 +53,7 @@ const WelcomeWidget = ({ role }) => {
                  <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-400 dark:to-violet-400 mb-2">
                     {t('dashboard.welcome', 'Welcome')}, <br className="md:hidden"/>
                     <span className="text-gray-800 dark:text-white text-3xl block md:inline md:ml-2">
-                        {user?.user_metadata?.full_name || user?.email}
+                        {user?.profile?.full_name || user?.user_metadata?.full_name || user?.email}
                     </span>
                 </h1>
                 <div className="flex flex-wrap gap-2 text-sm text-gray-600 dark:text-neutral-400 items-center">

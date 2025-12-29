@@ -271,8 +271,15 @@ exports.inviteUser = async (req, res) => {
                 }
             }
 
-            // Ensure profile exists
+            // Ensure profile exists AND update metadata to ensures name is synced
             if (userId) {
+                // Sync metadata specifically for recovered/zombie users who might have empty metadata
+                await supabaseAdmin.auth.admin.updateUserById(userId, {
+                    user_metadata: {
+                        full_name: fullName
+                    }
+                });
+
                 await supabaseAdmin.from('profiles').upsert({
                     id: userId,
                     email: email,

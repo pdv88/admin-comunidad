@@ -114,12 +114,12 @@ const DashboardLayout = ({ children }) => {
                 <div className="p-4 border-t border-white/20 dark:border-neutral-700/50 bg-white/10 dark:bg-black/10 shrink-0 backdrop-blur-sm rounded-b-3xl">
                     <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-3 overflow-hidden">
-                             <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-violet-500 flex items-center justify-center text-white font-bold text-sm shrink-0">
-                                {(user?.user_metadata?.full_name || user?.email || 'U').charAt(0).toUpperCase()}
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-violet-500 flex items-center justify-center text-white font-bold text-sm shrink-0">
+                                {(user?.profile?.full_name || user?.user_metadata?.full_name || user?.email || 'U').charAt(0).toUpperCase()}
                             </div>
                             <div className="flex flex-col truncate">
                                 <Link to="/app/settings" className="text-sm font-bold text-gray-800 dark:text-neutral-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors truncate">
-                                    {user?.user_metadata?.full_name || user?.email}
+                                    {user?.profile?.full_name || user?.user_metadata?.full_name || user?.email}
                                 </Link>
                                 <span className="text-xs text-gray-500 dark:text-gray-400 capitalize truncate">
                                     {displayRole(activeCommunity?.roles?.name)}
