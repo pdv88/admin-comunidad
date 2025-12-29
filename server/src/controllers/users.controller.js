@@ -89,17 +89,6 @@ exports.inviteUser = async (req, res) => {
 
         if (memberError || !membership) throw new Error('Inviter is not a member of this community');
 
-        const fs = require('fs');
-        const path = require('path');
-        const logPath = path.join(__dirname, '../../debug_invite.log');
-
-        fs.appendFileSync(logPath, `\n\n--- [${new Date().toISOString()}] Invite User Start ---\n`);
-        fs.appendFileSync(logPath, `Inviter: ${inviterUser.id}, Community: ${communityId}\n`);
-        fs.appendFileSync(logPath, `Environment CLIENT_URL: "${process.env.CLIENT_URL}"\n`);
-
-        console.log('InviteUser Membership Data:', JSON.stringify(membership, null, 2));
-        fs.appendFileSync(logPath, `Membership Query Result: ${JSON.stringify(membership, null, 2)}\n`);
-
         // Helper to handle potential arrays from Supabase
         const inviterRoleData = Array.isArray(membership.roles) ? membership.roles[0] : membership.roles;
         // Check both array/object cases for communities
@@ -113,7 +102,6 @@ exports.inviteUser = async (req, res) => {
 
         if (!finalCommunityName) {
             console.log('Community Data missing in join, executing fallback fetch...');
-            fs.appendFileSync(logPath, `Fallback: Fetching community ${communityId} directly...\n`);
 
             const { data: cData } = await supabaseAdmin
                 .from('communities')
@@ -124,9 +112,6 @@ exports.inviteUser = async (req, res) => {
             if (cData) {
                 finalCommunityName = cData.name;
                 finalCommunityLogo = cData.logo_url;
-                fs.appendFileSync(logPath, `Fallback Success: ${finalCommunityName}\n`);
-            } else {
-                fs.appendFileSync(logPath, `Fallback Failed: cData is null\n`);
             }
         }
 
@@ -148,11 +133,6 @@ exports.inviteUser = async (req, res) => {
             !!process.env.RAILWAY_GIT_COMMIT_SHA;
 
         const baseUrl = isProduction ? 'https://habiio.com' : (process.env.CLIENT_URL || 'https://habiio.com');
-
-        fs.appendFileSync(logPath, `Derived Community Data - Name: "${communityName}", Logo: "${communityLogo}"\n`);
-        fs.appendFileSync(logPath, `Environment CLIENT_URL: "${process.env.CLIENT_URL}", NODE_ENV: "${process.env.NODE_ENV}" -> Final BaseUrl: "${baseUrl}"\n`);
-
-
 
         // 2. Check if user already exists
         let userId;
@@ -275,19 +255,20 @@ exports.inviteUser = async (req, res) => {
 
             // Send Custom Email
             if (linkActionLink) {
-                console.log('Sending Invitation Email. Link:', linkActionLink);
-                fs.appendFileSync(logPath, `Generated Link: ${linkActionLink}\n`);
-                const sendEmail = require('../utils/sendEmail');
-                await sendEmail({
-                    email: email,
-                    subject: `Invitación a ${communityName} - Admin Comunidad`,
-                    templateName: 'invitation.html',
-                    context: {
-                        communityName: communityName,
-                        communityLogo: communityLogo,
-                        link: linkActionLink
-                    }
-                });
+                // Send Custom Email
+                if (linkActionLink) {
+                    const sendEmail = require('../utils/sendEmail');
+                    await sendEmail({
+                        email: email,
+                        subject: `Invitación a ${communityName} - Admin Comunidad`,
+                        templateName: 'invitation.html',
+                        context: {
+                            communityName: communityName,
+                            communityLogo: communityLogo,
+                            link: linkActionLink
+                        }
+                    });
+                }
             }
 
             // Ensure profile exists
