@@ -312,9 +312,11 @@ exports.updateProfile = async (req, res) => {
         if (error || !user) throw new Error('Invalid token');
 
         // 1. Update Auth Metadata
-        const { error: authError } = await supabase.auth.updateUser({
-            data: { full_name }
-        });
+        // 1. Update Auth Metadata
+        const { error: authError } = await require('../config/supabaseAdmin').auth.admin.updateUserById(
+            user.id,
+            { user_metadata: { full_name } }
+        );
         if (authError) throw authError;
 
         // 2. Update Public Profile
