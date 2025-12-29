@@ -89,9 +89,45 @@ exports.inviteUser = async (req, res) => {
 
         if (memberError || !membership) throw new Error('Inviter is not a member of this community');
 
+        const fs = require('fs');
+        const path = require('path');
+        const logPath = path.join(__dirname, '../../debug_invite.log');
+
+        fs.appendFileSync(logPath, `\n\n--- [${new Date().toISOString()}] Invite User Start ---\n`);
+        fs.appendFileSync(logPath, `Inviter: ${inviterUser.id}, Community: ${communityId}\n`);
+
+        console.log('InviteUser Membership Data:', JSON.stringify(membership, null, 2));
+        fs.appendFileSync(logPath, `Membership Query Result: ${JSON.stringify(membership, null, 2)}\n`);
+
         // Helper to handle potential arrays from Supabase
         const inviterRoleData = Array.isArray(membership.roles) ? membership.roles[0] : membership.roles;
-        const communityData = Array.isArray(membership.communities) ? membership.communities[0] : membership.communities;
+        // Check both array/object cases for communities
+        const communityData = (membership.communities && Array.isArray(membership.communities))
+            ? membership.communities[0]
+            : (membership.communities || null);
+
+        // Fallback: If communityData is missing (e.g. join failed), fetch it directly
+        let finalCommunityName = communityData?.name;
+        let finalCommunityLogo = communityData?.logo_url;
+
+        if (!finalCommunityName) {
+            console.log('Community Data missing in join, executing fallback fetch...');
+            fs.appendFileSync(logPath, `Fallback: Fetching community ${communityId} directly...\n`);
+
+            const { data: cData } = await supabaseAdmin
+                .from('communities')
+                .select('name, logo_url')
+                .eq('id', communityId)
+                .single();
+
+            if (cData) {
+                finalCommunityName = cData.name;
+                finalCommunityLogo = cData.logo_url;
+                fs.appendFileSync(logPath, `Fallback Success: ${finalCommunityName}\n`);
+            } else {
+                fs.appendFileSync(logPath, `Fallback Failed: cData is null\n`);
+            }
+        }
 
         const inviterRole = inviterRoleData?.name;
 
@@ -100,8 +136,12 @@ exports.inviteUser = async (req, res) => {
             throw new Error('Insufficient permissions to invite users');
         }
 
-        const communityName = communityData?.name || 'su comunidad';
-        const communityLogo = communityData?.logo_url;
+        const communityName = finalCommunityName || 'su comunidad';
+        const communityLogo = finalCommunityLogo;
+
+        fs.appendFileSync(logPath, `Derived Community Data - Name: "${communityName}", Logo: "${communityLogo}"\n`);
+
+
 
         // 2. Check if user already exists
         let userId;
@@ -113,6 +153,19 @@ exports.inviteUser = async (req, res) => {
 
         if (existingProfile) {
             userId = existingProfile.id;
+
+            // Generate magic link for existing user to redirect to update-password
+            // This allows them to easily sign in and update credentials if needed, or just access the app.
+            const { data: magicLinkData, error: magicLinkError } = await supabaseAdmin.auth.admin.generateLink({
+                type: 'magiclink',
+                email: email,
+                options: {
+                    redirectTo: (process.env.CLIENT_URL || 'https://habiio.com') + '/update-password'
+                }
+            });
+
+            const link = magicLinkData?.properties?.action_link || ((process.env.CLIENT_URL || 'https://habiio.com') + '/login');
+
             // User exists: Send a notification email that they were added to a new community
             const sendEmail = require('../utils/sendEmail');
             await sendEmail({
@@ -122,7 +175,7 @@ exports.inviteUser = async (req, res) => {
                 context: {
                     communityName: communityName,
                     communityLogo: communityLogo,
-                    link: (process.env.CLIENT_URL || 'https://habiio.com')
+                    link: link
                 }
             });
 
@@ -185,7 +238,10 @@ exports.inviteUser = async (req, res) => {
                             // Recover: fetch User ID by generating a magic link (which returns user object)
                             const { data: magicData, error: magicError } = await supabaseAdmin.auth.admin.generateLink({
                                 type: 'magiclink',
-                                email: email
+                                email: email,
+                                options: {
+                                    redirectTo: (process.env.CLIENT_URL || 'https://habiio.com') + '/update-password'
+                                }
                             });
 
                             if (magicError || !magicData.user) {
@@ -208,6 +264,8 @@ exports.inviteUser = async (req, res) => {
 
             // Send Custom Email
             if (linkActionLink) {
+                console.log('Sending Invitation Email. Link:', linkActionLink);
+                fs.appendFileSync(logPath, `Generated Link: ${linkActionLink}\n`);
                 const sendEmail = require('../utils/sendEmail');
                 await sendEmail({
                     email: email,
