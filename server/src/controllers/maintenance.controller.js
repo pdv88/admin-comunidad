@@ -163,50 +163,143 @@ exports.getCommunityStatus = async (req, res) => {
             return res.status(403).json({ error: 'Unauthorized' });
         }
 
-        const { period } = req.query;
+        const {
+            page = 1,
+            limit = 10,
+            sortBy = 'period',
+            sortOrder = 'desc',
+            period,
+            status,
+            search,
+            block
+        } = req.query;
 
-        // Fetch all fees, optionally filtered by period
+        // Parse to Integers
+        const pageNum = parseInt(page);
+        const limitNum = parseInt(limit);
+
+        // Calculate Range
+        const from = (pageNum - 1) * limitNum;
+        const to = from + limitNum - 1;
+
+        console.log(`Getting Status: Page ${pageNum}, Limit ${limitNum}, Range ${from}-${to}, Search: ${search || ''}, Block: ${block || ''}`);
+
+        // Base Query
+        const useInnerJoin = !!search || !!block;
+
+        let selectString = `
+            id, period, amount, status, payment_id, updated_at,
+            units${useInnerJoin ? '!inner' : ''} (
+                id,
+                unit_number,
+                blocks${useInnerJoin ? '!inner' : ''} (name, community_id),
+                unit_owners${useInnerJoin ? '!inner' : ''} (
+                    profile:profile_id (full_name, email)
+                )
+            )
+        `;
+
         let query = supabaseAdmin
             .from('monthly_fees')
-            .select(`
-                *,
-                units (
-                    id,
-                    unit_number,
-                    blocks (name),
-                    unit_owners (
-                        profile:profile_id (full_name, email, phone)
-                    )
-                )
-            `)
-            .eq('community_id', communityId)
-            .order('period', { ascending: false });
+            .select(selectString, { count: 'exact' })
+            .eq('community_id', communityId);
 
+        // Filters
         if (period) {
-            query = query.eq('period', period);
+            // Assume period is YYYY-MM. 
+            const startOfMonth = `${period}-01`;
+            const [year, month] = period.split('-').map(Number);
+            const endDate = new Date(year, month, 0).toISOString().split('T')[0];
+
+            query = query.gte('period', startOfMonth).lte('period', endDate);
         }
 
-        const { data, error } = await query;
+        if (status) query = query.eq('status', status);
+
+        // Safe Search: Filter by Unit Number (Two-step)
+        if (search) {
+            const { data: matchingUnits } = await supabaseAdmin
+                .from('units')
+                .select('id, blocks!inner(community_id)')
+                .ilike('unit_number', `%${search}%`)
+                .eq('blocks.community_id', communityId);
+
+            const validUnitIds = matchingUnits?.map(u => u.id) || [];
+
+            if (validUnitIds.length > 0) {
+                query = query.in('unit_id', validUnitIds);
+            } else {
+                query = query.eq('id', '00000000-0000-0000-0000-000000000000');
+            }
+        }
+
+        // Safe Search: Filter by Block Name (Two-step)
+        if (block) {
+            // Find units in matching blocks
+            const { data: matchingUnitsInBlock } = await supabaseAdmin
+                .from('units')
+                .select('id, blocks!inner(name)')
+                .ilike('blocks.name', `%${block}%`)
+                .eq('blocks.community_id', communityId);
+
+            const validUnitIds = matchingUnitsInBlock?.map(u => u.id) || [];
+
+            if (validUnitIds.length > 0) {
+                query = query.in('unit_id', validUnitIds);
+            } else {
+                query = query.eq('id', '00000000-0000-0000-0000-000000000000');
+            }
+        }
+
+        // Sorting
+        // IMPORTANT: Always add a secondary sort by ID to ensure deterministic pagination!
+        if (sortBy === 'unit') {
+            // Sort by Foreign Column: units(unit_number)
+            // Note: This syntax works in recent JS client versions for One-to-One or Many-to-One
+            query = query.order('unit_number', { foreignTable: 'units', ascending: sortOrder === 'asc' });
+        } else if (sortBy === 'block') {
+            // Sorting by nested foreign column is hard (units -> blocks -> name).
+            // Fallback: Sort by Unit Number as a proxy, or Period.
+            // Limitation: Nested sort not fully supported in simple syntax.
+            query = query.order('period', { ascending: sortOrder === 'asc' });
+        } else if (sortBy === 'status') {
+            query = query.order('status', { ascending: sortOrder === 'asc' });
+        } else {
+            query = query.order(sortBy, { ascending: sortOrder === 'asc' });
+        }
+
+        // Secondary deterministic sort
+        query = query.order('id', { ascending: true });
+
+        // Pagination
+        query = query.range(from, to);
+
+        const { data, count, error } = await query;
         if (error) throw error;
 
-        // Process data to be UI-friendly (flatten unit owners)
+        // Process data
         const result = data.map(fee => {
-            // Get primary owner or first owner
             const owner = fee.units?.unit_owners?.[0]?.profile || { full_name: 'No Owner' };
             return {
                 id: fee.id,
                 period: fee.period,
                 amount: fee.amount,
                 status: fee.status,
-                payment_id: fee.payment_id, // include payment link
+                payment_id: fee.payment_id,
                 unit_number: fee.units?.unit_number,
                 block_name: fee.units?.blocks?.name,
                 owner_name: owner.full_name,
-                owner_email: owner.email
+                owner_email: owner.email,
+                updated_at: fee.updated_at
             };
         });
 
-        res.json(result);
+        res.json({
+            data: result,
+            page: parseInt(page),
+            totalPages: Math.ceil(count / limit),
+            totalCount: count
+        });
 
     } catch (error) {
         res.status(400).json({ error: error.message });
@@ -281,15 +374,77 @@ exports.markAsPaid = async (req, res) => {
         };
         if (paymentId) updateData.payment_id = paymentId;
 
+        // 1. Update Fee Status
         const { data, error } = await supabaseAdmin
             .from('monthly_fees')
             .update(updateData)
             .eq('id', feeId)
             .eq('community_id', communityId)
-            .select()
+            .select(`
+                *,
+                units (
+                    id,
+                    unit_number,
+                    blocks (name),
+                    unit_owners (
+                        profile_id,
+                        profile:profile_id (email, full_name)
+                    )
+                )
+            `)
             .single();
 
         if (error) throw error;
+
+        // 2. Prepare Receipt Email (Async)
+        (async () => {
+            try {
+                // Determine owner email
+                const unitOwnerLink = data.units?.unit_owners?.[0];
+                const ownerProfile = unitOwnerLink?.profile;
+                let ownerEmail = ownerProfile?.email;
+
+                // Fallback fetch if missing email
+                if (!ownerEmail && unitOwnerLink?.profile_id) {
+                    const { data: { user } } = await supabaseAdmin.auth.admin.getUserById(unitOwnerLink.profile_id);
+                    if (user) ownerEmail = user.email;
+                }
+
+                if (ownerEmail) {
+                    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+
+                    // Fetch Community Info
+                    const { data: communityData } = await supabaseAdmin
+                        .from('communities')
+                        .select('name, logo_url')
+                        .eq('id', communityId)
+                        .single();
+
+                    // Format Amount
+                    const formatter = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' });
+
+                    await sendEmail({
+                        email: ownerEmail,
+                        subject: `Comprobante de Pago - ${communityData?.name}`,
+                        templateName: 'payment_receipt.html',
+                        context: {
+                            user_name: ownerProfile?.full_name || 'Vecino',
+                            amount_formatted: formatter.format(data.amount),
+                            period_name: data.period, // Could format date better
+                            unit_details: `${data.units?.blocks?.name} - ${data.units?.unit_number}`,
+                            community_name: communityData?.name,
+                            community_logo: communityData?.logo_url,
+                            payment_date: new Date().toLocaleDateString('es-ES'),
+                            payment_id: paymentId || data.id.slice(0, 8),
+                            link: `${clientUrl}/app/maintenance`
+                        }
+                    });
+                    // console.log(`Receipt sent to ${ownerEmail}`);
+                }
+            } catch (emailErr) {
+                console.error("Failed to send receipt email:", emailErr);
+            }
+        })();
 
         res.json(data);
     } catch (error) {
@@ -403,10 +558,27 @@ exports.resendFeeEmail = async (req, res) => {
         const communityName = communityData?.name || 'Su Comunidad';
         const communityLogo = communityData?.logo_url;
 
-        await sendEmail({
-            email: ownerEmail,
+        // Conditional Logic: Bill vs Receipt
+        const isPaid = fee.status === 'paid';
+        const formatter = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' });
+
+        const emailConfig = isPaid ? {
+            subject: `Comprobante de Pago - ${communityName}`,
+            template: 'payment_receipt.html',
+            context: {
+                user_name: ownerProfile?.full_name || 'Vecino',
+                amount_formatted: formatter.format(fee.amount),
+                period_name: fee.period,
+                unit_details: `${fee.units?.blocks?.name} - ${fee.units?.unit_number}`,
+                community_name: communityName,
+                community_logo: communityLogo,
+                payment_date: new Date(fee.updated_at || new Date()).toLocaleDateString('es-ES'),
+                payment_id: fee.payment_id || fee.id.slice(0, 8),
+                link: link
+            }
+        } : {
             subject: `Recordatorio: Recibo de Mantenimiento - ${communityName} - ${fee.period}`,
-            templateName: 'monthly_fee_bill.html',
+            template: 'monthly_fee_bill.html',
             context: {
                 period: fee.period,
                 amount: fee.amount,
@@ -416,9 +588,16 @@ exports.resendFeeEmail = async (req, res) => {
                 community_logo: communityLogo,
                 user_name: ownerProfile?.full_name || 'Vecino'
             }
+        };
+
+        await sendEmail({
+            email: ownerEmail,
+            subject: emailConfig.subject,
+            templateName: emailConfig.template,
+            context: emailConfig.context
         });
 
-        res.json({ message: `Email resent to ${ownerEmail}` });
+        res.json({ message: `Email (${isPaid ? 'Receipt' : 'Bill'}) resent to ${ownerEmail}` });
 
     } catch (error) {
         console.error("Resend email error:", error);

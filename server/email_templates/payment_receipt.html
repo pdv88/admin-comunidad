@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Confirmación de Pago</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap');
+
+    /* Responsive Styles */
+    @media only screen and (max-width: 600px) {
+      .content {
+        padding: 20px !important;
+      }
+      .responsive-table td {
+        padding: 20px 10px !important;
+      }
+      .details-grid {
+        grid-template-columns: 1fr !important;
+      }
+    }
+  </style>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Outfit', sans-serif; background: #f0fdf4; color: #1f2937;">
+  
+  <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="width: 100%; min-height: 100vh; background-color: #f0fdf4;" class="responsive-table">
+    <tr>
+      <td align="center" valign="middle" style="
+        padding: 40px 20px; 
+        background-color: #f0fdf4;
+        background-image: radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.1) 0%, transparent 40%), radial-gradient(circle at 90% 80%, rgba(52, 211, 153, 0.1) 0%, transparent 40%);
+      ">
+    
+    <div class="content" style="
+      max-width: 600px;
+      margin: 0 auto;
+      box-sizing: border-box;
+      background: rgba(255, 255, 255, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      border-radius: 20px; 
+      padding: 40px;
+      text-align: center;
+      box-shadow: 0 20px 25px -5px rgba(209, 250, 229, 0.5), 0 8px 10px -6px rgba(209, 250, 229, 0.5);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+    ">
+      
+      <div style="text-align: center; margin-bottom: 2rem;">
+        {{#if community_logo}}
+          <img src="{{community_logo}}" alt="{{community_name}}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 1rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+          <h2 style="margin: 0; color: #1f2937; font-size: 1.25rem;">{{community_name}}</h2>
+        {{else}}
+          <div style="width: 80px; height: 80px; background: #10b981; color: white; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; margin-bottom: 1rem;">✓</div>
+          <h2 style="margin: 0; color: #10b981; font-size: 1.5rem; font-weight: bold;">{{community_name}}</h2>
+        {{/if}}
+      </div>
+
+      <div style="margin-bottom: 2rem;">
+        <h1 style="color: #059669; font-size: 28px; margin: 0 0 10px 0;">¡Pago Recibido!</h1>
+        <p style="color: #4b5563; font-size: 16px; margin: 0;">Tu transacción ha sido completada con éxito.</p>
+      </div>
+
+      <div style="
+        margin: 2rem 0;
+        background: white;
+        border-radius: 16px;
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        overflow: hidden;
+      ">
+        <div style="background: #ecfdf5; padding: 20px; border-bottom: 1px dashed rgba(16, 185, 129, 0.3);">
+            <p style="margin: 0 0 5px 0; font-size: 0.85rem; color: #059669; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Monto Total</p>
+            <p style="
+                margin: 0; 
+                font-size: 2.5rem; 
+                font-weight: 700; 
+                color: #065f46;
+            ">{{amount_formatted}}</p>
+            <p style="margin: 5px 0 0 0; font-size: 0.9rem; color: #047857;">{{period_name}}</p>
+        </div>
+
+        <div class="details-grid" style="
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 20px; 
+            padding: 25px;
+            text-align: left;
+        ">
+            <div>
+                <p style="margin: 0 0 4px 0; font-size: 0.75rem; color: #6b7280; text-transform: uppercase;">Unidad</p>
+                <p style="margin: 0; font-weight: 600; color: #1f2937;">{{unit_details}}</p>
+            </div>
+             <div>
+                <p style="margin: 0 0 4px 0; font-size: 0.75rem; color: #6b7280; text-transform: uppercase;">ID Transacción</p>
+                <p style="margin: 0; font-weight: 500; color: #4b5563; font-family: monospace;">#{{payment_id}}</p>
+            </div>
+             <div>
+                <p style="margin: 0 0 4px 0; font-size: 0.75rem; color: #6b7280; text-transform: uppercase;">Fecha</p>
+                <p style="margin: 0; font-weight: 600; color: #1f2937;">{{payment_date}}</p>
+            </div>
+             <div>
+                <p style="margin: 0 0 4px 0; font-size: 0.75rem; color: #6b7280; text-transform: uppercase;">Estado</p>
+                <p style="margin: 0; font-weight: 700; color: #10b981;">CONFIRMADO</p>
+            </div>
+        </div>
+      </div>
+
+      <p style="
+        font-size: 0.9rem;
+        line-height: 1.6;
+        color: #4b5563;
+        margin-bottom: 2rem;
+      ">
+        Hola <strong>{{user_name}}</strong>, este correo sirve como comprobante oficial de tu pago. Gracias por mantenerte al día con tus cuotas de mantenimiento.
+      </p>
+
+      <a href="{{link}}" style="
+        display: inline-block;
+        padding: 0.875rem 2.5rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        text-decoration: none;
+        color: #ffffff;
+        background-color: #10b981;
+        border-radius: 9999px;
+        box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.4);
+        transition: all 0.2s ease;
+      ">Ver en la App</a>
+
+      <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid rgba(0,0,0,0.05);">
+        <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 0.5rem;">Descarga tus recibos en:</p>
+         <a href="{{link}}" style="font-size: 0.85rem; color: #10b981; text-decoration: none;">{{link}}</a>
+      </div>
+
+      <div style="margin-top: 3rem; text-align: center; opacity: 0.8;">
+         <p style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem;">Powered by</p>
+         <img src="https://habiio.com/assets/habiio_logo_header_nobg-KEmvXxNA.webp" alt="Habiio" style="max-width: 70px; display: inline-block;">
+      </div>
+    </div>
+    
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

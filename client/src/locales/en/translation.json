@@ -461,8 +461,20 @@
         "voted": "Voted",
         "view_results": "View Results",
         "confirm_delete_notice": "Are you sure you want to delete this notice?",
+        "all_blocks": "All Blocks",
         "unauthorized": "Unauthorized access",
-        "learn_more": "Learn more"
+        "learn_more": "Learn more",
+        "filter_block": "Filter Block...",
+        "search_unit": "Search Unit...",
+        "page": "Page",
+        "of": "of",
+        "total": "total",
+        "prev": "Previous",
+        "next": "Next",
+        "show_filters": "Filter Data",
+        "hide_filters": "Hide Filters",
+        "export": "Export",
+        "export_excel": "Export to Excel"
     },
     "payments": {
         "title": "Payments & Contributions",
@@ -597,12 +609,15 @@
     "maintenance": {
         "admin_title": "Maintenance Fee Management",
         "resident_title": "My Maintenance Fees",
+        "tab_community": "Community Management",
+        "tab_personal": "My Statement",
         "generate_title": "Generate Monthly Fees",
         "period": "Billing Period",
         "amount": "Amount",
         "generate_btn": "Generate Bills",
         "community_status": "Community Status",
         "history": "Payment History",
+        "block": "Block",
         "unit": "Unit",
         "owner": "Owner",
         "status": "Status",
@@ -616,6 +631,7 @@
         "no_records": "No records found.",
         "success_gen": "Successfully generated fees.",
         "error_gen": "Error generating fees.",
+        "no_records_export": "No records to export.",
         "pay": "Pay"
     }
 }

@@ -14,8 +14,10 @@ const Maintenance = () => {
     const { user, activeCommunity, loading: authLoading } = useAuth();
     const [loading, setLoading] = useState(true);
     const [fees, setFees] = useState([]);
+    const [blocks, setBlocks] = useState([]); // State for block dropdown
     const [isAdmin, setIsAdmin] = useState(false);
     const [activeTab, setActiveTab] = useState('community'); // 'community' | 'personal'
+    const [showFilters, setShowFilters] = useState(false); // Collapsible filters state
 
     // Admin Generation State
     const [genPeriod, setGenPeriod] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
@@ -29,6 +31,33 @@ const Maintenance = () => {
     const [selectedFeeForPayment, setSelectedFeeForPayment] = useState(null);
     const [reviewModalOpen, setReviewModalOpen] = useState(false);
     const [selectedReviewId, setSelectedReviewId] = useState(null);
+
+    // Filters & Pagination State
+    const [filters, setFilters] = useState({
+        page: 1,
+        limit: 10,
+        sortBy: 'period',
+        sortOrder: 'desc',
+        period: '',
+        status: '',
+        sortOrder: 'desc',
+        period: '',
+        status: '',
+        search: '', // Unit Search
+        block: ''   // Block Search
+    });
+    const [pagination, setPagination] = useState({
+        totalPages: 1,
+        totalCount: 0
+    });
+
+    // Debounce Search
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (activeCommunity) fetchFees();
+        }, 500); // Debounce API calls for search/filters
+        return () => clearTimeout(timer);
+    }, [filters, activeTab, isAdmin, activeCommunity]); // Auto-fetch on filter change
 
     const handleReviewClick = (fee) => {
         setSelectedReviewId(fee.payment_id);
@@ -128,6 +157,7 @@ const Maintenance = () => {
     useEffect(() => {
         if (activeCommunity) {
             fetchFees();
+            fetchBlocks();
         }
     }, [activeTab, isAdmin, activeCommunity]);
 
@@ -159,21 +189,152 @@ const Maintenance = () => {
             // Ensure UI state matches (optional sync)
             if (isUserAdmin !== isAdmin) setIsAdmin(isUserAdmin);
 
-            // Logic explicitly checks calculated values
-            // Use isUserAdmin instead of potentially stale isAdmin state
-            const endpoint = (isUserAdmin && activeTab === 'community') 
-                ? `${API_URL}/api/maintenance/status` 
-                : `${API_URL}/api/maintenance/my-statement`;
+            const baseUrl = `${API_URL}/api/maintenance`;
+            let endpoint;
+
+            if (isUserAdmin && activeTab === 'community') {
+                // Admin View: Use Status endpoint with params
+                const params = new URLSearchParams({
+                    page: filters.page,
+                    limit: filters.limit,
+                    sortBy: filters.sortBy,
+                    sortOrder: filters.sortOrder,
+                    ...(filters.period && { period: filters.period }),
+                    ...(filters.status && { status: filters.status }),
+                    ...(filters.search && { search: filters.search }), // Unit search
+                    ...(filters.block && { block: filters.block }),
+                });
+                endpoint = `${baseUrl}/status?${params.toString()}`;
+            } else {
+                // Personal View: Use My Statement (currently no filtering implemented on backend for this, but could be added later)
+                endpoint = `${baseUrl}/my-statement`;
+            }
 
             const res = await fetch(endpoint);
 
             if (res.ok) {
-                setFees(await res.json());
+                const data = await res.json();
+                if (isUserAdmin && activeTab === 'community') {
+                    // Expect { data, page, totalPages, totalCount }
+                    setFees(data.data || []);
+                    setPagination({
+                        totalPages: data.totalPages || 1,
+                        totalCount: data.totalCount || 0
+                    });
+                } else {
+                    // Personal view returns direct array
+                    setFees(Array.isArray(data) ? data : []);
+                }
             }
         } catch (error) {
             console.error("Error fetching fees:", error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Export to Excel (CSV)
+    const handleExport = async () => {
+        if (!activeCommunity) return;
+        
+        try {
+            // Fetch all records (high limit)
+            const queryParams = new URLSearchParams({
+                page: 1,
+                limit: 10000, 
+                sortBy: filters.sortBy,
+                sortOrder: filters.sortOrder
+            });
+
+            if (filters.period) queryParams.append('period', filters.period);
+            if (filters.status) queryParams.append('status', filters.status);
+            if (filters.search) queryParams.append('search', filters.search);
+            if (filters.block) queryParams.append('block', filters.block);
+
+            const res = await fetch(`${API_URL}/api/maintenance/status?${queryParams}`, {
+                headers: { 
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'X-Community-ID': activeCommunity.community_id
+                }
+            });
+
+            if (res.ok) {
+                const { data } = await res.json();
+                
+                if (!data || data.length === 0) {
+                    setMessage(t('maintenance.no_records_export', 'No records to export.'));
+                    setTimeout(() => setMessage(''), 3000);
+                    return;
+                }
+
+                // CSV Headers with BOM for Excel compatibility
+                const BOM = '\uFEFF';
+                let csvContent = BOM + "Period;Unit;Block;Owner;Amount;Status;Paid Date\n";
+
+                data.forEach(item => {
+                    const row = [
+                        item.period,
+                        item.unit_number || '',
+                        item.block_name || '',
+                        item.owner_name || '',
+                        Number(item.amount).toFixed(2),
+                        item.status,
+                        item.updated_at ? new Date(item.updated_at).toLocaleDateString() : ''
+                    ].join(';');
+                    csvContent += row + "\n";
+                });
+
+                // Trigger Download
+                const communityName = (activeCommunity?.name || 'community').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.setAttribute("href", url);
+                link.setAttribute("download", `maintenance_fees_${communityName}_${new Date().toISOString().slice(0,10)}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        } catch (error) {
+            console.error("Export error:", error);
+            setMessage(t('common.error_occurred', 'An error occurred'));
+        }
+    };
+
+    // Fetch Blocks for Dropdown
+    const fetchBlocks = async () => {
+        if (!activeCommunity) return;
+        try {
+            const res = await fetch(`${API_URL}/api/properties/blocks`, {
+                 headers: { 
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'X-Community-ID': activeCommunity.community_id
+                }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setBlocks(data);
+            }
+        } catch (error) {
+            console.error("Error fetching blocks:", error);
+        }
+    };
+
+    const handleFilterChange = (key, value) => {
+        setFilters(prev => ({ ...prev, [key]: value, page: 1 })); // Reset to page 1 on filter change
+    };
+
+    const handleSort = (key) => {
+        setFilters(prev => ({
+            ...prev,
+            sortBy: key,
+            sortOrder: prev.sortBy === key && prev.sortOrder === 'desc' ? 'asc' : 'desc'
+        }));
+    };
+
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= pagination.totalPages) {
+            setFilters(prev => ({ ...prev, page: newPage }));
         }
     };
 
@@ -299,11 +460,110 @@ const Maintenance = () => {
                     </div>
                 )}
 
-                {/* Fee List */}
+                {/* Filters & Fee List */}
                 <div className="glass-card p-6">
-                     <h2 className="text-lg font-bold mb-4 text-gray-800 dark:text-white">
-                        {isAdmin ? t('maintenance.community_status', 'Community Status') : t('maintenance.history', 'Payment History')}
-                     </h2>
+                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                        <h2 className="text-lg font-bold text-gray-800 dark:text-white">
+                            {isAdmin ? t('maintenance.community_status', 'Community Status') : t('maintenance.history', 'Payment History')}
+                        </h2>
+                        
+                        {/* Filters Toggle & Export (Admin Only) */}
+                        {isAdmin && activeTab === 'community' && (
+                            <div className="flex flex-col items-end gap-2 w-full md:w-auto">
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={handleExport}
+                                        className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 transition-colors"
+                                        title={t('common.export_excel', 'Export to Excel')}
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                                        </svg>
+                                        <span className="hidden sm:inline">{t('common.export', 'Export')}</span>
+                                    </button>
+                                    <button
+                                        onClick={() => setShowFilters(!showFilters)}
+                                        className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 transition-transform ${showFilters ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
+                                        </svg>
+                                        {showFilters ? t('common.hide_filters', 'Hide Filters') : t('common.show_filters', 'Filter Data')}
+                                    </button>
+                                </div>
+                                
+                            </div>
+                        )}
+                        
+                    </div>
+
+                    {/* Collapsible Full Width Filters */}
+                    {isAdmin && activeTab === 'community' && showFilters && (
+                        <div className="w-full animate-fadeIn mb-6 p-4 bg-gray-50 dark:bg-neutral-800/50 rounded-lg border border-gray-100 dark:border-white/10">
+                            <div className="flex flex-wrap gap-4 items-end">
+                                {/* Block Filter */}
+                                <div className="flex flex-col gap-1.5 flex-1 min-w-[200px]">
+                                    <label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                        {t('maintenance.block', 'Block')}
+                                    </label>
+                                    <select 
+                                        className="glass-input text-sm py-2 px-3 w-full"
+                                        value={filters.block || ''}
+                                        onChange={(e) => handleFilterChange('block', e.target.value)}
+                                    >
+                                        <option value="">{t('common.all_blocks', 'All Blocks')}</option>
+                                        {blocks.map(block => (
+                                            <option key={block.id} value={block.name}>{block.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {/* Unit Search */}
+                                <div className="flex flex-col gap-1.5 flex-1 min-w-[200px]">
+                                    <label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                        {t('maintenance.unit', 'Unit')}
+                                    </label>
+                                    <input 
+                                        type="text" 
+                                        placeholder={t('common.search_unit', 'Search Unit...')} 
+                                        className="glass-input text-sm py-2 px-3 w-full"
+                                        value={filters.search}
+                                        onChange={(e) => handleFilterChange('search', e.target.value)}
+                                    />
+                                </div>
+
+                                {/* Period Filter */}
+                                <div className="flex flex-col gap-1.5 flex-1 min-w-[200px]">
+                                    <label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                        {t('maintenance.period', 'Period')}
+                                    </label>
+                                    <input 
+                                        type="month" 
+                                        className="glass-input text-sm py-2 px-3 w-full"
+                                        value={filters.period}
+                                        onChange={(e) => handleFilterChange('period', e.target.value)}
+                                    />
+                                </div>
+
+                                {/* Status Filter */}
+                                <div className="flex flex-col gap-1.5 flex-1 min-w-[200px]">
+                                    <label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                        {t('maintenance.status', 'Status')}
+                                    </label>
+                                    <select 
+                                        className="glass-input text-sm py-2 px-3 w-full"
+                                        value={filters.status}
+                                        onChange={(e) => handleFilterChange('status', e.target.value)}
+                                    >
+                                        <option value="">{t('common.all_statuses', 'All Statuses')}</option>
+                                        <option value="paid">{t('maintenance.statuses.paid', 'Paid')}</option>
+                                        <option value="pending">{t('maintenance.statuses.pending', 'Pending')}</option>
+                                        <option value="overdue">{t('maintenance.statuses.overdue', 'Overdue')}</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                     
                     {message && <p className={`mb-4 text-sm ${message.includes('Error') ? 'text-red-500' : 'text-green-500'}`}>{message}</p>}
 
@@ -315,11 +575,62 @@ const Maintenance = () => {
                             <table className="glass-table">
                                 <thead>
                                     <tr>
-                                        <th>{t('maintenance.period', 'Period')}</th>
-                                        <th>{t('maintenance.unit', 'Unit')}</th>
+                                        <th 
+                                            onClick={() => activeTab === 'community' && handleSort('period')} 
+                                            className={`transition-colors ${activeTab === 'community' ? 'cursor-pointer hover:bg-black/5 dark:hover:bg-white/5' : ''}`}
+                                        >
+                                            <div className="flex items-center gap-1">
+                                                {t('maintenance.period', 'Period')}
+                                                {activeTab === 'community' && filters.sortBy === 'period' && (
+                                                    <span>{filters.sortOrder === 'asc' ? '↑' : '↓'}</span>
+                                                )}
+                                            </div>
+                                        </th>
+                                        <th 
+                                            onClick={() => activeTab === 'community' && handleSort('block')} 
+                                            className={`transition-colors ${activeTab === 'community' ? 'cursor-pointer hover:bg-black/5 dark:hover:bg-white/5' : ''}`}
+                                        >
+                                           <div className="flex items-center gap-1">
+                                                {t('maintenance.block', 'Block')}
+                                                {activeTab === 'community' && filters.sortBy === 'block' && (
+                                                    <span>{filters.sortOrder === 'asc' ? '↑' : '↓'}</span>
+                                                )}
+                                            </div>
+                                        </th>
+                                        <th 
+                                            onClick={() => activeTab === 'community' && handleSort('unit')} 
+                                            className={`transition-colors ${activeTab === 'community' ? 'cursor-pointer hover:bg-black/5 dark:hover:bg-white/5' : ''}`}
+                                        >
+                                           <div className="flex items-center gap-1">
+                                                {t('maintenance.unit', 'Unit')}
+                                                {activeTab === 'community' && filters.sortBy === 'unit' && (
+                                                    <span>{filters.sortOrder === 'asc' ? '↑' : '↓'}</span>
+                                                )}
+                                            </div>
+                                        </th>
                                         {isAdmin && activeTab === 'community' && <th>{t('maintenance.owner', 'Owner')}</th>}
-                                        <th>{t('maintenance.amount', 'Amount')}</th>
-                                        <th>{t('maintenance.status', 'Status')}</th>
+                                        <th 
+                                            onClick={() => activeTab === 'community' && handleSort('amount')} 
+                                            className={`transition-colors ${activeTab === 'community' ? 'cursor-pointer hover:bg-black/5 dark:hover:bg-white/5' : ''}`}
+                                        >
+                                            <div className="flex items-center gap-1">
+                                                {t('maintenance.amount', 'Amount')}
+                                                {activeTab === 'community' && filters.sortBy === 'amount' && (
+                                                    <span>{filters.sortOrder === 'asc' ? '↑' : '↓'}</span>
+                                                )}
+                                            </div>
+                                        </th>
+                                        <th 
+                                            onClick={() => activeTab === 'community' && handleSort('status')} 
+                                            className={`transition-colors ${activeTab === 'community' ? 'cursor-pointer hover:bg-black/5 dark:hover:bg-white/5' : ''}`}
+                                        >
+                                            <div className="flex items-center gap-1">
+                                                {t('maintenance.status', 'Status')}
+                                                {activeTab === 'community' && filters.sortBy === 'status' && (
+                                                    <span>{filters.sortOrder === 'asc' ? '↑' : '↓'}</span>
+                                                )}
+                                            </div>
+                                        </th>
                                         <th className="text-right">{t('common.actions', 'Actions')}</th>
                                     </tr>
                                 </thead>
@@ -330,7 +641,9 @@ const Maintenance = () => {
                                                 {new Date(fee.period + 'T12:00:00').toLocaleDateString(undefined, { year: 'numeric', month: 'long', timeZone: 'UTC' })}
                                             </td>
                                             <td className="text-gray-500 dark:text-neutral-400">
-                                                {(fee.block_name || fee.units?.blocks?.name) ? `${fee.block_name || fee.units?.blocks?.name} - ` : ''}
+                                                {fee.block_name || fee.units?.blocks?.name || '-'}
+                                            </td>
+                                            <td className="text-gray-900 font-medium dark:text-white">
                                                 {fee.unit_number || fee.units?.unit_number}
                                             </td>
                                             {isAdmin && activeTab === 'community' && (
@@ -349,20 +662,6 @@ const Maintenance = () => {
                                                 </span>
                                             </td>
                                             <td className="text-right font-medium">
-                                                {/* Resend Email Button (Admin Community View) */}
-                                                {isAdmin && activeTab === 'community' && (
-                                                    <button
-                                                        onClick={() => handleResendEmail(fee)}
-                                                        className="mr-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-300 transition-colors inline-flex items-center"
-                                                        title={t('maintenance.resend_email', 'Resend Email')}
-                                                    >
-                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                                            <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                                                            <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                                                        </svg>
-                                                    </button>
-                                                )}
-
                                                 {/* Review Button (Admin Community View + Pending + HAS payment_id) */}
                                                 {isAdmin && activeTab === 'community' && fee.status === 'pending' && fee.payment_id && (
                                                     <button
@@ -387,12 +686,31 @@ const Maintenance = () => {
                                                     </button>
                                                 )}
 
-                                                {/* Delete Button (Admin Community View) - Only if NO payment registered */}
-                                                {isAdmin && activeTab === 'community' && !fee.payment_id && (
+                                                {/* Resend Email Button (Admin Community View) */}
+                                                {isAdmin && activeTab === 'community' && (
+                                                    <button
+                                                        onClick={() => handleResendEmail(fee)}
+                                                        className="mr-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-300 transition-colors inline-flex items-center"
+                                                        title={t('maintenance.resend_email', 'Resend Email')}
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                            <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                                                            <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                                                        </svg>
+                                                    </button>
+                                                )}
+
+                                                {/* Delete Button (Admin Community View) - Disabled if payment registered */}
+                                                {isAdmin && activeTab === 'community' && (
                                                     <button
                                                         onClick={() => handleDeleteClick(fee)}
-                                                        className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors"
-                                                        title={t('common.delete', 'Delete')}
+                                                        disabled={!!fee.payment_id}
+                                                        className={`transition-colors ${
+                                                            fee.payment_id 
+                                                                ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' 
+                                                                : 'text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300'
+                                                        }`}
+                                                        title={fee.payment_id ? t('maintenance.cannot_delete_paid', 'Cannot delete paid fee') : t('common.delete', 'Delete')}
                                                     >
                                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -415,6 +733,31 @@ const Maintenance = () => {
                                 </tbody>
                             </table>
                             {fees.length === 0 && <p className="text-center py-4 text-gray-500">{t('maintenance.no_records', 'No records found.')}</p>}
+                        </div>
+                    )}
+
+                    {/* Pagination Controls */}
+                    {isAdmin && activeTab === 'community' && pagination.totalPages > 1 && (
+                        <div className="flex items-center justify-between mt-4 border-t border-gray-200 dark:border-gray-700 pt-4">
+                            <span className="text-sm text-gray-500 dark:text-gray-400">
+                                {t('common.page', 'Page')} {filters.page} {t('common.of', 'of')} {pagination.totalPages} ({pagination.totalCount} {t('common.total', 'total')})
+                            </span>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => handlePageChange(filters.page - 1)}
+                                    disabled={filters.page === 1}
+                                    className="px-4 py-2 text-sm font-medium rounded-full backdrop-blur-md bg-white/10 border border-white/20 text-gray-700 dark:text-gray-200 hover:bg-white/20 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+                                >
+                                    {t('common.prev', 'Previous')}
+                                </button>
+                                <button
+                                    onClick={() => handlePageChange(filters.page + 1)}
+                                    disabled={filters.page === pagination.totalPages}
+                                    className="px-4 py-2 text-sm font-medium rounded-full backdrop-blur-md bg-white/10 border border-white/20 text-gray-700 dark:text-gray-200 hover:bg-white/20 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+                                >
+                                    {t('common.next', 'Next')}
+                                </button>
+                            </div>
                         </div>
                     )}
                 </div>

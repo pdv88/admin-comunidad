@@ -456,8 +456,20 @@
         "voted": "Votado",
         "view_results": "Ver Resultados",
         "confirm_delete_notice": "¿Estás seguro de que quieres eliminar este aviso?",
+        "all_blocks": "Todos los Bloques",
         "unauthorized": "Acceso no autorizado",
-        "learn_more": "Leer más"
+        "learn_more": "Leer más",
+        "filter_block": "Filtrar Bloque...",
+        "search_unit": "Buscar Unidad...",
+        "page": "Página",
+        "of": "de",
+        "total": "total",
+        "prev": "Anterior",
+        "next": "Siguiente",
+        "show_filters": "Filtrar Datos",
+        "hide_filters": "Ocultar Filtros",
+        "export": "Exportar",
+        "export_excel": "Exportar a Excel"
     },
     "payments": {
         "title": "Pagos y Aportaciones",
@@ -592,12 +604,15 @@
     "maintenance": {
         "admin_title": "Gestión de Cuotas de Mantenimiento",
         "resident_title": "Mis Cuotas de Mantenimiento",
+        "tab_community": "Gestión Comunidad",
+        "tab_personal": "Mi Estado de Cuenta",
         "generate_title": "Generar Cuotas Mensuales",
         "period": "Periodo de Facturación",
         "amount": "Monto",
         "generate_btn": "Generar Cobros",
         "community_status": "Estado de la Comunidad",
         "history": "Historial de Pagos",
+        "block": "Bloque",
         "unit": "Unidad",
         "owner": "Propietario",
         "status": "Estado",
@@ -611,6 +626,7 @@
         "no_records": "No se encontraron registros.",
         "success_gen": "Cuotas generadas exitosamente.",
         "error_gen": "Error al generar cuotas.",
+        "no_records_export": "No hay registros para exportar.",
         "pay": "Pagar"
     }
 }
