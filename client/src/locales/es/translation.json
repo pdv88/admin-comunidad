@@ -383,6 +383,8 @@
             "name": "Nombre",
             "role": "Rol",
             "unit": "Unidad",
+            "email": "Correo",
+            "phone": "Teléfono",
             "actions": "Acciones"
         },
         "roles": {
@@ -407,6 +409,9 @@
             "sending_invite": "Enviando invitación...",
             "invite_success": "Invitación enviada exitosamente!",
             "invite_error": "Error al enviar invitación",
+            "resend_invite": "Reenviar Invitación",
+            "resend_success": "Invitación reenviada exitosamente!",
+            "resend_error": "Error al reenviar invitación",
             "error_prefix": "Error: "
         }
     },
@@ -438,7 +443,17 @@
             "title": "Suscripción y Pagos",
             "plan": "Plan Actual",
             "active": "Activo",
-            "next_billing": "Próxima facturación"
+            "next_billing": "Próxima facturación",
+            "manage": "Gestionar Suscripción"
+        },
+        "danger_zone": {
+            "title": "Zona de Peligro",
+            "delete_account": "Eliminar Cuenta",
+            "warning_text": "Una vez que elimines tu cuenta, no hay vuelta atrás. Por favor, asegúrate.",
+            "confirm_1": "¿Estás SEGURO de que quieres eliminar tu cuenta? Esto eliminará permanentemente todos tus datos.",
+            "confirm_2": "Esta acción es IRREVERSIBLE. Escribe ACEPTAR para confirmar (simulado).",
+            "delete_btn": "Eliminar Cuenta",
+            "delete_error": "Error al eliminar cuenta: "
         },
         "preferences": {
             "title": "Preferencias",

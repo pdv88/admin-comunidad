@@ -4,11 +4,22 @@ const randomstring = require('randomstring');
 
 exports.listUsers = async (req, res) => {
     try {
-        const communityId = req.headers['x-community-id'];
-        if (!communityId) return res.status(400).json({ error: 'Community ID header missing' });
+        let communityId = req.headers['x-community-id'];
+
+        // Handle duplicate headers (concatenated by comma)
+        if (communityId && communityId.includes(',')) {
+            communityId = communityId.split(',')[0].trim();
+        }
+
+        if (!communityId) {
+            console.error(`[ListUsers] Error: Community ID Missing`);
+            return res.status(400).json({ error: 'Community ID header missing' });
+        }
+
+
 
         // 1. Fetch community members
-        const { data: members, error: memberError } = await supabase
+        const { data: members, error: memberError } = await supabaseAdmin
             .from('community_members')
             .select(`
                 *,
@@ -17,16 +28,22 @@ exports.listUsers = async (req, res) => {
             `)
             .eq('community_id', communityId);
 
-        if (memberError) throw memberError;
+        if (memberError) {
+            console.error(`[ListUsers] Member Query Error:`, memberError);
+            throw memberError;
+        }
+
+
 
         if (!members || members.length === 0) {
+            // console.log(`[ListUsers] No members found for community ${communityId}`);
             return res.json([]);
         }
 
         const profileIds = members.map(m => m.profile_id);
 
         // 2. Fetch Unit Owners (and Units) for these profiles
-        const { data: ownerships, error: unitsError } = await supabase
+        const { data: ownerships, error: unitsError } = await supabaseAdmin
             .from('unit_owners')
             .select(`
                 *,
@@ -39,9 +56,33 @@ exports.listUsers = async (req, res) => {
 
         if (unitsError) throw unitsError;
 
-        // 3. Map structure
+        // 3. Fetch Auth Data for all profiles (to check 'email_confirmed_at')
+        // Using Promise.all to fetch individually as there's no bulk fetch by ID list in admin API currently exposed easily
+        const authUsers = await Promise.all(
+            profileIds.map(async (uid) => {
+                try {
+                    const { data: { user }, error } = await supabaseAdmin.auth.admin.getUserById(uid);
+                    return user || null;
+                } catch (e) {
+                    return null;
+                }
+            })
+        );
+
+        const authMap = {};
+        authUsers.forEach(u => {
+            if (u) authMap[u.id] = u;
+        });
+
+        // 4. Map structure
         const users = members.map(member => {
             const profile = member.profiles || {};
+            const authUser = authMap[member.profile_id];
+
+            // Determine if confirmed
+            // email_confirmed_at is set when they click the magic link/invite link
+            const isConfirmed = !!authUser?.email_confirmed_at;
+
             // Find ownerships for this profile AND filter by community via blocks
             const userOwnerships = ownerships?.filter(uo =>
                 uo.profile_id === member.profile_id &&
@@ -53,7 +94,10 @@ exports.listUsers = async (req, res) => {
                 roles: member.roles,  // Role details
                 unit_owners: userOwnerships,
                 community_member_id: member.id,
-                role_id: member.role_id
+                role_id: member.role_id,
+                is_confirmed: isConfirmed,
+                email: authUser?.email || profile.email,
+                phone: profile.phone
             };
         });
 
@@ -66,7 +110,12 @@ exports.listUsers = async (req, res) => {
 
 exports.inviteUser = async (req, res) => {
     const { email, fullName, roleName, unitIds } = req.body;
-    const communityId = req.headers['x-community-id'];
+    let communityId = req.headers['x-community-id'];
+
+    // Handle potential duplicate headers (e.g. "id, id")
+    if (communityId && communityId.includes(',')) {
+        communityId = communityId.split(',')[0].trim();
+    }
 
     if (!communityId) return res.status(400).json({ error: 'Community ID header missing' });
 
@@ -80,7 +129,7 @@ exports.inviteUser = async (req, res) => {
 
         // Check if inviter is Admin/President/Secretary in this community
         // Also fetch Community Name for the email
-        const { data: membership, error: memberError } = await supabase
+        const { data: membership, error: memberError } = await supabaseAdmin
             .from('community_members')
             .select('roles(name), communities(name, logo_url)')
             .eq('profile_id', inviterUser.id)
@@ -288,7 +337,7 @@ exports.inviteUser = async (req, res) => {
 
         // 4. Add to community_members
         // Find role ID
-        const { data: roleData, error: roleError } = await supabase
+        const { data: roleData, error: roleError } = await supabaseAdmin
             .from('roles')
             .select('id')
             .eq('name', roleName || 'neighbor')
@@ -335,7 +384,8 @@ exports.updateUser = async (req, res) => {
     const { id } = req.params; // potentially the community_member_id or profile_id
     // Ideally we pass profile_id. Let's assume ID is profile_id for now as it's standard.
     const { roleName, unitIds, fullName } = req.body;
-    const communityId = req.headers['x-community-id'];
+    let communityId = req.headers['x-community-id'];
+    if (communityId && communityId.includes(',')) communityId = communityId.split(',')[0].trim();
 
     try {
         // Update Profile Name if provided
@@ -434,7 +484,8 @@ exports.updateUser = async (req, res) => {
 
 exports.deleteUser = async (req, res) => {
     const { id } = req.params;
-    const communityId = req.headers['x-community-id'];
+    let communityId = req.headers['x-community-id'];
+    if (communityId && communityId.includes(',')) communityId = communityId.split(',')[0].trim();
 
     if (!communityId) {
         return res.status(400).json({ error: 'Community ID is required' });
@@ -468,7 +519,108 @@ exports.deleteUser = async (req, res) => {
         res.json({ message: 'User removed from community successfully' });
 
     } catch (err) {
-        console.error("Delete user error:", err);
         res.status(400).json({ error: err.message });
+    }
+}
+
+exports.resendInvitation = async (req, res) => {
+    const { id } = req.params; // userId (profile_id)
+    let communityId = req.headers['x-community-id'];
+    if (communityId && communityId.includes(',')) communityId = communityId.split(',')[0].trim();
+
+    if (!communityId) return res.status(400).json({ error: 'Community ID required' });
+
+    try {
+        // 1. Fetch User Profile & Auth
+        const { data: { user }, error: authError } = await supabaseAdmin.auth.admin.getUserById(id);
+        if (authError || !user) throw new Error('User not found');
+
+        // Check confirmation (Optional: allow resend anyway if they lost password, but user asked for "if not set")
+        // But "resend INVITATION" usually implies they haven't joined. 
+        // If they HAVE joined, we should maybe send a password reset instead?
+        // For simplicity and matching "Invite" flow, we send a Magic Link (which acts as both).
+
+        // 2. Fetch Community Details
+        const { data: community } = await supabaseAdmin
+            .from('communities')
+            .select('name, logo_url')
+            .eq('id', communityId)
+            .single();
+
+        const communityName = community?.name || 'su comunidad';
+        const communityLogo = community?.logo_url;
+
+        // 3. Generate Magic Link (Redirect to update-password)
+        const baseUrl = (process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT)
+            ? 'https://habiio.com'
+            : (process.env.CLIENT_URL || 'https://habiio.com');
+
+        const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+            type: 'magiclink',
+            email: user.email,
+            options: {
+                redirectTo: baseUrl + '/update-password'
+            }
+        });
+
+        if (linkError) throw linkError;
+
+        const link = linkData.properties.action_link;
+
+        // 4. Send Email
+        const sendEmail = require('../utils/sendEmail');
+        await sendEmail({
+            email: user.email,
+            from: `${communityName} <info@habiio.com>`,
+            subject: `Invitación a ${communityName} (Reenvío)`,
+            templateName: 'invitation.html',
+            context: {
+                communityName: communityName,
+                communityLogo: communityLogo,
+                link: link
+            }
+        });
+
+        res.json({ message: 'Invitation resent successfully' });
+
+    } catch (err) {
+        console.error("Resend invite error:", err);
+        res.status(400).json({ error: err.message });
+    }
+}
+
+exports.deleteAccount = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        // Security Check: Only allow deleting SELF or strictly Super Admin (future)
+        // For now, strictly enforce that the requester is deleting their own account.
+        const token = req.headers.authorization?.split(' ')[1];
+        if (!token) return res.status(401).json({ error: 'Unauthorized' });
+
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+        if (authError || !user) return res.status(401).json({ error: 'Invalid token' });
+
+        if (user.id !== id) {
+            return res.status(403).json({ error: 'You can only delete your own account.' });
+        }
+
+        // Additional Safety: Check if they are actually an admin registration (subscriber)
+        // The user requested "only the user who suscribes... should be able to see this button".
+        // The endpoint should probably enforce this too to prevent accidental deletion by normal neighbors if they somehow hit this API.
+        if (user.user_metadata?.is_admin_registration !== true) {
+            return res.status(403).json({ error: 'Only subscriber accounts can perform self-deletion.' });
+        }
+
+        // Perform Deletion via Admin Client (Hard Delete)
+        const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(id);
+
+        if (deleteError) throw deleteError;
+
+        res.json({ message: 'Account deleted successfully' });
+
+    } catch (err) {
+        console.error("Delete account error:", err);
+        res.status(500).json({ error: err.message });
     }
 }

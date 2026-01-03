@@ -20,7 +20,7 @@ const UserManagement = () => {
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [userToDelete, setUserToDelete] = useState(null);
     const { t } = useTranslation();
-    const { user } = useAuth();
+    const { user, activeCommunity } = useAuth();
 
     const handleEditClick = (user) => {
         setEditingUser({
@@ -42,10 +42,7 @@ const UserManagement = () => {
         // setMessage(t('user_management.messages.deleting', 'Deleting user...'));
         try {
             const res = await fetch(`${API_URL}/api/users/${userToDelete.id}`, {
-                method: 'DELETE',
-                headers: { 
-                    'Authorization': `Bearer ${localStorage.getItem('token')}` 
-                }
+                method: 'DELETE'
             });
             const data = await res.json();
             if (res.ok) {
@@ -68,7 +65,9 @@ const UserManagement = () => {
         try {
             const res = await fetch(`${API_URL}/api/users/${editingUser.id}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json' 
+                },
                 body: JSON.stringify({
                     fullName: editingUser.fullName,
                     roleName: editingUser.roleName,
@@ -89,8 +88,10 @@ const UserManagement = () => {
     };
 
     useEffect(() => {
-        fetchData();
-    }, []);
+        if (activeCommunity?.community_id) {
+            fetchData();
+        }
+    }, [activeCommunity]);
 
     const fetchData = async () => {
         try {
@@ -98,12 +99,19 @@ const UserManagement = () => {
                 fetch(`${API_URL}/api/users`),
                 fetch(`${API_URL}/api/properties/blocks`)
             ]);
-            const usersData = await usersRes.json();
-            setUsers(Array.isArray(usersData) ? usersData : []); // Safety check
             
-            const blocksData = await blocksRes.json();
-            // Flatten units for dropdown
-            setBlocks(blocksData); 
+            if (usersRes.ok) {
+                const usersData = await usersRes.json();
+                setUsers(Array.isArray(usersData) ? usersData : []);
+            } else {
+                 console.error("Users fetch failed:", await usersRes.text());
+                 setUsers([]);
+            }
+            
+            if (blocksRes.ok) {
+                const blocksData = await blocksRes.json();
+                setBlocks(blocksData);
+            }
         } catch (error) {
             console.error("Error fetching data:", error);
         } finally {
@@ -118,8 +126,7 @@ const UserManagement = () => {
             const res = await fetch(`${API_URL}/api/users/invite`, {
                 method: 'POST',
                 headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(newUser)
             });
@@ -133,6 +140,23 @@ const UserManagement = () => {
             }
         } catch (error) {
             setToast({ message: t('user_management.messages.invite_error'), type: 'error' });
+        }
+    };
+
+    const handleResendInvite = async (user) => {
+        try {
+            const res = await fetch(`${API_URL}/api/users/${user.id}/resend-invite`, {
+                method: 'POST'
+            });
+            const data = await res.json();
+            
+            if (res.ok) {
+                setToast({ message: t('user_management.messages.resend_success', 'Invitación reenviada exitosamente!'), type: 'success' });
+            } else {
+                setToast({ message: t('user_management.messages.error_prefix') + data.error, type: 'error' });
+            }
+        } catch (error) {
+            setToast({ message: t('user_management.messages.resend_error', 'Error al reenviar invitación'), type: 'error' });
         }
     };
 
@@ -259,6 +283,8 @@ const UserManagement = () => {
                         <thead>
                             <tr>
                                 <th>{t('user_management.table.name')}</th>
+                                <th>{t('user_management.table.email', 'Email')}</th>
+                                <th>{t('user_management.table.phone', 'Teléfono')}</th>
                                 <th>{t('user_management.table.role')}</th>
                                 <th>{t('user_management.table.unit')}</th>
                                 <th className="text-end">{t('user_management.table.actions')}</th>
@@ -268,6 +294,8 @@ const UserManagement = () => {
                             {users.map(user => (
                                 <tr key={user.id}>
                                     <td className="font-medium text-gray-800 dark:text-neutral-200">{user.full_name}</td>
+                                    <td className="text-gray-600 dark:text-neutral-400 text-sm">{user.email}</td>
+                                    <td className="text-gray-600 dark:text-neutral-400 text-sm">{user.phone || '-'}</td>
                                     <td>
                                         <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-800">
                                             {t(`user_management.roles.${user.roles?.name}`) !== `user_management.roles.${user.roles?.name}` ? t(`user_management.roles.${user.roles?.name}`) : user.roles?.name || 'N/A'}
@@ -279,6 +307,17 @@ const UserManagement = () => {
                                             : '-'}
                                     </td>
                                     <td className="text-end font-medium">
+                                        {!user.is_confirmed && (
+                                            <button 
+                                                onClick={() => handleResendInvite(user)}
+                                                className="mr-2 text-orange-600 hover:text-orange-900 dark:text-orange-400 dark:hover:text-orange-300 transition-colors"
+                                                title={t('user_management.messages.resend_invite', 'Reenviar Invitación')}
+                                            >
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                                </svg>
+                                            </button>
+                                        )}
                                         <button 
                                             onClick={() => handleEditClick(user)}
                                             className="mr-2 text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors"
