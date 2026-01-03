@@ -80,8 +80,15 @@ exports.listUsers = async (req, res) => {
             const authUser = authMap[member.profile_id];
 
             // Determine if confirmed
-            // email_confirmed_at is set when they click the magic link/invite link
-            const isConfirmed = !!authUser?.email_confirmed_at;
+            // Refined Logic: User is confirmed only if they have logged in SINCE they were added to this community.
+            // This handles cases where an old user is re-invited but hasn't accessed this community yet.
+            const lastSign = authUser?.last_sign_in_at ? new Date(authUser.last_sign_in_at) : null;
+            const joinedAt = member.created_at ? new Date(member.created_at) : null;
+
+            const isConfirmed = !!(lastSign && joinedAt && lastSign > joinedAt);
+
+            // DEBUG: Print status for this user
+            // console.log(`[UserStatus] ${profile.email} | LastSign: ${authUser?.last_sign_in_at} | Joined: ${member.created_at} | Confirmed: ${isConfirmed}`);
 
             // Find ownerships for this profile AND filter by community via blocks
             const userOwnerships = ownerships?.filter(uo =>
