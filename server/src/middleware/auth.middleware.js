@@ -13,6 +13,11 @@ const authenticateToken = async (req, res, next) => {
 
         if (error || !user) {
             // Token invalid or expired
+            const fs = require('fs');
+            const path = require('path');
+            const logPath = path.join(__dirname, '../../debug_middleware.log');
+            fs.appendFileSync(logPath, `[${new Date().toISOString()}] Auth Failed: ${error?.message || 'No user'}\n`);
+
             return res.status(401).json({ error: 'Invalid or expired token' });
         }
 

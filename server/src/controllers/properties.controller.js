@@ -5,7 +5,11 @@ const supabaseAdmin = require('../config/supabaseAdmin');
 // Helper to get user and their role in the specific community
 const getUserAndMember = async (req) => {
     const token = req.headers.authorization?.split(' ')[1];
-    const communityId = req.headers['x-community-id'];
+    let communityId = req.headers['x-community-id'];
+
+    if (communityId && communityId.includes(',')) {
+        communityId = communityId.split(',')[0].trim();
+    }
 
     if (!token) throw new Error('No token provided');
     if (!communityId) throw new Error('Community ID header missing');
@@ -31,7 +35,11 @@ roles(name),
 exports.getAllBlocks = async (req, res) => {
     try {
         const token = req.headers.authorization?.split(' ')[1];
-        const communityId = req.headers['x-community-id'];
+        let communityId = req.headers['x-community-id'];
+
+        if (communityId && communityId.includes(',')) {
+            communityId = communityId.split(',')[0].trim();
+        }
 
         if (!token) return res.status(401).json({ error: 'No token' });
         if (!communityId) return res.status(400).json({ error: 'Community ID missing' });

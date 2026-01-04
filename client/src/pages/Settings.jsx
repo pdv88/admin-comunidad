@@ -2,11 +2,13 @@ import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { API_URL } from '../config';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
 
 const Settings = () => {
-  const { user, updateProfile } = useAuth();
+  const { user, updateProfile, logout } = useAuth();
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const [fullName, setFullName] = React.useState(user?.user_metadata?.full_name || '');
   const [loading, setLoading] = React.useState(false);
   const [successMsg, setSuccessMsg] = React.useState('');
@@ -76,6 +78,31 @@ const Settings = () => {
         setErrorMsg('Failed to update profile');
     } finally {
         setLoading(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/api/users/${user.id}/account`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.error || 'Failed to delete account');
+        }
+
+        // Logout and redirect
+        await logout();
+        navigate('/login');
+        
+    } catch (error) {
+        console.error("Delete account error:", error);
+        alert(t('settings.danger_zone.delete_error', 'Error deleting account: ') + error.message);
     }
   };
 
@@ -203,6 +230,38 @@ const Settings = () => {
                       </div>
                   </div>
 
+                  {/* Danger Zone */}
+                  {user?.user_metadata?.is_admin_registration === true && (
+                      <div className="mt-8 pt-8 border-t border-gray-200 dark:border-neutral-700">
+                          <h2 className="text-lg font-bold text-red-600 mb-4">{t('settings.danger_zone.title', 'Danger Zone')}</h2>
+                          <div className="bg-red-50/50 border border-red-200 rounded-xl p-4 dark:bg-red-900/10 dark:border-red-800/30">
+                              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                  <div>
+                                      <p className="text-sm font-medium text-red-800 dark:text-red-400">{t('settings.danger_zone.delete_account', 'Delete Account')}</p>
+                                      <p className="text-xs text-red-600/80 dark:text-red-500/70 mt-1">
+                                          {t('settings.danger_zone.warning_text', 'Once you delete your account, there is no going back. Please be certain.')}
+                                      </p>
+                                  </div>
+                                  <button 
+                                      onClick={() => {
+                                          if (window.confirm(t('settings.danger_zone.confirm_1', 'Are you SURE you want to delete your account? This will permanently delete all data.'))) {
+                                              if (window.confirm(t('settings.danger_zone.confirm_2', 'This action is IRREVERSIBLE. Type OK to confirm.'))) {
+                                                  // Ideally we'd have a handleDeleteAccount function, but for now lets define it or assume it exists in component logic which I need to add.
+                                                  // Wait, I need to add the function definition too.
+                                                  // I should have added the function definition first or replaced the whole component.
+                                                  // Let me assume I'll add the function definition in the next step to keep this clean or try to do it here.
+                                                  handleDeleteAccount();
+                                              }
+                                          }
+                                      }}
+                                      className="py-2 px-4 inline-flex justify-center items-center gap-2 rounded-md border border-red-600 font-medium bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all dark:focus:ring-offset-gray-800"
+                                  >
+                                      {t('settings.danger_zone.delete_btn', 'Delete Account')}
+                                  </button>
+                              </div>
+                          </div>
+                      </div>
+                  )}
                   </>
               )}
 
