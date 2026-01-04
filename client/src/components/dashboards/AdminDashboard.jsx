@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
 import ActiveCampaignsWidget from '../payments/ActiveCampaignsWidget';
+import BilledVsCollectedChart from './widgets/BilledVsCollectedChart';
 
 const AdminDashboard = () => {
     const { t } = useTranslation();
@@ -33,6 +34,11 @@ const AdminDashboard = () => {
                     <p className="mt-2 text-3xl font-bold text-blue-600 dark:text-blue-500">8</p>
                     <span className="text-xs text-gray-500">{t('dashboard.admin.urgent', '2 urgent')}</span>
                 </div>
+            </div>
+
+            {/* Financial Overview Graph */}
+            <div className="w-full">
+                <BilledVsCollectedChart className="h-96" />
             </div>
 
             {/* Quick Actions / Sections */}
