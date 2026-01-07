@@ -12,8 +12,9 @@ import { useAuth } from '../context/AuthContext';
 const UserManagement = () => {
     const [users, setUsers] = useState([]);
     const [blocks, setBlocks] = useState([]); // For assignment
+    const [searchTerm, setSearchTerm] = useState(''); // Search
     const [loading, setLoading] = useState(true);
-    const [newUser, setNewUser] = useState({ email: '', fullName: '', roleName: 'neighbor', unitIds: [] });
+    const [newUser, setNewUser] = useState({ email: '', fullName: '', roleName: 'neighbor', unitIds: [], phone: '' });
     const [selectedBlockId, setSelectedBlockId] = useState(''); // New state for block filter
     const [toast, setToast] = useState({ message: '', type: 'success' }); // Changed from message string
     const [editingUser, setEditingUser] = useState(null); // User being edited
@@ -27,6 +28,7 @@ const UserManagement = () => {
             id: user.id,
             email: user.email, // Email is typically not editable here, just for display
             fullName: user.full_name,
+            phone: user.phone,
             roleName: user.roles?.name || 'neighbor',
             unitIds: user.unit_owners ? user.unit_owners.map(uo => uo.unit_id) : []
         });
@@ -71,7 +73,8 @@ const UserManagement = () => {
                 body: JSON.stringify({
                     fullName: editingUser.fullName,
                     roleName: editingUser.roleName,
-                    unitIds: editingUser.unitIds
+                    unitIds: editingUser.unitIds,
+                    phone: editingUser.phone
                 })
             });
             const data = await res.json();
@@ -133,7 +136,7 @@ const UserManagement = () => {
             const data = await res.json();
             if (res.ok) {
                 setToast({ message: t('user_management.messages.invite_success'), type: 'success' });
-                setNewUser({ email: '', fullName: '', roleName: 'neighbor', unitIds: [] });
+                setNewUser({ email: '', fullName: '', roleName: 'neighbor', unitIds: [], phone: '' });
                 fetchData();
             } else {
                 setToast({ message: t('user_management.messages.error_prefix') + data.error, type: 'error' });
@@ -188,6 +191,68 @@ const UserManagement = () => {
         return allUnits.filter(u => !assignedUnitIds.has(u.id) || currentUserUnitIds.includes(u.id));
     };
 
+    const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
+
+    const requestSort = (key) => {
+        let direction = 'ascending';
+        if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+            direction = 'descending';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    const sortedUsers = React.useMemo(() => {
+        let sortableItems = users.filter(user => {
+            const term = searchTerm.toLowerCase();
+            const unitNumbers = user.unit_owners?.map(uo => uo.units?.unit_number).join(' ').toLowerCase() || '';
+            const blockNames = user.unit_owners?.map(uo => uo.units?.blocks?.name).join(' ').toLowerCase() || '';
+            
+            return (
+                user.full_name?.toLowerCase().includes(term) ||
+                user.email?.toLowerCase().includes(term) ||
+                (user.phone && user.phone.includes(term)) ||
+                user.roles?.name?.toLowerCase().includes(term) ||
+                unitNumbers.includes(term) ||
+                blockNames.includes(term)
+            );
+        });
+
+        if (sortConfig.key) {
+            sortableItems.sort((a, b) => {
+                let aValue = '';
+                let bValue = '';
+
+                if (sortConfig.key === 'roleName') {
+                    aValue = t(`user_management.roles.${a.roles?.name}`) || '';
+                    bValue = t(`user_management.roles.${b.roles?.name}`) || '';
+                } else if (sortConfig.key === 'block') {
+                    aValue = a.unit_owners?.map(uo => uo.units?.blocks?.name).join(', ') || '';
+                    bValue = b.unit_owners?.map(uo => uo.units?.blocks?.name).join(', ') || '';
+                } else if (sortConfig.key === 'unit') {
+                    aValue = a.unit_owners?.map(uo => uo.units?.unit_number).join(', ') || '';
+                    bValue = b.unit_owners?.map(uo => uo.units?.unit_number).join(', ') || '';
+                } else {
+                    aValue = a[sortConfig.key] || '';
+                    bValue = b[sortConfig.key] || '';
+                }
+
+                if (aValue < bValue) {
+                    return sortConfig.direction === 'ascending' ? -1 : 1;
+                }
+                if (aValue > bValue) {
+                    return sortConfig.direction === 'ascending' ? 1 : -1;
+                }
+                return 0;
+            });
+        }
+        return sortableItems;
+    }, [users, searchTerm, sortConfig, t]);
+
+    const getClassNamesFor = (name) => {
+        if (!sortConfig.key) return;
+        return sortConfig.key === name ? sortConfig.direction : undefined;
+    };
+
     if (loading) {
          return (
             <DashboardLayout>
@@ -228,6 +293,13 @@ const UserManagement = () => {
                             value={newUser.fullName}
                             onChange={e => setNewUser({...newUser, fullName: e.target.value})}
                             required
+                        />
+                        <input 
+                            type="tel" 
+                            placeholder={t('user_management.invite.phone', 'Phone Number')} 
+                            className="glass-input"
+                            value={newUser.phone || ''}
+                            onChange={e => setNewUser({...newUser, phone: e.target.value})}
                         />
 
                         <GlassSelect 
@@ -277,21 +349,43 @@ const UserManagement = () => {
                     </form>
                 </div>
 
-                {/* User List */}
+                {/* Search & User List */}
                 <div className="glass-card overflow-hidden">
+                    <div className="p-4 border-b border-gray-200 dark:border-neutral-700">
+                        <input
+                            type="text"
+                            placeholder={t('user_management.search_placeholder', 'Search users...')}
+                            className="glass-input w-full md:w-1/3"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
                     <table className="glass-table">
                         <thead>
                             <tr>
-                                <th>{t('user_management.table.name')}</th>
-                                <th>{t('user_management.table.email', 'Email')}</th>
-                                <th>{t('user_management.table.phone', 'Teléfono')}</th>
-                                <th>{t('user_management.table.role')}</th>
-                                <th>{t('user_management.table.unit')}</th>
+                                <th onClick={() => requestSort('full_name')} className="cursor-pointer hover:text-blue-500 transition-colors">
+                                    {t('user_management.table.name')} {getClassNamesFor('full_name') === 'ascending' ? '↑' : getClassNamesFor('full_name') === 'descending' ? '↓' : ''}
+                                </th>
+                                <th onClick={() => requestSort('email')} className="cursor-pointer hover:text-blue-500 transition-colors">
+                                    {t('user_management.table.email', 'Email')} {getClassNamesFor('email') === 'ascending' ? '↑' : getClassNamesFor('email') === 'descending' ? '↓' : ''}
+                                </th>
+                                <th onClick={() => requestSort('phone')} className="cursor-pointer hover:text-blue-500 transition-colors">
+                                    {t('user_management.table.phone', 'Teléfono')} {getClassNamesFor('phone') === 'ascending' ? '↑' : getClassNamesFor('phone') === 'descending' ? '↓' : ''}
+                                </th>
+                                <th onClick={() => requestSort('roleName')} className="cursor-pointer hover:text-blue-500 transition-colors">
+                                    {t('user_management.table.role')} {getClassNamesFor('roleName') === 'ascending' ? '↑' : getClassNamesFor('roleName') === 'descending' ? '↓' : ''}
+                                </th>
+                                <th onClick={() => requestSort('block')} className="cursor-pointer hover:text-blue-500 transition-colors">
+                                    {t('user_management.table.block', 'Bloque')} {getClassNamesFor('block') === 'ascending' ? '↑' : getClassNamesFor('block') === 'descending' ? '↓' : ''}
+                                </th>
+                                <th onClick={() => requestSort('unit')} className="cursor-pointer hover:text-blue-500 transition-colors">
+                                    {t('user_management.table.unit')} {getClassNamesFor('unit') === 'ascending' ? '↑' : getClassNamesFor('unit') === 'descending' ? '↓' : ''}
+                                </th>
                                 <th className="text-end">{t('user_management.table.actions')}</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {users.map(user => (
+                            {sortedUsers.map(user => (
                                 <tr key={user.id}>
                                     <td className="font-medium text-gray-800 dark:text-neutral-200">{user.full_name}</td>
                                     <td className="text-gray-600 dark:text-neutral-400 text-sm">{user.email}</td>
@@ -300,6 +394,11 @@ const UserManagement = () => {
                                         <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-800">
                                             {t(`user_management.roles.${user.roles?.name}`) !== `user_management.roles.${user.roles?.name}` ? t(`user_management.roles.${user.roles?.name}`) : user.roles?.name || 'N/A'}
                                         </span>
+                                    </td>
+                                    <td>
+                                        {user.unit_owners && user.unit_owners.length > 0 
+                                            ? [...new Set(user.unit_owners.map(uo => uo.units?.blocks?.name).filter(Boolean))].join(', ') 
+                                            : '-'}
                                     </td>
                                     <td>
                                         {user.unit_owners && user.unit_owners.length > 0 
@@ -366,6 +465,15 @@ const UserManagement = () => {
                                                         className="glass-input"
                                                         value={editingUser.fullName}
                                                         onChange={e => setEditingUser({...editingUser, fullName: e.target.value})}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300">{t('user_management.table.phone', 'Teléfono')}</label>
+                                                    <input 
+                                                        type="tel" 
+                                                        className="glass-input"
+                                                        value={editingUser.phone || ''}
+                                                        onChange={e => setEditingUser({...editingUser, phone: e.target.value})}
                                                     />
                                                 </div>
                                                 <div>

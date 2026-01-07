@@ -302,7 +302,7 @@ exports.forgotPassword = async (req, res) => {
 };
 
 exports.updateProfile = async (req, res) => {
-    const { full_name } = req.body;
+    const { full_name, phone } = req.body;
     const token = req.headers.authorization?.split(' ')[1];
 
     if (!token) return res.status(401).json({ error: 'No token provided' });
@@ -312,22 +312,31 @@ exports.updateProfile = async (req, res) => {
         if (error || !user) throw new Error('Invalid token');
 
         // 1. Update Auth Metadata
-        // 1. Update Auth Metadata
-        const { error: authError } = await require('../config/supabaseAdmin').auth.admin.updateUserById(
-            user.id,
-            { user_metadata: { full_name } }
-        );
-        if (authError) throw authError;
+        const updates = {};
+        if (full_name) updates.full_name = full_name;
+        // Phone is usually not stored in metadata duplicatedly unless needed, but let's keep it clean.
+
+        if (Object.keys(updates).length > 0) {
+            const { error: authError } = await require('../config/supabaseAdmin').auth.admin.updateUserById(
+                user.id,
+                { user_metadata: updates }
+            );
+            if (authError) throw authError;
+        }
 
         // 2. Update Public Profile
+        const profileUpdates = {};
+        if (full_name) profileUpdates.full_name = full_name;
+        if (phone !== undefined) profileUpdates.phone = phone;
+
         const { error: profileError } = await require('../config/supabaseAdmin')
             .from('profiles')
-            .update({ full_name })
+            .update(profileUpdates)
             .eq('id', user.id);
 
         if (profileError) throw profileError;
 
-        res.json({ message: 'Profile updated successfully', user: { ...user, user_metadata: { ...user.user_metadata, full_name } } });
+        res.json({ message: 'Profile updated successfully', user: { ...user, user_metadata: { ...user.user_metadata, ...updates }, phone: phone } });
     } catch (err) {
         res.status(400).json({ error: err.message });
     }

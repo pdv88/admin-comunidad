@@ -10,6 +10,7 @@ const Settings = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [fullName, setFullName] = React.useState(user?.user_metadata?.full_name || '');
+  const [phone, setPhone] = React.useState(user?.phone || '');
   const [loading, setLoading] = React.useState(false);
   const [successMsg, setSuccessMsg] = React.useState('');
   const [errorMsg, setErrorMsg] = React.useState('');
@@ -72,7 +73,7 @@ const Settings = () => {
     setErrorMsg('');
     setSuccessMsg('');
     try {
-        await updateProfile({ full_name: fullName });
+        await updateProfile({ full_name: fullName, phone: phone });
         setSuccessMsg(t('settings.update_success', 'Profile updated successfully'));
     } catch (error) {
         setErrorMsg('Failed to update profile');
@@ -131,6 +132,18 @@ const Settings = () => {
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
                     />
+                </div>
+                <div>
+                     <label htmlFor="phone" className="block text-sm font-medium mb-2 mt-4 dark:text-gray-300">{t('settings.profile.phone', 'Phone Number')}</label>
+                     <input 
+                         type="tel" 
+                         id="phone"
+                         className="glass-input w-full"
+                         value={phone}
+                         onChange={(e) => setPhone(e.target.value)}
+                     />
+                </div>
+                <div className="flex gap-4 mt-4">
                     <button 
                         onClick={handleUpdateProfile}
                         disabled={loading}

@@ -370,6 +370,7 @@
     },
     "user_management": {
         "title": "Gestión de Usuarios",
+        "search_placeholder": "Buscar usuarios...",
         "loading": "Cargando usuarios...",
         "invite": {
             "title": "Invitar Nuevo Usuario",
@@ -382,6 +383,7 @@
         "table": {
             "name": "Nombre",
             "role": "Rol",
+            "block": "Bloque",
             "unit": "Unidad",
             "email": "Correo",
             "phone": "Teléfono",
@@ -435,6 +437,7 @@
         "title": "Configuración de la Cuenta",
         "subtitle": "Administra tu perfil y preferencias.",
         "fullname": "Nombre Completo",
+        "phone": "Teléfono",
         "email": "Correo Electrónico",
         "role": "Rol",
         "save": "Guardar Cambios",

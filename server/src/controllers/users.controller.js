@@ -49,7 +49,7 @@ exports.listUsers = async (req, res) => {
                 *,
                 units (
                     *,
-                    blocks ( community_id )
+                    blocks ( * )
                 )
             `)
             .in('profile_id', profileIds);
@@ -116,7 +116,7 @@ exports.listUsers = async (req, res) => {
 }
 
 exports.inviteUser = async (req, res) => {
-    const { email, fullName, roleName, unitIds } = req.body;
+    const { email, fullName, roleName, unitIds, phone } = req.body;
     let communityId = req.headers['x-community-id'];
 
     // Handle potential duplicate headers (e.g. "id, id")
@@ -337,7 +337,8 @@ exports.inviteUser = async (req, res) => {
                 await supabaseAdmin.from('profiles').upsert({
                     id: userId,
                     email: email,
-                    full_name: fullName
+                    full_name: fullName,
+                    phone: phone || null
                 });
             }
         }
@@ -390,16 +391,20 @@ exports.inviteUser = async (req, res) => {
 exports.updateUser = async (req, res) => {
     const { id } = req.params; // potentially the community_member_id or profile_id
     // Ideally we pass profile_id. Let's assume ID is profile_id for now as it's standard.
-    const { roleName, unitIds, fullName } = req.body;
+    const { roleName, unitIds, fullName, phone } = req.body;
     let communityId = req.headers['x-community-id'];
     if (communityId && communityId.includes(',')) communityId = communityId.split(',')[0].trim();
 
     try {
-        // Update Profile Name if provided
-        if (fullName) {
+        // Update Profile Name/Phone passed
+        if (fullName || phone !== undefined) {
+            const updates = {};
+            if (fullName) updates.full_name = fullName;
+            if (phone !== undefined) updates.phone = phone;
+
             const { error: profileError } = await supabaseAdmin
                 .from('profiles')
-                .update({ full_name: fullName })
+                .update(updates)
                 .eq('id', id);
 
             if (profileError) throw profileError;
