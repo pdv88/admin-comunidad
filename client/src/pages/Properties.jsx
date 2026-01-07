@@ -13,6 +13,9 @@ const Properties = () => {
     const [loading, setLoading] = useState(true);
     const [newBlock, setNewBlock] = useState('');
     const [newUnit, setNewUnit] = useState({ blockId: '', number: '', type: 'apartment' });
+    
+    // Loading state for assigning representative
+    const [assigningRepBlockId, setAssigningRepBlockId] = useState(null);
 
     const [toast, setToast] = useState({ message: '', type: 'success' });
     const { t } = useTranslation();
@@ -101,6 +104,7 @@ const Properties = () => {
     };
 
     const handleAssignRep = async (blockId, userId) => {
+        setAssigningRepBlockId(blockId);
         try {
             const res = await fetch(`${API_URL}/api/properties/blocks/${blockId}`, {
                 method: 'PUT',
@@ -108,10 +112,12 @@ const Properties = () => {
                 body: JSON.stringify({ representative_id: userId || null })
             });
             if (res.ok) {
-                fetchData();
+                await fetchData();
             }
         } catch (error) {
             console.error(error);
+        } finally {
+            setAssigningRepBlockId(null);
         }
     };
 
@@ -256,16 +262,23 @@ const Properties = () => {
                                     <h3 className="font-bold text-gray-800 dark:text-white">{block.name}</h3>
                                     <div className="flex items-center gap-2">
                                          <span className="text-xs text-gray-500">{t('properties.representative')}:</span>
-                                         <select 
-                                            className="ml-2 text-sm py-1 px-3 rounded-lg border-none bg-white/40 dark:bg-neutral-800/40 backdrop-blur-sm shadow-sm focus:ring-2 focus:ring-blue-500/50"
-                                            value={block.representative_id || ''}
-                                            onChange={(e) => handleAssignRep(block.id, e.target.value)}
-                                         >
-                                            <option value="">{t('properties.none')}</option>
-                                            {users.map(u => (
-                                                <option key={u.id} value={u.id}>{u.full_name || u.email || 'User'}</option>
-                                            ))}
-                                         </select>
+                                         {assigningRepBlockId === block.id ? (
+                                             <div className="ml-2 flex items-center justify-center w-6 h-6">
+                                                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                                             </div>
+                                         ) : (
+                                             <select 
+                                                className="ml-2 text-sm py-1 px-3 rounded-lg border-none bg-white/40 dark:bg-neutral-800/40 backdrop-blur-sm shadow-sm focus:ring-2 focus:ring-blue-500/50"
+                                                value={block.representative_id || ''}
+                                                onChange={(e) => handleAssignRep(block.id, e.target.value)}
+                                                disabled={assigningRepBlockId !== null}
+                                             >
+                                                <option value="">{t('properties.none')}</option>
+                                                {users.map(u => (
+                                                    <option key={u.id} value={u.id}>{u.full_name || u.email || 'User'}</option>
+                                                ))}
+                                             </select>
+                                         )}
                                     </div>
                                 </div>
                                 <div className="p-6">

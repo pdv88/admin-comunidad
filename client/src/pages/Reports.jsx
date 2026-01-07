@@ -14,6 +14,7 @@ const Reports = () => {
     const { user, activeCommunity } = useAuth();
     const { t } = useTranslation();
     const [reports, setReports] = useState([]);
+    const [blocks, setBlocks] = useState([]); // Blocks for scope selection
     const [filteredReports, setFilteredReports] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
@@ -25,16 +26,18 @@ const Reports = () => {
 
     const role = activeCommunity?.roles?.name || user?.profile?.roles?.name;
     const isVocal = role === 'vocal';
-    const isAdminOrPres = ['admin', 'president', 'secretary', 'treasurer'].includes(role); //Added treasurer just in case
+    const isAdminOrPres = ['admin', 'president', 'secretary', 'treasurer'].includes(role); 
     const isMaintenance = role === 'maintenance';
 
-    const [activeTab, setActiveTab] = useState(isAdminOrPres ? 'all' : 'my'); // 'my', 'block', 'all'
+    const [activeTab, setActiveTab] = useState(isAdminOrPres ? 'all' : 'my'); 
 
     // New Report State
     const [newReport, setNewReport] = useState({ 
         title: '', 
         description: '', 
         category: 'maintenance',
+        scope: 'community', // community, block, unit
+        block_id: '',
         unit_id: '' 
     });
 
@@ -42,13 +45,21 @@ const Reports = () => {
     const userUnits = user?.profile?.unit_owners?.map(uo => uo.units) || [];
 
     useEffect(() => {
+        // If user is resident (only 1 unit usually), default to unit scope?
+        // Or keep community default. Let's keep community default but if they only have 1 unit, pre-fill IDs.
         if (userUnits.length === 1) {
-            setNewReport(prev => ({ ...prev, unit_id: userUnits[0].id }));
+            setNewReport(prev => ({ 
+                ...prev, 
+                // scope: 'unit', // Optional: Auto-select unit scope? user might want community
+                unit_id: userUnits[0].id,
+                block_id: userUnits[0].block_id
+            }));
         }
         fetchReports();
+        fetchBlocks();
     }, []);
 
-    // Effect to filter reports based on Active Tab
+    // ... (existing activeTab useEffect) ...
     useEffect(() => {
         if (!reports.length) return;
 
@@ -56,14 +67,16 @@ const Reports = () => {
         if (activeTab === 'my') {
             filtered = reports.filter(r => r.user_id === user.id);
         } else if (activeTab === 'block') {
-            // Filter by Vocal's blocks
-            const myBlockIds = userUnits.map(u => u.block_id);
-            filtered = reports.filter(r => myBlockIds.includes(r.block_id));
+            // Filter by blocks where the user is the representative
+            const myVocalBlockIds = blocks
+                .filter(b => b.representative_id === user.id)
+                .map(b => b.id);
+            filtered = reports.filter(r => myVocalBlockIds.includes(r.block_id));
         } else if (activeTab === 'all') {
             filtered = reports;
         }
         setFilteredReports(filtered);
-    }, [activeTab, reports]);
+    }, [activeTab, reports, blocks, user.id]);
 
 
     const fetchReports = async () => {
@@ -75,7 +88,6 @@ const Reports = () => {
             if (res.ok) {
                 const data = await res.json();
                 setReports(data);
-                // Default filter will trigger via useEffect
             }
         } catch (error) {
             console.error('Error fetching reports:', error);
@@ -84,22 +96,54 @@ const Reports = () => {
         }
     };
 
+    const fetchBlocks = async () => {
+        try {
+            const res = await fetch(`${API_URL}/api/properties/blocks`);
+            if (res.ok) {
+                const data = await res.json();
+                setBlocks(data);
+            }
+        } catch (error) {
+            console.error("Error fetching blocks:", error);
+        }
+    };
+
     const handleCreateReport = async (e) => {
         e.preventDefault();
         try {
             const token = localStorage.getItem('token');
+            
+            // Prepare payload based on scope
+            const payload = {
+                title: newReport.title,
+                description: newReport.description,
+                category: newReport.category,
+                // Scope logic
+                unit_id: newReport.scope === 'unit' ? newReport.unit_id : null,
+                block_id: newReport.scope === 'block' ? newReport.block_id : null
+                // if scope is community, both are null
+            };
+
             const res = await fetch(`${API_URL}/api/reports`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify(newReport)
+                body: JSON.stringify(payload)
             });
 
             if (res.ok) {
                 setShowModal(false);
-                setNewReport({ title: '', description: '', category: 'maintenance', unit_id: userUnits.length === 1 ? userUnits[0].id : '' });
+                // Reset form
+                setNewReport({ 
+                    title: '', 
+                    description: '', 
+                    category: 'maintenance', 
+                    scope: 'community',
+                    block_id: userUnits.length === 1 ? userUnits[0].block_id : '',
+                    unit_id: userUnits.length === 1 ? userUnits[0].id : '' 
+                });
                 fetchReports();
                 setToast({ message: t('reports.create_success', 'Report created successfully'), type: 'success' });
             } else {
@@ -111,6 +155,7 @@ const Reports = () => {
         }
     };
 
+    // ... (handleDeleteClick, confirmDeleteReport, handleStatusUpdate, getStatusColor remain same) ...
     const handleDeleteClick = (reportId) => {
         setReportToDelete(reportId);
         setShowDeleteModal(true);
@@ -183,15 +228,18 @@ const Reports = () => {
                 onClose={() => setToast({ ...toast, message: '' })} 
             />
             <div className="max-w-7xl mx-auto space-y-4 md:space-y-8">
+                {/* ... Header and Tabs ... */}
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t('reports.title', 'Issues & Maintenance')}</h1>
-                    <button 
-                        onClick={() => setShowModal(true)}
-                        className="glass-button gap-2"
-                    >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
-                        {t('reports.report_issue', 'Report Issue')}
-                    </button>
+                    {(isAdminOrPres || isVocal) && (
+                        <button 
+                            onClick={() => setShowModal(true)}
+                            className="glass-button gap-2"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
+                            {t('reports.report_issue', 'Report Issue')}
+                        </button>
+                    )}
                 </div>
 
                 {/* Tabs */}
@@ -204,7 +252,7 @@ const Reports = () => {
                     >
                         {t('reports.tabs.my', 'My Reports')}
                     </button>
-                    {(isVocal || isAdminOrPres) && (
+                    {isVocal && !isAdminOrPres && (
                         <button
                             onClick={() => setActiveTab('block')}
                             className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === 'block' 
@@ -246,17 +294,26 @@ const Reports = () => {
                                             <span className="text-xs text-gray-500 dark:text-neutral-400">
                                                 {new Date(report.created_at).toLocaleDateString()}
                                             </span>
-                                            {/* Show Unit Info if not 'my' tab */}
-                                            {activeTab !== 'my' && report.units && (
+                                            
+                                            {/* Scope Badge */}
+                                            {report.unit_id ? (
                                                 <span className="text-xs font-semibold text-gray-600 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 px-2 py-0.5 rounded">
-                                                    {report.units.blocks?.name} - {report.units.unit_number}
+                                                    {t('reports.scope.unit', 'Unit')}: {report.units?.unit_number} ({report.units?.blocks?.name})
+                                                </span>
+                                            ) : report.block_id ? (
+                                                <span className="text-xs font-semibold text-gray-600 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 px-2 py-0.5 rounded">
+                                                    {t('reports.scope.block', 'Block')}: {blocks.find(b => b.id === report.block_id)?.name || 'N/A'}
+                                                </span>
+                                            ) : (
+                                                <span className="text-xs font-semibold text-gray-600 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 px-2 py-0.5 rounded">
+                                                    {t('reports.scope.community', 'Community')}
                                                 </span>
                                             )}
                                         </div>
                                         <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-1">{report.title}</h3>
                                         <p className="text-gray-600 dark:text-neutral-400 text-sm mb-3">{report.description}</p>
                                         
-                                        {/* Status Actions for Authorized Users */}
+                                        {/* Status Actions */}
                                         {(isAdminOrPres || isMaintenance || (isVocal && activeTab === 'block')) && (
                                             <div className="flex gap-2 mt-2">
                                                 {report.status === 'pending' && (
@@ -277,7 +334,7 @@ const Reports = () => {
                                             </div>
                                         )}
 
-                                        {/* Delete Action (Admins or Own Pending Reports) */}
+                                        {/* Delete Action */}
                                         {(isAdminOrPres || (report.user_id === user.id && report.status === 'pending')) && (
                                             <div className="mt-2 text-right">
                                                  <button 
@@ -306,24 +363,91 @@ const Reports = () => {
                         <div className="glass-card w-full max-w-md p-6 shadow-xl animate-fade-in">
                             <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">{t('reports.form.title', 'Report Issue')}</h2>
                             <form onSubmit={handleCreateReport} className="space-y-4">
-                                {/* Unit Selection (if multiple) */}
-                                {userUnits.length > 1 && (
+                                
+                                {/* Scope Selector */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">{t('reports.form.scope', 'Scope')}</label>
+                                    <GlassSelect
+                                        value={newReport.scope}
+                                        onChange={(e) => setNewReport({ ...newReport, scope: e.target.value })}
+                                        options={[
+                                            { value: 'community', label: t('reports.scope.community', 'Community (General)') },
+                                            { value: 'block', label: t('reports.scope.block', 'Block (Building)') },
+                                            { value: 'unit', label: t('reports.scope.unit', 'My Unit') }
+                                        ]}
+                                    />
+                                </div>
+
+                                {/* Conditional Block Selection (For Block Scope OR Unit Scope for Admins) */}
+                                {(newReport.scope === 'block' || ((isAdminOrPres || isVocal) && newReport.scope === 'unit')) && (
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">{t('reports.form.unit', 'Unit')}</label>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">{t('reports.form.select_block', 'Select Block')}</label>
                                         <GlassSelect
-                                            value={newReport.unit_id}
-                                            onChange={(e) => setNewReport({ ...newReport, unit_id: e.target.value })}
+                                            value={newReport.block_id}
+                                            onChange={(e) => setNewReport({ ...newReport, block_id: e.target.value, unit_id: '' })} // Reset unit when block changes
                                             options={[
-                                                 { value: '', label: t('common.select', 'Select...') },
-                                                 ...userUnits.map(unit => ({
-                                                     value: unit.id,
-                                                     label: `${unit.blocks?.name ? unit.blocks.name + ' - ' : ''}${unit.unit_number}`
-                                                 }))
+                                                { value: '', label: t('common.select', 'Select...') },
+                                                ...blocks
+                                                    .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
+                                                    .map(b => ({ value: b.id, label: b.name }))
                                             ]}
-                                            placeholder={t('reports.form.select_unit', 'Select Unit')}
-                                            required
+                                            required={newReport.scope === 'block' || newReport.scope === 'unit'}
                                         />
                                     </div>
+                                )}
+
+                                {/* Conditional Unit Selection */}
+                                {newReport.scope === 'unit' && (
+                                    (isAdminOrPres || isVocal) ? (
+                                        // Admin/Vocal View: Select from units in chosen block
+                                        newReport.block_id && (
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">{t('reports.form.unit', 'Unit')}</label>
+                                                <GlassSelect
+                                                    value={newReport.unit_id}
+                                                    onChange={(e) => setNewReport({ ...newReport, unit_id: e.target.value })}
+                                                    options={[
+                                                         { value: '', label: t('common.select', 'Select...') },
+                                                         ...(blocks.find(b => b.id === newReport.block_id)?.units
+                                                            ?.sort((a, b) => a.unit_number.localeCompare(b.unit_number, undefined, { numeric: true }))
+                                                            ?.map(u => ({
+                                                             value: u.id,
+                                                             label: u.unit_number
+                                                         })) || [])
+                                                    ]}
+                                                    required={newReport.scope === 'unit'}
+                                                    placeholder={t('reports.form.select_unit', 'Select Unit')}
+                                                />
+                                            </div>
+                                        )
+                                    ) : (
+                                        // Resident View: Select from OWN units (if multiple)
+                                        userUnits.length > 0 && (
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">{t('reports.form.unit', 'Unit')}</label>
+                                                <GlassSelect
+                                                    value={newReport.unit_id}
+                                                    onChange={(e) => setNewReport({ ...newReport, unit_id: e.target.value })}
+                                                    options={[
+                                                         { value: '', label: t('common.select', 'Select...') },
+                                                         ...userUnits
+                                                            .sort((a, b) => {
+                                                                const blockA = a.blocks?.name || '';
+                                                                const blockB = b.blocks?.name || '';
+                                                                if (blockA !== blockB) return blockA.localeCompare(blockB, undefined, { numeric: true });
+                                                                return a.unit_number.localeCompare(b.unit_number, undefined, { numeric: true });
+                                                            })
+                                                            .map(unit => ({
+                                                             value: unit.id,
+                                                             label: `${unit.blocks?.name ? unit.blocks.name + ' - ' : ''}${unit.unit_number}`
+                                                         }))
+                                                    ]}
+                                                    required={newReport.scope === 'unit'}
+                                                    placeholder={t('reports.form.select_unit', 'Select Unit')}
+                                                />
+                                            </div>
+                                        )
+                                    )
                                 )}
                                 
                                 <div>

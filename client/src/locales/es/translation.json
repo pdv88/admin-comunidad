@@ -317,6 +317,11 @@
             "block": "Incidencias Bloque",
             "all": "Todas"
         },
+        "scope": {
+            "community": "Comunidad",
+            "block": "Bloque",
+            "unit": "Unidad"
+        },
         "status": {
             "pending": "Pendiente",
             "in_progress": "En Progreso",
@@ -331,9 +336,13 @@
         "no_reports": "No se encontraron reportes.",
         "form": {
             "title": "Título",
+            "scope": "Alcance",
+            "select_block": "Seleccionar Bloque",
             "issue_title": "Título de Incidencia",
             "category": "Categoría",
+            "select_category": "Seleccionar Categoría",
             "unit": "Unidad",
+            "select_unit": "Seleccionar Unidad",
             "desc": "Descripción",
             "placeholder_title": "ej. Luz rota",
             "placeholder_desc": "Describe el problema...",
@@ -414,7 +423,8 @@
             "resend_invite": "Reenviar Invitación",
             "resend_success": "Invitación reenviada exitosamente!",
             "resend_error": "Error al reenviar invitación",
-            "error_prefix": "Error: "
+            "error_prefix": "Error: ",
+            "role_change_restricted": "Solo el Super Admin puede cambiar roles."
         }
     },
     "update_password": {
@@ -480,6 +490,7 @@
         "error_occurred": "Ocurrió un error",
         "edit": "Editar",
         "save": "Guardar",
+        "saving": "Guardando...",
         "voted": "Votado",
         "view_results": "Ver Resultados",
         "confirm_delete_notice": "¿Estás seguro de que quieres eliminar este aviso?",

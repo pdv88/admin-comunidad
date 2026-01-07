@@ -18,6 +18,7 @@ const UserManagement = () => {
     const [selectedBlockId, setSelectedBlockId] = useState(''); // New state for block filter
     const [toast, setToast] = useState({ message: '', type: 'success' }); // Changed from message string
     const [editingUser, setEditingUser] = useState(null); // User being edited
+    const [isUpdating, setIsUpdating] = useState(false); // Loading state for updates
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [userToDelete, setUserToDelete] = useState(null);
     const { t } = useTranslation();
@@ -63,7 +64,7 @@ const UserManagement = () => {
 
     const handleUpdateUser = async (e) => {
         e.preventDefault();
-        // setMessage(t('user_management.messages.updating'));
+        setIsUpdating(true);
         try {
             const res = await fetch(`${API_URL}/api/users/${editingUser.id}`, {
                 method: 'PUT',
@@ -87,6 +88,8 @@ const UserManagement = () => {
             }
         } catch (error) {
             setToast({ message: t('user_management.messages.update_error'), type: 'error' });
+        } finally {
+            setIsUpdating(false);
         }
     };
 
@@ -535,9 +538,11 @@ const UserManagement = () => {
                                                     </button>
                                                     <button 
                                                         type="submit" 
-                                                        className="glass-button"
+                                                        className="glass-button flex items-center gap-2"
+                                                        disabled={isUpdating}
                                                     >
-                                                        {t('user_management.edit.save')}
+                                                        {isUpdating && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>}
+                                                        {isUpdating ? t('common.saving', 'Saving...') : t('user_management.edit.save')}
                                                     </button>
                                                 </div>
                                             </form>

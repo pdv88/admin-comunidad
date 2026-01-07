@@ -100,8 +100,10 @@ exports.create = async (req, res) => {
 
         if (!member) return res.status(403).json({ error: 'Not a member of this community' });
 
-        // If unit_id provided, fetch block_id (ensure unit is in THIS community? Not checked here, assumes valid unit)
-        let block_id = null;
+        // If unit_id provided, fetch block_id
+        // If NO unit_id, check if block_id was sent explicitly (Block Scope)
+        let block_id = req.body.block_id || null;
+
         if (unit_id) {
             const { data: unit } = await supabaseAdmin
                 .from('units')

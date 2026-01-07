@@ -428,7 +428,7 @@ exports.updateUser = async (req, res) => {
                 return res.status(403).json({ error: 'Only the Super Admin can change user roles.' });
             }
 
-            const { data: roleData, error: roleError } = await supabase
+            const { data: roleData, error: roleError } = await supabaseAdmin
                 .from('roles')
                 .select('id')
                 .eq('name', roleName)
