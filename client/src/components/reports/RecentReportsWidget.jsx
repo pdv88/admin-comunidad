@@ -117,10 +117,10 @@ const RecentReportsWidget = (props) => {
                                          report.category === 'noise' ? '🔊' : '📝'}
                                      </div>
                                      <div className="min-w-0">
-                                        <h4 className="font-semibold text-gray-900 dark:text-white truncate group-hover:text-blue-600 transition-colors">
+                                        <h3 className="font-semibold text-gray-900 dark:text-white truncate group-hover:text-blue-600 transition-colors">
                                             {report.title}
-                                        </h4>
-                                        <p className="text-xs text-gray-500 dark:text-neutral-400">
+                                        </h3>
+                                        <p className="text-xs text-gray-600 dark:text-neutral-400">
                                             {new Date(report.created_at).toLocaleDateString()}
                                         </p>
                                      </div>

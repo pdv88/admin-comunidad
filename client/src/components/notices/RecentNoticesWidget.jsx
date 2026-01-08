@@ -52,7 +52,7 @@ const RecentNoticesWidget = () => {
                     <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 shrink-0">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" /></svg>
                     </span>
-                    <span className="text-xs font-bold uppercase px-2 py-0.5 rounded-full whitespace-nowrap bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/10">
+                    <span className="text-xs font-bold uppercase px-2 py-0.5 rounded-full whitespace-nowrap bg-blue-500/10 text-blue-800 dark:text-blue-200 border border-blue-500/10">
                         {t('notices.latest', 'Latest')}
                     </span>
                 </div>
@@ -65,14 +65,14 @@ const RecentNoticesWidget = () => {
                                 {notices.map((notice, idx) => (
                                     <div key={`${iteration}-${notice.id}-${idx}`} className="flex items-center gap-3 text-gray-800 dark:text-gray-200">
                                         {notice.priority === 'urgent' && (
-                                            <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm">
+                                            <span className="bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm">
                                                 FLASH
                                             </span>
                                         )}
                                         <span className="text-sm font-bold md:text-base">
                                             {notice.title}:
                                         </span>
-                                        <span className="text-sm md:text-base font-normal opacity-90">
+                                        <span className="text-sm md:text-base font-normal text-gray-700 dark:text-gray-300">
                                             {notice.content}
                                         </span>
                                         {/* Separator */}

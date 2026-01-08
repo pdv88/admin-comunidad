@@ -15,24 +15,24 @@ const AdminDashboard = () => {
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="bg-white dark:bg-neutral-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-700">
-                    <h3 className="text-gray-500 text-sm font-medium uppercase dark:text-neutral-400">{t('dashboard.admin.revenue', 'Revenue')}</h3>
+                    <h3 className="text-gray-600 text-sm font-medium uppercase dark:text-neutral-400">{t('dashboard.admin.revenue', 'Revenue')}</h3>
                     <p className="mt-2 text-3xl font-bold text-green-600 dark:text-green-500">€12,450</p>
-                    <span className="text-xs text-gray-500">{t('dashboard.admin.monthly', 'This month')}</span>
+                    <span className="text-xs text-gray-600">{t('dashboard.admin.monthly', 'This month')}</span>
                 </div>
                 <div className="bg-white dark:bg-neutral-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-700">
-                    <h3 className="text-gray-500 text-sm font-medium uppercase dark:text-neutral-400">{t('dashboard.admin.expenses', 'Expenses')}</h3>
+                    <h3 className="text-gray-600 text-sm font-medium uppercase dark:text-neutral-400">{t('dashboard.admin.expenses', 'Expenses')}</h3>
                     <p className="mt-2 text-3xl font-bold text-red-600 dark:text-red-500">€4,200</p>
-                    <span className="text-xs text-gray-500">{t('dashboard.admin.monthly', 'This month')}</span>
+                    <span className="text-xs text-gray-600">{t('dashboard.admin.monthly', 'This month')}</span>
                 </div>
                 <div className="bg-white dark:bg-neutral-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-700">
-                    <h3 className="text-gray-500 text-sm font-medium uppercase dark:text-neutral-400">{t('dashboard.admin.delinquency', 'Delinquency')}</h3>
+                    <h3 className="text-gray-600 text-sm font-medium uppercase dark:text-neutral-400">{t('dashboard.admin.delinquency', 'Delinquency')}</h3>
                     <p className="mt-2 text-3xl font-bold text-orange-600 dark:text-orange-500">5.2%</p>
-                    <span className="text-xs text-gray-500">{t('dashboard.admin.active_cases', '3 active cases')}</span>
+                    <span className="text-xs text-gray-600">{t('dashboard.admin.active_cases', '3 active cases')}</span>
                 </div>
                 <div className="bg-white dark:bg-neutral-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-neutral-700">
-                    <h3 className="text-gray-500 text-sm font-medium uppercase dark:text-neutral-400">{t('dashboard.admin.tickets', 'Open Tickets')}</h3>
+                    <h3 className="text-gray-600 text-sm font-medium uppercase dark:text-neutral-400">{t('dashboard.admin.tickets', 'Open Tickets')}</h3>
                     <p className="mt-2 text-3xl font-bold text-blue-600 dark:text-blue-500">8</p>
-                    <span className="text-xs text-gray-500">{t('dashboard.admin.urgent', '2 urgent')}</span>
+                    <span className="text-xs text-gray-600">{t('dashboard.admin.urgent', '2 urgent')}</span>
                 </div>
             </div>
 

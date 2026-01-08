@@ -37,7 +37,7 @@ const ReportDetailsPanel = ({ report, onUpdate }) => {
     const [newNote, setNewNote] = useState('');
     const [sendingNote, setSendingNote] = useState(false);
 
-    const notesEndRef = useRef(null);
+    const notesContainerRef = useRef(null);
 
     // Permissions (using hasAnyRole helper)
     const canEdit = hasAnyRole(['super_admin', 'admin', 'president', 'maintenance']) || 
@@ -53,9 +53,10 @@ const ReportDetailsPanel = ({ report, onUpdate }) => {
     }, [activeTab]);
 
     useEffect(() => {
-        // Auto scroll to bottom of notes
-        if (activeTab === 'notes' && notesEndRef.current) {
-            notesEndRef.current.scrollIntoView({ behavior: "smooth" });
+        // Auto scroll to bottom of notes container only
+        if (activeTab === 'notes' && notesContainerRef.current) {
+            const { scrollHeight, clientHeight } = notesContainerRef.current;
+            notesContainerRef.current.scrollTo({ top: scrollHeight, behavior: 'smooth' });
         }
     }, [notes, activeTab]);
 
@@ -330,7 +331,7 @@ const ReportDetailsPanel = ({ report, onUpdate }) => {
                     {/* NOTES TAB */}
                     {activeTab === 'notes' && (
                         <div className="flex flex-col h-full">
-                            <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2">
+                            <div ref={notesContainerRef} className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2">
                                 {loadingNotes && <div className="text-center py-4"><div className="animate-spin inline-block w-6 h-6 border-2 border-current border-t-transparent rounded-full text-blue-500"></div></div>}
                                 {!loadingNotes && notes.length === 0 && (
                                     <p className="text-center text-gray-500 dark:text-neutral-500 italic py-10">{t('reports.modal.no_notes', 'No notes yet.')}</p>
@@ -345,7 +346,6 @@ const ReportDetailsPanel = ({ report, onUpdate }) => {
                                         </div>
                                     </div>
                                 ))}
-                                <div ref={notesEndRef} />
                             </div>
                             <form onSubmit={handleSendNote} className="relative">
                                 <input 
@@ -360,6 +360,7 @@ const ReportDetailsPanel = ({ report, onUpdate }) => {
                                     type="submit" 
                                     disabled={!newNote.trim() || sendingNote}
                                     className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:hover:bg-blue-600 transition-colors"
+                                    aria-label={t('reports.modal.send_note', 'Send note')}
                                 >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
                                 </button>
@@ -424,6 +425,7 @@ const ReportDetailsPanel = ({ report, onUpdate }) => {
                                                     }}
                                                     className="absolute top-2 right-2 p-1.5 bg-red-500/80 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm shadow-sm"
                                                     title={t('common.delete')}
+                                                    aria-label={t('common.delete')}
                                                 >
                                                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                                                 </button>
@@ -447,6 +449,7 @@ const ReportDetailsPanel = ({ report, onUpdate }) => {
                     <button 
                         onClick={() => setExpandedImage(null)}
                         className="absolute top-4 right-4 text-white hover:text-gray-300 p-2"
+                        aria-label={t('common.close', 'Close')}
                     >
                          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>

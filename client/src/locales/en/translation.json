@@ -8,6 +8,14 @@
         "login": "Log In",
         "register": "Register"
     },
+    "footer": {
+        "legal": "Legal",
+        "privacy": "Privacy Policy",
+        "terms": "Terms & Conditions",
+        "contact": "Contact",
+        "socials": "Follow Us",
+        "rights_reserved": "All rights reserved."
+    },
     "hero": {
         "title": "Smart Management for Your Community",
         "subtitle": "Simplify the administration of condominiums and buildings. Control payments, residents, and common areas in a single platform.",
@@ -139,11 +147,6 @@
         "t3": {
             "quote": "Reporting maintenance issues is so easy now. I take a photo, upload it, and it gets fixed."
         }
-    },
-    "footer": {
-        "about": "About us",
-        "services": "Services",
-        "blog": "Blog"
     },
     "auth": {
         "signin_title": "Sign in",
@@ -353,7 +356,22 @@
         },
         "create_success": "Report created successfully",
         "delete_success": "Report deleted successfully",
-        "status_updated": "Status updated"
+        "status_updated": "Status updated",
+        "modal": {
+            "details": "Details",
+            "notes": "Notes & Activity",
+            "images": "Images",
+            "report_id": "Report ID",
+            "created_at": "Created",
+            "status": "Status",
+            "no_notes": "No notes yet.",
+            "type_note": "Type a note...",
+            "send_note": "Send note",
+            "gallery": "Image Gallery",
+            "gallery_desc": "Upload photos of the issue.",
+            "primary": "Primary",
+            "no_images": "No images uploaded yet."
+        }
     },
     "voting": {
         "title": "Active Polls",
@@ -469,6 +487,7 @@
         "loading": "Loading...",
         "delete": "Delete",
         "cancel": "Cancel",
+        "close": "Close",
         "confirm": "Confirm",
         "confirm_delete_report": "Are you sure you want to delete this report? This cannot be undone.",
         "error_occurred": "An error occurred",
@@ -670,5 +689,52 @@
         "delete_title": "Delete Maintenance Fee",
         "delete_confirm": "Are you sure you want to delete this fee? This action cannot be undone.",
         "warning_gen_zero": "Warning: No new fees generated. All occupied units may already be billed for this period."
+    },
+    "terms": {
+        "title": "Terms and Conditions",
+        "updated": "Last updated: {{date}}",
+        "section1": {
+            "title": "1. Agreement to Terms",
+            "content": "These Terms and Conditions constitute a legally binding agreement made between you, whether personally or on behalf of an entity (\"you\") and Habiio (\"we,\" \"us\" or \"our\"), concerning your access to and use of the website as well as any other media form, media channel, mobile website or mobile application related, linked, or otherwise connected thereto."
+        },
+        "section2": {
+            "title": "2. Intellectual Property Rights",
+            "content": "Unless otherwise indicated, the Site is our proprietary property and all source code, databases, functionality, software, website designs, audio, video, text, photographs, and graphics on the Site and the trademarks, service marks, and logos contained therein are owned or controlled by us or licensed to us."
+        },
+        "section3": {
+            "title": "3. User Representations",
+            "content": "By using the Site, you represent and warrant that: (1) all registration information you submit will be true, accurate, current, and complete; (2) you will maintain the accuracy of such information and promptly update such registration information as necessary."
+        },
+        "section4": {
+            "title": "4. Modifications and Interruptions",
+            "content": "We reserve the right to change, modify, or remove the contents of the Site at any time or for any reason at our sole discretion without notice. However, we have no obligation to update any information on our Site."
+        }
+    },
+    "privacy": {
+        "title": "Privacy Policy",
+        "updated": "Last updated: {{date}}",
+        "section1": {
+            "title": "1. Introduction",
+            "content": "Welcome to Habiio. We respect your privacy and are committed to protecting your personal data. This privacy policy will inform you as to how we look after your personal data when you visit our website and tell you about your privacy rights and how the law protects you."
+        },
+        "section2": {
+            "title": "2. Data We Collect",
+            "content": "We may collect, use, store and transfer different kinds of personal data about you which we have grouped together follows:",
+            "list1": "Identity Data (name, username)",
+            "list2": "Contact Data (email address, telephone number)",
+            "list3": "Technical Data (IP address, browser type)",
+            "list4": "Usage Data (how you use our website)"
+        },
+        "section3": {
+            "title": "3. How We Use Your Data",
+            "content": "We will only use your personal data when the law allows us to. Most commonly, we will use your personal data in the following circumstances:",
+            "list1": "Where we need to perform the contract we are about to enter into or have entered into with you.",
+            "list2": "Where it is necessary for our legitimate interests.",
+            "list3": "Where we need to comply with a legal or regulatory obligation."
+        },
+        "section4": {
+            "title": "4. Contact Us",
+            "content": "If you have any questions about this privacy policy, please contact us."
+        }
     }
 }

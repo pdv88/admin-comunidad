@@ -8,6 +8,14 @@
         "login": "Iniciar Sesión",
         "register": "Registrarse"
     },
+    "footer": {
+        "legal": "Legal",
+        "privacy": "Política de Privacidad",
+        "terms": "Términos y Condiciones",
+        "contact": "Contacto",
+        "socials": "Síguenos",
+        "rights_reserved": "Todos los derechos reservados."
+    },
     "hero": {
         "title": "Gestión Inteligente para tu Comunidad",
         "subtitle": "Simplifica la administración de condominios y edificios. Control de pagos, residentes y áreas comunes en una sola plataforma.",
@@ -139,11 +147,6 @@
         "t3": {
             "quote": "Reportar incidencias es muy fácil ahora. Hago una foto, la subo y se soluciona."
         }
-    },
-    "footer": {
-        "about": "Sobre nosotros",
-        "services": "Servicios",
-        "blog": "Blog"
     },
     "auth": {
         "signin_title": "Iniciar Sesión",
@@ -373,6 +376,7 @@
             "status": "Estado",
             "no_notes": "Aún no hay notas.",
             "type_note": "Escribe una nota...",
+            "send_note": "Enviar nota",
             "gallery": "Galería de Imágenes",
             "gallery_desc": "Sube fotos del problema.",
             "primary": "Principal",
@@ -512,6 +516,7 @@
         "loading": "Cargando...",
         "delete": "Eliminar",
         "cancel": "Cancelar",
+        "close": "Cerrar",
         "confirm": "Confirmar",
         "confirm_delete_report": "¿Estás seguro de que quieres eliminar este reporte? No se puede deshacer.",
         "confirm_delete_image": "¿Estás seguro de que quieres eliminar esta imagen?",
@@ -722,5 +727,52 @@
         "delete_title": "Eliminar Cuota de Mantenimiento",
         "delete_confirm": "¿Estás seguro de que quieres eliminar esta cuota? Esta acción no se puede deshacer.",
         "warning_gen_zero": "Advertencia: No se generaron nuevas cuotas. Todas las unidades ocupadas ya podrían estar facturadas para este periodo."
+    },
+    "terms": {
+        "title": "Términos y Condiciones",
+        "updated": "Última actualización: {{date}}",
+        "section1": {
+            "title": "1. Acuerdo de Términos",
+            "content": "Estos Términos y Condiciones constituyen un acuerdo legalmente vinculante realizado entre usted, ya sea personalmente o en nombre de una entidad (\"usted\") y Habiio (\"nosotros\", \"nos\" o \"nuestro\"), con respecto a su acceso y uso del sitio web, así como cualquier otro medio de comunicación, canal de medios, sitio web móvil o aplicación móvil relacionada, vinculada o conectada de otra manera a la misma."
+        },
+        "section2": {
+            "title": "2. Derechos de Propiedad Intelectual",
+            "content": "A menos que se indique lo contrario, el Sitio es de nuestra propiedad exclusiva y todo el código fuente, bases de datos, funcionalidad, software, diseños de sitios web, audio, video, texto, fotografías y gráficos en el Sitio y las marcas comerciales, marcas de servicio y logotipos contenidos en el mismo son propiedad nuestra o controlados por nosotros o con licencia para nosotros."
+        },
+        "section3": {
+            "title": "3. Representaciones del Usuario",
+            "content": "Al utilizar el Sitio, usted declara y garantiza que: (1) toda la información de registro que envíe será verdadera, precisa, actual y completa; (2) mantendrá la precisión de dicha información y actualizará rápidamente dicha información de registro según sea necesario."
+        },
+        "section4": {
+            "title": "4. Modificaciones e Interrupciones",
+            "content": "Nos reservamos el derecho de cambiar, modificar o eliminar el contenido del Sitio en cualquier momento o por cualquier motivo a nuestra entera discreción sin previo aviso. Sin embargo, no tenemos la obligación de actualizar ninguna información en nuestro Sitio."
+        }
+    },
+    "privacy": {
+        "title": "Política de Privacidad",
+        "updated": "Última actualización: {{date}}",
+        "section1": {
+            "title": "1. Introducción",
+            "content": "Bienvenido a Habiio. Respetamos su privacidad y estamos comprometidos con la protección de sus datos personales. Esta política de privacidad le informará sobre cómo cuidamos sus datos personales cuando visita nuestro sitio web y le informará sobre sus derechos de privacidad y cómo la ley lo protege."
+        },
+        "section2": {
+            "title": "2. Datos que Recopilamos",
+            "content": "Podemos recopilar, utilizar, almacenar y transferir diferentes tipos de datos personales sobre usted que hemos agrupado de la siguiente manera:",
+            "list1": "Datos de Identidad (nombre, nombre de usuario)",
+            "list2": "Datos de Contacto (dirección de correo electrónico, número de teléfono)",
+            "list3": "Datos Técnicos (dirección IP, tipo de navegador)",
+            "list4": "Datos de Uso (cómo utiliza nuestro sitio web)"
+        },
+        "section3": {
+            "title": "3. Cómo Utilizamos sus Datos",
+            "content": "Solo utilizaremos sus datos personales cuando la ley nos lo permita. Lo más habitual es que utilicemos sus datos personales en las siguientes circunstancias:",
+            "list1": "Cuando necesitemos celebrar el contrato que estamos a punto de celebrar o hemos celebrado con usted.",
+            "list2": "Cuando sea necesario para nuestros intereses legítimos.",
+            "list3": "Cuando necesitemos cumplir con una obligación legal o reglamentaria."
+        },
+        "section4": {
+            "title": "4. Contacto",
+            "content": "Si tiene alguna pregunta sobre esta política de privacidad, contáctenos."
+        }
     }
 }

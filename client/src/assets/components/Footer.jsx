@@ -95,7 +95,7 @@ function Footer() {
            <div className="mt-8 pt-6 border-t border-gray-200 dark:border-neutral-700">
                <div className="text-center">
                    <p className="text-sm text-gray-500 dark:text-neutral-400">
-                       © {new Date().getFullYear()} Habiio. All rights reserved.
+                       © {new Date().getFullYear()} Habiio. {t('footer.rights_reserved', 'All rights reserved.')}
                    </p>
                </div>
            </div>

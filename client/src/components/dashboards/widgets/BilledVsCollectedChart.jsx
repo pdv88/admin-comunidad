@@ -111,10 +111,10 @@ const BilledVsCollectedChart = ({ className }) => {
         <div className="relative z-10 p-6 flex flex-col h-full">
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h3 className="text-lg font-bold text-gray-800 dark:text-white">
+                    <h2 className="text-lg font-bold text-gray-800 dark:text-white">
                         {t('dashboard.graphs.financial_overview', 'Financial Overview')}
-                    </h3>
-                    <p className="text-xs text-gray-500 dark:text-neutral-400">
+                    </h2>
+                    <p className="text-xs text-gray-600 dark:text-neutral-400">
                         {t('dashboard.graphs.billed_vs_collected', 'Billed vs Collected (Last 6 Months)')}
                     </p>
                 </div>

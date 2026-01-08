@@ -89,7 +89,7 @@ const WelcomeWidget = ({ role }) => {
                                 {feeStatus === 'paid' ? '✓' : '!'}
                             </div>
                             <div className="flex flex-col">
-                                <span className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                                <span className="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">
                                     {t('dashboard.monthly_fee')}
                                 </span>
                                 <div className={`text-xs font-bold uppercase tracking-wider mb-0.5 ${
