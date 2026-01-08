@@ -5,6 +5,13 @@ exports.getAll = async (req, res) => {
     const token = req.headers.authorization?.split(' ')[1];
     const communityId = req.headers['x-community-id'];
 
+    // Pagination & Filter Params
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const search = req.query.search || '';
+    const status = req.query.status || 'all';
+    const category = req.query.category || 'all';
+
     if (!token) return res.status(401).json({ error: 'No token' });
     if (!communityId) return res.status(400).json({ error: 'Community ID header missing' });
 
@@ -44,33 +51,79 @@ exports.getAll = async (req, res) => {
                 *,
                 profiles:user_id (full_name, email),
                 units:unit_id (unit_number, blocks(name))
-            `)
-            .eq('community_id', communityId) // Filter by Community
-            .order('created_at', { ascending: false });
+            `, { count: 'exact' }) // Request total count
+            .eq('community_id', communityId);
 
-        // RBAC Filtering
+        // RBAC Filtering (Base Scope)
         if (['admin', 'president', 'maintenance', 'secretary'].includes(role)) {
             // See ALL reports in community
         } else if (role === 'vocal') {
-            // See reports for their BLOCKS or their own reports
-            const myBlockIds = profile.unit_owners
-                ?.map(uo => uo.units?.block_id)
-                .filter(Boolean);
+            // Vocal Logic: Can see BLOCK reports or OWN reports
+            // If we want "My Reports" tab specifically, user might send ?scope=my
+            // But for general 'getAll', we usually return everything they have access to.
+            // If frontend sends specific scope (e.g. 'my' or 'block'), we can respect that too,
+            // but let's stick to the secure base logic + filters.
 
-            if (myBlockIds && myBlockIds.length > 0) {
-                query = query.or(`block_id.in.(${myBlockIds.join(',')}),user_id.eq.${user.id}`);
-            } else {
+            // However, to support the frontend tabs ('my', 'block', 'all'), passed as filters?
+            // Or does frontend purely rely on backend to filter? 
+            // Current Frontend: 'my' => user_id check. 'block' => block_id check.
+            // Let's implement 'scope' param or handle it via 'user_id' filter from frontend?
+            // Simplest: Let frontend send `?mode=my` or `?mode=block`.
+
+            const mode = req.query.mode || 'all'; // 'my', 'block', 'all'
+
+            if (mode === 'my') {
                 query = query.eq('user_id', user.id);
+            } else if (mode === 'block') {
+                const myBlockIds = profile.unit_owners
+                    ?.map(uo => uo.units?.block_id)
+                    .filter(Boolean) || [];
+                if (myBlockIds.length > 0) {
+                    query = query.in('block_id', myBlockIds);
+                } else {
+                    query = query.eq('1', '0'); // No blocks, no results
+                }
+            } else {
+                // Default Vocal View: Own + Block? Or just enforce what they CAN see?
+                // Usually vocal sees everything in their block AND their own stuff.
+                // If no mode specified, we return the Union.
+                const myBlockIds = profile.unit_owners
+                    ?.map(uo => uo.units?.block_id)
+                    .filter(Boolean) || [];
+                if (myBlockIds.length > 0) {
+                    query = query.or(`block_id.in.(${myBlockIds.join(',')}),user_id.eq.${user.id}`);
+                } else {
+                    query = query.eq('user_id', user.id);
+                }
             }
+
         } else {
             // Resident: See ONLY own reports
             query = query.eq('user_id', user.id);
         }
 
-        const { data: reports, error } = await query;
+        // Apply Filters
+        if (status !== 'all') {
+            query = query.eq('status', status);
+        }
+        if (category !== 'all') {
+            query = query.eq('category', category);
+        }
+        if (search) {
+            // ILIKE search on title, description. 
+            // Searching related tables (profiles.full_name) is harder in one query without a view or rpc.
+            // For now, let's search title/desc.
+            query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
+        }
+
+        // Apply Pagination
+        query = query.order('created_at', { ascending: false })
+            .range((page - 1) * limit, page * limit - 1);
+
+        const { data: reports, count, error } = await query;
         if (error) throw error;
 
-        res.json(reports);
+        res.json({ data: reports, count });
     } catch (err) {
         console.error('Get Reports Error:', err);
         res.status(400).json({ error: err.message });

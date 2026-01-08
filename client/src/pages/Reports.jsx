@@ -16,7 +16,6 @@ const Reports = () => {
     const { t } = useTranslation();
     const [reports, setReports] = useState([]);
     const [blocks, setBlocks] = useState([]); // Blocks for scope selection
-    const [filteredReports, setFilteredReports] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     
@@ -45,77 +44,71 @@ const Reports = () => {
         unit_id: '' 
     });
 
-    // Filters
+    // Filters & Pagination
     const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [categoryFilter, setCategoryFilter] = useState('all');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalReports, setTotalReports] = useState(0);
+    const itemsPerPage = 10;
 
     // Get User Units for Dropdown
     const userUnits = user?.profile?.unit_owners?.map(uo => uo.units) || [];
 
     useEffect(() => {
-        // If user is resident (only 1 unit usually), default to unit scope?
-        // Or keep community default. Let's keep community default but if they only have 1 unit, pre-fill IDs.
+        // Debounce search term
+        const handler = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+        }, 500); // 500ms delay
+
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [searchTerm]);
+
+    // Reset page when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [debouncedSearch, statusFilter, categoryFilter, activeTab]);
+
+    useEffect(() => {
         if (userUnits.length === 1) {
-            setNewReport(prev => ({ 
+             setNewReport(prev => ({ 
                 ...prev, 
-                // scope: 'unit', // Optional: Auto-select unit scope? user might want community
                 unit_id: userUnits[0].id,
                 block_id: userUnits[0].block_id
             }));
         }
-        fetchReports();
         fetchBlocks();
     }, []);
 
-    // ... (existing activeTab useEffect) ...
+    // Fetch reports when dependencies change
     useEffect(() => {
-        if (!reports.length) return;
-
-        let filtered = [];
-        if (activeTab === 'my') {
-            filtered = reports.filter(r => r.user_id === user.id);
-        } else if (activeTab === 'block') {
-            // Filter by blocks where the user is the representative
-            const myVocalBlockIds = blocks
-                .filter(b => b.representative_id === user.id)
-                .map(b => b.id);
-            filtered = reports.filter(r => myVocalBlockIds.includes(r.block_id));
-        } else if (activeTab === 'all') {
-            filtered = reports;
-        }
-
-        // Apply Filters
-        if (searchTerm) {
-            const lowerSearch = searchTerm.toLowerCase();
-            filtered = filtered.filter(r => 
-                r.title.toLowerCase().includes(lowerSearch) || 
-                r.description.toLowerCase().includes(lowerSearch) ||
-                (r.profiles?.full_name || '').toLowerCase().includes(lowerSearch)
-            );
-        }
-
-        if (statusFilter !== 'all') {
-            filtered = filtered.filter(r => r.status === statusFilter);
-        }
-
-        if (categoryFilter !== 'all') {
-            filtered = filtered.filter(r => r.category === categoryFilter);
-        }
-
-        setFilteredReports(filtered);
-    }, [activeTab, reports, blocks, user.id, searchTerm, statusFilter, categoryFilter]);
-
+        fetchReports();
+    }, [currentPage, debouncedSearch, statusFilter, categoryFilter, activeTab]);
 
     const fetchReports = async () => {
+        setLoading(true);
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`${API_URL}/api/reports`, {
+            const params = new URLSearchParams({
+                page: currentPage,
+                limit: itemsPerPage,
+                search: debouncedSearch,
+                status: statusFilter,
+                category: categoryFilter,
+                mode: activeTab
+            });
+
+            const res = await fetch(`${API_URL}/api/reports?${params.toString()}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
+
             if (res.ok) {
                 const data = await res.json();
-                setReports(data);
+                setReports(data.data || []);
+                setTotalReports(data.count || 0);
             }
         } catch (error) {
             console.error('Error fetching reports:', error);
@@ -348,12 +341,13 @@ const Reports = () => {
                 <div className="grid gap-4">
                     {loading ? (
                         <GlassLoader />
-                    ) : filteredReports.length === 0 ? (
+                    ) : reports.length === 0 ? (
                         <div className="glass-card text-center py-12">
                              <p className="text-gray-500 dark:text-neutral-400">{t('reports.no_reports', 'No reports found.')}</p>
                         </div>
                     ) : (
-                        filteredReports.map(report => (
+                        <>
+                        {reports.map(report => (
                             <div 
                                 key={report.id} 
                                 className={`glass-card p-4 hover:bg-white/40 dark:hover:bg-neutral-800/40 transition-colors animate-fade-in ${expandedReportId === report.id ? 'active-card ring-2 ring-blue-500/50' : ''}`}
@@ -395,11 +389,7 @@ const Reports = () => {
                                                 </span>
                                             </div>
 
-                                            {/* Status Change Buttons (Outside Accordion - Keep Quick Actions?) */}
-                                            {/* Actually, user might want quick actions visible without expanding, relying on permissions. */}
-                                            {/* Let's keep them here. */}
-                                            {/* BUT: if expanding, maybe move delete inside? */}
-                                            {/* Let's keep status buttons here for quick access */}
+                                            {/* Status Change Buttons */}
                                             {(isAdminOrPres || isVocal) && ( report.status !== 'resolved' && report.status !== 'rejected') && (
                                                 <div className="mt-3 flex gap-2" onClick={e => e.stopPropagation()}>
                                                     {report.status === 'pending' && (
@@ -420,8 +410,7 @@ const Reports = () => {
                                                     )}
                                                 </div>
                                             )}  
-                                            {/* Delete Button - Only pending/rejected or admin */}
-                                            {/* User might click delete and trigger expand if not careful with stopPropagation */}
+                                            {/* Delete Button */}
                                             {(report.status === 'pending' || report.status === 'rejected' || isAdminOrPres) && (report.user_id === user.id || isAdminOrPres) && (
                                                 <div className="mt-2 text-right" onClick={e => e.stopPropagation()}>
                                                     <button 
@@ -451,7 +440,31 @@ const Reports = () => {
                                     </div>
                                 )}
                             </div>
-                        ))
+                        ))}
+                        
+                        {/* Pagination Controls */}
+                        {totalReports > itemsPerPage && (
+                            <div className="flex justify-center items-center gap-4 mt-6">
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                    disabled={currentPage === 1}
+                                    className="glass-button px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
+                                </button>
+                                <span className="text-gray-600 dark:text-neutral-400 font-medium">
+                                    {currentPage} / {Math.ceil(totalReports / itemsPerPage)}
+                                </span>
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(totalReports / itemsPerPage)))}
+                                    disabled={currentPage >= Math.ceil(totalReports / itemsPerPage)}
+                                    className="glass-button px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+                                </button>
+                            </div>
+                        )}
+                        </>
                     )}
                 </div>
 
