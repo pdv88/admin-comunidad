@@ -317,6 +317,7 @@ const Maintenance = () => {
     const handleSort = (key) => {
         setFilters(prev => ({
             ...prev,
+            page: 1,
             sortBy: key,
             sortOrder: prev.sortBy === key && prev.sortOrder === 'desc' ? 'asc' : 'desc'
         }));
@@ -579,15 +580,9 @@ const Maintenance = () => {
                                                 )}
                                             </div>
                                         </th>
-                                        <th 
-                                            onClick={() => activeTab === 'community' && handleSort('block')} 
-                                            className={`transition-colors ${activeTab === 'community' ? 'cursor-pointer hover:bg-black/5 dark:hover:bg-white/5' : ''}`}
-                                        >
+                                        <th>
                                            <div className="flex items-center gap-1">
                                                 {t('maintenance.block', 'Block')}
-                                                {activeTab === 'community' && filters.sortBy === 'block' && (
-                                                    <span>{filters.sortOrder === 'asc' ? '↑' : '↓'}</span>
-                                                )}
                                             </div>
                                         </th>
                                         <th 

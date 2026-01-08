@@ -77,11 +77,16 @@ exports.generateMonthlyFees = async (req, res) => {
 
         const existingUnitIds = new Set(existingFees.map(f => f.unit_id));
 
-        // 3. Filter units that don't have a fee yet
-        const unitsToBill = units.filter(unit => !existingUnitIds.has(unit.id));
+        // 3. Filter units that don't have a fee yet AND ensure they have at least one owner
+        // Note: unit_owners!inner in the query typically handles this, but explicit check adds safety.
+        const unitsToBill = units.filter(unit =>
+            !existingUnitIds.has(unit.id) &&
+            unit.unit_owners &&
+            unit.unit_owners.length > 0
+        );
 
         if (unitsToBill.length === 0) {
-            return res.status(200).json({ message: 'All units already have fees for this period.', count: 0 });
+            return res.status(200).json({ message: 'All occupied units already have fees for this period.', count: 0 });
         }
 
         // 4. Prepare inserts for new fees only
@@ -258,11 +263,10 @@ exports.getCommunityStatus = async (req, res) => {
             // Sort by Foreign Column: units(unit_number)
             // Note: This syntax works in recent JS client versions for One-to-One or Many-to-One
             query = query.order('unit_number', { foreignTable: 'units', ascending: sortOrder === 'asc' });
-        } else if (sortBy === 'block') {
-            // Sorting by nested foreign column is hard (units -> blocks -> name).
-            // Fallback: Sort by Unit Number as a proxy, or Period.
-            // Limitation: Nested sort not fully supported in simple syntax.
+        } else if (sortBy === 'period') {
             query = query.order('period', { ascending: sortOrder === 'asc' });
+            // Secondary sort by Unit Number (as a proxy for logical ordering by owner/unit)
+            query = query.order('unit_number', { foreignTable: 'units', ascending: true });
         } else if (sortBy === 'status') {
             query = query.order('status', { ascending: sortOrder === 'asc' });
         } else {

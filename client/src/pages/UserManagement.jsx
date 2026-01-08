@@ -10,6 +10,7 @@ import Toast from '../components/Toast';
 import { useAuth } from '../context/AuthContext';
 
 const UserManagement = () => {
+    const [showInviteModal, setShowInviteModal] = useState(false);
     const [users, setUsers] = useState([]);
     const [blocks, setBlocks] = useState([]); // For assignment
     const [searchTerm, setSearchTerm] = useState(''); // Search
@@ -27,7 +28,7 @@ const UserManagement = () => {
     const [userToDelete, setUserToDelete] = useState(null);
     const { t } = useTranslation();
     const { user, activeCommunity } = useAuth();
-
+    
     const handleEditClick = (user) => {
         setEditingUser({
             id: user.id,
@@ -150,7 +151,6 @@ const UserManagement = () => {
 
     const handleInvite = async (e) => {
         e.preventDefault();
-        // setMessage(t('user_management.messages.sending_invite')); // Optional: Show loading toast or spinner
         try {
             const res = await fetch(`${API_URL}/api/users/invite`, {
                 method: 'POST',
@@ -163,6 +163,7 @@ const UserManagement = () => {
             if (res.ok) {
                 setToast({ message: t('user_management.messages.invite_success'), type: 'success' });
                 setNewUser({ email: '', fullName: '', roleName: 'neighbor', unitIds: [], phone: '' });
+                setShowInviteModal(false);
                 fetchData();
             } else {
                 setToast({ message: t('user_management.messages.error_prefix') + data.error, type: 'error' });
@@ -284,84 +285,135 @@ const UserManagement = () => {
             />
             <div className="max-w-7xl mx-auto space-y-4 md:space-y-8">
                  {/* ... existing content ... */}
-                 <div className="flex justify-between items-center mb-6">
+                <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t('user_management.title')}</h1>
+                    <button 
+                        onClick={() => setShowInviteModal(true)}
+                        className="glass-button gap-2"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
+                        {t('user_management.invite.title', 'Invite User')}
+                    </button>
                 </div>
 
-                {/* Invite Form */}
-                <div className="glass-card p-6 mb-8 relative z-20">
-                    <h2 className="font-bold mb-4 dark:text-white">{t('user_management.invite.title')}</h2>
-                    <form onSubmit={handleInvite} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
-                        <input 
-                            type="email" 
-                            placeholder={t('user_management.invite.email')} 
-                            className="glass-input"
-                            value={newUser.email}
-                            onChange={e => setNewUser({...newUser, email: e.target.value})}
-                            required
-                        />
-                        <input 
-                            type="text" 
-                            placeholder={t('user_management.invite.fullname')} 
-                            className="glass-input"
-                            value={newUser.fullName}
-                            onChange={e => setNewUser({...newUser, fullName: e.target.value})}
-                            required
-                        />
-                        <input 
-                            type="tel" 
-                            placeholder={t('user_management.invite.phone', 'Phone Number')} 
-                            className="glass-input"
-                            value={newUser.phone || ''}
-                            onChange={e => setNewUser({...newUser, phone: e.target.value})}
-                        />
+                {/* Invite Modal */}
+                {showInviteModal && (
+                <ModalPortal>
+                     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                        <div className="glass-card w-full max-w-4xl p-6 shadow-xl animate-fade-in relative">
+                            <button 
+                                onClick={() => setShowInviteModal(false)}
+                                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                            >
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                            
+                            <h2 className="font-bold mb-6 text-xl dark:text-white">{t('user_management.invite.title')}</h2>
+                            
+                            <form onSubmit={handleInvite} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+                                <div className="lg:col-span-2">
+                                     <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">{t('user_management.table.name')}</label>
+                                    <input 
+                                        type="text" 
+                                        placeholder={t('user_management.invite.fullname')} 
+                                        className="glass-input w-full"
+                                        value={newUser.fullName}
+                                        onChange={e => setNewUser({...newUser, fullName: e.target.value})}
+                                        required
+                                    />
+                                </div>
+                                <div className="lg:col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">{t('user_management.invite.email')}</label>
+                                    <input 
+                                        type="email" 
+                                        placeholder={t('user_management.invite.email')} 
+                                        className="glass-input w-full"
+                                        value={newUser.email}
+                                        onChange={e => setNewUser({...newUser, email: e.target.value})}
+                                        required
+                                    />
+                                </div>
+                                <div className="lg:col-span-1">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">{t('user_management.table.phone')}</label>
+                                    <input 
+                                        type="tel" 
+                                        placeholder={t('user_management.invite.phone', 'Phone Number')} 
+                                        className="glass-input w-full"
+                                        value={newUser.phone || ''}
+                                        onChange={e => setNewUser({...newUser, phone: e.target.value})}
+                                    />
+                                </div>
 
-                        <GlassSelect 
-                            value={newUser.roleName}
-                            onChange={e => setNewUser({...newUser, roleName: e.target.value})}
-                            options={[
-                                { value: 'neighbor', label: t('user_management.roles.neighbor') },
-                                { value: 'president', label: t('user_management.roles.president') },
-                                { value: 'secretary', label: t('user_management.roles.secretary') },
-                                { value: 'vice_president', label: t('user_management.roles.vice_president') },
-                                { value: 'admin', label: t('user_management.roles.admin') },
-                                { value: 'treasurer', label: t('user_management.roles.treasurer') },
-                                { value: 'maintenance', label: t('user_management.roles.maintenance') }
-                            ]}
-                            placeholder={t('user_management.table.role')}
-                        />
+                                <div className="lg:col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">{t('user_management.table.role')}</label>
+                                    <GlassSelect 
+                                        value={newUser.roleName}
+                                        onChange={e => setNewUser({...newUser, roleName: e.target.value})}
+                                        options={[
+                                            { value: 'neighbor', label: t('user_management.roles.neighbor') },
+                                            { value: 'president', label: t('user_management.roles.president') },
+                                            { value: 'secretary', label: t('user_management.roles.secretary') },
+                                            { value: 'vice_president', label: t('user_management.roles.vice_president') },
+                                            { value: 'admin', label: t('user_management.roles.admin') },
+                                            { value: 'treasurer', label: t('user_management.roles.treasurer') },
+                                            { value: 'maintenance', label: t('user_management.roles.maintenance') }
+                                        ]}
+                                        placeholder={t('user_management.table.role')}
+                                    />
+                                </div>
 
-                        {/* Block Selection Dropdown */}
-                        <GlassSelect
-                            value={selectedBlockId}
-                            onChange={(e) => {
-                                setSelectedBlockId(e.target.value);
-                                setNewUser({...newUser, unitIds: []}); // Reset unit when block changes
-                            }}
-                            options={[
-                                { value: '', label: t('properties.select_block', 'Select Block') }, // Option to clear/default
-                                ...(Array.isArray(blocks) ? blocks.map(block => ({ value: block.id, label: block.name })) : [])
-                            ]}
-                            placeholder={t('properties.select_block', 'Select Block')}
-                        />
+                                {/* Block Selection Dropdown */}
+                                <div className="lg:col-span-1">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">{t('user_management.table.block')}</label>
+                                    <GlassSelect
+                                        value={selectedBlockId}
+                                        onChange={(e) => {
+                                            setSelectedBlockId(e.target.value);
+                                            setNewUser({...newUser, unitIds: []}); // Reset unit when block changes
+                                        }}
+                                        options={[
+                                            { value: '', label: t('properties.select_block', 'Select Block') }, // Option to clear/default
+                                            ...(Array.isArray(blocks) ? blocks.map(block => ({ value: block.id, label: block.name })) : [])
+                                        ]}
+                                        placeholder={t('properties.select_block', 'Select Block')}
+                                    />
+                                </div>
 
-                        {/* Unit Selection Dropdown (Filtered) */}
-                        <GlassSelect 
-                            value={newUser.unitIds[0] || ''}
-                            onChange={(e) => {
-                                const val = e.target.value;
-                                setNewUser({...newUser, unitIds: val ? [val] : []});
-                            }}
-                            disabled={!selectedBlockId}
-                            options={getAvailableUnits(null)
-                                .filter(u => !selectedBlockId || u.blockName === blocks.find(b => b.id === selectedBlockId)?.name)
-                                .map(u => ({ value: u.id, label: u.unit_number }))
-                            }
-                            placeholder={t('user_management.invite.assign_unit')}
-                        />
-                        <button type="submit" className="glass-button self-start">{t('user_management.invite.send')}</button>
-                    </form>
-                </div>
+                                {/* Unit Selection Dropdown (Filtered) */}
+                                <div className="lg:col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">{t('user_management.table.unit')}</label>
+                                    <GlassSelect 
+                                        value={newUser.unitIds[0] || ''}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            setNewUser({...newUser, unitIds: val ? [val] : []});
+                                        }}
+                                        disabled={!selectedBlockId}
+                                        options={getAvailableUnits(null)
+                                            .filter(u => !selectedBlockId || u.blockName === blocks.find(b => b.id === selectedBlockId)?.name)
+                                            .map(u => ({ value: u.id, label: u.unit_number }))
+                                        }
+                                        placeholder={t('user_management.invite.assign_unit')}
+                                    />
+                                </div>
+                                
+                                <div className="lg:col-span-5 flex justify-end gap-3 mt-4">
+                                     <button 
+                                        type="button" 
+                                        onClick={() => setShowInviteModal(false)}
+                                        className="glass-button-secondary"
+                                    >
+                                        {t('common.cancel', 'Cancel')}
+                                    </button>
+                                    <button type="submit" className="glass-button">
+                                        {t('user_management.invite.send')}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </ModalPortal>
+                )}
 
                 {/* Search & User List */}
                 <div className="glass-card overflow-hidden">
@@ -374,8 +426,9 @@ const UserManagement = () => {
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    <table className="glass-table">
-                        <thead>
+                    <div className="overflow-x-auto">
+                        <table className="glass-table">
+                            <thead>
                             <tr>
                                 <th onClick={() => requestSort('full_name')} className="cursor-pointer hover:text-blue-500 transition-colors">
                                     {t('user_management.table.name')} {getClassNamesFor('full_name') === 'ascending' ? '↑' : getClassNamesFor('full_name') === 'descending' ? '↓' : ''}
@@ -454,6 +507,7 @@ const UserManagement = () => {
                             ))}
                         </tbody>
                     </table>
+                    </div>
                     
                     {/* Pagination Controls */}
                     {!loading && totalUsers > itemsPerPage && (
