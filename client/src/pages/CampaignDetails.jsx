@@ -7,6 +7,7 @@ import DashboardLayout from '../components/DashboardLayout';
 import GlassLoader from '../components/GlassLoader';
 import PaymentList from '../components/payments/PaymentList';
 import CampaignProgress from '../components/payments/CampaignProgress';
+import { getCurrencySymbol } from '../utils/currencyUtils';
 
 const CampaignDetails = () => {
     const { id } = useParams();
@@ -118,11 +119,11 @@ const CampaignDetails = () => {
                     <div className="mt-4 grid grid-cols-2 gap-4 text-center">
                         <div className="p-4 rounded-xl bg-gray-50 dark:bg-white/5">
                             <p className="text-xs text-gray-500 uppercase">{t('campaigns.stats.goal', 'Goal')}</p>
-                            <p className="text-xl font-bold dark:text-white">€{campaign.target_amount}</p>
+                            <p className="text-xl font-bold dark:text-white">{getCurrencySymbol(activeCommunity?.communities?.currency)}{campaign.target_amount}</p>
                         </div>
                         <div className="p-4 rounded-xl bg-gray-50 dark:bg-white/5">
                             <p className="text-xs text-gray-500 uppercase">{t('campaigns.stats.raised', 'Raised')}</p>
-                            <p className="text-xl font-bold text-green-600 dark:text-green-400">€{campaign.current_amount}</p>
+                            <p className="text-xl font-bold text-green-600 dark:text-green-400">{getCurrencySymbol(activeCommunity?.communities?.currency)}{campaign.current_amount}</p>
                         </div>
                     </div>
                 </div>
@@ -137,7 +138,8 @@ const CampaignDetails = () => {
                         payments={payments} 
                         isAdmin={isAdmin} 
                         onRefresh={fetchData}
-                        showResidentInfo={isAdmin} // Admins see who paid
+                        showResidentInfo={isAdmin}
+                        currencyCode={activeCommunity?.communities?.currency}
                     />
                 </div>
 

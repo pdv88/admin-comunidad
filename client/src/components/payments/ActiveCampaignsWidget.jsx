@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { API_URL } from '../../config';
 import CampaignProgress from './CampaignProgress';
+import { useAuth } from '../../context/AuthContext';
+import { getCurrencySymbol } from '../../utils/currencyUtils';
 
 const ActiveCampaignsWidget = (props) => {
     const { t } = useTranslation();
+    const { activeCommunity } = useAuth();
     const [campaigns, setCampaigns] = useState([]);
     const [loading, setLoading] = useState(true);
     
@@ -74,8 +77,8 @@ const ActiveCampaignsWidget = (props) => {
                                 </div>
                                 <CampaignProgress campaign={campaign} />
                                 <div className="flex justify-between text-xs text-gray-500 dark:text-neutral-400 mt-1">
-                                    <span>{t('campaigns.stats.raised', 'Raised')}: €{campaign.current_amount}</span>
-                                    <span>{t('campaigns.stats.goal', 'Goal')}: €{campaign.target_amount}</span>
+                                    <span>{t('campaigns.stats.raised', 'Raised')}: {getCurrencySymbol(activeCommunity?.communities?.currency)}{campaign.current_amount}</span>
+                                    <span>{t('campaigns.stats.goal', 'Goal')}: {getCurrencySymbol(activeCommunity?.communities?.currency)}{campaign.target_amount}</span>
                                 </div>
                              </div>
                         ))}

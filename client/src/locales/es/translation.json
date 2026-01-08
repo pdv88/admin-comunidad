@@ -559,7 +559,7 @@
         "upload": {
             "title": "Registrar Pago",
             "date": "Fecha del Pago",
-            "amount": "Monto (€)",
+            "amount": "Monto",
             "notes": "Notas (Opcional)",
             "receipt": "Comprobante (Imagen)",
             "submit": "Enviar Pago",
@@ -596,7 +596,7 @@
             "active_campaigns": "Campañas",
             "create_title": "Crear Nueva Campaña",
             "name": "Nombre de la Campaña",
-            "goal": "Meta (€)",
+            "goal": "Meta",
             "description": "Descripción",
             "deadline": "Fecha Límite",
             "create_btn": "Crear Campaña",
@@ -618,7 +618,7 @@
         "update_success": "¡Campaña actualizada con éxito!",
         "update_error": "Error al actualizar la campaña",
         "name": "Nombre de la Campaña",
-        "goal": "Meta (€)",
+        "goal": "Meta",
         "description": "Descripción",
         "deadline": "Fecha Límite",
         "deadline_label": "Fecha Límite",
@@ -633,7 +633,14 @@
         "edit_title": "Editar Campaña",
         "ongoing_hint": "Dejar vacío para indefinida",
         "is_active": "Campaña Activa",
-        "contribute": "Contribuir"
+        "contribute": "Contribuir",
+        "back_to_list": "Volver a Campañas",
+        "contributions_title": "Historial de Contribuciones",
+        "not_found": "Campaña no encontrada.",
+        "stats": {
+            "goal": "Meta",
+            "raised": "Recaudado"
+        }
     },
     "cookies": {
         "message": "Utilizamos cookies para asegurar que tengas la mejor experiencia en nuestro sitio web.",
@@ -661,7 +668,8 @@
         "upload_success": "Imagen subida exitosamente",
         "upload_error": "Error al subir la imagen",
         "delete_success": "Eliminado exitosamente",
-        "error_prefix": "Error: "
+        "error_prefix": "Error: ",
+        "currency": "Moneda"
     },
     "community_switcher": {
         "switch_title": "Cambiar Comunidad",

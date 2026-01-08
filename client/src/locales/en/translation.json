@@ -510,7 +510,7 @@
         "upload": {
             "title": "Register Payment",
             "date": "Payment Date",
-            "amount": "Amount (€)",
+            "amount": "Amount",
             "notes": "Notes (Optional)",
             "receipt": "Receipt (Image)",
             "submit": "Submit Payment",
@@ -547,7 +547,7 @@
             "active_campaigns": "Campaigns",
             "create_title": "Create New Campaign",
             "name": "Campaign Name",
-            "goal": "Goal Amount (€)",
+            "goal": "Goal Amount",
             "description": "Description",
             "deadline": "Deadline",
             "create_btn": "Create Campaign",
@@ -569,7 +569,7 @@
         "update_success": "Campaign updated successfully!",
         "update_error": "Error updating campaign",
         "name": "Campaign Name",
-        "goal": "Goal Amount (€)",
+        "goal": "Goal Amount",
         "description": "Description",
         "deadline": "Deadline",
         "deadline_label": "Deadline",
@@ -584,7 +584,14 @@
         "edit_title": "Edit Campaign",
         "ongoing_hint": "Leave empty for ongoing",
         "is_active": "Active Campaign",
-        "contribute": "Contribute"
+        "contribute": "Contribute",
+        "back_to_list": "Back to Campaigns",
+        "contributions_title": "Contributions History",
+        "not_found": "Campaign not found.",
+        "stats": {
+            "goal": "Goal",
+            "raised": "Raised"
+        }
     },
     "cookies": {
         "message": "We use cookies to ensure you get the best experience on our website.",
@@ -609,7 +616,8 @@
         "save": "Save Changes",
         "success": "Community settings updated successfully!",
         "error": "Failed to update settings.",
-        "error_prefix": "Error: "
+        "error_prefix": "Error: ",
+        "currency": "Currency"
     },
     "community_switcher": {
         "switch_title": "Switch Community",

@@ -4,6 +4,7 @@ import { API_URL } from '../../config';
 
 import GlassSelect from '../GlassSelect';
 import { useAuth } from '../../context/AuthContext';
+import { getCurrencySymbol } from '../../utils/currencyUtils';
 
 const PaymentUpload = ({ onSuccess, onCancel, isAdmin, initialType, initialFeeId, initialCampaignId, initialAmount, initialUnitId }) => {
     const { user: currentUser, activeCommunity } = useAuth();
@@ -336,7 +337,7 @@ const PaymentUpload = ({ onSuccess, onCancel, isAdmin, initialType, initialFeeId
                                     { value: '', label: t('common.select_or_general', 'General Payment / Balance') },
                                     ...filteredFees.map(fee => ({
                                         value: fee.id,
-                                        label: `${new Date(fee.period).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })} - ${fee.amount}€`
+                                        label: `${new Date(fee.period).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })} - ${getCurrencySymbol(activeCommunity?.communities?.currency)}${fee.amount}`
                                     }))
                                 ]}
                                 placeholder={t('common.select', 'Select Fee')}
@@ -372,7 +373,7 @@ const PaymentUpload = ({ onSuccess, onCancel, isAdmin, initialType, initialFeeId
                 {/* Amount - Input if variable, Display if fixed */}
                 {!initialAmount ? (
                     <div>
-                        <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('payments.upload.amount', 'Amount (€)')}</label>
+                        <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('payments.upload.amount', 'Amount')}</label>
                         <input 
                             type="number" 
                             step="0.01"
@@ -385,7 +386,7 @@ const PaymentUpload = ({ onSuccess, onCancel, isAdmin, initialType, initialFeeId
                 ) : (
                     <div className="p-4 bg-blue-50/50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800 text-center">
                         <p className="text-xs text-blue-600 dark:text-blue-400 font-semibold uppercase tracking-wider mb-1">{t('payments.upload.amount', 'Amount to Pay')}</p>
-                        <p className="text-3xl font-bold text-gray-800 dark:text-white">{amount}€</p>
+                        <p className="text-3xl font-bold text-gray-800 dark:text-white">{getCurrencySymbol(activeCommunity?.communities?.currency)}{amount}</p>
                     </div>
                 )}
                 <div>

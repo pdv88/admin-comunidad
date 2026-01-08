@@ -218,6 +218,26 @@ export const AuthProvider = ({ children }) => {
       window.location.reload(); 
   };
 
+  // Refresh the active community data (e.g., after settings update)
+  const refreshActiveCommunity = async () => {
+      try {
+          const token = localStorage.getItem('token');
+          const res = await fetch(`${API_URL}/api/communities/my`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res.ok) {
+              const updatedCommunityData = await res.json();
+              // Update the activeCommunity with the new data while preserving membership info
+              setActiveCommunity(prev => ({
+                  ...prev,
+                  communities: updatedCommunityData
+              }));
+          }
+      } catch (error) {
+          console.error('Error refreshing community:', error);
+      }
+  };
+
   const deleteCommunity = async (communityId) => {
       try {
         const token = localStorage.getItem('token');
@@ -259,6 +279,7 @@ export const AuthProvider = ({ children }) => {
     userCommunities,
     activeCommunity,
     switchCommunity,
+    refreshActiveCommunity,
     login,
     logout,
     updateProfile,

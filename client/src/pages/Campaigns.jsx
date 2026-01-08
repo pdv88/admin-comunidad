@@ -9,6 +9,7 @@ import ModalPortal from '../components/ModalPortal';
 import PaymentUpload from '../components/payments/PaymentUpload';
 import GlassLoader from '../components/GlassLoader';
 import Toast from '../components/Toast';
+import { getCurrencySymbol } from '../utils/currencyUtils';
 
 const Campaigns = () => {
     const { t } = useTranslation();
@@ -223,7 +224,7 @@ const Campaigns = () => {
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.goal', 'Goal Amount (€)')}</label>
+                                                    <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.goal', 'Goal Amount')}</label>
                                                     <input 
                                                         type="number" 
                                                         step="0.01" 
@@ -376,8 +377,8 @@ const Campaigns = () => {
                                 />
 
                                 <div className="mt-4 flex justify-between text-xs text-gray-500 dark:text-neutral-500 mb-4">
-                                    <span>{t('campaigns.collected', 'Collected')}: €{campaign.current_amount}</span>
-                                    <span>{t('campaigns.goal', 'Goal')}: €{campaign.target_amount}</span>
+                                    <span>{t('campaigns.collected', 'Collected')}: {getCurrencySymbol(activeCommunity?.communities?.currency)}{campaign.current_amount}</span>
+                                    <span>{t('campaigns.goal', 'Goal')}: {getCurrencySymbol(activeCommunity?.communities?.currency)}{campaign.target_amount}</span>
                                 </div>
                                 {campaign.deadline && (
                                      <div className="text-xs text-gray-500 dark:text-neutral-400 mb-4 text-right">
@@ -432,7 +433,7 @@ const Campaigns = () => {
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.goal', 'Goal Amount (€)')}</label>
+                                                <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.goal', 'Goal Amount')}</label>
                                                 <input 
                                                     type="number" 
                                                     step="0.01" 

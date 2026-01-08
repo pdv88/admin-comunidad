@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import ModalPortal from '../ModalPortal';
 import { useTranslation } from 'react-i18next';
 import { API_URL } from '../../config';
+import { getCurrencySymbol } from '../../utils/currencyUtils';
 
-const PaymentReviewModal = ({ isOpen, onClose, paymentId, onConfirm, onReject }) => {
+const PaymentReviewModal = ({ isOpen, onClose, paymentId, onConfirm, onReject, currencyCode }) => {
     const { t } = useTranslation();
     const [loading, setLoading] = useState(true);
     const [payment, setPayment] = useState(null);
@@ -89,7 +90,7 @@ const PaymentReviewModal = ({ isOpen, onClose, paymentId, onConfirm, onReject })
                                 </div>
                                 <div>
                                     <span className="block text-gray-500 dark:text-gray-400">{t('payments.amount', 'Amount')}</span>
-                                    <span className="font-bold text-lg text-green-600 dark:text-green-400">{payment.amount}€</span>
+                                    <span className="font-bold text-lg text-green-600 dark:text-green-400">{getCurrencySymbol(currencyCode)}{payment.amount}</span>
                                 </div>
                                 <div>
                                     <span className="block text-gray-500 dark:text-gray-400">{t('payments.date', 'Date')}</span>

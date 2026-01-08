@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { API_URL } from '../config';
 import { useAuth } from '../context/AuthContext';
+import { SUPPORTED_CURRENCIES, DEFAULT_CURRENCY } from '../utils/currencyUtils';
 
 import DashboardLayout from '../components/DashboardLayout';
 import GlassLoader from '../components/GlassLoader';
@@ -10,14 +11,15 @@ import Toast from '../components/Toast';
 
 const CommunitySettings = () => {
     const { t } = useTranslation();
-    const { user, deleteCommunity } = useAuth();
+    const { user, deleteCommunity, refreshActiveCommunity } = useAuth();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [community, setCommunity] = useState({
         name: '',
         address: '',
         bank_details: [],
-        logo_url: '' // New field
+        logo_url: '',
+        currency: DEFAULT_CURRENCY
     });
     const [logoFile, setLogoFile] = useState(null);
     const [logoPreview, setLogoPreview] = useState('');
@@ -38,7 +40,8 @@ const CommunitySettings = () => {
                 setCommunity({ 
                     ...data, 
                     bank_details: Array.isArray(data.bank_details) ? data.bank_details : [],
-                    logo_url: data.logo_url || ''
+                    logo_url: data.logo_url || '',
+                    currency: data.currency || DEFAULT_CURRENCY
                 });
                 if (data.logo_url) {
                     setLogoPreview(data.logo_url);
@@ -120,6 +123,8 @@ const CommunitySettings = () => {
                     setLogoPreview(updatedCommunity.logo_url);
                 }
                 setLogoFile(null); // Clear the file after successful upload
+                // Refresh the context so other components see the updated currency
+                await refreshActiveCommunity();
             } else {
                 const errorData = await res.json();
                 setToast({ message: t('community_settings.error') + ': ' + (errorData.message || 'Unknown error'), type: 'error' });
@@ -243,6 +248,20 @@ const CommunitySettings = () => {
                                     value={community.address}
                                     onChange={(e) => setCommunity({ ...community, address: e.target.value })}
                                 />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {t('community_settings.currency', 'Currency')}
+                                </label>
+                                <select
+                                    className="glass-input w-full"
+                                    value={community.currency}
+                                    onChange={(e) => setCommunity({ ...community, currency: e.target.value })}
+                                >
+                                    {SUPPORTED_CURRENCIES.map(c => (
+                                        <option key={c.code} value={c.code}>{c.name}</option>
+                                    ))}
+                                </select>
                             </div>
                         </div>
 

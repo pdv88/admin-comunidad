@@ -2,6 +2,7 @@ const supabase = require('../config/supabaseClient');
 const supabaseAdmin = require('../config/supabaseAdmin');
 
 const sendEmail = require('../utils/sendEmail');
+const { getCurrencySymbol, formatCurrency } = require('../utils/currencyUtils');
 
 // Helper to get user and their role
 const getUserAndMember = async (req) => {
@@ -106,14 +107,15 @@ exports.generateMonthlyFees = async (req, res) => {
 
         if (error) throw error;
 
-        // Fetch Community Name and Logo
+        // Fetch Community Name, Logo and Currency
         const { data: communityData } = await supabaseAdmin
             .from('communities')
-            .select('name, logo_url')
+            .select('name, logo_url, currency')
             .eq('id', communityId)
             .single();
         const communityName = communityData?.name || 'Su Comunidad';
         const communityLogo = communityData?.logo_url;
+        const communityCurrency = communityData?.currency || 'EUR';
 
         // 6. Send Email Notifications (Async, don't block response)
         (async () => {
@@ -136,6 +138,7 @@ exports.generateMonthlyFees = async (req, res) => {
                                 context: {
                                     period: period,
                                     amount: fee.amount,
+                                    currency_symbol: getCurrencySymbol(communityCurrency),
                                     unit_details: `${unit.blocks?.name} - ${unit.unit_number}`,
                                     link: link,
                                     community_name: communityName,
@@ -421,12 +424,11 @@ exports.markAsPaid = async (req, res) => {
                     // Fetch Community Info
                     const { data: communityData } = await supabaseAdmin
                         .from('communities')
-                        .select('name, logo_url')
+                        .select('name, logo_url, currency')
                         .eq('id', communityId)
                         .single();
 
-                    // Format Amount
-                    const formatter = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' });
+                    const communityCurrency = communityData?.currency || 'EUR';
 
                     await sendEmail({
                         email: ownerEmail,
@@ -435,7 +437,7 @@ exports.markAsPaid = async (req, res) => {
                         templateName: 'payment_receipt.html',
                         context: {
                             user_name: ownerProfile?.full_name || 'Vecino',
-                            amount_formatted: formatter.format(data.amount),
+                            amount_formatted: formatCurrency(data.amount, communityCurrency),
                             period_name: data.period, // Could format date better
                             unit_details: `${data.units?.blocks?.name} - ${data.units?.unit_number}`,
                             community_name: communityData?.name,
@@ -555,25 +557,25 @@ exports.resendFeeEmail = async (req, res) => {
         const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
         const link = `${clientUrl}/app/maintenance`;
 
-        // Fetch Community Name and Logo
+        // Fetch Community Name, Logo and Currency
         const { data: communityData } = await supabaseAdmin
             .from('communities')
-            .select('name, logo_url')
+            .select('name, logo_url, currency')
             .eq('id', communityId)
             .single();
         const communityName = communityData?.name || 'Su Comunidad';
         const communityLogo = communityData?.logo_url;
+        const communityCurrency = communityData?.currency || 'EUR';
 
         // Conditional Logic: Bill vs Receipt
         const isPaid = fee.status === 'paid';
-        const formatter = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' });
 
         const emailConfig = isPaid ? {
             subject: `Comprobante de Pago - ${communityName}`,
             template: 'payment_receipt.html',
             context: {
                 user_name: ownerProfile?.full_name || 'Vecino',
-                amount_formatted: formatter.format(fee.amount),
+                amount_formatted: formatCurrency(fee.amount, communityCurrency),
                 period_name: fee.period,
                 unit_details: `${fee.units?.blocks?.name} - ${fee.units?.unit_number}`,
                 community_name: communityName,
@@ -588,6 +590,7 @@ exports.resendFeeEmail = async (req, res) => {
             context: {
                 period: fee.period,
                 amount: fee.amount,
+                currency_symbol: getCurrencySymbol(communityCurrency),
                 unit_details: `${fee.units?.blocks?.name} - ${fee.units?.unit_number}`,
                 link: link,
                 community_name: communityName,

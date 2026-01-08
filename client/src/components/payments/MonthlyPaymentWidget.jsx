@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { API_URL } from '../../config';
+import { useAuth } from '../../context/AuthContext';
+import { getCurrencySymbol } from '../../utils/currencyUtils';
 
 const MonthlyPaymentWidget = () => {
     const { t } = useTranslation();
+    const { activeCommunity } = useAuth();
     const [status, setStatus] = useState('loading'); // loading, paid, pending
     const [currentAmount, setCurrentAmount] = useState(0);
     
@@ -69,10 +72,10 @@ const MonthlyPaymentWidget = () => {
                     </p>
                     <div className="flex items-baseline gap-2">
                         <span className="text-3xl font-bold text-gray-800 dark:text-white">
-                            €{currentAmount.toFixed(2)}
+                            {getCurrencySymbol(activeCommunity?.communities?.currency)}{currentAmount.toFixed(2)}
                         </span>
                         <span className="text-sm text-gray-500">
-                            / €{MONTHLY_FEE.toFixed(2)}
+                            / {getCurrencySymbol(activeCommunity?.communities?.currency)}{MONTHLY_FEE.toFixed(2)}
                         </span>
                     </div>
                 </div>

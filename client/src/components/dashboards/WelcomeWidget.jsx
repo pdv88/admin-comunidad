@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
 import { API_URL } from '../../config';
+import { getCurrencySymbol } from '../../utils/currencyUtils';
 
 const WelcomeWidget = ({ role }) => {
     const { t } = useTranslation();
@@ -90,9 +91,9 @@ const WelcomeWidget = ({ role }) => {
                                 </div>
                                 <div className="flex items-baseline gap-1">
                                     {feeStatus === 'paid' ? (
-                                        <span className="font-bold text-gray-900 dark:text-white">€0.00</span>
+                                        <span className="font-bold text-gray-900 dark:text-white">{getCurrencySymbol(activeCommunity?.communities?.currency)}0.00</span>
                                     ) : (
-                                        <span className="font-bold text-gray-900 dark:text-white">€{feeAmount.toFixed(2)}</span>
+                                        <span className="font-bold text-gray-900 dark:text-white">{getCurrencySymbol(activeCommunity?.communities?.currency)}{feeAmount.toFixed(2)}</span>
                                     )}
                                 </div>
                             </div>

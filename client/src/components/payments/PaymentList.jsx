@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { API_URL } from '../../config';
 import ConfirmationModal from '../ConfirmationModal';
+import { getCurrencySymbol } from '../../utils/currencyUtils';
 
-const PaymentList = ({ payments, isAdmin, onRefresh, showResidentInfo = false, loading = false }) => {
+const PaymentList = ({ payments, isAdmin, onRefresh, showResidentInfo = false, loading = false, currencyCode }) => {
     const { t } = useTranslation();
     const [processingId, setProcessingId] = useState(null);
     const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null });
@@ -146,7 +147,7 @@ const PaymentList = ({ payments, isAdmin, onRefresh, showResidentInfo = false, l
                                             </>
                                         )}
                                         <td className="text-gray-800 dark:text-neutral-200">
-                                            €{payment.amount}
+                                            {getCurrencySymbol(currencyCode)}{payment.amount}
                                         </td>
                                         <td>
                                             {getStatusBadge(payment.status)}

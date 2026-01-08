@@ -13,6 +13,7 @@ import {
 import { API_URL } from '../../../config';
 
 import { useAuth } from '../../../context/AuthContext';
+import { getCurrencySymbol } from '../../../utils/currencyUtils';
 
 const BilledVsCollectedChart = ({ className }) => {
   const { t } = useTranslation();
@@ -75,10 +76,10 @@ const BilledVsCollectedChart = ({ className }) => {
           <p className="font-bold text-gray-800 dark:text-white mb-2">{label}</p>
           <div className="space-y-1">
             <p className="text-cyan-600 dark:text-cyan-400 font-medium">
-              {t('dashboard.graphs.billed', 'Billed')}: €{payload[0].value.toLocaleString()}
+              {t('dashboard.graphs.billed', 'Billed')}: {getCurrencySymbol(activeCommunity?.communities?.currency)}{payload[0].value.toLocaleString()}
             </p>
             <p className="text-emerald-600 dark:text-emerald-400 font-medium">
-              {t('dashboard.graphs.collected', 'Collected')}: €{payload[1].value.toLocaleString()}
+              {t('dashboard.graphs.collected', 'Collected')}: {getCurrencySymbol(activeCommunity?.communities?.currency)}{payload[1].value.toLocaleString()}
             </p>
           </div>
         </div>
@@ -143,7 +144,7 @@ const BilledVsCollectedChart = ({ className }) => {
                                 axisLine={false} 
                                 tickLine={false} 
                                 tick={{ fill: '#9ca3af', fontSize: 12 }}
-                                tickFormatter={(value) => `€${value / 1000}k`}
+                                tickFormatter={(value) => `${getCurrencySymbol(activeCommunity?.communities?.currency)}${value / 1000}k`}
                             />
                             <Tooltip content={<CustomTooltip />} />
                             <Area 
