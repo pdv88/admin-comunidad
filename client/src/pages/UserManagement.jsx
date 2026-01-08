@@ -13,6 +13,10 @@ const UserManagement = () => {
     const [users, setUsers] = useState([]);
     const [blocks, setBlocks] = useState([]); // For assignment
     const [searchTerm, setSearchTerm] = useState(''); // Search
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalUsers, setTotalUsers] = useState(0);
+    const itemsPerPage = 10;
     const [loading, setLoading] = useState(true);
     const [newUser, setNewUser] = useState({ email: '', fullName: '', roleName: 'neighbor', unitIds: [], phone: '' });
     const [selectedBlockId, setSelectedBlockId] = useState(''); // New state for block filter
@@ -93,22 +97,41 @@ const UserManagement = () => {
         }
     };
 
+    // Debounce search
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+            setCurrentPage(1); // Reset to first page on search
+        }, 500);
+        return () => clearTimeout(handler);
+    }, [searchTerm]);
+
+    // Fetch on changes
     useEffect(() => {
         if (activeCommunity?.community_id) {
             fetchData();
         }
-    }, [activeCommunity]);
+    }, [activeCommunity, currentPage, debouncedSearch]);
 
     const fetchData = async () => {
+        setLoading(true);
         try {
+            const params = new URLSearchParams({
+                page: currentPage,
+                limit: itemsPerPage,
+                search: debouncedSearch
+            });
+
             const [usersRes, blocksRes] = await Promise.all([
-                fetch(`${API_URL}/api/users`),
+                fetch(`${API_URL}/api/users?${params.toString()}`),
                 fetch(`${API_URL}/api/properties/blocks`)
             ]);
             
             if (usersRes.ok) {
-                const usersData = await usersRes.json();
-                setUsers(Array.isArray(usersData) ? usersData : []);
+                const usersResponse = await usersRes.json();
+                // Handle both legacy (array) and new (object) formats temporarily if needed, but we know we changed it.
+                setUsers(usersResponse.data || []);
+                setTotalUsers(usersResponse.count || 0);
             } else {
                  console.error("Users fetch failed:", await usersRes.text());
                  setUsers([]);
@@ -205,20 +228,8 @@ const UserManagement = () => {
     };
 
     const sortedUsers = React.useMemo(() => {
-        let sortableItems = users.filter(user => {
-            const term = searchTerm.toLowerCase();
-            const unitNumbers = user.unit_owners?.map(uo => uo.units?.unit_number).join(' ').toLowerCase() || '';
-            const blockNames = user.unit_owners?.map(uo => uo.units?.blocks?.name).join(' ').toLowerCase() || '';
-            
-            return (
-                user.full_name?.toLowerCase().includes(term) ||
-                user.email?.toLowerCase().includes(term) ||
-                (user.phone && user.phone.includes(term)) ||
-                user.roles?.name?.toLowerCase().includes(term) ||
-                unitNumbers.includes(term) ||
-                blockNames.includes(term)
-            );
-        });
+        // Client-side filtering removed as it is now handled by server
+        let sortableItems = [...users];
 
         if (sortConfig.key) {
             sortableItems.sort((a, b) => {
@@ -249,7 +260,7 @@ const UserManagement = () => {
             });
         }
         return sortableItems;
-    }, [users, searchTerm, sortConfig, t]);
+    }, [users, sortConfig, t]);
 
     const getClassNamesFor = (name) => {
         if (!sortConfig.key) return;
@@ -443,6 +454,29 @@ const UserManagement = () => {
                             ))}
                         </tbody>
                     </table>
+                    
+                    {/* Pagination Controls */}
+                    {!loading && totalUsers > itemsPerPage && (
+                        <div className="flex justify-center items-center gap-4 py-4 border-t border-gray-200 dark:border-neutral-700">
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                disabled={currentPage === 1}
+                                className="glass-button px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
+                            </button>
+                            <span className="text-gray-600 dark:text-neutral-400 font-medium">
+                                {currentPage} / {Math.ceil(totalUsers / itemsPerPage)}
+                            </span>
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(totalUsers / itemsPerPage)))}
+                                disabled={currentPage >= Math.ceil(totalUsers / itemsPerPage)}
+                                className="glass-button px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
             {/* Edit User Modal */}

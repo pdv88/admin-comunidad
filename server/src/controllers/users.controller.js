@@ -5,6 +5,9 @@ const randomstring = require('randomstring');
 exports.listUsers = async (req, res) => {
     try {
         let communityId = req.headers['x-community-id'];
+        const { page = 1, limit = 10, search = '' } = req.query;
+        const from = (page - 1) * limit;
+        const to = from + limit - 1;
 
         // Handle duplicate headers (concatenated by comma)
         if (communityId && communityId.includes(',')) {
@@ -16,33 +19,41 @@ exports.listUsers = async (req, res) => {
             return res.status(400).json({ error: 'Community ID header missing' });
         }
 
-
-
-        // 1. Fetch community members
-        const { data: members, error: memberError } = await supabaseAdmin
+        // 1. Build Query for Community Members
+        let query = supabaseAdmin
             .from('community_members')
             .select(`
                 *,
-                profiles (*),
+                profiles!inner (*),
                 roles ( name )
-            `)
+            `, { count: 'exact' })
             .eq('community_id', communityId);
+
+        // Apply Search Filter on Profiles if provided
+        if (search) {
+            // Note: filtering on joined table requires !inner which we added above.
+            // We search full_name OR email OR phone.
+            query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`, { foreignTable: 'profiles' });
+        }
+
+        // Apply Pagination
+        query = query.range(from, to).order('created_at', { ascending: false });
+
+        const { data: members, count, error: memberError } = await query;
 
         if (memberError) {
             console.error(`[ListUsers] Member Query Error:`, memberError);
             throw memberError;
         }
 
-
-
         if (!members || members.length === 0) {
-            // console.log(`[ListUsers] No members found for community ${communityId}`);
-            return res.json([]);
+            return res.json({ data: [], count: 0 });
         }
 
         const profileIds = members.map(m => m.profile_id);
 
         // 2. Fetch Unit Owners (and Units) for these profiles
+        // We only need ownerships for the users displayed on this page
         const { data: ownerships, error: unitsError } = await supabaseAdmin
             .from('unit_owners')
             .select(`
@@ -87,9 +98,6 @@ exports.listUsers = async (req, res) => {
 
             const isConfirmed = !!(lastSign && joinedAt && lastSign > joinedAt);
 
-            // DEBUG: Print status for this user
-            // console.log(`[UserStatus] ${profile.email} | LastSign: ${authUser?.last_sign_in_at} | Joined: ${member.created_at} | Confirmed: ${isConfirmed}`);
-
             // Find ownerships for this profile AND filter by community via blocks
             const userOwnerships = ownerships?.filter(uo =>
                 uo.profile_id === member.profile_id &&
@@ -108,7 +116,7 @@ exports.listUsers = async (req, res) => {
             };
         });
 
-        res.json(users);
+        res.json({ data: users, count });
     } catch (err) {
         console.error("List users error:", err);
         res.status(500).json({ error: err.message });
