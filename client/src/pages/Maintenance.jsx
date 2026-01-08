@@ -11,7 +11,7 @@ import GlassLoader from '../components/GlassLoader';
 import Toast from '../components/Toast';
 
 const Maintenance = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { user, activeCommunity, loading: authLoading } = useAuth();
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
@@ -420,31 +420,55 @@ const Maintenance = () => {
                 {isAdmin && activeTab === 'community' && (
                     <div className="glass-card p-6">
                         <h2 className="text-lg font-bold mb-4 text-gray-800 dark:text-white">{t('maintenance.generate_title', 'Generate Monthly Fees')}</h2>
-                        <form onSubmit={handleGenerate} className="flex flex-col sm:flex-row gap-4 items-end">
-                            <div>
-                                <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('maintenance.period', 'Billing Period')}</label>
-                                <input 
-                                    type="month" 
-                                    className="glass-input"
-                                    value={genPeriod}
-                                    onChange={(e) => setGenPeriod(e.target.value)}
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('maintenance.amount', 'Amount')}</label>
-                                <input 
-                                    type="number" 
-                                    className="glass-input"
-                                    value={genAmount}
-                                    onChange={(e) => setGenAmount(e.target.value)}
-                                    required
-                                />
+                        <form onSubmit={handleGenerate} className="space-y-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('maintenance.period', 'Billing Period')}</label>
+                                    <div className="flex gap-2">
+                                        <select 
+                                            className="glass-input flex-1"
+                                            value={genPeriod.split('-')[1] || '01'}
+                                            onChange={(e) => setGenPeriod(`${genPeriod.split('-')[0]}-${e.target.value}`)}
+                                            required
+                                        >
+                                            {Array.from({ length: 12 }, (_, i) => {
+                                                const monthNum = String(i + 1).padStart(2, '0');
+                                                const monthName = new Date(2024, i, 1).toLocaleDateString(i18n.language, { month: 'long' });
+                                                return (
+                                                    <option key={monthNum} value={monthNum} className="capitalize">
+                                                        {monthName.charAt(0).toUpperCase() + monthName.slice(1)}
+                                                    </option>
+                                                );
+                                            })}
+                                        </select>
+                                        <select 
+                                            className="glass-input w-24"
+                                            value={genPeriod.split('-')[0] || new Date().getFullYear()}
+                                            onChange={(e) => setGenPeriod(`${e.target.value}-${genPeriod.split('-')[1] || '01'}`)}
+                                            required
+                                        >
+                                            {Array.from({ length: 5 }, (_, i) => {
+                                                const year = new Date().getFullYear() - 1 + i;
+                                                return <option key={year} value={year}>{year}</option>;
+                                            })}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('maintenance.amount', 'Amount')}</label>
+                                    <input 
+                                        type="number" 
+                                        className="glass-input w-full"
+                                        value={genAmount}
+                                        onChange={(e) => setGenAmount(e.target.value)}
+                                        required
+                                    />
+                                </div>
                             </div>
                             <button 
                                 type="submit" 
                                 disabled={generating}
-                                className="glass-button bg-indigo-600 text-white hover:bg-indigo-700"
+                                className="glass-button w-full sm:w-auto bg-indigo-600 text-white hover:bg-indigo-700"
                             >
                                 {generating ? t('common.processing', 'Generating...') : t('maintenance.generate_btn', 'Generate Bills')}
                             </button>
@@ -625,8 +649,13 @@ const Maintenance = () => {
                                 <tbody>
                                     {fees.map(fee => (
                                         <tr key={fee.id}>
-                                            <td className="text-gray-900 dark:text-white">
-                                                {new Date(fee.period + 'T12:00:00').toLocaleDateString(undefined, { year: 'numeric', month: 'long', timeZone: 'UTC' })}
+                                            <td className="text-gray-900 dark:text-white capitalize">
+                                                {(() => {
+                                                    const date = new Date(fee.period + 'T12:00:00');
+                                                    const month = date.toLocaleDateString(i18n.language, { month: 'long', timeZone: 'UTC' });
+                                                    const year = date.toLocaleDateString(i18n.language, { year: 'numeric', timeZone: 'UTC' });
+                                                    return `${month.charAt(0).toUpperCase() + month.slice(1)} ${year}`;
+                                                })()}
                                             </td>
                                             <td className="text-gray-500 dark:text-neutral-400">
                                                 {fee.block_name || fee.units?.blocks?.name || '-'}
