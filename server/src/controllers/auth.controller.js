@@ -91,22 +91,35 @@ exports.register = async (req, res) => {
 
             if (profileError) console.error("Profile creation error:", profileError);
 
-            // 5. Link User to Community as Admin
-            // Fetch 'admin' role ID
-            const { data: roleData } = await require('../config/supabaseAdmin')
-                .from('roles')
+            // 5. Link User to Community and add Admin role
+            // First, create community_members entry (without role_id - roles are in member_roles now)
+            const { data: memberData, error: memberError } = await require('../config/supabaseAdmin')
+                .from('community_members')
+                .insert({
+                    profile_id: data.user.id,
+                    community_id: communityId
+                })
                 .select('id')
-                .eq('name', 'admin')
                 .single();
 
-            if (roleData) {
-                await require('../config/supabaseAdmin')
-                    .from('community_members')
-                    .insert({
-                        profile_id: data.user.id,
-                        community_id: communityId,
-                        role_id: roleData.id
-                    });
+            if (memberError) console.error("Community member creation error:", memberError);
+
+            // Then add super_admin role to member_roles (subscriber who registered gets elevated permissions)
+            if (memberData) {
+                const { data: roleData } = await require('../config/supabaseAdmin')
+                    .from('roles')
+                    .select('id')
+                    .eq('name', 'super_admin')
+                    .single();
+
+                if (roleData) {
+                    await require('../config/supabaseAdmin')
+                        .from('member_roles')
+                        .insert({
+                            member_id: memberData.id,
+                            role_id: roleData.id
+                        });
+                }
             }
         }
 
@@ -146,13 +159,27 @@ exports.login = async (req, res) => {
 
         if (profileError) console.error("Profile fetch error:", profileError);
 
-        // Fetch Communities and Roles
+        // Fetch Communities with their member info
         const { data: communities, error: commError } = await require('../config/supabaseAdmin')
             .from('community_members')
-            .select('*, communities(*), roles(*)')
+            .select('*, communities(*)')
             .eq('profile_id', data.user.id);
 
         if (commError) console.error("Community fetch error:", commError);
+
+        // Fetch roles from member_roles table (supports multiple roles)
+        const memberIds = communities?.map(cm => cm.id) || [];
+        console.log('[Login] Member IDs:', memberIds); // DEBUG
+        let memberRoles = [];
+        if (memberIds.length > 0) {
+            const { data: rolesData, error: rolesError } = await require('../config/supabaseAdmin')
+                .from('member_roles')
+                .select('*, roles(*), blocks(*)')
+                .in('member_id', memberIds);
+            console.log('[Login] Roles data:', rolesData); // DEBUG
+            console.log('[Login] Roles error:', rolesError); // DEBUG
+            if (!rolesError) memberRoles = rolesData || [];
+        }
 
         // Fetch Units for this user
         const { data: units, error: unitsError } = await require('../config/supabaseAdmin')
@@ -160,12 +187,21 @@ exports.login = async (req, res) => {
             .select('*, units(*, blocks(community_id))')
             .eq('profile_id', data.user.id);
 
-        // Join units to communities
+        // Join units and roles to communities
         const communitiesWithUnits = communities?.map(cm => {
             const communityUnits = units?.filter(u => u.units?.blocks?.community_id === cm.community_id) || [];
+            const roles = memberRoles
+                .filter(mr => mr.member_id === cm.id)
+                .map(mr => ({
+                    id: mr.role_id,
+                    name: mr.roles?.name,
+                    block_id: mr.block_id,
+                    block_name: mr.blocks?.name
+                }));
             return {
                 ...cm,
-                unit_owners: communityUnits
+                unit_owners: communityUnits,
+                roles: roles.length > 0 ? roles : [{ name: 'resident' }] // Default to resident if no roles
             };
         }) || [];
 
@@ -173,7 +209,7 @@ exports.login = async (req, res) => {
             message: 'Login successful',
             token: data.session.access_token,
             user: { ...data.user, profile },
-            communities: communitiesWithUnits // Return list of communities with units attached
+            communities: communitiesWithUnits // Return list of communities with units and roles attached
         });
 
     } catch (error) {
@@ -205,8 +241,19 @@ exports.getMe = async (req, res) => {
         // Fetch Communities
         const { data: communities, error: commError } = await require('../config/supabaseAdmin')
             .from('community_members')
-            .select('*, communities(*), roles(*)')
+            .select('*, communities(*)')
             .eq('profile_id', user.id);
+
+        // Fetch roles from member_roles table (supports multiple roles)
+        const memberIds = communities?.map(cm => cm.id) || [];
+        let memberRoles = [];
+        if (memberIds.length > 0) {
+            const { data: rolesData, error: rolesError } = await require('../config/supabaseAdmin')
+                .from('member_roles')
+                .select('*, roles(*), blocks(*)')
+                .in('member_id', memberIds);
+            if (!rolesError) memberRoles = rolesData || [];
+        }
 
         // Fetch Units for this user
         const { data: units, error: unitsError } = await require('../config/supabaseAdmin')
@@ -214,14 +261,23 @@ exports.getMe = async (req, res) => {
             .select('*, units(*, blocks(community_id))')
             .eq('profile_id', user.id);
 
-        // Join units to communities
+        // Join units and roles to communities
         const communitiesWithUnits = communities
             ?.filter(cm => cm.communities)
             .map(cm => {
                 const communityUnits = units?.filter(u => u.units?.blocks?.community_id === cm.community_id) || [];
+                const roles = memberRoles
+                    .filter(mr => mr.member_id === cm.id)
+                    .map(mr => ({
+                        id: mr.role_id,
+                        name: mr.roles?.name,
+                        block_id: mr.block_id,
+                        block_name: mr.blocks?.name
+                    }));
                 return {
                     ...cm,
-                    unit_owners: communityUnits
+                    unit_owners: communityUnits,
+                    roles: roles.length > 0 ? roles : [{ name: 'resident' }]
                 };
             }) || [];
 

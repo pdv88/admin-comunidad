@@ -121,25 +121,34 @@ exports.updateBlock = async (req, res) => {
                 .single();
 
             if (!roleError && vocalRole) {
-                // 2. Check the user's current role
+                // 2. Get the member_id from community_members
                 const { data: targetMember, error: targetError } = await supabaseAdmin
                     .from('community_members')
-                    .select('roles(name)')
+                    .select('id')
                     .eq('profile_id', representative_id)
                     .eq('community_id', communityId)
                     .single();
 
-                // 3. If they are just a neighbor (or null/undefined role), promote to vocal
-                // We avoid demoting admins, presidents, etc.
-                const currentRoleName = targetMember?.roles?.name;
-                const privilegedRoles = ['admin', 'president', 'vice_president', 'secretary', 'treasurer'];
+                if (!targetError && targetMember) {
+                    // 3. Check if user already has this vocal role for this block
+                    const { data: existingRole } = await supabaseAdmin
+                        .from('member_roles')
+                        .select('id')
+                        .eq('member_id', targetMember.id)
+                        .eq('role_id', vocalRole.id)
+                        .eq('block_id', id) // id is the block id being updated
+                        .single();
 
-                if (!targetError && (!currentRoleName || !privilegedRoles.includes(currentRoleName))) {
-                    await supabaseAdmin
-                        .from('community_members')
-                        .update({ role_id: vocalRole.id })
-                        .eq('profile_id', representative_id)
-                        .eq('community_id', communityId);
+                    // 4. If they don't already have this block's vocal role, add it
+                    if (!existingRole) {
+                        await supabaseAdmin
+                            .from('member_roles')
+                            .insert({
+                                member_id: targetMember.id,
+                                role_id: vocalRole.id,
+                                block_id: id // Associate vocal role with this specific block
+                            });
+                    }
                 }
             }
         }

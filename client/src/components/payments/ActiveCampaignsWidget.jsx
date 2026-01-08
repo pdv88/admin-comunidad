@@ -12,27 +12,36 @@ const ActiveCampaignsWidget = (props) => {
     const [loading, setLoading] = useState(true);
     
     useEffect(() => {
-        fetchCampaigns();
-    }, []);
-
-    const fetchCampaigns = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`${API_URL}/api/payments/campaigns`, {
-                 headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                // Filter only active campaigns
-                const active = data.filter(c => c.is_active);
-                setCampaigns(active);
+        const abortController = new AbortController();
+        
+        const fetchCampaigns = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch(`${API_URL}/api/payments/campaigns`, {
+                     headers: { 'Authorization': `Bearer ${token}` },
+                     signal: abortController.signal
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    // Filter only active campaigns
+                    const active = data.filter(c => c.is_active);
+                    setCampaigns(active);
+                }
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    console.error(error);
+                }
+            } finally {
+                if (!abortController.signal.aborted) {
+                    setLoading(false);
+                }
             }
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setLoading(false);
-        }
-    };
+        };
+        
+        fetchCampaigns();
+        
+        return () => abortController.abort();
+    }, []);
 
     if (loading) return (
         <div className={props.className}>

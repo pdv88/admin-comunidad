@@ -11,7 +11,10 @@ import Toast from '../components/Toast';
 
 const CommunitySettings = () => {
     const { t } = useTranslation();
-    const { user, deleteCommunity, refreshActiveCommunity } = useAuth();
+    const { user, deleteCommunity, refreshActiveCommunity, hasAnyRole } = useAuth();
+    
+    // Only super_admin and president can edit community settings
+    const canEdit = hasAnyRole(['super_admin', 'president']);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [community, setCommunity] = useState({
@@ -195,9 +198,10 @@ const CommunitySettings = () => {
                 
                 <div className="glass-card p-6 rounded-xl">
                     <form onSubmit={handleSave} className="space-y-6">
-                        {/* Basic Info */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="md:col-span-2 flex flex-col items-center justify-center p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl hover:border-blue-500 transition-colors">
+                        {/* Basic Info - Logo left, inputs right on desktop; logo top on mobile */}
+                        <div className="flex flex-col md:flex-row gap-6">
+                            {/* Logo Upload - Left column on desktop, top on mobile */}
+                            <div className="md:w-48 shrink-0 flex flex-col items-center justify-center p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl hover:border-blue-500 transition-colors">
                                 <label className="cursor-pointer flex flex-col items-center space-y-2 w-full">
                                     <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{t('community_settings.logo', 'Community Logo')}</span>
                                     {logoPreview || community.logo_url ? (
@@ -226,42 +230,45 @@ const CommunitySettings = () => {
                                 </label>
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    {t('community_settings.name')}
-                                </label>
-                                <input
-                                    type="text"
-                                    className="glass-input w-full"
-                                    value={community.name}
-                                    onChange={(e) => setCommunity({ ...community, name: e.target.value })}
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    {t('community_settings.address')}
-                                </label>
-                                <input
-                                    type="text"
-                                    className="glass-input w-full"
-                                    value={community.address}
-                                    onChange={(e) => setCommunity({ ...community, address: e.target.value })}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    {t('community_settings.currency', 'Currency')}
-                                </label>
-                                <select
-                                    className="glass-input w-full"
-                                    value={community.currency}
-                                    onChange={(e) => setCommunity({ ...community, currency: e.target.value })}
-                                >
-                                    {SUPPORTED_CURRENCIES.map(c => (
-                                        <option key={c.code} value={c.code}>{c.name}</option>
-                                    ))}
-                                </select>
+                            {/* Inputs - Right column on desktop */}
+                            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        {t('community_settings.name')}
+                                    </label>
+                                    <input
+                                        type="text"
+                                        className="glass-input w-full"
+                                        value={community.name}
+                                        onChange={(e) => setCommunity({ ...community, name: e.target.value })}
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        {t('community_settings.address')}
+                                    </label>
+                                    <input
+                                        type="text"
+                                        className="glass-input w-full"
+                                        value={community.address}
+                                        onChange={(e) => setCommunity({ ...community, address: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        {t('community_settings.currency', 'Currency')}
+                                    </label>
+                                    <select
+                                        className="glass-input w-full"
+                                        value={community.currency}
+                                        onChange={(e) => setCommunity({ ...community, currency: e.target.value })}
+                                    >
+                                        {SUPPORTED_CURRENCIES.map(c => (
+                                            <option key={c.code} value={c.code}>{c.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
                         </div>
 
@@ -332,19 +339,25 @@ const CommunitySettings = () => {
                         </div>
 
                         <div className="pt-4 flex items-center justify-end gap-3">
-                            <button 
-                                type="submit" 
-                                disabled={saving}
-                                className="glass-button"
-                            >
-                                {saving ? t('community_settings.saving') : t('community_settings.save')}
-                            </button>
+                            {canEdit ? (
+                                <button 
+                                    type="submit" 
+                                    disabled={saving}
+                                    className="glass-button"
+                                >
+                                    {saving ? t('community_settings.saving') : t('community_settings.save')}
+                                </button>
+                            ) : (
+                                <p className="text-sm text-gray-500 dark:text-gray-400 italic">
+                                    {t('community_settings.view_only', 'You can view but not edit community settings.')}
+                                </p>
+                            )}
                         </div>
                     </form>
                 </div>
 
                 {/* Delete Community Button (Super Admin Only) */}
-                 {user?.user_metadata?.is_admin_registration === true && (
+                 {hasAnyRole(['super_admin']) && (
                     <div className="flex justify-end mt-8 border-t border-gray-200 dark:border-gray-700 pt-6">
                          <button
                             type="button"

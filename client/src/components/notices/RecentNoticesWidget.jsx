@@ -9,25 +9,34 @@ const RecentNoticesWidget = () => {
     const [notices, setNotices] = useState([]);
     const [loading, setLoading] = useState(true);
     useEffect(() => {
-        fetchRecentNotices();
-    }, []);
-
-    const fetchRecentNotices = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`${API_URL}/api/notices`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setNotices(data.slice(0, 5)); 
+        const abortController = new AbortController();
+        
+        const fetchRecentNotices = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch(`${API_URL}/api/notices`, {
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    signal: abortController.signal
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setNotices(data.slice(0, 5)); 
+                }
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    console.error("Error fetching notices:", error);
+                }
+            } finally {
+                if (!abortController.signal.aborted) {
+                    setLoading(false);
+                }
             }
-        } catch (error) {
-            console.error("Error fetching notices:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
+        };
+        
+        fetchRecentNotices();
+        
+        return () => abortController.abort();
+    }, []);
 
     if (loading) return <div className="animate-pulse h-12 w-full bg-gray-200 dark:bg-neutral-800 rounded-lg mb-6"></div>;
     if (notices.length === 0) return null;

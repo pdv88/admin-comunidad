@@ -63,7 +63,8 @@ exports.updateCommunity = async (req, res) => {
 
         if (!member) return res.status(403).json({ error: 'Not a member.' });
 
-        if (!['admin', 'president'].includes(member.roles?.name)) {
+        // Only super_admin (subscriber) and president can edit community settings
+        if (!['super_admin', 'president'].includes(member.roles?.name)) {
             return res.status(403).json({ error: 'Unauthorized to update community settings.' });
         }
 

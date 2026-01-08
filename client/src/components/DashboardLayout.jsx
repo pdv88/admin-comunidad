@@ -8,7 +8,7 @@ import AnimatedBackground from '../assets/components/AnimatedBackground';
 import CommunitySwitcher from './CommunitySwitcher';
 
 const DashboardLayout = ({ children }) => {
-    const { logout, user, activeCommunity } = useAuth();
+    const { logout, user, activeCommunity, hasAnyRole, getPrimaryRole } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
     const { t } = useTranslation();
@@ -41,6 +41,9 @@ const DashboardLayout = ({ children }) => {
 
     const closeSidebar = () => setIsSidebarOpen(false);
 
+    // Get primary role for display
+    const primaryRole = getPrimaryRole();
+
     return (
         <div className="relative flex h-screen bg-slate-300 dark:bg-slate-950 overflow-hidden md:gap-2">
             <AnimatedBackground />
@@ -72,7 +75,7 @@ const DashboardLayout = ({ children }) => {
                     <Link to="/app/dashboard" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/dashboard')}`}>
                         {t('dashboard_layout.nav.dashboard')}
                     </Link>
-                    {['admin', 'president', 'secretary', 'vocal'].includes(activeCommunity?.roles?.name) && (
+                    {hasAnyRole(['admin', 'president', 'secretary', 'vocal']) && (
                         <Link to="/app/notices" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/notices')}`}>
                              {t('dashboard_layout.nav.notices')}
                         </Link>
@@ -89,7 +92,7 @@ const DashboardLayout = ({ children }) => {
                     <Link to="/app/campaigns" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/campaigns')}`}>
                         {t('dashboard_layout.nav.campaigns')}
                     </Link>
-                    {(activeCommunity?.roles?.name === 'admin' || activeCommunity?.roles?.name === 'president') && (
+                    {hasAnyRole(['super_admin', 'admin', 'president']) && (
                         <>
                             <div className="pt-4 pb-2">
                                 <div className="h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-neutral-600 to-transparent mb-3 opacity-50"></div>
@@ -122,7 +125,7 @@ const DashboardLayout = ({ children }) => {
                                     {user?.profile?.full_name || user?.user_metadata?.full_name || user?.email}
                                 </Link>
                                 <span className="text-xs text-gray-500 dark:text-gray-400 capitalize truncate">
-                                    {displayRole(activeCommunity?.roles?.name)}
+                                    {displayRole(primaryRole)}
                                 </span>
                             </div>
                         </div>

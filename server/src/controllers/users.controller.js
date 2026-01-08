@@ -67,7 +67,18 @@ exports.listUsers = async (req, res) => {
 
         if (unitsError) throw unitsError;
 
-        // 3. Fetch Auth Data for all profiles (to check 'email_confirmed_at')
+        // 3. Fetch roles from member_roles table for these members
+        const memberIds = members.map(m => m.id);
+        let memberRoles = [];
+        if (memberIds.length > 0) {
+            const { data: rolesData, error: rolesError } = await supabaseAdmin
+                .from('member_roles')
+                .select('*, roles(*), blocks(*)')
+                .in('member_id', memberIds);
+            if (!rolesError) memberRoles = rolesData || [];
+        }
+
+        // 4. Fetch Auth Data for all profiles (to check 'email_confirmed_at')
         // Using Promise.all to fetch individually as there's no bulk fetch by ID list in admin API currently exposed easily
         const authUsers = await Promise.all(
             profileIds.map(async (uid) => {
@@ -85,7 +96,7 @@ exports.listUsers = async (req, res) => {
             if (u) authMap[u.id] = u;
         });
 
-        // 4. Map structure
+        // 5. Map structure
         const users = members.map(member => {
             const profile = member.profiles || {};
             const authUser = authMap[member.profile_id];
@@ -104,12 +115,21 @@ exports.listUsers = async (req, res) => {
                 uo.units?.blocks?.community_id === communityId
             ) || [];
 
+            // Get roles from member_roles table
+            const roles = memberRoles
+                .filter(mr => mr.member_id === member.id)
+                .map(mr => ({
+                    id: mr.role_id,
+                    name: mr.roles?.name,
+                    block_id: mr.block_id,
+                    block_name: mr.blocks?.name
+                }));
+
             return {
                 ...profile,   // Profile details
-                roles: member.roles,  // Role details
+                roles: roles.length > 0 ? roles : [{ name: 'resident' }],  // Role details (array)
                 unit_owners: userOwnerships,
                 community_member_id: member.id,
-                role_id: member.role_id,
                 is_confirmed: isConfirmed,
                 email: authUser?.email || profile.email,
                 phone: profile.phone
@@ -446,15 +466,36 @@ exports.updateUser = async (req, res) => {
             roleId = roleData.id;
         }
 
-        // Update Community Member Role
+        // Update Community Member Roles (using member_roles table)
         if (roleId) {
-            const { error: updateError } = await supabaseAdmin
+            // First, get the member_id from community_members
+            const { data: memberData, error: memberError } = await supabaseAdmin
                 .from('community_members')
-                .update({ role_id: roleId })
+                .select('id')
                 .eq('profile_id', id)
-                .eq('community_id', communityId);
+                .eq('community_id', communityId)
+                .single();
 
-            if (updateError) throw updateError;
+            if (memberError) throw memberError;
+
+            if (memberData) {
+                // Delete existing roles for this member (except block-specific vocal roles)
+                await supabaseAdmin
+                    .from('member_roles')
+                    .delete()
+                    .eq('member_id', memberData.id)
+                    .is('block_id', null); // Only delete non-block roles
+
+                // Insert new role
+                const { error: insertError } = await supabaseAdmin
+                    .from('member_roles')
+                    .insert({
+                        member_id: memberData.id,
+                        role_id: roleId
+                    });
+
+                if (insertError) throw insertError;
+            }
         }
 
         // Update Units

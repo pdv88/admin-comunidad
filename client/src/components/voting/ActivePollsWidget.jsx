@@ -9,27 +9,36 @@ const ActivePollsWidget = (props) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetchPolls();
-    }, []);
-
-    const fetchPolls = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`${API_URL}/api/polls`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                const now = new Date();
-                const active = data.filter(p => !p.ends_at || new Date(p.ends_at) > now);
-                setPolls(active);
+        const abortController = new AbortController();
+        
+        const fetchPolls = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch(`${API_URL}/api/polls`, {
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    signal: abortController.signal
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    const now = new Date();
+                    const active = data.filter(p => !p.ends_at || new Date(p.ends_at) > now);
+                    setPolls(active);
+                }
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    console.error(error);
+                }
+            } finally {
+                if (!abortController.signal.aborted) {
+                    setLoading(false);
+                }
             }
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setLoading(false);
-        }
-    };
+        };
+        
+        fetchPolls();
+        
+        return () => abortController.abort();
+    }, []);
 
     if (loading) return (
         <div className={props.className}>

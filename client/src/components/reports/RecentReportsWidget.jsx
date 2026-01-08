@@ -14,27 +14,36 @@ const RecentReportsWidget = (props) => {
     const canViewAll = ['admin', 'president', 'vocal', 'secretary', 'maintenance'].includes(role);
 
     useEffect(() => {
-        fetchReports();
-    }, []);
-
-    const fetchReports = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`${API_URL}/api/reports?limit=10`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                // Controller returns wrapped object with data property now
-                // We request limit=3 so we don't need to slice
-                setReports(data.data || []);
+        const abortController = new AbortController();
+        
+        const fetchReports = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch(`${API_URL}/api/reports?limit=10`, {
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    signal: abortController.signal
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    // Controller returns wrapped object with data property now
+                    // We request limit=3 so we don't need to slice
+                    setReports(data.data || []);
+                }
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    console.error(error);
+                }
+            } finally {
+                if (!abortController.signal.aborted) {
+                    setLoading(false);
+                }
             }
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setLoading(false);
-        }
-    };
+        };
+        
+        fetchReports();
+        
+        return () => abortController.abort();
+    }, []);
 
     const getStatusStyle = (status) => {
         switch(status) {

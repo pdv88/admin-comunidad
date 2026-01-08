@@ -16,7 +16,7 @@ import DashboardSkeleton from './DashboardSkeleton';
 import { useState, useEffect } from 'react';
 
 const Dashboard = () => {
-    const { user, activeCommunity } = useAuth();
+    const { user, activeCommunity, hasAnyRole, getPrimaryRole } = useAuth();
     const { t } = useTranslation();
     const [loading, setLoading] = useState(true);
 
@@ -30,10 +30,13 @@ const Dashboard = () => {
     if (loading) {
         return <DashboardSkeleton />;
     }
-    const role = activeCommunity?.roles?.name || 'resident';
+    
+    // Get primary role for display (highest in hierarchy)
+    const role = getPrimaryRole();
+    
     // Determine if the user has a role that displays a top-right section
-    // Temporarily exclude 'president' etc until they have content, to avoid gaps
-    const hasRoleSection = ['admin'].includes(role);
+    // Using hasAnyRole to check for multiple roles
+    const hasRoleSection = hasAnyRole(['admin']);
 
     // Common glass card style
     // Common glass card style
@@ -54,8 +57,8 @@ const Dashboard = () => {
                     <WelcomeWidget role={role} />
                 </div>
 
-                {/* Financial Overview Chart (Admins Only) */}
-                {['admin', 'president', 'treasurer'].includes(role) && (
+                {/* Financial Overview Chart (Financial roles) */}
+                {hasAnyRole(['admin', 'president', 'treasurer']) && (
                     <div className="w-full shrink-0 h-96">
                          <BilledVsCollectedChart className="h-full" />
                     </div>
@@ -64,7 +67,7 @@ const Dashboard = () => {
                  {/* 2. Role Sections (Auto Height) */}
                  {hasRoleSection && (
                     <div className="w-full shrink-0">
-                        {role === 'admin' && <AdminSection className={cardClass} />}
+                        {hasAnyRole(['admin']) && <AdminSection className={cardClass} />}
                         {/* Other roles hidden for now */}
                     </div>
                  )}

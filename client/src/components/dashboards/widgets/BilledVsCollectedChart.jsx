@@ -21,18 +21,26 @@ const BilledVsCollectedChart = ({ className }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // Fix for Recharts "height -1" warning: Delay render to ensure DOM is ready
-  const [isMounted, setIsMounted] = useState(false);
+  // Simple delay to let container mount before rendering chart
+  const [chartReady, setChartReady] = useState(false);
 
   useEffect(() => {
-    // Small timeout to ensure layout is painted
+    // Only set ready after data loads
+    if (loading || data.length === 0) {
+      setChartReady(false);
+      return;
+    }
+    
     const timer = setTimeout(() => {
-        setIsMounted(true);
+      setChartReady(true);
     }, 100);
+
     return () => clearTimeout(timer);
-  }, []);
+  }, [loading, data.length]);
 
   useEffect(() => {
+    const abortController = new AbortController();
+    
     const fetchData = async () => {
         if (!activeCommunity?.community_id) return;
 
@@ -42,7 +50,8 @@ const BilledVsCollectedChart = ({ className }) => {
                 headers: { 
                     'Authorization': `Bearer ${token}`,
                     'x-community-id': activeCommunity.community_id
-                }
+                },
+                signal: abortController.signal
             });
             
             if (res.ok) {
@@ -50,13 +59,20 @@ const BilledVsCollectedChart = ({ className }) => {
                 setData(result);
             }
         } catch (error) {
-            console.error(error);
+            // Ignore abort errors
+            if (error.name !== 'AbortError') {
+                console.error(error);
+            }
         } finally {
-            setLoading(false);
+            if (!abortController.signal.aborted) {
+                setLoading(false);
+            }
         }
     };
 
     fetchData();
+    
+    return () => abortController.abort();
   }, [activeCommunity]);
 
   if (loading) {
@@ -109,10 +125,10 @@ const BilledVsCollectedChart = ({ className }) => {
                     <p>{t('dashboard.graphs.no_data', 'No financial data available')}</p>
                  </div>
             ) : (
-                <div className="flex-1 w-full min-h-0 relative">
+                <div className="flex-1 w-full min-h-[200px] relative">
                     <div className="absolute inset-0">
-                        {isMounted && (
-                            <ResponsiveContainer width="100%" height="100%">
+                        {chartReady && (
+                            <ResponsiveContainer width="100%" height="100%" debounce={100}>
                             <AreaChart
                                 data={data}
                                 margin={{
@@ -144,7 +160,7 @@ const BilledVsCollectedChart = ({ className }) => {
                                 axisLine={false} 
                                 tickLine={false} 
                                 tick={{ fill: '#9ca3af', fontSize: 12 }}
-                                tickFormatter={(value) => `${getCurrencySymbol(activeCommunity?.communities?.currency)}${value / 1000}k`}
+                                tickFormatter={(value) => `${getCurrencySymbol(activeCommunity?.communities?.currency)}${value}`}
                             />
                             <Tooltip content={<CustomTooltip />} />
                             <Area 
@@ -153,7 +169,7 @@ const BilledVsCollectedChart = ({ className }) => {
                                 stroke="#06b6d4" 
                                 fillOpacity={1} 
                                 fill="url(#colorBilled)" 
-                                strokeWidth={3}
+                                strokeWidth={1}
                             />
                             <Area 
                                 type="monotone" 
@@ -161,7 +177,7 @@ const BilledVsCollectedChart = ({ className }) => {
                                 stroke="#10b981" 
                                 fillOpacity={1} 
                                 fill="url(#colorCollected)" 
-                                strokeWidth={3}
+                                strokeWidth={1}
                             />
                         </AreaChart>
                         </ResponsiveContainer>

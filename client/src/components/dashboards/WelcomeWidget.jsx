@@ -16,36 +16,43 @@ const WelcomeWidget = ({ role }) => {
     const isResident = role === 'resident' || role === 'neighbor' || hasUnits;
 
     useEffect(() => {
-        if (isResident) {
-            fetchPaymentStatus();
-        }
-    }, [isResident]);
-
-    const fetchPaymentStatus = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            // Fetch 'my statement' which includes all monthly fees (pending and paid)
-            const res = await fetch(`${API_URL}/api/maintenance/my-statement`, {
-                headers: { 'Authorization': `Bearer ${token}`, 'x-community-id': activeCommunity?.community_id }
-            });
-            
-            if (res.ok) {
-                const fees = await res.json();
+        if (!isResident) return;
+        
+        const abortController = new AbortController();
+        
+        const fetchPaymentStatus = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                // Fetch 'my statement' which includes all monthly fees (pending and paid)
+                const res = await fetch(`${API_URL}/api/maintenance/my-statement`, {
+                    headers: { 'Authorization': `Bearer ${token}`, 'x-community-id': activeCommunity?.community_id },
+                    signal: abortController.signal
+                });
                 
-                // Calculate total UNPAID fees
-                const pendingFees = fees.filter(f => f.status === 'pending');
-                const totalUnpaid = pendingFees.reduce((sum, f) => sum + Number(f.amount), 0);
-                
-                setFeeAmount(totalUnpaid);
-                
-                // If 0 unpaid, status is 'paid' (Up to date), otherwise 'pending'
-                setFeeStatus(totalUnpaid === 0 ? 'paid' : 'pending');
+                if (res.ok) {
+                    const fees = await res.json();
+                    
+                    // Calculate total UNPAID fees
+                    const pendingFees = fees.filter(f => f.status === 'pending');
+                    const totalUnpaid = pendingFees.reduce((sum, f) => sum + Number(f.amount), 0);
+                    
+                    setFeeAmount(totalUnpaid);
+                    
+                    // If 0 unpaid, status is 'paid' (Up to date), otherwise 'pending'
+                    setFeeStatus(totalUnpaid === 0 ? 'paid' : 'pending');
+                }
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    console.error('Error fetching fees:', error);
+                    setFeeStatus('error');
+                }
             }
-        } catch (error) {
-            console.error('Error fetching fees:', error);
-            setFeeStatus('error');
-        }
-    };
+        };
+        
+        fetchPaymentStatus();
+        
+        return () => abortController.abort();
+    }, [isResident, activeCommunity?.community_id]);
 
     return (
         <div className="glass-card p-4 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 h-full">

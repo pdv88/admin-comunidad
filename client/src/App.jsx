@@ -57,7 +57,7 @@ function App() {
              <Route path="/app/voting" element={<Voting />} />
              
              {/* Admin/President Only Routes */}
-             <Route element={<ProtectedRoute allowedRoles={['admin', 'president']} />}>
+             <Route element={<ProtectedRoute allowedRoles={['super_admin', 'admin', 'president']} />}>
                 <Route path="/app/properties" element={<Properties />} />
                 <Route path="/app/users" element={<UserManagement />} />
                 <Route path="/app/community" element={<CommunitySettings />} />

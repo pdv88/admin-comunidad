@@ -274,6 +274,30 @@ export const AuthProvider = ({ children }) => {
       }
   };
 
+  // Helper function to check if user has a specific role
+  const hasRole = (roleName) => {
+    const roles = activeCommunity?.roles || [];
+    return roles.some(r => r.name === roleName);
+  };
+
+  // Helper function to check if user has any of the specified roles
+  const hasAnyRole = (roleNames) => {
+    const roles = activeCommunity?.roles || [];
+    return roles.some(r => roleNames.includes(r.name));
+  };
+
+  // Get the primary/highest role for display purposes
+  const getPrimaryRole = () => {
+    const roles = activeCommunity?.roles || [];
+    const hierarchy = ['super_admin', 'admin', 'president', 'treasurer', 'secretary', 'vocal', 'maintenance', 'resident'];
+    for (const role of hierarchy) {
+      if (roles.some(r => r.name === role)) {
+        return role;
+      }
+    }
+    return 'resident';
+  };
+
   const value = {
     user,
     userCommunities,
@@ -284,7 +308,10 @@ export const AuthProvider = ({ children }) => {
     logout,
     updateProfile,
     deleteCommunity,
-    loading
+    loading,
+    hasRole,
+    hasAnyRole,
+    getPrimaryRole
   };
 
   return (
