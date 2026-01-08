@@ -611,3 +611,76 @@ exports.resendFeeEmail = async (req, res) => {
         res.status(400).json({ error: error.message });
     }
 };
+
+exports.getFinancialStats = async (req, res) => {
+    try {
+        const { member, communityId } = await getUserAndMember(req);
+        const role = member.roles?.name;
+
+        if (role !== 'admin' && role !== 'president' && role !== 'treasurer') {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        // 1. Calculate Date Range (Last 6 Months)
+        const today = new Date();
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(today.getMonth() - 5); // 5 months back + current = 6
+        sixMonthsAgo.setDate(1); // Start of that month
+
+        const startPeriod = sixMonthsAgo.toISOString().slice(0, 7); // YYYY-MM
+        const endPeriod = today.toISOString().slice(0, 7); // YYYY-MM
+
+        // 2. Fetch Data
+        const { data: fees, error } = await supabaseAdmin
+            .from('monthly_fees')
+            .select('period, amount, status')
+            .eq('community_id', communityId)
+            .gte('period', `${startPeriod}-01`);
+
+        if (error) throw error;
+
+        // 3. Aggregate Data
+        const statsMap = {};
+
+        // Initialize all months in range to ensure no gaps
+        let currentLoopDate = new Date(sixMonthsAgo);
+        while (currentLoopDate <= today) {
+            const p = currentLoopDate.toISOString().slice(0, 7);
+            statsMap[p] = { billed: 0, collected: 0 };
+            currentLoopDate.setMonth(currentLoopDate.getMonth() + 1);
+        }
+
+        fees.forEach(fee => {
+            // Fee period might be YYYY-MM-DD or YYYY-MM. normalizing
+            const p = fee.period.slice(0, 7);
+            if (statsMap[p]) {
+                const amount = parseFloat(fee.amount || 0);
+                statsMap[p].billed += amount;
+                if (fee.status === 'paid') {
+                    statsMap[p].collected += amount;
+                }
+            }
+        });
+
+        // 4. Format for Chart
+        // Specific spanish abbreviations for the chart
+        const monthsEs = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+        const result = Object.keys(statsMap).sort().map(key => {
+            const [year, month] = key.split('-');
+            const monthIndex = parseInt(month, 10) - 1;
+            return {
+                name: monthsEs[monthIndex],
+                fullDate: key,
+                billed: statsMap[key].billed,
+                collected: statsMap[key].collected
+            };
+        });
+
+        res.json(result);
+
+    } catch (error) {
+        console.error("Financial Stats Error:", error);
+        res.status(400).json({ error: error.message });
+    }
+};

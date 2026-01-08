@@ -6,11 +6,11 @@ import { API_URL } from '../../config';
 
 const RecentReportsWidget = (props) => {
     const { t } = useTranslation();
-    const { user } = useAuth();
+    const { user, activeCommunity } = useAuth();
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const role = user?.profile?.roles?.name || 'resident';
+    const role = activeCommunity?.roles?.name || 'resident';
     const canViewAll = ['admin', 'president', 'vocal', 'secretary', 'maintenance'].includes(role);
 
     useEffect(() => {
@@ -20,13 +20,14 @@ const RecentReportsWidget = (props) => {
     const fetchReports = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`${API_URL}/api/reports`, {
+            const res = await fetch(`${API_URL}/api/reports?limit=10`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
                 const data = await res.json();
-                // Controller already sorts by created_at desc
-                setReports(data.slice(0, 3));
+                // Controller returns wrapped object with data property now
+                // We request limit=3 so we don't need to slice
+                setReports(data.data || []);
             }
         } catch (error) {
             console.error(error);

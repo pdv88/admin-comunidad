@@ -10,36 +10,53 @@ import {
   ResponsiveContainer
 } from 'recharts';
 
+import { API_URL } from '../../../config';
+
+import { useAuth } from '../../../context/AuthContext';
+
 const BilledVsCollectedChart = ({ className }) => {
   const { t } = useTranslation();
+  const { activeCommunity } = useAuth();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // Fix for Recharts "height -1" warning: Delay render to ensure DOM is ready
+  const [isMounted, setIsMounted] = useState(false);
 
-  // Mock data generation
   useEffect(() => {
-    // Simulating API fetch
-    const fetchData = async () => {
-        // Generate last 6 months of data
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const currentMonth = new Date().getMonth();
-        const mockData = [];
+    // Small timeout to ensure layout is painted
+    const timer = setTimeout(() => {
+        setIsMounted(true);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
 
-        // Generate data for the last 6 months
-        for (let i = 5; i >= 0; i--) {
-            const dataIndex = (currentMonth - i + 12) % 12;
-            mockData.push({
-                name: months[dataIndex],
-                billed: Math.floor(Math.random() * (15000 - 10000) + 10000), // Random between 10k and 15k
-                collected: Math.floor(Math.random() * (14000 - 9000) + 9000), // Random between 9k and 14k
+  useEffect(() => {
+    const fetchData = async () => {
+        if (!activeCommunity?.community_id) return;
+
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${API_URL}/api/maintenance/stats`, {
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'x-community-id': activeCommunity.community_id
+                }
             });
+            
+            if (res.ok) {
+                const result = await res.json();
+                setData(result);
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(false);
         }
-        
-        setData(mockData);
-        setLoading(false);
     };
 
     fetchData();
-  }, []);
+  }, [activeCommunity]);
 
   if (loading) {
     return (
@@ -70,11 +87,10 @@ const BilledVsCollectedChart = ({ className }) => {
     return null;
   };
 
+
+
   return (
-    <div className={`relative overflow-hidden rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md shadow-xl ${className}`}>
-        {/* Glassmorphism background effect */}
-        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/10 to-transparent pointer-events-none z-0"></div>
-        
+    <div className={`glass-card relative overflow-hidden flex flex-col ${className}`}>
         <div className="relative z-10 p-6 flex flex-col h-full">
             <div className="flex justify-between items-center mb-6">
                 <div>
@@ -87,61 +103,71 @@ const BilledVsCollectedChart = ({ className }) => {
                 </div>
             </div>
 
-            <div className="flex-1 w-full min-h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                <AreaChart
-                    data={data}
-                    margin={{
-                    top: 10,
-                    right: 10,
-                    left: 0,
-                    bottom: 0,
-                    }}
-                >
-                    <defs>
-                    <linearGradient id="colorBilled" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
-                    </linearGradient>
-                    <linearGradient id="colorCollected" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                    </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} strokeOpacity={0.1} />
-                    <XAxis 
-                        dataKey="name" 
-                        axisLine={false} 
-                        tickLine={false} 
-                        tick={{ fill: '#9ca3af', fontSize: 12 }} 
-                        dy={10}
-                    />
-                    <YAxis 
-                        axisLine={false} 
-                        tickLine={false} 
-                        tick={{ fill: '#9ca3af', fontSize: 12 }}
-                        tickFormatter={(value) => `€${value / 1000}k`}
-                    />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Area 
-                        type="monotone" 
-                        dataKey="billed" 
-                        stroke="#06b6d4" 
-                        fillOpacity={1} 
-                        fill="url(#colorBilled)" 
-                        strokeWidth={3}
-                    />
-                    <Area 
-                        type="monotone" 
-                        dataKey="collected" 
-                        stroke="#10b981" 
-                        fillOpacity={1} 
-                        fill="url(#colorCollected)" 
-                        strokeWidth={3}
-                    />
-                </AreaChart>
-                </ResponsiveContainer>
-            </div>
+            {data.length === 0 ? (
+                 <div className="flex-1 w-full flex items-center justify-center text-gray-400 dark:text-neutral-500">
+                    <p>{t('dashboard.graphs.no_data', 'No financial data available')}</p>
+                 </div>
+            ) : (
+                <div className="flex-1 w-full min-h-0 relative">
+                    <div className="absolute inset-0">
+                        {isMounted && (
+                            <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart
+                                data={data}
+                                margin={{
+                                top: 10,
+                                right: 10,
+                                left: 0,
+                                bottom: 0,
+                                }}
+                            >
+                            <defs>
+                            <linearGradient id="colorBilled" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.8}/>
+                                <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
+                            </linearGradient>
+                            <linearGradient id="colorCollected" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
+                                <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                            </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} strokeOpacity={0.1} />
+                            <XAxis 
+                                dataKey="name" 
+                                axisLine={false} 
+                                tickLine={false} 
+                                tick={{ fill: '#9ca3af', fontSize: 12 }} 
+                                dy={10}
+                            />
+                            <YAxis 
+                                axisLine={false} 
+                                tickLine={false} 
+                                tick={{ fill: '#9ca3af', fontSize: 12 }}
+                                tickFormatter={(value) => `€${value / 1000}k`}
+                            />
+                            <Tooltip content={<CustomTooltip />} />
+                            <Area 
+                                type="monotone" 
+                                dataKey="billed" 
+                                stroke="#06b6d4" 
+                                fillOpacity={1} 
+                                fill="url(#colorBilled)" 
+                                strokeWidth={3}
+                            />
+                            <Area 
+                                type="monotone" 
+                                dataKey="collected" 
+                                stroke="#10b981" 
+                                fillOpacity={1} 
+                                fill="url(#colorCollected)" 
+                                strokeWidth={3}
+                            />
+                        </AreaChart>
+                        </ResponsiveContainer>
+                        )}
+                    </div>
+                </div>
+          )}
         </div>
     </div>
   );

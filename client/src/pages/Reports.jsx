@@ -27,7 +27,7 @@ const Reports = () => {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [reportToDelete, setReportToDelete] = useState(null);
 
-    const role = activeCommunity?.roles?.name || user?.profile?.roles?.name;
+    const role = activeCommunity?.roles?.name || 'resident';
     const isVocal = role === 'vocal';
     const isAdminOrPres = ['admin', 'president', 'secretary', 'treasurer'].includes(role); 
     const isMaintenance = role === 'maintenance';

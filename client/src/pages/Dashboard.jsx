@@ -11,11 +11,12 @@ import ActivePollsWidget from '../components/voting/ActivePollsWidget';
 import RecentNoticesWidget from '../components/notices/RecentNoticesWidget';
 import RecentReportsWidget from '../components/reports/RecentReportsWidget';
 import WelcomeWidget from '../components/dashboards/WelcomeWidget';
+import BilledVsCollectedChart from '../components/dashboards/widgets/BilledVsCollectedChart';
 import DashboardSkeleton from './DashboardSkeleton';
 import { useState, useEffect } from 'react';
 
 const Dashboard = () => {
-    const { user } = useAuth();
+    const { user, activeCommunity } = useAuth();
     const { t } = useTranslation();
     const [loading, setLoading] = useState(true);
 
@@ -29,7 +30,7 @@ const Dashboard = () => {
     if (loading) {
         return <DashboardSkeleton />;
     }
-    const role = user?.profile?.roles?.name || 'resident';
+    const role = activeCommunity?.roles?.name || 'resident';
     // Determine if the user has a role that displays a top-right section
     // Temporarily exclude 'president' etc until they have content, to avoid gaps
     const hasRoleSection = ['admin'].includes(role);
@@ -42,7 +43,7 @@ const Dashboard = () => {
 
     return (
         <DashboardLayout>
-            <div className="flex flex-col min-h-full md:h-full gap-4">
+            <div className="flex flex-col min-h-full md:h-full gap-2">
                 {/* 0. Notices Bar (Full Width) */}
                 <div className="w-full shrink-0">
                     <RecentNoticesWidget />
@@ -53,6 +54,13 @@ const Dashboard = () => {
                     <WelcomeWidget role={role} />
                 </div>
 
+                {/* Financial Overview Chart (Admins Only) */}
+                {['admin', 'president', 'treasurer'].includes(role) && (
+                    <div className="w-full shrink-0 h-96">
+                         <BilledVsCollectedChart className="h-full" />
+                    </div>
+                )}
+
                  {/* 2. Role Sections (Auto Height) */}
                  {hasRoleSection && (
                     <div className="w-full shrink-0">
@@ -62,7 +70,7 @@ const Dashboard = () => {
                  )}
 
                 {/* 3. Action Center & Reports (Fills remaining space on desktop, stacks on mobile) */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full md:flex-1 md:min-h-0"> 
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 w-full md:flex-1 md:min-h-0"> 
                     
                     {/* Polls */}
                     <div className="col-span-1 h-96 md:h-full md:min-h-0">

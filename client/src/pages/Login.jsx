@@ -21,7 +21,11 @@ const Login = () => {
       // Redirect based on role (future improvement)
       navigate('/app/dashboard'); 
     } catch (err) {
-      setError(err.message);
+      if (err.message.includes('JSON') || err.message.includes('fetch') || err.message.includes('Failed to execute')) {
+         setError(t('auth.login_error_generic', 'Login failed. Please check your connection or try again later.'));
+      } else {
+         setError(err.message);
+      }
     }
   };
 

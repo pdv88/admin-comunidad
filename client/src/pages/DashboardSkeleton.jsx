@@ -5,7 +5,7 @@ import GlassSkeleton from '../components/GlassSkeleton';
 const DashboardSkeleton = () => {
     return (
         <DashboardLayout>
-            <div className="flex flex-col h-full gap-4 animate-pulse">
+            <div className="flex flex-col h-full gap-2 animate-pulse">
                 {/* 0. Notices Bar Skeleton */}
                 <div className="w-full shrink-0">
                     <GlassSkeleton height="h-14" />
@@ -16,8 +16,13 @@ const DashboardSkeleton = () => {
                     <GlassSkeleton height="h-48" />
                 </div>
 
+                {/* 2. Financial Overview Skeleton (Admin/President) */}
+                <div className="w-full shrink-0">
+                    <GlassSkeleton height="h-96" />
+                </div>
+
                 {/* 3. Action Center & Reports Grid Skeleton */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1 min-h-0 w-full"> 
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 flex-1 min-h-0 w-full"> 
                     
                     {/* Polls */}
                     <div className="col-span-1 h-full min-h-[300px]">

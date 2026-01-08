@@ -220,7 +220,14 @@
         "visit": "Visita",
         "report_btn": "Reportar",
         "recent_reports": "Reportes Recientes",
-        "my_reports": "Mis Reportes"
+        "my_reports": "Mis Reportes",
+        "graphs": {
+            "financial_overview": "Resumen Financiero",
+            "billed_vs_collected": "Facturado vs Cobrado (Últimos 6 Meses)",
+            "no_data": "No hay datos financieros disponibles",
+            "billed": "Facturado",
+            "collected": "Cobrado"
+        }
     },
     "dashboard_layout": {
         "brand": "Admin Comunidad",

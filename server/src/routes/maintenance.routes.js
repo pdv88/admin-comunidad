@@ -8,6 +8,7 @@ router.use(authMiddleware);
 
 // Admin Routes
 router.post('/generate', maintenanceController.generateMonthlyFees);
+router.get('/stats', maintenanceController.getFinancialStats);
 router.get('/status', maintenanceController.getCommunityStatus);
 router.put('/:feeId/pay', maintenanceController.markAsPaid);
 router.delete('/:feeId', maintenanceController.deleteFee);

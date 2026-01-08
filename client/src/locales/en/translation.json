@@ -224,7 +224,14 @@
         "visit": "Visit",
         "report_btn": "Report",
         "recent_reports": "Recent Reports",
-        "my_reports": "My Reports"
+        "my_reports": "My Reports",
+        "graphs": {
+            "financial_overview": "Financial Overview",
+            "billed_vs_collected": "Billed vs Collected (Last 6 Months)",
+            "no_data": "No financial data available",
+            "billed": "Billed",
+            "collected": "Collected"
+        }
     },
     "dashboard_layout": {
         "brand": "Admin Community",

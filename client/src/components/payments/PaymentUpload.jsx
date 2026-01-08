@@ -137,7 +137,8 @@ const PaymentUpload = ({ onSuccess, onCancel, isAdmin, initialType, initialFeeId
             });
             if (res.ok) {
                 const data = await res.json();
-                setUsers(data);
+                // Controller returns wrapped object with data property
+                setUsers(data.data || []);
             }
         } catch (error) {
             console.error('Error fetching users:', error);
