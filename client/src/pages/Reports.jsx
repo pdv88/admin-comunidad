@@ -9,6 +9,7 @@ import ModalPortal from '../components/ModalPortal';
 import GlassSelect from '../components/GlassSelect';
 import GlassLoader from '../components/GlassLoader';
 import Toast from '../components/Toast';
+import ReportDetailsPanel from '../components/ReportDetailsPanel';
 
 const Reports = () => {
     const { user, activeCommunity } = useAuth();
@@ -19,10 +20,13 @@ const Reports = () => {
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     
+    // Accordion State
+    const [expandedReportId, setExpandedReportId] = useState(null);
+    const [toast, setToast] = useState({ message: '', type: 'success' });
+
     // Delete Confirmation State
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [reportToDelete, setReportToDelete] = useState(null);
-    const [toast, setToast] = useState({ message: '', type: 'success' });
 
     const role = activeCommunity?.roles?.name || user?.profile?.roles?.name;
     const isVocal = role === 'vocal';
@@ -40,6 +44,11 @@ const Reports = () => {
         block_id: '',
         unit_id: '' 
     });
+
+    // Filters
+    const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [categoryFilter, setCategoryFilter] = useState('all');
 
     // Get User Units for Dropdown
     const userUnits = user?.profile?.unit_owners?.map(uo => uo.units) || [];
@@ -75,8 +84,27 @@ const Reports = () => {
         } else if (activeTab === 'all') {
             filtered = reports;
         }
+
+        // Apply Filters
+        if (searchTerm) {
+            const lowerSearch = searchTerm.toLowerCase();
+            filtered = filtered.filter(r => 
+                r.title.toLowerCase().includes(lowerSearch) || 
+                r.description.toLowerCase().includes(lowerSearch) ||
+                (r.profiles?.full_name || '').toLowerCase().includes(lowerSearch)
+            );
+        }
+
+        if (statusFilter !== 'all') {
+            filtered = filtered.filter(r => r.status === statusFilter);
+        }
+
+        if (categoryFilter !== 'all') {
+            filtered = filtered.filter(r => r.category === categoryFilter);
+        }
+
         setFilteredReports(filtered);
-    }, [activeTab, reports, blocks, user.id]);
+    }, [activeTab, reports, blocks, user.id, searchTerm, statusFilter, categoryFilter]);
 
 
     const fetchReports = async () => {
@@ -273,6 +301,48 @@ const Reports = () => {
                         </button>
                     )}
                 </div>
+                
+                {/* Filters */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div className="md:col-span-2">
+                        <div className="relative">
+                            <input
+                                type="text"
+                                placeholder={t('reports.search_placeholder', 'Search by title, description or name...')}
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="glass-input pl-10 w-full"
+                            />
+                            <svg className="w-5 h-5 absolute left-3 top-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                        </div>
+                    </div>
+                    <div>
+                        <GlassSelect
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            options={[
+                                { value: 'all', label: t('reports.filters.all_status', 'All Statuses') },
+                                { value: 'pending', label: t('reports.status.pending', 'Pending') },
+                                { value: 'in_progress', label: t('reports.status.in_progress', 'In Progress') },
+                                { value: 'resolved', label: t('reports.status.resolved', 'Resolved') },
+                                { value: 'rejected', label: t('reports.status.rejected', 'Rejected') }
+                            ]}
+                        />
+                    </div>
+                    <div>
+                        <GlassSelect
+                            value={categoryFilter}
+                            onChange={(e) => setCategoryFilter(e.target.value)}
+                            options={[
+                                { value: 'all', label: t('reports.filters.all_categories', 'All Categories') },
+                                { value: 'maintenance', label: t('reports.categories.maintenance', 'Maintenance') },
+                                { value: 'security', label: t('reports.categories.security', 'Security') },
+                                { value: 'cleanliness', label: t('reports.categories.cleanliness', 'Cleanliness') },
+                                { value: 'other', label: t('reports.categories.other', 'Other') }
+                            ]}
+                        />
+                    </div>
+                </div>
 
                 {/* Reports List */}
                 <div className="grid gap-4">
@@ -284,73 +354,102 @@ const Reports = () => {
                         </div>
                     ) : (
                         filteredReports.map(report => (
-                            <div key={report.id} className="glass-card p-5 hover:shadow-xl transition-shadow">
-                                <div className="flex justify-between items-start">
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-1">
-                                             <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${getStatusColor(report.status)} uppercase tracking-wide`}>
-                                                {t(`reports.status.${report.status}`, report.status)}
-                                            </span>
-                                            <span className="text-xs text-gray-500 dark:text-neutral-400">
-                                                {new Date(report.created_at).toLocaleDateString()}
-                                            </span>
+                            <div 
+                                key={report.id} 
+                                className={`glass-card p-4 hover:bg-white/40 dark:hover:bg-neutral-800/40 transition-colors animate-fade-in ${expandedReportId === report.id ? 'active-card ring-2 ring-blue-500/50' : ''}`}
+                            >
+                                <div 
+                                    className="cursor-pointer"
+                                    onClick={() => setExpandedReportId(expandedReportId === report.id ? null : report.id)}
+                                >
+                                    <div className="flex justify-between items-start">
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getStatusColor(report.status)}`}>
+                                                    {t(`reports.status.${report.status}`, report.status)}
+                                                </span>
+                                                <span className="text-xs text-gray-400 capitalize bg-gray-100 dark:bg-neutral-700 px-2 py-0.5 rounded-full">
+                                                    {t(`reports.categories.${report.category}`, report.category)}
+                                                </span>
+                                            </div>
+                                            <h3 className="font-bold text-gray-800 dark:text-white text-lg mb-1">{report.title}</h3>
+                                            <p className="text-gray-600 dark:text-neutral-300 text-sm line-clamp-2 md:line-clamp-none">{report.description}</p>
                                             
-                                            {/* Scope Badge */}
-                                            {report.unit_id ? (
-                                                <span className="text-xs font-semibold text-gray-600 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 px-2 py-0.5 rounded">
-                                                    {t('reports.scope.unit', 'Unit')}: {report.units?.unit_number} ({report.units?.blocks?.name})
+                                            <div className="mt-3 flex items-center gap-4 text-xs text-gray-500 dark:text-neutral-400">
+                                                <div className="flex items-center gap-1">
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                                                    {report.profiles?.full_name || 'Unknown'}
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                    {new Date(report.created_at).toLocaleDateString()}
+                                                </div>
+                                                {/* Scope Badge */}
+                                                <span className="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 px-2 py-0.5 rounded flex items-center gap-1">
+                                                    {report.scope === 'community' && <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
+                                                    {report.scope === 'block' && <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>}
+                                                    {report.scope === 'unit' && <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>}
+                                                    {report.scope === 'block' ? `${t('reports.scope.block')} ${report.blocks?.name || ''}` : 
+                                                     report.scope === 'unit' ? `${t('reports.scope.unit')} ${report.blocks?.name || ''} - ${report.units?.unit_number || ''}` : 
+                                                     t('reports.scope.community')}
                                                 </span>
-                                            ) : report.block_id ? (
-                                                <span className="text-xs font-semibold text-gray-600 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 px-2 py-0.5 rounded">
-                                                    {t('reports.scope.block', 'Block')}: {blocks.find(b => b.id === report.block_id)?.name || 'N/A'}
-                                                </span>
-                                            ) : (
-                                                <span className="text-xs font-semibold text-gray-600 dark:text-neutral-300 bg-gray-100 dark:bg-neutral-700 px-2 py-0.5 rounded">
-                                                    {t('reports.scope.community', 'Community')}
-                                                </span>
+                                            </div>
+
+                                            {/* Status Change Buttons (Outside Accordion - Keep Quick Actions?) */}
+                                            {/* Actually, user might want quick actions visible without expanding, relying on permissions. */}
+                                            {/* Let's keep them here. */}
+                                            {/* BUT: if expanding, maybe move delete inside? */}
+                                            {/* Let's keep status buttons here for quick access */}
+                                            {(isAdminOrPres || isVocal) && ( report.status !== 'resolved' && report.status !== 'rejected') && (
+                                                <div className="mt-3 flex gap-2" onClick={e => e.stopPropagation()}>
+                                                    {report.status === 'pending' && (
+                                                        <button 
+                                                            onClick={() => handleStatusUpdate(report.id, 'in_progress')}
+                                                            className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded transition-colors"
+                                                        >
+                                                            {t('reports.actions.start_progress', 'Start Progress')}
+                                                        </button>
+                                                    )}
+                                                    {report.status === 'in_progress' && (
+                                                        <button 
+                                                            onClick={() => handleStatusUpdate(report.id, 'resolved')}
+                                                            className="text-xs bg-green-100 hover:bg-green-200 text-green-700 px-2 py-1 rounded transition-colors"
+                                                        >
+                                                            {t('reports.actions.mark_resolved', 'Mark Resolved')}
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            )}  
+                                            {/* Delete Button - Only pending/rejected or admin */}
+                                            {/* User might click delete and trigger expand if not careful with stopPropagation */}
+                                            {(report.status === 'pending' || report.status === 'rejected' || isAdminOrPres) && (report.user_id === user.id || isAdminOrPres) && (
+                                                <div className="mt-2 text-right" onClick={e => e.stopPropagation()}>
+                                                    <button 
+                                                        onClick={() => handleDeleteReport(report.id)}
+                                                        className="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1 ml-auto"
+                                                    >
+                                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                        {t('common.delete', 'Delete')}
+                                                    </button>
+                                                </div>
                                             )}
                                         </div>
-                                        <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-1">{report.title}</h3>
-                                        <p className="text-gray-600 dark:text-neutral-400 text-sm mb-3">{report.description}</p>
-                                        
-                                        {/* Status Actions */}
-                                        {(isAdminOrPres || isMaintenance || (isVocal && activeTab === 'block')) && (
-                                            <div className="flex gap-2 mt-2">
-                                                {report.status === 'pending' && (
-                                                    <button onClick={() => handleStatusUpdate(report.id, 'in_progress')} className="text-xs bg-blue-50 text-blue-600 px-3 py-1.5 rounded hover:bg-blue-100 font-medium">
-                                                        {t('reports.actions.start', 'Start Progress')}
-                                                    </button>
-                                                )}
-                                                {report.status === 'in_progress' && (
-                                                    <button onClick={() => handleStatusUpdate(report.id, 'resolved')} className="text-xs bg-green-50 text-green-600 px-3 py-1.5 rounded hover:bg-green-100 font-medium">
-                                                        {t('reports.actions.resolve', 'Mark Resolved')}
-                                                    </button>
-                                                )}
-                                                {report.status !== 'rejected' && report.status !== 'resolved' && (
-                                                     <button onClick={() => handleStatusUpdate(report.id, 'rejected')} className="text-xs bg-red-50 text-red-600 px-3 py-1.5 rounded hover:bg-red-100 font-medium">
-                                                        {t('reports.actions.reject', 'Reject')}
-                                                    </button>
-                                                )}
-                                            </div>
+                                        {report.image_url && (
+                                            <img src={report.image_url} alt="Report" className="w-20 h-20 object-cover rounded-lg ml-4 bg-gray-100" />
                                         )}
-
-                                        {/* Delete Action */}
-                                        {(isAdminOrPres || (report.user_id === user.id && report.status === 'pending')) && (
-                                            <div className="mt-2 text-right">
-                                                 <button 
-                                                    onClick={() => handleDeleteClick(report.id)}
-                                                    className="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1 ml-auto"
-                                                >
-                                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                                    {t('common.delete', 'Delete')}
-                                                </button>
-                                            </div>
-                                        )}
+                                        {/* Chevron for indication */}
+                                        <div className="ml-2 mt-1 text-gray-400">
+                                            <svg className={`w-5 h-5 transform transition-transform ${expandedReportId === report.id ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                                        </div>
                                     </div>
-                                    {report.image_url && (
-                                        <img src={report.image_url} alt="Report" className="w-20 h-20 object-cover rounded-lg ml-4 bg-gray-100" />
-                                    )}
                                 </div>
+                                
+                                {/* Accordion Content */}
+                                {expandedReportId === report.id && (
+                                    <div className="mt-4 animate-slide-down">
+                                        <ReportDetailsPanel report={report} onUpdate={fetchReports} />
+                                    </div>
+                                )}
                             </div>
                         ))
                     )}
@@ -482,7 +581,7 @@ const Reports = () => {
                                     <textarea
                                         value={newReport.description}
                                         onChange={(e) => setNewReport({ ...newReport, description: e.target.value })}
-                                        className="glass-input min-h-[100px] rounded-2xl"
+                                        className="glass-input min-h-[100px] rounded-3xl"
                                         rows="3"
                                         placeholder={t('reports.form.placeholder_desc', 'Describe the issue...')}
                                     ></textarea>

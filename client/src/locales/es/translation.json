@@ -350,7 +350,27 @@
         },
         "create_success": "Reporte creado exitosamente",
         "delete_success": "Reporte eliminado exitosamente",
-        "status_updated": "Estado actualizado"
+        "update_success": "Reporte actualizado exitosamente",
+        "status_updated": "Estado actualizado",
+        "search_placeholder": "Buscar por título, descripción o nombre...",
+        "filters": {
+            "all_status": "Todos los Estados",
+            "all_categories": "Todas las Categorías"
+        },
+        "modal": {
+            "details": "Detalles",
+            "notes": "Notas y Actividad",
+            "images": "Imágenes",
+            "report_id": "ID del Reporte",
+            "created_at": "Creado",
+            "status": "Estado",
+            "no_notes": "Aún no hay notas.",
+            "type_note": "Escribe una nota...",
+            "gallery": "Galería de Imágenes",
+            "gallery_desc": "Sube fotos del problema.",
+            "primary": "Principal",
+            "no_images": "Aún no hay imágenes subidas."
+        }
     },
     "voting": {
         "title": "Votaciones Activas",
@@ -487,6 +507,7 @@
         "cancel": "Cancelar",
         "confirm": "Confirmar",
         "confirm_delete_report": "¿Estás seguro de que quieres eliminar este reporte? No se puede deshacer.",
+        "confirm_delete_image": "¿Estás seguro de que quieres eliminar esta imagen?",
         "error_occurred": "Ocurrió un error",
         "edit": "Editar",
         "save": "Guardar",
@@ -507,6 +528,10 @@
         "show_filters": "Filtrar Datos",
         "hide_filters": "Ocultar Filtros",
         "export": "Exportar",
+        "invalid_file_type": "Tipo de archivo inválido. Por favor sube una imagen.",
+        "upload_error": "Error al procesar la imagen.",
+        "processing": "Procesando...",
+        "add_photo": "Añadir Foto",
         "export_excel": "Exportar a Excel"
     },
     "payments": {
@@ -626,6 +651,9 @@
         "save": "Guardar Cambios",
         "success": "Configuración actualizada exitosamente!",
         "error": "Error al actualizar la configuración.",
+        "upload_success": "Imagen subida exitosamente",
+        "upload_error": "Error al subir la imagen",
+        "delete_success": "Eliminado exitosamente",
         "error_prefix": "Error: "
     },
     "community_switcher": {

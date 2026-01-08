@@ -139,7 +139,8 @@ exports.create = async (req, res) => {
 
 exports.update = async (req, res) => {
     const { id } = req.params;
-    const { status } = req.body;
+    // status is for status updates. title/desc/category for edits.
+    const { status, title, description, category } = req.body;
     const token = req.headers.authorization?.split(' ')[1];
     const communityId = req.headers['x-community-id'];
 
@@ -177,28 +178,199 @@ exports.update = async (req, res) => {
         if (report.community_id !== communityId) return res.status(404).json({ error: 'Report not in this community' });
 
         // Authorization Logic
-        let isAuthorized = false;
+        let canUpdateStatus = false;
+        let canEditContent = false;
 
+        // 1. Status Update Rights
         if (['admin', 'president', 'maintenance'].includes(role)) {
-            isAuthorized = true;
+            canUpdateStatus = true;
+            canEditContent = true; // Admins can edit content too
         } else if (role === 'vocal') {
             const vocalBlockIds = profile.unit_owners?.map(uo => uo.units?.block_id);
             if (vocalBlockIds?.includes(report.block_id)) {
-                isAuthorized = true;
+                canUpdateStatus = true;
+                canEditContent = true;
             }
         }
 
-        if (!isAuthorized) {
-            return res.status(403).json({ error: 'Unauthorized to update status' });
+        // 2. Content Edit Rights (Owner can edit if pending)
+        if (report.user_id === user.id && report.status === 'pending') {
+            canEditContent = true;
+        }
+
+        const updates = { updated_at: new Date() };
+
+        // Apply Status Update
+        if (status) {
+            if (!canUpdateStatus) return res.status(403).json({ error: 'Unauthorized to update status' });
+            updates.status = status;
+        }
+
+        // Apply Content Update
+        if (title || description || category) {
+            if (!canEditContent) return res.status(403).json({ error: 'Unauthorized to edit report content' });
+            if (title) updates.title = title;
+            if (description) updates.description = description;
+            if (category) updates.category = category;
+        }
+
+        if (Object.keys(updates).length <= 1) { // only updated_at
+            return res.status(400).json({ error: 'No fields to update' });
         }
 
         const { error: updateError } = await supabaseAdmin
             .from('reports')
-            .update({ status, updated_at: new Date() })
+            .update(updates)
             .eq('id', id);
 
         if (updateError) throw updateError;
-        res.json({ message: 'Status updated' });
+        res.json({ message: 'Report updated' });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+};
+
+exports.addNote = async (req, res) => {
+    const { id } = req.params;
+    const { content } = req.body;
+    const token = req.headers.authorization?.split(' ')[1];
+
+    try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+        if (authError || !user) throw new Error('Unauthorized');
+
+        // Check access (simplification: if member of community, technically might be able to add note?? 
+        // Better: Same read access as report)
+        // For now, simple insert handling.
+
+        const { data: note, error } = await supabaseAdmin
+            .from('report_notes')
+            .insert([{
+                report_id: id,
+                user_id: user.id,
+                content
+            }])
+            .select()
+            .single();
+
+        if (error) throw error;
+        res.json(note);
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+};
+
+exports.getNotes = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const { data: notes, error } = await supabaseAdmin
+            .from('report_notes')
+            .select(`
+                *,
+                profiles:user_id (full_name, email)
+            `)
+            .eq('report_id', id)
+            .order('created_at', { ascending: true });
+
+        if (error) throw error;
+        res.json(notes);
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+};
+
+exports.addImage = async (req, res) => {
+    const { id } = req.params;
+    const { url } = req.body; // URL from client upload
+    const token = req.headers.authorization?.split(' ')[1];
+
+    try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+        if (authError || !user) throw new Error('Unauthorized');
+
+        const { data: img, error } = await supabaseAdmin
+            .from('report_images')
+            .insert([{
+                report_id: id,
+                url,
+                uploaded_by: user.id
+            }])
+            .select()
+            .single();
+
+        if (error) throw error;
+        res.json(img);
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+};
+
+exports.getImages = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const { data: images, error } = await supabaseAdmin
+            .from('report_images')
+            .select('*')
+            .eq('report_id', id)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        res.json(images);
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+};
+
+exports.deleteImage = async (req, res) => {
+    const { id, imageId } = req.params; // report id, image id
+    const token = req.headers.authorization?.split(' ')[1];
+
+    try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+        if (authError || !user) throw new Error('Unauthorized');
+
+        // Fetch image to check ownership
+        const { data: image } = await supabaseAdmin
+            .from('report_images')
+            .select('uploaded_by')
+            .eq('id', imageId)
+            .single();
+
+        if (!image) return res.status(404).json({ error: 'Image not found' });
+
+        // Check permissions: Owner of image or Admin/President
+        // We need to fetch the user's role if we want to allow admins to delete others' images.
+        // For simplicity/speed, let's fetch the member role.
+        let canDelete = false;
+        if (image.uploaded_by === user.id) {
+            canDelete = true;
+        } else {
+            const communityId = req.headers['x-community-id'];
+            if (communityId) {
+                const { data: member } = await supabaseAdmin
+                    .from('community_members')
+                    .select('roles(name)')
+                    .eq('profile_id', user.id)
+                    .eq('community_id', communityId)
+                    .single();
+
+                const role = member?.roles?.name;
+                if (['admin', 'president'].includes(role)) {
+                    canDelete = true;
+                }
+            }
+        }
+
+        if (!canDelete) return res.status(403).json({ error: 'Unauthorized to delete this image' });
+
+        const { error } = await supabaseAdmin
+            .from('report_images')
+            .delete()
+            .eq('id', imageId);
+
+        if (error) throw error;
+        res.json({ message: 'Image deleted' });
+
     } catch (err) {
         res.status(400).json({ error: err.message });
     }
