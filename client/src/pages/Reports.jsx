@@ -365,7 +365,7 @@ const Reports = () => {
                                                     {t(`reports.categories.${report.category}`, report.category)}
                                                 </span>
                                             </div>
-                                            <h3 className="font-bold text-gray-800 dark:text-white text-lg mb-1">{report.title}</h3>
+                                            <h2 className="font-bold text-gray-800 dark:text-white text-lg mb-1">{report.title}</h2>
                                             <p className="text-gray-600 dark:text-neutral-300 text-sm line-clamp-2 md:line-clamp-none">{report.description}</p>
                                             
                                             <div className="mt-3 flex items-center gap-4 text-xs text-gray-500 dark:text-neutral-400">
@@ -448,6 +448,7 @@ const Reports = () => {
                                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                                     disabled={currentPage === 1}
                                     className="glass-button px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    aria-label="Previous Page"
                                 >
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
                                 </button>
@@ -458,6 +459,7 @@ const Reports = () => {
                                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(totalReports / itemsPerPage)))}
                                     disabled={currentPage >= Math.ceil(totalReports / itemsPerPage)}
                                     className="glass-button px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    aria-label="Next Page"
                                 >
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
                                 </button>

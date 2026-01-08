@@ -1,6 +1,8 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next';
 
 function DashboardHeader() {
+  const { t } = useTranslation();
   return (
     <>
     {/* <!-- ========== HEADER ========== --> */}
@@ -58,6 +60,7 @@ function DashboardHeader() {
               <button
                 type="button"
                 className="w-[2.375rem] h-[2.375rem] inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-full border border-transparent text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:hover:bg-neutral-700"
+                aria-label={t('header.search', 'Search')}
               >
                 <svg
                   className="flex-shrink-0 size-4"
@@ -113,6 +116,7 @@ function DashboardHeader() {
               <button
                 type="button"
                 className="w-[2.375rem] h-[2.375rem] inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-full border border-transparent text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:hover:bg-neutral-700"
+                aria-label={t('header.notifications', 'Notifications')}
               >
                 <svg
                   className="flex-shrink-0 size-4"
@@ -134,6 +138,7 @@ function DashboardHeader() {
                 type="button"
                 className="w-[2.375rem] h-[2.375rem] inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-full border border-transparent text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:hover:bg-neutral-700"
                 data-hs-offcanvas="#hs-offcanvas-right"
+                aria-label={t('header.apps', 'Apps')}
               >
                 <svg
                   className="flex-shrink-0 size-4"
@@ -156,11 +161,12 @@ function DashboardHeader() {
                   id="hs-dropdown-with-header"
                   type="button"
                   className="w-[2.375rem] h-[2.375rem] inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-full border border-transparent text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:hover:bg-neutral-700"
+                  aria-label={t('header.profile_menu', 'Profile Menu')}
                 >
                   <img
                     className="inline-block size-[38px] rounded-full ring-2 ring-white dark:ring-neutral-800"
                     src="https://images.unsplash.com/photo-1568602471122-7832951cc4c5?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=facearea&facepad=2&w=320&h=320&q=80"
-                    alt="Image Description"
+                    alt={t('header.profile_menu', 'Profile Menu')}
                   />
                 </button>
 

@@ -361,7 +361,7 @@ const Campaigns = () => {
                             <div>
                                 <div className="flex justify-between items-start mb-2">
                                     <Link to={`/app/campaigns/${campaign.id}`} className="hover:underline">
-                                        <h3 className="font-bold text-lg text-gray-800 dark:text-white">{campaign.name}</h3>
+                                        <h2 className="font-bold text-lg text-gray-800 dark:text-white">{campaign.name}</h2>
                                     </Link>
                                     <span className={`inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-xs font-medium ${campaign.is_active ? 'bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-500' : 'bg-gray-100 text-gray-800 dark:bg-gray-800/30 dark:text-gray-500'}`}>
                                         {campaign.is_active ? t('campaigns.active', 'Active') : t('campaigns.closed', 'Closed')}

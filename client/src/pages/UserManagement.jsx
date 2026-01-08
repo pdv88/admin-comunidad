@@ -304,6 +304,7 @@ const UserManagement = () => {
                             <button 
                                 onClick={() => setShowInviteModal(false)}
                                 className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                                aria-label="Close"
                             >
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                             </button>
@@ -478,6 +479,7 @@ const UserManagement = () => {
                                                 onClick={() => handleResendInvite(user)}
                                                 className="mr-2 text-orange-600 hover:text-orange-900 dark:text-orange-400 dark:hover:text-orange-300 transition-colors"
                                                 title={t('user_management.messages.resend_invite', 'Reenviar Invitación')}
+                                                aria-label={t('user_management.messages.resend_invite', 'Reenviar Invitación')}
                                             >
                                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -488,6 +490,7 @@ const UserManagement = () => {
                                             onClick={() => handleEditClick(user)}
                                             className="mr-2 text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors"
                                             title={t('common.edit', 'Edit')}
+                                            aria-label={t('common.edit', 'Edit')}
                                         >
                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -497,6 +500,7 @@ const UserManagement = () => {
                                             onClick={() => handleDeleteClick(user)}
                                             className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors"
                                             title={t('common.delete', 'Delete')}
+                                            aria-label={t('common.delete', 'Delete')}
                                         >
                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -516,6 +520,7 @@ const UserManagement = () => {
                                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                                 disabled={currentPage === 1}
                                 className="glass-button px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                aria-label="Previous Page"
                             >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
                             </button>
@@ -526,6 +531,7 @@ const UserManagement = () => {
                                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(totalUsers / itemsPerPage)))}
                                 disabled={currentPage >= Math.ceil(totalUsers / itemsPerPage)}
                                 className="glass-button px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                aria-label="Next Page"
                             >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
                             </button>

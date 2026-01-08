@@ -6,7 +6,12 @@
         "pricing": "Precios",
         "dashboard": "Panel",
         "login": "Iniciar Sesión",
-        "register": "Registrarse"
+        "register": "Registrarse",
+        "notifications": "Notificaciones",
+        "apps": "Aplicaciones",
+        "profile_menu": "Menú de Perfil",
+        "search": "Buscar",
+        "close_sidebar": "Cerrar barra lateral"
     },
     "footer": {
         "legal": "Legal",

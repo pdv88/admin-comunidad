@@ -6,7 +6,12 @@
         "pricing": "Pricing",
         "dashboard": "Dashboard",
         "login": "Log In",
-        "register": "Register"
+        "register": "Register",
+        "notifications": "Notifications",
+        "apps": "Apps",
+        "profile_menu": "Profile Menu",
+        "search": "Search",
+        "close_sidebar": "Close Sidebar"
     },
     "footer": {
         "legal": "Legal",

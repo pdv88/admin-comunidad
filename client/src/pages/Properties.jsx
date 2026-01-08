@@ -290,6 +290,7 @@ const Properties = () => {
                                                         onClick={() => confirmDelete('unit', unit.id)}
                                                         className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition shadow-sm z-10"
                                                         title={t('common.delete', 'Delete')}
+                                                        aria-label={t('common.delete', 'Delete')}
                                                     >
                                                         &times;
                                                     </button>
@@ -320,6 +321,7 @@ const Properties = () => {
                                                         onClick={() => handleEditUnit(unit)}
                                                         className="absolute -top-2 -left-2 w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition shadow-sm z-10"
                                                         title={t('common.edit', 'Edit')}
+                                                        aria-label={t('common.edit', 'Edit')}
                                                     >
                                                         &#9998;
                                                     </button>
