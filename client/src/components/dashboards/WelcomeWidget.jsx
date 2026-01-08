@@ -7,13 +7,14 @@ import { getCurrencySymbol } from '../../utils/currencyUtils';
 
 const WelcomeWidget = ({ role }) => {
     const { t } = useTranslation();
-    const { user, activeCommunity } = useAuth();
+    const { user, activeCommunity, getPrimaryRole } = useAuth();
     const [feeStatus, setFeeStatus] = useState('loading');
     const [feeAmount, setFeeAmount] = useState(0);
     const MONTHLY_FEE = 50.00;
 
     const hasUnits = activeCommunity?.unit_owners?.length > 0;
-    const isResident = role === 'resident' || role === 'neighbor' || hasUnits;
+    const displayRole = role || getPrimaryRole();
+    const isResident = displayRole === 'resident' || displayRole === 'neighbor' || hasUnits;
 
     useEffect(() => {
         if (!isResident) return;
@@ -66,7 +67,7 @@ const WelcomeWidget = ({ role }) => {
                 </h1>
                 <div className="flex flex-wrap gap-2 text-sm text-gray-600 dark:text-neutral-400 items-center">
                     <span className="px-2 py-0.5 rounded-md bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 text-xs font-bold uppercase tracking-wider">
-                        {activeCommunity?.roles?.name || t('common.user', 'User')}
+                        {displayRole || t('common.user', 'User')}
                     </span>
                      {activeCommunity?.unit_owners?.map((uo, idx) => (
                         <span key={idx} className="bg-gray-100 dark:bg-neutral-800 px-2 py-0.5 rounded text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-neutral-700 text-xs">

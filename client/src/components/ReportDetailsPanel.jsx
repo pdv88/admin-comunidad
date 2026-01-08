@@ -10,7 +10,7 @@ import ConfirmationModal from './ConfirmationModal';
 
 const ReportDetailsPanel = ({ report, onUpdate }) => {
     const { t } = useTranslation();
-    const { user, activeCommunity } = useAuth();
+    const { user, activeCommunity, hasAnyRole } = useAuth();
     const [activeTab, setActiveTab] = useState('details'); // details, notes, images
     const [notes, setNotes] = useState([]);
     const [images, setImages] = useState([]); // Array of { id, url, ... }
@@ -27,16 +27,21 @@ const ReportDetailsPanel = ({ report, onUpdate }) => {
     });
     const [savingEdit, setSavingEdit] = useState(false);
 
+    // Report Images State
+    const [uploading, setUploading] = useState(false);
+
+    // Delete Confirmation State
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    
     // New Note State
     const [newNote, setNewNote] = useState('');
     const [sendingNote, setSendingNote] = useState(false);
 
     const notesEndRef = useRef(null);
 
-    // Permissions (Mirrored from controller logic roughly)
-    const role = activeCommunity?.roles?.name || user?.profile?.roles?.name;
-    const canEdit = ['admin', 'president', 'maintenance'].includes(role) || 
-                   (role === 'vocal' && activeCommunity?.blocks?.some(b => b.id === report.block_id && b.representative_id === user.id)) ||
+    // Permissions (using hasAnyRole helper)
+    const canEdit = hasAnyRole(['super_admin', 'admin', 'president', 'maintenance']) || 
+                   (hasAnyRole(['vocal']) && activeCommunity?.blocks?.some(b => b.id === report.block_id && b.representative_id === user.id)) ||
                    (report.user_id === user.id && report.status === 'pending');
 
     // Toast State

@@ -10,7 +10,7 @@ import GlassLoader from '../components/GlassLoader';
 import Toast from '../components/Toast';
 
 const Notices = () => {
-    const { user, activeCommunity } = useAuth();
+    const { user, activeCommunity, hasAnyRole } = useAuth();
     const { t } = useTranslation();
     const [notices, setNotices] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -30,10 +30,9 @@ const Notices = () => {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [noticeToDelete, setNoticeToDelete] = useState(null);
 
-    const role = activeCommunity?.roles?.name;
-    const canCreate = ['admin', 'president', 'secretary', 'vocal'].includes(role);
-    const isAdminOrPres = ['admin', 'president', 'secretary'].includes(role);
-    const isVocal = role === 'vocal';
+    const canCreate = hasAnyRole(['super_admin', 'admin', 'president', 'secretary', 'vocal']);
+    const isAdminOrPres = hasAnyRole(['super_admin', 'admin', 'president', 'secretary']);
+    const isVocal = hasAnyRole(['vocal']);
 
     // Extract blocks owned by Vocal from profile
     // Assuming backend populates unit_owners on login or getMe.
@@ -51,7 +50,7 @@ const Notices = () => {
         if (isVocal && vocalBlockIds.length > 0) {
              setNewNotice(prev => ({ ...prev, block_id: vocalBlockIds[0] }));
         }
-    }, [role]);
+    }, [canCreate, isVocal, isAdminOrPres]);
 
     const fetchNotices = async () => {
         try {

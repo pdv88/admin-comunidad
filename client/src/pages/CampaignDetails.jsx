@@ -12,10 +12,9 @@ import { getCurrencySymbol } from '../utils/currencyUtils';
 const CampaignDetails = () => {
     const { id } = useParams();
     const { t } = useTranslation();
-    const { user, activeCommunity } = useAuth();
+    const { user, activeCommunity, hasAnyRole } = useAuth();
     const navigate = useNavigate();
-    const role = activeCommunity?.roles?.name;
-    const isAdmin = role === 'admin' || role === 'president';
+    const isAdmin = hasAnyRole(['super_admin', 'admin', 'president']);
 
     const [campaign, setCampaign] = useState(null);
     const [payments, setPayments] = useState([]);

@@ -6,12 +6,11 @@ import { API_URL } from '../../config';
 
 const RecentReportsWidget = (props) => {
     const { t } = useTranslation();
-    const { user, activeCommunity } = useAuth();
+    const { user, activeCommunity, hasAnyRole } = useAuth();
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const role = activeCommunity?.roles?.name || 'resident';
-    const canViewAll = ['admin', 'president', 'vocal', 'secretary', 'maintenance'].includes(role);
+    const canViewAll = hasAnyRole(['super_admin', 'admin', 'president', 'vocal', 'secretary', 'maintenance']);
 
     useEffect(() => {
         const abortController = new AbortController();

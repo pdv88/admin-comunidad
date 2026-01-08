@@ -7,7 +7,7 @@ import ModalPortal from '../components/ModalPortal';
 import GlassLoader from '../components/GlassLoader';
 
 const Voting = () => {
-    const { user, activeCommunity } = useAuth();
+    const { user, activeCommunity, hasAnyRole, getPrimaryRole } = useAuth();
     const [polls, setPolls] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('active'); // 'active' or 'past'
@@ -27,8 +27,7 @@ const Voting = () => {
         targetBlocks: []
     });
 
-    const role = activeCommunity?.roles?.name || user?.profile?.roles?.name || 'resident';
-    const isAdmin = ['admin', 'president', 'secretary'].includes(role);
+    const isAdmin = hasAnyRole(['super_admin', 'admin', 'president', 'secretary']);
 
     useEffect(() => {
         fetchPolls();

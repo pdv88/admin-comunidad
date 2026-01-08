@@ -12,7 +12,7 @@ import Toast from '../components/Toast';
 import ReportDetailsPanel from '../components/ReportDetailsPanel';
 
 const Reports = () => {
-    const { user, activeCommunity } = useAuth();
+    const { user, activeCommunity, hasAnyRole } = useAuth();
     const { t } = useTranslation();
     const [reports, setReports] = useState([]);
     const [blocks, setBlocks] = useState([]); // Blocks for scope selection
@@ -27,10 +27,9 @@ const Reports = () => {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [reportToDelete, setReportToDelete] = useState(null);
 
-    const role = activeCommunity?.roles?.name || 'resident';
-    const isVocal = role === 'vocal';
-    const isAdminOrPres = ['admin', 'president', 'secretary', 'treasurer'].includes(role); 
-    const isMaintenance = role === 'maintenance';
+    const isVocal = hasAnyRole(['vocal']);
+    const isAdminOrPres = hasAnyRole(['super_admin', 'admin', 'president', 'secretary', 'treasurer']); 
+    const isMaintenance = hasAnyRole(['maintenance']);
 
     const [activeTab, setActiveTab] = useState(isAdminOrPres ? 'all' : 'my'); 
 
