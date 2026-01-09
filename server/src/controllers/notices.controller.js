@@ -1,6 +1,25 @@
 const supabase = require('../config/supabaseClient');
 const supabaseAdmin = require('../config/supabaseAdmin');
 
+// Helper to get block IDs that a user represents as vocal
+const getVocalBlocks = async (memberId) => {
+    const { data } = await supabaseAdmin
+        .from('member_roles')
+        .select('block_id, roles!inner(name)')
+        .eq('member_id', memberId)
+        .eq('roles.name', 'vocal');
+    return data?.map(r => r.block_id).filter(Boolean) || [];
+};
+
+// Helper to get user's roles from member_roles table
+const getMemberRoles = async (memberId) => {
+    const { data } = await supabaseAdmin
+        .from('member_roles')
+        .select('roles(name)')
+        .eq('member_id', memberId);
+    return data?.map(r => r.roles?.name).filter(Boolean) || [];
+};
+
 exports.getAll = async (req, res) => {
     const token = req.headers.authorization?.split(' ')[1];
     const communityId = req.headers['x-community-id'];
@@ -80,33 +99,35 @@ exports.create = async (req, res) => {
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
         if (authError || !user) throw new Error('Unauthorized');
 
+        // Get member record
         const { data: member } = await supabaseAdmin
             .from('community_members')
-            .select(`
-                roles(name),
-                profile:profile_id (
-                     unit_owners(units(block_id))
-                )
-            `)
+            .select('id')
             .eq('profile_id', user.id)
             .eq('community_id', communityId)
             .single();
 
         if (!member) return res.status(403).json({ error: 'Not a member' });
 
-        const role = member.roles?.name;
-        const profile = member.profile;
+        // Get user's roles from member_roles table
+        const roles = await getMemberRoles(member.id);
 
-        // 1. Permission Check
-        if (!['admin', 'president', 'secretary', 'vocal'].includes(role)) {
+        // 1. Permission Check - check if user has any of the allowed roles
+        const allowedRoles = ['admin', 'president', 'secretary', 'vocal'];
+        const hasPermission = roles.some(role => allowedRoles.includes(role));
+
+        if (!hasPermission) {
             return res.status(403).json({ error: 'Unauthorized to create notices' });
         }
 
-        // 2. Scope Check
+        // 2. Scope Check for vocals
         let finalBlockId = block_id || null;
+        const isVocal = roles.includes('vocal');
+        const isAdmin = roles.some(r => ['admin', 'president', 'secretary'].includes(r));
 
-        if (role === 'vocal') {
-            const vocalBlockIds = profile.unit_owners?.map(uo => uo.units?.block_id);
+        if (isVocal && !isAdmin) {
+            // Vocals can only post to their assigned blocks
+            const vocalBlockIds = await getVocalBlocks(member.id);
 
             if (!finalBlockId) {
                 if (vocalBlockIds.length === 1) {

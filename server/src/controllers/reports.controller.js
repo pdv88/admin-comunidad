@@ -1,6 +1,25 @@
 const supabase = require('../config/supabaseClient');
 const supabaseAdmin = require('../config/supabaseAdmin');
 
+// Helper to get block IDs that a user represents as vocal
+const getVocalBlocks = async (memberId) => {
+    const { data } = await supabaseAdmin
+        .from('member_roles')
+        .select('block_id, roles!inner(name)')
+        .eq('member_id', memberId)
+        .eq('roles.name', 'vocal');
+    return data?.map(r => r.block_id).filter(Boolean) || [];
+};
+
+// Helper to get user's roles from member_roles table
+const getMemberRoles = async (memberId) => {
+    const { data } = await supabaseAdmin
+        .from('member_roles')
+        .select('roles(name)')
+        .eq('member_id', memberId);
+    return data?.map(r => r.roles?.name).filter(Boolean) || [];
+};
+
 exports.getAll = async (req, res) => {
     const token = req.headers.authorization?.split(' ')[1];
     const communityId = req.headers['x-community-id'];
@@ -42,7 +61,7 @@ exports.getAll = async (req, res) => {
 
         if (!member) return res.status(403).json({ error: 'Not a member' });
 
-        const role = member.roles?.name;
+        const roles = await getMemberRoles(member.id); // Use new helper
         const profile = member.profile;
 
         let query = supabaseAdmin
@@ -55,31 +74,24 @@ exports.getAll = async (req, res) => {
             .eq('community_id', communityId);
 
         // RBAC Filtering (Base Scope)
-        if (['admin', 'president', 'maintenance', 'secretary'].includes(role)) {
+        if (roles.includes('admin') || roles.includes('president') || roles.includes('maintenance') || roles.includes('secretary')) {
             // See ALL reports in community
-        } else if (role === 'vocal') {
+        } else if (roles.includes('vocal')) {
             // Vocal Logic: Can see BLOCK reports or OWN reports
             // If we want "My Reports" tab specifically, user might send ?scope=my
             // But for general 'getAll', we usually return everything they have access to.
             // If frontend sends specific scope (e.g. 'my' or 'block'), we can respect that too,
             // but let's stick to the secure base logic + filters.
 
-            // However, to support the frontend tabs ('my', 'block', 'all'), passed as filters?
-            // Or does frontend purely rely on backend to filter? 
-            // Current Frontend: 'my' => user_id check. 'block' => block_id check.
-            // Let's implement 'scope' param or handle it via 'user_id' filter from frontend?
-            // Simplest: Let frontend send `?mode=my` or `?mode=block`.
-
             const mode = req.query.mode || 'all'; // 'my', 'block', 'all'
 
             if (mode === 'my') {
                 query = query.eq('user_id', user.id);
             } else if (mode === 'block') {
-                const myBlockIds = profile.unit_owners
-                    ?.map(uo => uo.units?.block_id)
-                    .filter(Boolean) || [];
-                if (myBlockIds.length > 0) {
-                    query = query.in('block_id', myBlockIds);
+                // Use getVocalBlocks instead of unit_owners
+                const vocalBlockIds = await getVocalBlocks(member.id);
+                if (vocalBlockIds.length > 0) {
+                    query = query.in('block_id', vocalBlockIds);
                 } else {
                     query = query.eq('1', '0'); // No blocks, no results
                 }
@@ -87,11 +99,9 @@ exports.getAll = async (req, res) => {
                 // Default Vocal View: Own + Block? Or just enforce what they CAN see?
                 // Usually vocal sees everything in their block AND their own stuff.
                 // If no mode specified, we return the Union.
-                const myBlockIds = profile.unit_owners
-                    ?.map(uo => uo.units?.block_id)
-                    .filter(Boolean) || [];
-                if (myBlockIds.length > 0) {
-                    query = query.or(`block_id.in.(${myBlockIds.join(',')}),user_id.eq.${user.id}`);
+                const vocalBlockIds = await getVocalBlocks(member.id);
+                if (vocalBlockIds.length > 0) {
+                    query = query.or(`block_id.in.(${vocalBlockIds.join(',')}),user_id.eq.${user.id}`);
                 } else {
                     query = query.eq('user_id', user.id);
                 }
@@ -141,17 +151,18 @@ exports.create = async (req, res) => {
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
         if (authError || !user) throw new Error('Unauthorized');
 
-        // Verify membership? Assuming frontend sends correct ID, but better to check if user belongs.
-        // For efficiency, we might skip full role check here if "create report" is allowed for all members.
-        // But verifying membership prevents data injection into random communities.
-        const { data: member } = await supabaseAdmin // Lightweight check
+        const { data: member } = await supabaseAdmin
             .from('community_members')
-            .select('id')
+            .select('id, profile:profile_id(unit_owners(unit_id))')
             .eq('profile_id', user.id)
             .eq('community_id', communityId)
             .single();
 
         if (!member) return res.status(403).json({ error: 'Not a member of this community' });
+
+        const roles = await getMemberRoles(member.id);
+        const isAdmin = roles.includes('admin') || roles.includes('president') || roles.includes('secretary');
+        const isVocal = roles.includes('vocal');
 
         // If unit_id provided, fetch block_id
         // If NO unit_id, check if block_id was sent explicitly (Block Scope)
@@ -164,6 +175,33 @@ exports.create = async (req, res) => {
                 .eq('id', unit_id)
                 .single();
             if (unit) block_id = unit.block_id;
+        }
+
+        // Vocal Restrictions
+        if (isVocal && !isAdmin) {
+            const vocalBlockIds = await getVocalBlocks(member.id);
+
+            // Check ownership of unit (Residents/Vocals can always report on their own units)
+            const ownUnitIds = member.profile?.unit_owners?.map(uo => uo.unit_id) || [];
+            const isOwnUnit = unit_id && ownUnitIds.includes(unit_id);
+
+            // If it's NOT their own unit, they must represent the block.
+            if (!isOwnUnit) {
+                if (!block_id) {
+                    // No block context? If they have 1 block, auto-assign.
+                    if (vocalBlockIds.length === 1) {
+                        block_id = vocalBlockIds[0];
+                    } else {
+                        // Ambiguous. 
+                        return res.status(400).json({ error: 'Block Representatives must specify a block or unit.' });
+                    }
+                }
+
+                // Validate permissions on the block
+                if (!vocalBlockIds.includes(block_id)) {
+                    return res.status(403).json({ error: 'You can only file reports for blocks you represent or your own unit.' });
+                }
+            }
         }
 
         const { data: report, error } = await supabaseAdmin

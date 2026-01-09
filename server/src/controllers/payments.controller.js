@@ -1,6 +1,25 @@
 const supabase = require('../config/supabaseClient');
 const supabaseAdmin = require('../config/supabaseAdmin');
 
+// Helper to get block IDs that a user represents as vocal
+const getVocalBlocks = async (memberId) => {
+    const { data } = await supabaseAdmin
+        .from('member_roles')
+        .select('block_id, roles!inner(name)')
+        .eq('member_id', memberId)
+        .eq('roles.name', 'vocal');
+    return data?.map(r => r.block_id).filter(Boolean) || [];
+};
+
+// Helper to get user's roles from member_roles table
+const getMemberRoles = async (memberId) => {
+    const { data } = await supabaseAdmin
+        .from('member_roles')
+        .select('roles(name)')
+        .eq('member_id', memberId);
+    return data?.map(r => r.roles?.name).filter(Boolean) || [];
+};
+
 // Helper to get user and their role in the specific community
 const getUserAndMember = async (req) => {
     const token = req.headers.authorization?.split(' ')[1];
@@ -16,6 +35,7 @@ const getUserAndMember = async (req) => {
     const { data: member, error: memberError } = await supabaseAdmin
         .from('community_members')
         .select(`
+            id,
             role_id,
             roles(name),
             profile:profile_id (
@@ -38,6 +58,10 @@ const getUserAndMember = async (req) => {
     if (memberError || !member) {
         throw new Error('User is not a member of this community');
     }
+
+    // Fetch roles from member_roles table for multi-role support
+    const roles = await getMemberRoles(member.id);
+    member.allRoles = roles;
 
     return { user, member, communityId };
 };
@@ -410,26 +434,56 @@ exports.deletePayment = async (req, res) => {
 
 exports.createCampaign = async (req, res) => {
     try {
-        const { member, communityId } = await getUserAndMember(req);
-        const role = member.roles?.name;
+        const { user, member, communityId } = await getUserAndMember(req);
+        const roles = member.allRoles || [];
 
-        if (role !== 'admin' && role !== 'president') {
+        // Permission Check - admins + vocals can create campaigns
+        const isAdmin = roles.some(r => ['admin', 'president'].includes(r));
+        const isVocal = roles.includes('vocal');
+
+        if (!isAdmin && !isVocal) {
             return res.status(403).json({ error: 'Unauthorized' });
         }
 
         const { name, goal_amount, description, deadline, target_type, target_blocks } = req.body;
 
+        let finalTargetType = target_type || 'all';
+        let finalTargetBlocks = target_blocks || [];
+
+        // Vocals must target specific blocks (their blocks only)
+        if (isVocal && !isAdmin) {
+            const vocalBlockIds = await getVocalBlocks(member.id);
+
+            if (!finalTargetBlocks || finalTargetBlocks.length === 0) {
+                if (vocalBlockIds.length === 1) {
+                    finalTargetBlocks = vocalBlockIds;
+                    finalTargetType = 'blocks';
+                } else {
+                    return res.status(400).json({ error: 'Block representatives must specify target blocks for the campaign' });
+                }
+            }
+
+            // Ensure vocal is only targeting their blocks
+            const unauthorizedBlocks = finalTargetBlocks.filter(b => !vocalBlockIds.includes(b));
+            if (unauthorizedBlocks.length > 0) {
+                return res.status(403).json({ error: 'You can only create campaigns for blocks you represent' });
+            }
+
+            finalTargetType = 'blocks';
+        }
+
         const { data, error } = await supabaseAdmin
             .from('campaigns')
             .insert({
                 community_id: communityId,
+                created_by: user.id,
                 name,
                 target_amount: goal_amount,
                 current_amount: 0,
                 description,
                 deadline,
-                target_type: target_type || 'all',
-                target_blocks: target_blocks || [],
+                target_type: finalTargetType,
+                target_blocks: finalTargetBlocks,
                 is_active: true
             })
             .select()
@@ -445,15 +499,41 @@ exports.createCampaign = async (req, res) => {
 
 exports.updateCampaign = async (req, res) => {
     try {
-        const { member, communityId } = await getUserAndMember(req);
-        const role = member.roles?.name;
+        const { user, member, communityId } = await getUserAndMember(req);
+        const roles = member.allRoles || [];
 
-        if (role !== 'admin' && role !== 'president') {
+        const isAdmin = roles.some(r => ['admin', 'president'].includes(r));
+        const isVocal = roles.includes('vocal');
+
+        if (!isAdmin && !isVocal) {
             return res.status(403).json({ error: 'Unauthorized' });
         }
 
         const { id } = req.params;
         const { name, goal_amount, description, deadline, is_active } = req.body;
+
+        // Get campaign to check ownership
+        const { data: campaign } = await supabaseAdmin
+            .from('campaigns')
+            .select('created_by, target_blocks')
+            .eq('id', id)
+            .single();
+
+        if (!campaign) return res.status(404).json({ error: 'Campaign not found' });
+
+        // Vocals can only update campaigns they created for their blocks
+        if (isVocal && !isAdmin) {
+            if (campaign.created_by !== user.id) {
+                return res.status(403).json({ error: 'You can only update campaigns you created' });
+            }
+            const vocalBlockIds = await getVocalBlocks(member.id);
+            const campaignBlocks = campaign.target_blocks || [];
+            const canUpdate = campaignBlocks.every(b => vocalBlockIds.includes(b));
+
+            if (!canUpdate) {
+                return res.status(403).json({ error: 'Unauthorized' });
+            }
+        }
 
         const { data, error } = await supabaseAdmin
             .from('campaigns')

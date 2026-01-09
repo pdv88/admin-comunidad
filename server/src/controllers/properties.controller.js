@@ -17,17 +17,29 @@ const getUserAndMember = async (req) => {
     const { data: { user }, error } = await supabase.auth.getUser(token);
     if (error || !user) throw new Error('Invalid token');
 
+    // Get the community member record
     const { data: member, error: memberError } = await supabaseAdmin
         .from('community_members')
         .select(`
-roles(name),
-    profile: profile_id(*)
+            id,
+            profile: profile_id(*)
         `)
         .eq('profile_id', user.id)
         .eq('community_id', communityId)
         .single();
 
     if (memberError || !member) throw new Error('Not a member of this community');
+
+    // Fetch roles from member_roles table
+    const { data: memberRoles } = await supabaseAdmin
+        .from('member_roles')
+        .select('roles(name)')
+        .eq('member_id', member.id);
+
+    // Map roles to an array of role names for easier checking
+    const roles = memberRoles?.map(mr => mr.roles?.name).filter(Boolean) || [];
+    member.roles = roles.length > 0 ? { name: roles[0] } : null; // Keep backwards compatible for single role checks
+    member.allRoles = roles; // New: array of all role names
 
     return { user, member, communityId };
 };
@@ -96,9 +108,10 @@ exports.updateBlock = async (req, res) => {
 
     try {
         const { member, communityId } = await getUserAndMember(req);
-        const role = member.roles?.name;
+        const allowedRoles = ['admin', 'president'];
+        const hasPermission = member.allRoles?.some(role => allowedRoles.includes(role));
 
-        if (role !== 'admin' && role !== 'president') {
+        if (!hasPermission) {
             return res.status(403).json({ error: 'Unauthorized' });
         }
 
@@ -120,6 +133,10 @@ exports.updateBlock = async (req, res) => {
                 .eq('name', 'vocal')
                 .single();
 
+            if (roleError) {
+                console.error('Error finding vocal role:', roleError);
+            }
+
             if (!roleError && vocalRole) {
                 // 2. Get the member_id from community_members
                 const { data: targetMember, error: targetError } = await supabaseAdmin
@@ -129,6 +146,10 @@ exports.updateBlock = async (req, res) => {
                     .eq('community_id', communityId)
                     .single();
 
+                if (targetError) {
+                    console.error('Error finding target member:', targetError);
+                }
+
                 if (!targetError && targetMember) {
                     // 3. Check if user already has this vocal role for this block
                     const { data: existingRole } = await supabaseAdmin
@@ -136,18 +157,22 @@ exports.updateBlock = async (req, res) => {
                         .select('id')
                         .eq('member_id', targetMember.id)
                         .eq('role_id', vocalRole.id)
-                        .eq('block_id', id) // id is the block id being updated
-                        .single();
+                        .eq('block_id', id)
+                        .maybeSingle();
 
                     // 4. If they don't already have this block's vocal role, add it
                     if (!existingRole) {
-                        await supabaseAdmin
+                        const { error: insertError } = await supabaseAdmin
                             .from('member_roles')
                             .insert({
                                 member_id: targetMember.id,
                                 role_id: vocalRole.id,
-                                block_id: id // Associate vocal role with this specific block
+                                block_id: id
                             });
+
+                        if (insertError) {
+                            console.error('Error inserting vocal role:', insertError);
+                        }
                     }
                 }
             }

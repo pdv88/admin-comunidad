@@ -26,6 +26,7 @@ import Maintenance from "./pages/Maintenance";
 import PrivacyNotice from "./components/PrivacyNotice";
 import Privacy from './pages/Privacy';
 import Terms from "./pages/Terms";
+import CommunityInfo from "./pages/CommunityInfo";
 
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -52,6 +53,7 @@ function App() {
           {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>
              <Route path="/app/dashboard" element={<Dashboard />} />
+             <Route path="/app/community-info" element={<CommunityInfo />} />
              <Route path="/app/notices" element={<Notices />} />
              <Route path="/app/reports" element={<Reports />} />
              <Route path="/app/voting" element={<Voting />} />

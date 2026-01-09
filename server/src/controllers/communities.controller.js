@@ -189,17 +189,12 @@ exports.deleteCommunity = async (req, res) => {
         if (authError || !user) throw new Error('Invalid token');
 
         // Check for Super Admin (Registration Account)
-        // Adjust logic if needed: user_metadata might need to be refreshed or we trust the token.
-        // We will trust user found from getUser which includes metadata.
         const isSuperAdmin = user.user_metadata?.is_admin_registration === true;
 
         if (!isSuperAdmin) {
             return res.status(403).json({ error: 'Only the account that registered the app can delete communities.' });
         }
 
-        // Delete Community using Admin Client (Cascades should handle members/units if DB configured, 
-        // otherwise we might need manual cleanup. Assuming DB constraints are set to CASCADE or we want to force it).
-        // Safest is to try delete. 
         const { error: deleteError } = await supabaseAdmin
             .from('communities')
             .delete()
@@ -211,6 +206,85 @@ exports.deleteCommunity = async (req, res) => {
 
     } catch (err) {
         console.error("Delete Community Error:", err);
+        res.status(500).json({ error: err.message });
+    }
+};
+
+exports.getPublicInfo = async (req, res) => {
+    const token = req.headers.authorization?.split(' ')[1];
+    const communityId = req.headers['x-community-id'];
+
+    if (!token) return res.status(401).json({ error: 'No token' });
+    if (!communityId) return res.status(400).json({ error: 'Community ID header missing' });
+
+    try {
+        console.log(`[PublicInfo] Request for CommunityID: ${communityId}`);
+
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+        if (authError || !user) throw new Error('Unauthorized');
+
+        // Verify membership (Any member can view this)
+        const { data: member } = await supabaseAdmin
+            .from('community_members')
+            .select('id')
+            .eq('profile_id', user.id)
+            .eq('community_id', communityId)
+            .single();
+
+        if (!member) {
+            console.warn(`[PublicInfo] User ${user.id} is not a member of ${communityId}`);
+            return res.status(403).json({ error: 'Not a member' });
+        }
+
+        // 1. Fetch Community Details (Public Fields + Bank Info)
+        const { data: community, error: commError } = await supabaseAdmin
+            .from('communities')
+            .select('name, address, bank_details, logo_url')
+            .eq('id', communityId)
+            .single();
+
+        if (commError) {
+            console.error(`[PublicInfo] Community Fetch Error:`, commError);
+            throw commError;
+        }
+
+        // 2. Fetch Leaders (Admin, President, Secretary, Vocal, Treasurer)
+        // Use member_roles as the junction table
+        const { data: rolesData, error: rolesError } = await supabaseAdmin
+            .from('member_roles')
+            .select(`
+                roles!inner(name),
+                community_members!inner(
+                    profile:profile_id(full_name, email, phone),
+                    community_id
+                )
+            `)
+            .eq('community_members.community_id', communityId)
+            .in('roles.name', ['admin', 'president', 'secretary', 'treasurer', 'vocal']);
+
+        if (rolesError) {
+            console.error(`[PublicInfo] Leaders Fetch Error:`, rolesError);
+            throw rolesError;
+        }
+
+        // Format Leaders List
+        // member_roles -> community_members -> profile
+        const leaders = rolesData.map(r => ({
+            role: r.roles.name,
+            name: r.community_members.profile.full_name,
+            email: r.community_members.profile.email,
+            phone: r.community_members.profile.phone
+        }));
+
+        console.log(`[PublicInfo] Returned ${leaders.length} leaders for ${community.name}`);
+
+        res.json({
+            community,
+            leaders
+        });
+
+    } catch (err) {
+        console.error('Get Public Info Error:', err);
         res.status(500).json({ error: err.message });
     }
 };

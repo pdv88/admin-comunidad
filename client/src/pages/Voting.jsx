@@ -28,11 +28,17 @@ const Voting = () => {
     });
 
     const isAdmin = hasAnyRole(['super_admin', 'admin', 'president', 'secretary']);
+    const canCreate = hasAnyRole(['super_admin', 'admin', 'president', 'secretary', 'vocal']);
+    const isVocal = hasAnyRole(['vocal']);
 
     useEffect(() => {
         fetchPolls();
-        if (isAdmin) fetchBlocks();
-    }, [isAdmin]);
+        if (isAdmin || isVocal) fetchBlocks();
+    }, [isAdmin, isVocal]);
+
+    const vocalBlocks = activeCommunity?.roles
+        ?.filter(r => r.name === 'vocal' && r.block_id)
+        .map(r => r.block_id) || [];
 
     const fetchPolls = async () => {
         try {
@@ -58,7 +64,16 @@ const Voting = () => {
 
     const openCreateModal = () => {
         setEditingPoll(null);
-        setPollForm({ title: '', description: '', options: ['', ''], deadline: '', targetType: 'all', targetBlocks: [] });
+        // Pre-fill for vocals
+        const isRestrictedVocal = isVocal && !isAdmin;
+        setPollForm({ 
+            title: '', 
+            description: '', 
+            options: ['', ''], 
+            deadline: '', 
+            targetType: isRestrictedVocal ? 'blocks' : 'all', 
+            targetBlocks: isRestrictedVocal ? vocalBlocks : [] 
+        });
         setShowPollModal(true);
     };
 
@@ -177,7 +192,7 @@ const Voting = () => {
             <div className="max-w-7xl mx-auto space-y-4 md:space-y-8">
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t('voting.title')}</h1>
-                    {isAdmin && (
+                    {canCreate && (
                         <button 
                             onClick={openCreateModal}
                             className="glass-button"
@@ -215,7 +230,7 @@ const Voting = () => {
                         
                         return (
                             <div key={poll.id} className="glass-card p-6 flex flex-col relative group">
-                                {isAdmin && (
+                                {(isAdmin || (isVocal && poll.created_by === user.id)) && (
                                     <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white dark:bg-neutral-800 p-1 rounded-lg">
                                         <button 
                                             onClick={() => openEditModal(poll)}
@@ -247,7 +262,7 @@ const Voting = () => {
                                         return (
                                             <div key={option.id} className="relative">
                                                 {/* Visual Bar for results */}
-                                                {(hasVoted || isExpired || isAdmin) && (
+                                                {(hasVoted || isExpired || isAdmin || (isVocal && poll.created_by === user.id)) && (
                                                     <div className={`absolute inset-0 rounded-full overflow-hidden ${isMyVote ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-gray-50 dark:bg-neutral-700/50'}`}>
                                                         <div 
                                                             className={`h-full transition-all duration-500 ${isMyVote ? 'bg-blue-200 dark:bg-blue-800/40' : 'bg-gray-200 dark:bg-neutral-600'}`} 
@@ -346,13 +361,14 @@ const Voting = () => {
                             <div className="mb-4">
                                 <label className="block text-sm font-medium mb-1 dark:text-neutral-300">{t('voting.target_audience', 'Target Audience')}</label>
                                 <div className="flex gap-4 mb-2">
-                                    <label className="flex items-center gap-2 dark:text-white">
+                                    <label className={`flex items-center gap-2 dark:text-white ${(isVocal && !isAdmin) ? 'opacity-50 cursor-not-allowed' : ''}`}>
                                         <input 
                                             type="radio" 
                                             name="targetType" 
                                             value="all"
                                             checked={pollForm.targetType === 'all'}
                                             onChange={e => setPollForm({...pollForm, targetType: e.target.value})}
+                                            disabled={isVocal && !isAdmin}
                                         />
                                         {t('payments.target_all', 'All Community')}
                                     </label>
@@ -369,7 +385,9 @@ const Voting = () => {
                                 </div>
                                 {pollForm.targetType === 'blocks' && (
                                     <div className="max-h-32 overflow-y-auto border rounded p-2 dark:border-neutral-700">
-                                        {blocks.map(b => (
+                                        {blocks
+                                            .filter(b => (!isVocal || isAdmin) || vocalBlocks.includes(b.id))
+                                            .map(b => (
                                             <label key={b.id} className="flex items-center gap-2 mb-1 dark:text-neutral-300">
                                                 <input 
                                                     type="checkbox"

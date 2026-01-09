@@ -14,7 +14,13 @@ import { getCurrencySymbol } from '../utils/currencyUtils';
 const Campaigns = () => {
     const { t } = useTranslation();
     const { user, activeCommunity, hasAnyRole } = useAuth(); 
-    const canCreate = hasAnyRole(['super_admin', 'admin', 'president']);
+    const isAdmin = hasAnyRole(['super_admin', 'admin', 'president']);
+    const canCreate = hasAnyRole(['super_admin', 'admin', 'president', 'vocal']);
+    const isVocal = hasAnyRole(['vocal']);
+
+    const vocalBlocks = activeCommunity?.roles
+        ?.filter(r => r.name === 'vocal' && r.block_id)
+        .map(r => r.block_id) || [];
     
     const [campaigns, setCampaigns] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -41,6 +47,18 @@ const Campaigns = () => {
     const handleContributeClick = (campaign) => {
         setSelectedCampaignForPayment(campaign);
         setPaymentModalOpen(true);
+    };
+
+    const openCreateForm = () => {
+        const isRestrictedVocal = isVocal && !isAdmin;
+        // Reset and pre-fill
+        setName('');
+        setGoal('');
+        setDesc('');
+        setDeadline('');
+        setTargetType(isRestrictedVocal ? 'blocks' : 'all');
+        setSelectedBlocks(isRestrictedVocal ? vocalBlocks : []);
+        setShowCreateForm(true);
     };
 
     // Edit State
@@ -191,7 +209,7 @@ const Campaigns = () => {
                     <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t('campaigns.title', 'Funding Campaigns')}</h1>
                     {canCreate && (
                         <button 
-                            onClick={() => setShowCreateForm(true)}
+                            onClick={openCreateForm}
                             className="glass-button"
                         >
                             {t('campaigns.create_btn', 'Create Campaign')}
@@ -265,8 +283,9 @@ const Campaigns = () => {
                                                              checked={targetType === 'all'}
                                                              onChange={() => setTargetType('all')}
                                                              className="text-indigo-600 focus:ring-indigo-500"
+                                                             disabled={isVocal && !isAdmin}
                                                          />
-                                                         <span className="text-sm dark:text-gray-300">{t('campaigns.target_all', 'All Community')}</span>
+                                                         <span className={`text-sm dark:text-gray-300 ${(isVocal && !isAdmin) ? 'opacity-50' : ''}`}>{t('campaigns.target_all', 'All Community')}</span>
                                                      </label>
                                                      <label className="flex items-center gap-2 cursor-pointer">
                                                          <input 
@@ -285,7 +304,9 @@ const Campaigns = () => {
                                                      <div className="mt-2 p-3 bg-gray-50/50 dark:bg-neutral-900/50 rounded-lg border border-gray-200 dark:border-neutral-700 max-h-40 overflow-y-auto backdrop-blur-sm">
                                                          <label className="block text-xs font-semibold text-gray-500 uppercase mb-2">{t('campaigns.select_blocks', 'Select Blocks')}</label>
                                                          <div className="grid grid-cols-2 gap-2">
-                                                             {availableBlocks.map(block => (
+                                                             {availableBlocks
+                                                                 .filter(block => (!isVocal || isAdmin) || vocalBlocks.includes(block.id))
+                                                                 .map(block => (
                                                                  <label key={block.id} className="flex items-center gap-2 cursor-pointer p-2 hover:bg-white/50 dark:hover:bg-neutral-800/50 rounded transition-colors">
                                                                      <input 
                                                                          type="checkbox"
@@ -385,7 +406,7 @@ const Campaigns = () => {
                                      </div>
                                 )}
 
-                                {canCreate && (
+                                { (isAdmin || (isVocal && campaign.created_by === user.id)) && (
                                     <button 
                                         onClick={() => handleEditClick(campaign)}
                                         className="w-full glass-button-secondary"

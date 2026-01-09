@@ -75,6 +75,9 @@ const DashboardLayout = ({ children }) => {
                     <Link to="/app/dashboard" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/dashboard')}`}>
                         {t('dashboard_layout.nav.dashboard')}
                     </Link>
+                    <Link to="/app/community-info" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/community-info')}`}>
+                        {t('dashboard_layout.nav.community_info', 'Community Info')}
+                    </Link>
                     {hasAnyRole(['admin', 'president', 'secretary', 'vocal']) && (
                         <Link to="/app/notices" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/notices')}`}>
                              {t('dashboard_layout.nav.notices')}

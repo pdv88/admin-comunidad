@@ -116,7 +116,7 @@ exports.listUsers = async (req, res) => {
             ) || [];
 
             // Get roles from member_roles table
-            const roles = memberRoles
+            const rawRoles = memberRoles
                 .filter(mr => mr.member_id === member.id)
                 .map(mr => ({
                     id: mr.role_id,
@@ -124,6 +124,39 @@ exports.listUsers = async (req, res) => {
                     block_id: mr.block_id,
                     block_name: mr.blocks?.name
                 }));
+
+            // Advanced Deduplication: Prioritize Specific Roles
+            // If a user has "Vocal (Global)" AND "Vocal (Block A)", we only want to show "Vocal (Block A)".
+
+            // 1. Group by Role ID
+            const rolesById = new Map();
+            rawRoles.forEach(r => {
+                if (!rolesById.has(r.id)) rolesById.set(r.id, []);
+                rolesById.get(r.id).push(r);
+            });
+
+            const finalRolesList = [];
+            rolesById.forEach((roleList) => {
+                // If this role type has ANY block-specific entries, filter out the global (null block) ones.
+                const hasSpecific = roleList.some(r => r.block_id);
+                if (hasSpecific) {
+                    // Keep only specific ones
+                    finalRolesList.push(...roleList.filter(r => r.block_id));
+                } else {
+                    // Keep the global one(s)
+                    finalRolesList.push(...roleList);
+                }
+            });
+
+            // 2. Final uniqueness check (by composite key) to be safe
+            const uniqueRolesMap = new Map();
+            finalRolesList.forEach(r => {
+                const key = `${r.id}_${r.block_id || 'global'}`;
+                if (!uniqueRolesMap.has(key)) {
+                    uniqueRolesMap.set(key, r);
+                }
+            });
+            const roles = Array.from(uniqueRolesMap.values());
 
             return {
                 ...profile,   // Profile details
@@ -381,16 +414,38 @@ exports.inviteUser = async (req, res) => {
 
         if (roleError) throw roleError;
 
-        // Insert into community_members
-        const { error: memberInsertError } = await supabaseAdmin
+        // Insert into community_members (upsert to handle existing members)
+        const { data: memberData, error: memberInsertError } = await supabaseAdmin
             .from('community_members')
             .upsert({
                 profile_id: userId,
                 community_id: communityId,
-                role_id: roleData.id
-            });
+                role_id: roleData.id // Keep for backwards compatibility
+            }, { onConflict: 'profile_id,community_id' })
+            .select('id')
+            .single();
 
         if (memberInsertError) throw memberInsertError;
+
+        // Insert into member_roles table (new multi-role system)
+        if (memberData) {
+            // First, remove any existing roles for this member (to avoid duplicates)
+            await supabaseAdmin
+                .from('member_roles')
+                .delete()
+                .eq('member_id', memberData.id)
+                .is('block_id', null);
+
+            // Insert the new role
+            const { error: roleInsertError } = await supabaseAdmin
+                .from('member_roles')
+                .insert({
+                    member_id: memberData.id,
+                    role_id: roleData.id
+                });
+
+            if (roleInsertError) throw roleInsertError;
+        }
 
         // Assign units if any
         if (unitIds && unitIds.length > 0) {
@@ -419,7 +474,7 @@ exports.inviteUser = async (req, res) => {
 exports.updateUser = async (req, res) => {
     const { id } = req.params; // potentially the community_member_id or profile_id
     // Ideally we pass profile_id. Let's assume ID is profile_id for now as it's standard.
-    const { roleName, unitIds, fullName, phone } = req.body;
+    const { roleName, roleNames, unitIds, fullName, phone } = req.body;
     let communityId = req.headers['x-community-id'];
     if (communityId && communityId.includes(',')) communityId = communityId.split(',')[0].trim();
 
@@ -438,9 +493,12 @@ exports.updateUser = async (req, res) => {
             if (profileError) throw profileError;
         }
 
-        // Find role ID if roleName is provided
-        let roleId = null;
-        if (roleName) {
+        // Support both roleNames (array) and roleName (single) for backwards compatibility
+        const roleNamesToUse = roleNames || (roleName ? [roleName] : null);
+
+        // Find role IDs if roleNames is provided
+        let roleIds = [];
+        if (roleNamesToUse && roleNamesToUse.length > 0) {
             // CHECK PRIVILEGES: Only Super Admin (is_admin_registration) can change roles
             const token = req.headers.authorization?.split(' ')[1];
             if (!token) throw new Error('No token provided');
@@ -450,24 +508,22 @@ exports.updateUser = async (req, res) => {
 
             if (requester.user_metadata?.is_admin_registration !== true) {
                 // If not super admin, check if they are trying to change role
-                // Fetch current role to see if it's actually changing? 
-                // Or just blanket deny any roleName field presence?
-                // For simplicity, strict restriction: explicit role change requires privileges.
+                // Strict restriction: explicit role change requires privileges.
                 return res.status(403).json({ error: 'Only the Super Admin can change user roles.' });
             }
 
-            const { data: roleData, error: roleError } = await supabaseAdmin
+            // Fetch all role IDs for the given role names
+            const { data: rolesData, error: rolesError } = await supabaseAdmin
                 .from('roles')
-                .select('id')
-                .eq('name', roleName)
-                .single();
+                .select('id, name')
+                .in('name', roleNamesToUse);
 
-            if (roleError) throw roleError;
-            roleId = roleData.id;
+            if (rolesError) throw rolesError;
+            roleIds = rolesData.map(r => r.id);
         }
 
         // Update Community Member Roles (using member_roles table)
-        if (roleId) {
+        if (roleIds.length > 0) {
             // First, get the member_id from community_members
             const { data: memberData, error: memberError } = await supabaseAdmin
                 .from('community_members')
@@ -486,15 +542,19 @@ exports.updateUser = async (req, res) => {
                     .eq('member_id', memberData.id)
                     .is('block_id', null); // Only delete non-block roles
 
-                // Insert new role
-                const { error: insertError } = await supabaseAdmin
-                    .from('member_roles')
-                    .insert({
+                // Insert all new roles
+                if (roleIds.length > 0) {
+                    const inserts = roleIds.map(roleId => ({
                         member_id: memberData.id,
                         role_id: roleId
-                    });
+                    }));
 
-                if (insertError) throw insertError;
+                    const { error: insertError } = await supabaseAdmin
+                        .from('member_roles')
+                        .insert(inserts);
+
+                    if (insertError) throw insertError;
+                }
             }
         }
 

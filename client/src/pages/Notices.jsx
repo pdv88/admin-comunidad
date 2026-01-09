@@ -34,17 +34,15 @@ const Notices = () => {
     const isAdminOrPres = hasAnyRole(['super_admin', 'admin', 'president', 'secretary']);
     const isVocal = hasAnyRole(['vocal']);
 
-    // Extract blocks owned by Vocal from profile
-    // Assuming backend populates unit_owners on login or getMe.
-    // If user.profile is legacy, we might need a safer way.
-    // For now, rely on user.unit_owners if user structure updated, or user.profile.unit_owners.
-    const userUnits = user?.unit_owners || user?.profile?.unit_owners || [];
-    const vocalBlockIds = [...new Set(userUnits.map(u => u.units?.block_id).filter(Boolean))];
+    // Extract blocks owned by Vocal from activeCommunity.roles
+    const vocalBlockIds = activeCommunity?.roles
+        ?.filter(r => r.name === 'vocal' && r.block_id)
+        .map(r => r.block_id) || [];
 
     useEffect(() => {
         if (!canCreate) return; // Redirect logic usually handled by router or layout, but good to check
         fetchNotices();
-        if (isAdminOrPres) fetchBlocks();
+        if (isAdminOrPres || isVocal) fetchBlocks();
         
         // Init form for Vocal
         if (isVocal && vocalBlockIds.length > 0) {
@@ -288,10 +286,9 @@ const Notices = () => {
                                             disabled={isVocal && vocalBlockIds.length === 1}
                                             options={[
                                                 ...(isAdminOrPres ? [{ value: '', label: t('notices.target.global', 'All Community') }] : []),
-                                                ...(isAdminOrPres ? blocks.map(block => ({ value: block.id, label: block.name })) : []),
-                                                ...(isVocal && vocalBlockIds.length > 0 
-                                                    ? [...new Map(userUnits.map(u => [u.block_id, u.blocks])).values()].map(block => ({ value: block?.id, label: block?.name }))
-                                                    : [])
+                                                ...(blocks
+                                                    .filter(block => isAdminOrPres || vocalBlockIds.includes(block.id))
+                                                    .map(block => ({ value: block.id, label: block.name })))
                                             ]}
                                             placeholder={t('notices.form.select_target', 'Select Target')}
                                         />

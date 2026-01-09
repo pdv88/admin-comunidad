@@ -35,7 +35,7 @@ const UserManagement = () => {
             email: user.email, // Email is typically not editable here, just for display
             fullName: user.full_name,
             phone: user.phone,
-            roleName: user.roles?.name || 'neighbor',
+            roleNames: Array.isArray(user.roles) ? user.roles.map(r => r.name) : [user.roles?.name || 'neighbor'],
             unitIds: user.unit_owners ? user.unit_owners.map(uo => uo.unit_id) : []
         });
     };
@@ -78,7 +78,7 @@ const UserManagement = () => {
                 },
                 body: JSON.stringify({
                     fullName: editingUser.fullName,
-                    roleName: editingUser.roleName,
+                    roleNames: editingUser.roleNames,
                     unitIds: editingUser.unitIds,
                     phone: editingUser.phone
                 })
@@ -238,8 +238,11 @@ const UserManagement = () => {
                 let bValue = '';
 
                 if (sortConfig.key === 'roleName') {
-                    aValue = t(`user_management.roles.${a.roles?.name}`) || '';
-                    bValue = t(`user_management.roles.${b.roles?.name}`) || '';
+                    // Get all role names for sorting
+                    const aRoles = Array.isArray(a.roles) ? a.roles.map(r => t(`user_management.roles.${r.name}`)).join(', ') : '';
+                    const bRoles = Array.isArray(b.roles) ? b.roles.map(r => t(`user_management.roles.${r.name}`)).join(', ') : '';
+                    aValue = aRoles;
+                    bValue = bRoles;
                 } else if (sortConfig.key === 'block') {
                     aValue = a.unit_owners?.map(uo => uo.units?.blocks?.name).join(', ') || '';
                     bValue = b.unit_owners?.map(uo => uo.units?.blocks?.name).join(', ') || '';
@@ -459,9 +462,17 @@ const UserManagement = () => {
                                     <td className="text-gray-600 dark:text-neutral-400 text-sm">{user.email}</td>
                                     <td className="text-gray-600 dark:text-neutral-400 text-sm">{user.phone || '-'}</td>
                                     <td>
-                                        <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-800">
-                                            {t(`user_management.roles.${user.roles?.name}`) !== `user_management.roles.${user.roles?.name}` ? t(`user_management.roles.${user.roles?.name}`) : user.roles?.name || 'N/A'}
-                                        </span>
+                                        <div className="flex flex-wrap gap-1">
+                                            {Array.isArray(user.roles) && user.roles.length > 0 ? (
+                                                user.roles.map((role, idx) => (
+                                                    <span key={idx} className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-800 whitespace-nowrap">
+                                                        {(t(`user_management.roles.${role.name}`) !== `user_management.roles.${role.name}` ? t(`user_management.roles.${role.name}`) : role.name) + (role.block_name ? ` - ${role.block_name}` : '')}
+                                                    </span>
+                                                ))
+                                            ) : (
+                                                <span className="bg-gray-100 text-gray-600 text-xs font-semibold px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300">N/A</span>
+                                            )}
+                                        </div>
                                     </td>
                                     <td>
                                         {user.unit_owners && user.unit_owners.length > 0 
@@ -574,22 +585,33 @@ const UserManagement = () => {
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300">{t('user_management.table.role')}</label>
-                                                    <select 
-                                                        className="glass-input disabled:opacity-50 disabled:cursor-not-allowed"
-                                                        value={editingUser.roleName}
-                                                        onChange={e => setEditingUser({...editingUser, roleName: e.target.value})}
-                                                        disabled={user?.user_metadata?.is_admin_registration !== true}
-                                                    >
-                                                        <option value="neighbor">{t('user_management.roles.neighbor')}</option>
-                                                        <option value="president">{t('user_management.roles.president')}</option>
-                                                        <option value="secretary">{t('user_management.roles.secretary')}</option>
-                                                        <option value="vice_president">{t('user_management.roles.vice_president')}</option>
-                                                        <option value="admin">{t('user_management.roles.admin')}</option>
-                                                        <option value="treasurer">{t('user_management.roles.treasurer')}</option>
-                                                        <option value="vocal">{t('user_management.roles.vocal')}</option>
-                                                        <option value="maintenance">{t('user_management.roles.maintenance')}</option>
-                                                    </select>
+                                                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">{t('user_management.table.role')}</label>
+                                                    <div className={`border border-gray-300 dark:border-neutral-700 rounded-md p-2 max-h-32 overflow-y-auto bg-white dark:bg-neutral-900 ${user?.user_metadata?.is_admin_registration !== true ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                                                        <div className="space-y-1">
+                                                            {['neighbor', 'president', 'secretary', 'vice_president', 'admin', 'treasurer', 'vocal', 'maintenance'].map(roleName => (
+                                                                <label key={roleName} className="flex items-center space-x-2 p-1 hover:bg-gray-50 dark:hover:bg-neutral-800 rounded cursor-pointer">
+                                                                    <input 
+                                                                        type="checkbox"
+                                                                        value={roleName}
+                                                                        checked={editingUser.roleNames?.includes(roleName) || false}
+                                                                        disabled={user?.user_metadata?.is_admin_registration !== true}
+                                                                        onChange={e => {
+                                                                            const name = roleName;
+                                                                            let newRoles;
+                                                                            if (e.target.checked) {
+                                                                                newRoles = [...(editingUser.roleNames || []), name];
+                                                                            } else {
+                                                                                newRoles = (editingUser.roleNames || []).filter(r => r !== name);
+                                                                            }
+                                                                            setEditingUser({...editingUser, roleNames: newRoles});
+                                                                        }}
+                                                                        className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                                                    />
+                                                                    <span className="text-sm text-gray-700 dark:text-neutral-300">{t(`user_management.roles.${roleName}`)}</span>
+                                                                </label>
+                                                            ))}
+                                                        </div>
+                                                    </div>
                                                     {user?.user_metadata?.is_admin_registration !== true && (
                                                         <p className="text-xs text-gray-500 mt-1 dark:text-neutral-400">{t('user_management.role_change_restricted', 'Only Super Admin can change roles.')}</p>
                                                     )}

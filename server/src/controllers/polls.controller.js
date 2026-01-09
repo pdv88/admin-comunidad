@@ -1,6 +1,25 @@
 const supabase = require('../config/supabaseClient');
 const supabaseAdmin = require('../config/supabaseAdmin');
 
+// Helper to get block IDs that a user represents as vocal
+const getVocalBlocks = async (memberId) => {
+    const { data } = await supabaseAdmin
+        .from('member_roles')
+        .select('block_id, roles!inner(name)')
+        .eq('member_id', memberId)
+        .eq('roles.name', 'vocal');
+    return data?.map(r => r.block_id).filter(Boolean) || [];
+};
+
+// Helper to get user's roles from member_roles table
+const getMemberRoles = async (memberId) => {
+    const { data } = await supabaseAdmin
+        .from('member_roles')
+        .select('roles(name)')
+        .eq('member_id', memberId);
+    return data?.map(r => r.roles?.name).filter(Boolean) || [];
+};
+
 exports.getAll = async (req, res) => {
     const token = req.headers.authorization?.split(' ')[1];
     const communityId = req.headers['x-community-id'];
@@ -96,19 +115,54 @@ exports.create = async (req, res) => {
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
         if (authError) throw authError;
 
-        // Check Permissions in Community Members
+        // Get member record
         const { data: member } = await supabaseAdmin
             .from('community_members')
-            .select('roles(name)')
+            .select('id')
             .eq('profile_id', user.id)
             .eq('community_id', communityId)
             .single();
 
         if (!member) return res.status(403).json({ error: 'Not a member of this community' });
 
-        const allowedRoles = ['admin', 'president', 'secretary'];
-        if (!allowedRoles.includes(member.roles?.name)) {
-            return res.status(403).json({ error: 'Unauthorized: Only admins can create polls.' });
+        // Get user's roles from member_roles table
+        const roles = await getMemberRoles(member.id);
+
+        // Permission Check - admins + vocals can create polls
+        const allowedRoles = ['admin', 'president', 'secretary', 'vocal'];
+        const hasPermission = roles.some(role => allowedRoles.includes(role));
+
+        if (!hasPermission) {
+            return res.status(403).json({ error: 'Unauthorized: Only admins and block representatives can create polls.' });
+        }
+
+        // Scope Check for vocals
+        const isVocal = roles.includes('vocal');
+        const isAdmin = roles.some(r => ['admin', 'president', 'secretary'].includes(r));
+
+        let finalTargetType = targetType || 'all';
+        let finalTargetBlocks = targetBlocks || null;
+
+        if (isVocal && !isAdmin) {
+            // Vocals must target specific blocks (their blocks only)
+            const vocalBlockIds = await getVocalBlocks(member.id);
+
+            if (!finalTargetBlocks || finalTargetBlocks.length === 0) {
+                if (vocalBlockIds.length === 1) {
+                    finalTargetBlocks = vocalBlockIds;
+                    finalTargetType = 'blocks';
+                } else {
+                    return res.status(400).json({ error: 'Block representatives must specify target blocks for the poll' });
+                }
+            }
+
+            // Ensure vocal is only targeting their blocks
+            const unauthorizedBlocks = finalTargetBlocks.filter(b => !vocalBlockIds.includes(b));
+            if (unauthorizedBlocks.length > 0) {
+                return res.status(403).json({ error: 'You can only create polls for blocks you represent' });
+            }
+
+            finalTargetType = 'blocks';
         }
 
         // 1. Create Poll
@@ -120,8 +174,8 @@ exports.create = async (req, res) => {
                 created_by: user.id,
                 community_id: communityId,
                 ends_at: deadline,
-                target_type: targetType || 'all',
-                target_blocks: targetBlocks || null
+                target_type: finalTargetType,
+                target_blocks: finalTargetBlocks
             }])
             .select()
             .single();
@@ -196,26 +250,51 @@ exports.deletePoll = async (req, res) => {
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
         if (authError || !user) throw new Error('Unauthorized');
 
-        // Check Permissions
+        // Get member record
         const { data: member } = await supabaseAdmin
             .from('community_members')
-            .select('roles(name)')
+            .select('id')
             .eq('profile_id', user.id)
             .eq('community_id', communityId)
             .single();
 
-        const allowedRoles = ['admin', 'president', 'secretary'];
-        if (!member || !allowedRoles.includes(member.roles?.name)) {
-            return res.status(403).json({ error: 'Unauthorized' });
+        if (!member) return res.status(403).json({ error: 'Unauthorized' });
+
+        // Get user's roles from member_roles table
+        const roles = await getMemberRoles(member.id);
+        const isAdmin = roles.some(r => ['admin', 'president', 'secretary'].includes(r));
+        const isVocal = roles.includes('vocal');
+
+        // Get poll info to check ownership/targeting
+        const { data: poll } = await supabaseAdmin
+            .from('polls')
+            .select('created_by, target_blocks')
+            .eq('id', id)
+            .single();
+
+        if (!poll) return res.status(404).json({ error: 'Poll not found' });
+
+        // Admins can delete any poll
+        if (isAdmin) {
+            const { error } = await supabaseAdmin.from('polls').delete().eq('id', id);
+            if (error) throw error;
+            return res.json({ message: 'Poll deleted' });
         }
 
-        const { error } = await supabaseAdmin
-            .from('polls')
-            .delete()
-            .eq('id', id);
+        // Vocals can delete polls they created for their blocks
+        if (isVocal && poll.created_by === user.id) {
+            const vocalBlockIds = await getVocalBlocks(member.id);
+            const pollBlocks = poll.target_blocks || [];
+            const canDelete = pollBlocks.every(b => vocalBlockIds.includes(b));
 
-        if (error) throw error;
-        res.json({ message: 'Poll deleted' });
+            if (canDelete) {
+                const { error } = await supabaseAdmin.from('polls').delete().eq('id', id);
+                if (error) throw error;
+                return res.json({ message: 'Poll deleted' });
+            }
+        }
+
+        return res.status(403).json({ error: 'Unauthorized' });
     } catch (err) {
         res.status(400).json({ error: err.message });
     }
@@ -233,17 +312,46 @@ exports.update = async (req, res) => {
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
         if (authError || !user) throw new Error('Unauthorized');
 
-        // Check Permission
+        // Get member record
         const { data: member } = await supabaseAdmin
             .from('community_members')
-            .select('roles(name)')
+            .select('id')
             .eq('profile_id', user.id)
             .eq('community_id', communityId)
             .single();
 
-        const allowedRoles = ['admin', 'president', 'secretary'];
-        if (!member || !allowedRoles.includes(member.roles?.name)) {
+        if (!member) return res.status(403).json({ error: 'Unauthorized' });
+
+        // Get user's roles from member_roles table
+        const roles = await getMemberRoles(member.id);
+        const isAdmin = roles.some(r => ['admin', 'president', 'secretary'].includes(r));
+        const isVocal = roles.includes('vocal');
+
+        if (!isAdmin && !isVocal) {
             return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        // Get poll info to check ownership
+        const { data: poll } = await supabaseAdmin
+            .from('polls')
+            .select('created_by, target_blocks')
+            .eq('id', id)
+            .single();
+
+        if (!poll) return res.status(404).json({ error: 'Poll not found' });
+
+        // Vocals can only update polls they created for their blocks
+        if (isVocal && !isAdmin) {
+            if (poll.created_by !== user.id) {
+                return res.status(403).json({ error: 'You can only update polls you created' });
+            }
+            const vocalBlockIds = await getVocalBlocks(member.id);
+            const pollBlocks = poll.target_blocks || [];
+            const canUpdate = pollBlocks.every(b => vocalBlockIds.includes(b));
+
+            if (!canUpdate) {
+                return res.status(403).json({ error: 'Unauthorized' });
+            }
         }
 
         const { error } = await supabaseAdmin
