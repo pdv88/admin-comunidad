@@ -10,6 +10,7 @@ import GlassSelect from '../components/GlassSelect';
 import GlassLoader from '../components/GlassLoader';
 import Toast from '../components/Toast';
 import ReportDetailsPanel from '../components/ReportDetailsPanel';
+import { exportReportToPDF } from '../utils/pdfExport';
 
 const Reports = () => {
     const { user, activeCommunity, hasAnyRole } = useAuth();
@@ -230,6 +231,36 @@ const Reports = () => {
         }
     };
 
+    const handleExportPDF = async (report, e) => {
+        e.stopPropagation();
+        try {
+            const token = localStorage.getItem('token');
+            let notesData = [];
+            let imagesData = [];
+
+            // Fetch notes
+            const notesRes = await fetch(`${API_URL}/api/reports/${report.id}/notes`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (notesRes.ok) notesData = await notesRes.json();
+            
+            // Fetch images
+            const imagesRes = await fetch(`${API_URL}/api/reports/${report.id}/images`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (imagesRes.ok) imagesData = await imagesRes.json();
+            // Try to get logo and brand color from nested communities object or direct property
+            const logoUrl = activeCommunity?.communities?.logo_url || activeCommunity?.logo_url;
+            const brandColor = activeCommunity?.communities?.brand_color || activeCommunity?.brand_color || '#3B82F6';
+            
+            await exportReportToPDF(report, notesData, imagesData, t, logoUrl, brandColor);
+            setToast({ message: t('reports.pdf_exported', 'PDF downloaded successfully'), type: 'success' });
+        } catch (error) {
+            console.error('Error exporting PDF:', error);
+            setToast({ message: t('common.error_occurred', 'Error occurred'), type: 'error' });
+        }
+    };
+
     const getStatusColor = (status) => {
         switch (status) {
             case 'pending': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
@@ -409,9 +440,21 @@ const Reports = () => {
                                                     )}
                                                 </div>
                                             )}  
-                                            {/* Delete Button */}
-                                            {(report.status === 'pending' || report.status === 'rejected' || isAdminOrPres) && (report.user_id === user.id || isAdminOrPres) && (
-                                                <div className="mt-2 text-right" onClick={e => e.stopPropagation()}>
+                                            
+                                            {/* Action Buttons Row */}
+                                            <div className="mt-3 flex items-center gap-3" onClick={e => e.stopPropagation()}>
+                                                {/* Download PDF Button */}
+                                                <button
+                                                    onClick={(e) => handleExportPDF(report, e)}
+                                                    className="text-xs flex items-center gap-1 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 font-medium transition-colors"
+                                                    title={t('reports.export_pdf', 'Download PDF')}
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                                    <span className="hidden sm:inline">{t('reports.export_pdf', 'Download PDF')}</span>
+                                                </button>
+
+                                                {/* Delete Button */}
+                                                {(report.status === 'pending' || report.status === 'rejected' || isAdminOrPres) && (report.user_id === user.id || isAdminOrPres) && (
                                                     <button 
                                                         onClick={() => handleDeleteReport(report.id)}
                                                         className="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1 ml-auto"
@@ -419,8 +462,8 @@ const Reports = () => {
                                                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                                         {t('common.delete', 'Delete')}
                                                     </button>
-                                                </div>
-                                            )}
+                                                )}
+                                            </div>
                                         </div>
                                         {report.image_url && (
                                             <img src={report.image_url} alt="Report" className="w-20 h-20 object-cover rounded-lg ml-4 bg-gray-100" />

@@ -7,6 +7,7 @@ import ImageUploader from './ImageUploader';
 import GlassLoader from './GlassLoader';
 import Toast from './Toast';
 import ConfirmationModal from './ConfirmationModal';
+import { exportReportToPDF } from '../utils/pdfExport';
 
 const ReportDetailsPanel = ({ report, onUpdate }) => {
     const { t } = useTranslation();
@@ -46,6 +47,41 @@ const ReportDetailsPanel = ({ report, onUpdate }) => {
 
     // Toast State
     const [toast, setToast] = useState({ message: '', type: 'success' });
+
+    // PDF Export handler
+    const handleExportPDF = async () => {
+        try {
+            // Fetch notes and images if not already loaded
+            let notesData = notes;
+            let imagesData = images;
+            
+            if (notesData.length === 0) {
+                const token = localStorage.getItem('token');
+                const notesRes = await fetch(`${API_URL}/api/reports/${report.id}/notes`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (notesRes.ok) notesData = await notesRes.json();
+            }
+            
+            if (imagesData.length === 0) {
+                const token = localStorage.getItem('token');
+                const imagesRes = await fetch(`${API_URL}/api/reports/${report.id}/images`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (imagesRes.ok) imagesData = await imagesRes.json();
+            }
+            
+            // Try to get logo and brand from nested communities object or direct property
+            const logoUrl = activeCommunity?.communities?.logo_url || activeCommunity?.logo_url;
+            const brandColor = activeCommunity?.communities?.brand_color || activeCommunity?.brand_color || '#3B82F6';
+
+            await exportReportToPDF(report, notesData, imagesData, t, logoUrl, brandColor);
+            setToast({ message: t('reports.pdf_exported', 'PDF downloaded successfully'), type: 'success' });
+        } catch (error) {
+            console.error('Error exporting PDF:', error);
+            setToast({ message: t('common.error_occurred', 'Error occurred'), type: 'error' });
+        }
+    };
 
     useEffect(() => {
         if (activeTab === 'notes') fetchNotes();
@@ -244,6 +280,20 @@ const ReportDetailsPanel = ({ report, onUpdate }) => {
                         className={`flex-1 md:flex-none p-3 text-left font-medium transition-all rounded-xl border ${activeTab === 'images' ? 'bg-white/40 dark:bg-neutral-800/40 text-blue-600 border-white/40 shadow-lg backdrop-blur-md' : 'text-gray-600 dark:text-neutral-400 border-transparent hover:bg-white/10 dark:hover:bg-neutral-800/20'}`}
                     >
                         {t('reports.modal.images', 'Images')}
+                    </button>
+                    
+                    {/* Divider */}
+                    <div className="hidden md:block border-t border-white/10 dark:border-white/5 my-2"></div>
+                    
+                    {/* Export PDF Button */}
+                    <button 
+                        onClick={handleExportPDF}
+                        className="flex-1 md:flex-none p-3 text-left font-medium transition-all rounded-xl border text-gray-600 dark:text-neutral-400 border-transparent hover:bg-white/10 dark:hover:bg-neutral-800/20 flex items-center gap-2"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        {t('reports.export_pdf', 'Download PDF')}
                     </button>
                 </div>
 

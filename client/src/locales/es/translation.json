@@ -386,8 +386,22 @@
             "gallery": "Galería de Imágenes",
             "gallery_desc": "Sube fotos del problema.",
             "primary": "Principal",
-            "no_images": "Aún no hay imágenes subidas."
-        }
+            "no_images": "Aún no hay imágenes subidas.",
+            "max_images": "Máximo 5 imágenes"
+        },
+        "export_pdf": "Descargar PDF",
+        "pdf_exported": "PDF descargado exitosamente",
+        "reporter": "Reportado por",
+        "date": "Fecha",
+        "scope_label": "Alcance",
+        "status_label": "Estado",
+        "category_label": "Categoría",
+        "details": "Detalles del Reporte",
+        "description": "Descripción",
+        "notes": "Notas y Comentarios",
+        "images": "Imágenes Adjuntas",
+        "images_note": "Las imágenes están disponibles en el reporte en línea.",
+        "generated_on": "Generado el"
     },
     "voting": {
         "title": "Votaciones Activas",

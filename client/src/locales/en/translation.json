@@ -376,8 +376,22 @@
             "gallery": "Image Gallery",
             "gallery_desc": "Upload photos of the issue.",
             "primary": "Primary",
-            "no_images": "No images uploaded yet."
-        }
+            "no_images": "No images uploaded yet.",
+            "max_images": "Max 5 images reached"
+        },
+        "export_pdf": "Download PDF",
+        "pdf_exported": "PDF downloaded successfully",
+        "reporter": "Reported by",
+        "date": "Date",
+        "scope_label": "Scope",
+        "status_label": "Status",
+        "category_label": "Category",
+        "details": "Report Details",
+        "description": "Description",
+        "notes": "Notes & Comments",
+        "images": "Attached Images",
+        "images_note": "Images are available in the online report.",
+        "generated_on": "Generated on"
     },
     "voting": {
         "title": "Active Polls",
