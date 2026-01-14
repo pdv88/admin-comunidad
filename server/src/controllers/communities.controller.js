@@ -254,6 +254,8 @@ exports.getPublicInfo = async (req, res) => {
             .from('member_roles')
             .select(`
                 roles!inner(name),
+                block_id,
+                blocks(name),
                 community_members!inner(
                     profile:profile_id(full_name, email, phone),
                     community_id
@@ -267,14 +269,36 @@ exports.getPublicInfo = async (req, res) => {
             throw rolesError;
         }
 
-        // Format Leaders List
-        // member_roles -> community_members -> profile
-        const leaders = rolesData.map(r => ({
-            role: r.roles.name,
-            name: r.community_members.profile.full_name,
-            email: r.community_members.profile.email,
-            phone: r.community_members.profile.phone
-        }));
+        // Format Leaders List - Group by person (email) to avoid duplicates
+        const leadersMap = new Map();
+
+        rolesData.forEach(r => {
+            const email = r.community_members.profile.email;
+            const roleName = r.roles.name;
+            const blockName = r.blocks?.name;
+
+            if (!leadersMap.has(email)) {
+                leadersMap.set(email, {
+                    name: r.community_members.profile.full_name,
+                    email: email,
+                    phone: r.community_members.profile.phone,
+                    roles: []
+                });
+            }
+
+            const leader = leadersMap.get(email);
+            // Add role with block info for vocals
+            if (roleName === 'vocal' && blockName) {
+                leader.roles.push({ role: roleName, block: blockName });
+            } else {
+                // Check if this role already exists (avoid duplicates)
+                if (!leader.roles.some(r => r.role === roleName)) {
+                    leader.roles.push({ role: roleName });
+                }
+            }
+        });
+
+        const leaders = Array.from(leadersMap.values());
 
         console.log(`[PublicInfo] Returned ${leaders.length} leaders for ${community.name}`);
 

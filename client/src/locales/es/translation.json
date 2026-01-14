@@ -168,6 +168,7 @@
         "password_mismatch": "Las contraseñas no coinciden",
         "registration_success": "¡Registro exitoso! Por favor verifica tu correo.",
         "signin_btn": "Iniciar Sesión",
+        "signing_in": "Iniciando sesión...",
         "signup_btn": "Registrarse",
         "forgot_pass_title": "Recuperar contraseña",
         "remember_pass": "¿Recuerdas tu contraseña?",
@@ -549,7 +550,10 @@
         "upload_error": "Error al procesar la imagen.",
         "processing": "Procesando...",
         "add_photo": "Añadir Foto",
-        "export_excel": "Exportar a Excel"
+        "export_excel": "Exportar a Excel",
+        "optional": "opcional",
+        "copy": "Copiar",
+        "copied": "Copiado"
     },
     "payments": {
         "title": "Pagos y Aportaciones",
@@ -666,6 +670,7 @@
         "bank_name": "Nombre del Banco",
         "account_number": "Número de Cuenta",
         "account_holder": "Titular de la Cuenta",
+        "secondary_number": "CLABE / IBAN / Routing",
         "placeholders": {
             "bank_name": "ej. Banco Santander",
             "account_number": "ej. 1234567890",
@@ -691,6 +696,18 @@
         "create": "Crear",
         "error": "Error al crear la comunidad",
         "loading": "Cargando..."
+    },
+    "community_info": {
+        "title": "Información de la Comunidad",
+        "subtitle": "Datos de contacto e información bancaria",
+        "bank_details": "Datos Bancarios",
+        "bank_name": "Nombre del Banco",
+        "account_number": "Número de Cuenta",
+        "account_holder": "Titular de la Cuenta",
+        "no_bank_details": "No hay datos bancarios disponibles.",
+        "leaders_title": "Líderes y Contacto de la Comunidad",
+        "no_leaders": "No hay información de contacto disponible.",
+        "no_address": "Dirección no proporcionada"
     },
     "maintenance": {
         "admin_title": "Gestión de Cuotas de Mantenimiento",

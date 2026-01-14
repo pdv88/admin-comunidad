@@ -168,6 +168,7 @@
         "password_mismatch": "Passwords do not match",
         "registration_success": "Registration successful! Please check your email to verify account.",
         "signin_btn": "Sign in",
+        "signing_in": "Signing in...",
         "signup_btn": "Sign up",
         "forgot_pass_title": "Forgot password?",
         "remember_pass": "Remember your password?",
@@ -514,7 +515,10 @@
         "show_filters": "Filter Data",
         "hide_filters": "Hide Filters",
         "export": "Export",
-        "export_excel": "Export to Excel"
+        "export_excel": "Export to Excel",
+        "optional": "optional",
+        "copy": "Copy",
+        "copied": "Copied"
     },
     "payments": {
         "title": "Payments & Contributions",
@@ -631,6 +635,7 @@
         "bank_name": "Bank Name",
         "account_number": "Account Number",
         "account_holder": "Account Holder",
+        "secondary_number": "CLABE / IBAN / Routing",
         "placeholders": {
             "bank_name": "e.g. Bank of America",
             "account_number": "e.g. 1234567890",
@@ -653,6 +658,18 @@
         "create": "Create",
         "error": "Failed to create community",
         "loading": "Loading..."
+    },
+    "community_info": {
+        "title": "Community Information",
+        "subtitle": "Contact details and bank information",
+        "bank_details": "Bank Details",
+        "bank_name": "Bank Name",
+        "account_number": "Account Number",
+        "account_holder": "Account Holder",
+        "no_bank_details": "No bank details available.",
+        "leaders_title": "Community Leaders & Contact",
+        "no_leaders": "No public contact information available.",
+        "no_address": "No address provided"
     },
     "maintenance": {
         "admin_title": "Maintenance Fee Management",

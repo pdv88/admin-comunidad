@@ -142,7 +142,13 @@ const CommunitySettings = () => {
     const addBankAccount = () => {
         setCommunity(prev => ({
             ...prev,
-            bank_details: [...prev.bank_details, { bank_name: '', account_number: '', account_holder: '' }]
+            bank_details: [...prev.bank_details, { 
+                bank_name: '', 
+                account_number: '', 
+                account_holder: '',
+                secondary_number: '',
+                secondary_type: 'clabe' // Default to CLABE for Mexico
+            }]
         }));
     };
 
@@ -302,7 +308,7 @@ const CommunitySettings = () => {
                                                 <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                                             </svg>
                                         </button>
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
                                                 <label className="block text-xs text-gray-500 mb-1">{t('community_settings.bank_name')}</label>
                                                 <input
@@ -314,16 +320,6 @@ const CommunitySettings = () => {
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-xs text-gray-500 mb-1">{t('community_settings.account_number')}</label>
-                                                <input
-                                                    type="text"
-                                                    className="glass-input w-full text-sm"
-                                                    placeholder={t('community_settings.placeholders.account_number')}
-                                                    value={bank.account_number}
-                                                    onChange={(e) => updateBankAccount(index, 'account_number', e.target.value)}
-                                                />
-                                            </div>
-                                            <div>
                                                 <label className="block text-xs text-gray-500 mb-1">{t('community_settings.account_holder')}</label>
                                                 <input
                                                     type="text"
@@ -332,6 +328,46 @@ const CommunitySettings = () => {
                                                     value={bank.account_holder}
                                                     onChange={(e) => updateBankAccount(index, 'account_holder', e.target.value)}
                                                 />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-gray-500 mb-1">{t('community_settings.account_number')}</label>
+                                                <input
+                                                    type="text"
+                                                    className="glass-input w-full text-sm font-mono"
+                                                    placeholder={t('community_settings.placeholders.account_number')}
+                                                    value={bank.account_number}
+                                                    onChange={(e) => updateBankAccount(index, 'account_number', e.target.value)}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-gray-500 mb-1">
+                                                    {t('community_settings.secondary_number', 'CLABE / IBAN / Routing')}
+                                                    <span className="text-gray-400 ml-1">({t('common.optional', 'optional')})</span>
+                                                </label>
+                                                <div className="flex gap-2">
+                                                    <select
+                                                        className="glass-input text-sm w-24 shrink-0"
+                                                        value={bank.secondary_type || 'clabe'}
+                                                        onChange={(e) => updateBankAccount(index, 'secondary_type', e.target.value)}
+                                                    >
+                                                        <option value="clabe">CLABE</option>
+                                                        <option value="iban">IBAN</option>
+                                                        <option value="routing">Routing</option>
+                                                        <option value="swift">SWIFT</option>
+                                                        <option value="bic">BIC</option>
+                                                    </select>
+                                                    <input
+                                                        type="text"
+                                                        className="glass-input w-full text-sm font-mono"
+                                                        placeholder={bank.secondary_type === 'clabe' ? '18 digits' : 
+                                                                    bank.secondary_type === 'iban' ? 'e.g. ES91 2100 0418...' :
+                                                                    bank.secondary_type === 'routing' ? '9 digits' :
+                                                                    bank.secondary_type === 'swift' ? 'e.g. BSCHESMMXXX' :
+                                                                    '8-11 characters'}
+                                                        value={bank.secondary_number || ''}
+                                                        onChange={(e) => updateBankAccount(index, 'secondary_number', e.target.value)}
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
