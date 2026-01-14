@@ -9,6 +9,7 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -16,6 +17,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
     try {
       await login(email, password);
       // Redirect based on role (future improvement)
@@ -26,6 +28,8 @@ const Login = () => {
       } else {
          setError(err.message);
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -100,7 +104,23 @@ const Login = () => {
                   </div>
                   {/* <!-- End Form Group --> */}
 
-                  <button type="submit" className="w-full inline-flex justify-center items-center gap-x-3 text-center bg-gradient-to-r from-blue-600 via-violet-600 to-blue-600 bg-[length:200%_auto] text-white text-sm font-semibold rounded-full hover:shadow-lg hover:bg-right active:scale-95 transition-all duration-500 py-3 px-6 shadow-lg shadow-blue-500/30 disabled:opacity-50 disabled:pointer-events-none">{t('auth.signin_btn')}</button>
+                  <button 
+                    type="submit" 
+                    disabled={loading}
+                    className="w-full inline-flex justify-center items-center gap-x-3 text-center bg-gradient-to-r from-blue-600 via-violet-600 to-blue-600 bg-[length:200%_auto] text-white text-sm font-semibold rounded-full hover:shadow-lg hover:bg-right active:scale-95 transition-all duration-500 py-3 px-6 shadow-lg shadow-blue-500/30 disabled:opacity-50 disabled:pointer-events-none"
+                  >
+                    {loading ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        {t('auth.signing_in', 'Signing in...')}
+                      </>
+                    ) : (
+                      t('auth.signin_btn')
+                    )}
+                  </button>
                 </div>
               </form>
               {/* <!-- End Form --> */}
