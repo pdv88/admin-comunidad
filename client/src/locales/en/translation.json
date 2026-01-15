@@ -251,11 +251,12 @@
             "voting": "Voting",
             "properties": "Properties",
             "payments": "Payments",
-            "maintenance": "Maintenance Fees",
+            "maintenance": "Community Fees",
             "campaigns": "Campaigns",
             "users": "Users",
             "administration": "Administration",
-            "community_settings": "Community Settings"
+            "community_settings": "Community Settings",
+            "community_info": "Community Info"
         },
         "sign_out": "Sign out"
     },

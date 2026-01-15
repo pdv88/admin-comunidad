@@ -247,11 +247,12 @@
             "voting": "Votaciones",
             "properties": "Propiedades",
             "payments": "Pagos",
-            "maintenance": "Cuotas de Mantenimiento",
+            "maintenance": "Cuotas de Comunidad",
             "campaigns": "Campañas",
             "users": "Usuarios",
             "administration": "Administración",
-            "community_settings": "Configuración de Comunidad"
+            "community_settings": "Configuración de Comunidad",
+            "community_info": "Info de Comunidad"
         },
         "sign_out": "Cerrar sesión"
     },
