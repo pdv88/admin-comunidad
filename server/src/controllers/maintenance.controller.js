@@ -191,7 +191,7 @@ exports.getCommunityStatus = async (req, res) => {
         const from = (pageNum - 1) * limitNum;
         const to = from + limitNum - 1;
 
-        console.log(`Getting Status: Page ${pageNum}, Limit ${limitNum}, Range ${from}-${to}, Search: ${search || ''}, Block: ${block || ''}`);
+
 
         // Base Query
         const useInnerJoin = !!search || !!block;

@@ -23,6 +23,7 @@ import CommunitySettings from "./pages/CommunitySettings";
 import Campaigns from "./pages/Campaigns";
 import CampaignDetails from "./pages/CampaignDetails";
 import Maintenance from "./pages/Maintenance";
+import Reservations from "./pages/Reservations";
 import PrivacyNotice from "./components/PrivacyNotice";
 import Privacy from './pages/Privacy';
 import Terms from "./pages/Terms";
@@ -57,6 +58,7 @@ function App() {
              <Route path="/app/notices" element={<Notices />} />
              <Route path="/app/reports" element={<Reports />} />
              <Route path="/app/voting" element={<Voting />} />
+             <Route path="/app/reservations" element={<Reservations />} />
              
              {/* Admin/President Only Routes */}
              <Route element={<ProtectedRoute allowedRoles={['super_admin', 'admin', 'president']} />}>

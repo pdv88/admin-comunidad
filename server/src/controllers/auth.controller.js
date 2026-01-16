@@ -137,7 +137,7 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
     const { email, password } = req.body;
-    console.log(`Login attempt for: ${email}`); // DEBUG
+
 
     try {
         const { data, error } = await supabase.auth.signInWithPassword({
@@ -169,15 +169,15 @@ exports.login = async (req, res) => {
 
         // Fetch roles from member_roles table (supports multiple roles)
         const memberIds = communities?.map(cm => cm.id) || [];
-        console.log('[Login] Member IDs:', memberIds); // DEBUG
+
         let memberRoles = [];
         if (memberIds.length > 0) {
             const { data: rolesData, error: rolesError } = await require('../config/supabaseAdmin')
                 .from('member_roles')
                 .select('*, roles(*), blocks(*)')
                 .in('member_id', memberIds);
-            console.log('[Login] Roles data:', rolesData); // DEBUG
-            console.log('[Login] Roles error:', rolesError); // DEBUG
+
+
             if (!rolesError) memberRoles = rolesData || [];
         }
 

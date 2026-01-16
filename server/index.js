@@ -27,7 +27,8 @@ app.use('/api/properties', propertiesRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/communities', require('./src/routes/communities.routes'));
 app.use('/api/payments', require('./src/routes/payments.routes'));
-app.use('/api/maintenance', require('./src/routes/maintenance.routes')); // New Maintenance Routes
+app.use('/api/maintenance', require('./src/routes/maintenance.routes'));
+app.use('/api/amenities', require('./src/routes/amenities.routes')); // New Amenities Routes
 
 // Base route
 app.get('/', (req, res) => {

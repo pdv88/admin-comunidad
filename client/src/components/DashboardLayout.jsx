@@ -71,45 +71,48 @@ const DashboardLayout = ({ children }) => {
                 <CommunitySwitcher />
 
                 {/* Nav Links - Scrollable area */}
-                <nav className="flex-1 px-4 space-y-2 overflow-y-auto customer-scrollbar">
-                    <Link to="/app/dashboard" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/dashboard')}`}>
+                <nav className="flex-1 px-4 space-y-1 overflow-y-auto customer-scrollbar">
+                    <Link to="/app/dashboard" onClick={closeSidebar} className={`block py-1.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/dashboard')}`}>
                         {t('dashboard_layout.nav.dashboard')}
                     </Link>
-                    <Link to="/app/community-info" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/community-info')}`}>
+                    <Link to="/app/community-info" onClick={closeSidebar} className={`block py-1.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/community-info')}`}>
                         {t('dashboard_layout.nav.community_info', 'Community Info')}
                     </Link>
                     {hasAnyRole(['admin', 'president', 'secretary', 'vocal']) && (
-                        <Link to="/app/notices" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/notices')}`}>
+                        <Link to="/app/notices" onClick={closeSidebar} className={`block py-1.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/notices')}`}>
                              {t('dashboard_layout.nav.notices')}
                         </Link>
                     )}
-                    <Link to="/app/reports" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/reports')}`}>
+                    <Link to="/app/reports" onClick={closeSidebar} className={`block py-1.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/reports')}`}>
                          {t('dashboard_layout.nav.reports')}
                     </Link>
-                    <Link to="/app/voting" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/voting')}`}>
+                    <Link to="/app/voting" onClick={closeSidebar} className={`block py-1.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/voting')}`}>
                          {t('dashboard_layout.nav.voting')}
                     </Link>
-                    <Link to="/app/maintenance" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/maintenance')}`}>
+                    <Link to="/app/maintenance" onClick={closeSidebar} className={`block py-1.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/maintenance')}`}>
                          {t('dashboard_layout.nav.maintenance', 'Maintenance Fees')}
                     </Link>
-                    <Link to="/app/campaigns" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/campaigns')}`}>
+                    <Link to="/app/campaigns" onClick={closeSidebar} className={`block py-1.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/campaigns')}`}>
                         {t('dashboard_layout.nav.campaigns')}
+                    </Link>
+                    <Link to="/app/reservations" onClick={closeSidebar} className={`block py-1.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/reservations')}`}>
+                         {t('dashboard_layout.nav.reservations', 'Reservations')}
                     </Link>
                     {hasAnyRole(['super_admin', 'admin', 'president']) && (
                         <>
-                            <div className="pt-4 pb-2">
-                                <div className="h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-neutral-600 to-transparent mb-3 opacity-50"></div>
+                            <div className="pt-2 pb-1">
+                                <div className="h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-neutral-600 to-transparent mb-2 opacity-50"></div>
                                 <span className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider italic">{t('dashboard_layout.nav.administration', 'Administration')}</span>
                             </div>
-                            <Link to="/app/properties" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/properties')}`}>
+                            <Link to="/app/properties" onClick={closeSidebar} className={`block py-1.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/properties')}`}>
                                 {t('dashboard_layout.nav.properties')}
                             </Link>
 
-                            <Link to="/app/users" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/users')}`}>
+                            <Link to="/app/users" onClick={closeSidebar} className={`block py-1.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/users')}`}>
                                 {t('dashboard_layout.nav.users')}
                             </Link>
 
-                            <Link to="/app/community" onClick={closeSidebar} className={`block py-2.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/community')}`}>
+                            <Link to="/app/community" onClick={closeSidebar} className={`block py-1.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/community')}`}>
                                 {t('dashboard_layout.nav.community_settings', 'Community Settings')}
                             </Link>
                         </>

@@ -218,7 +218,7 @@ exports.getPublicInfo = async (req, res) => {
     if (!communityId) return res.status(400).json({ error: 'Community ID header missing' });
 
     try {
-        console.log(`[PublicInfo] Request for CommunityID: ${communityId}`);
+
 
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
         if (authError || !user) throw new Error('Unauthorized');
@@ -300,7 +300,7 @@ exports.getPublicInfo = async (req, res) => {
 
         const leaders = Array.from(leadersMap.values());
 
-        console.log(`[PublicInfo] Returned ${leaders.length} leaders for ${community.name}`);
+
 
         res.json({
             community,

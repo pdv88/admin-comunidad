@@ -128,7 +128,9 @@ export const AuthProvider = ({ children }) => {
         if (response.status === 401) {
             console.warn("Session expired (401). Redirecting to login.");
             localStorage.removeItem('token');
+            localStorage.removeItem('active_community_id');
             setUser(null);
+            window.location.href = '/login';
         }
         return response;
       } catch (error) {
