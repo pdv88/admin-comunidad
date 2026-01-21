@@ -1,4 +1,13 @@
 {
+    "days": {
+        "sun": "Dom",
+        "mon": "Lun",
+        "tue": "Mar",
+        "wed": "Mié",
+        "thu": "Jue",
+        "fri": "Vie",
+        "sat": "Sáb"
+    },
     "header": {
         "brand": "VIDEAPP",
         "home": "Inicio",
@@ -568,7 +577,9 @@
         "export_excel": "Exportar a Excel",
         "optional": "opcional",
         "copy": "Copiar",
-        "copied": "Copiado"
+        "copied": "Copiado",
+        "days": "días",
+        "no_description": "Sin descripción."
     },
     "payments": {
         "title": "Pagos y Aportaciones",
@@ -722,7 +733,39 @@
         "no_bank_details": "No hay datos bancarios disponibles.",
         "leaders_title": "Líderes y Contacto de la Comunidad",
         "no_leaders": "No hay información de contacto disponible.",
-        "no_address": "Dirección no proporcionada"
+        "no_address": "Dirección no proporcionada",
+        "amenities": "Amenidades y Horarios",
+        "days": "Días",
+        "hours": "Horario",
+        "every_day": "Todos los días",
+        "all_week": "Toda la semana",
+        "24_hours": "24 Horas",
+        "daily_reservation": "Reserva Diaria",
+        "no_amenities": "No hay amenidades registradas.",
+        "max_hours_badge": "Límite: {{count}}h",
+        "max_days_monthly_badge": "Límite: {{count}} días/mes",
+        "limit_hours_daily": "Reservas limitadas a {{count}} horas al día",
+        "limit_days_monthly": "Reservas limitadas a {{count}} días al mes"
+    },
+    "reservations": {
+        "title": "Reservas",
+        "new_booking": "+ Nueva Reserva",
+        "pending_approvals": "Aprobaciones Pendientes",
+        "upcoming": "Próximas Reservas",
+        "request_booking": "Solicitar Reserva",
+        "reserve_for_resident": "Reservar para Residente (Opcional)",
+        "admin_note": "Si se selecciona, los límites aplicarán a este usuario.",
+        "amenity": "Amenidad",
+        "select_amenity": "Seleccionar Amenidad...",
+        "date": "Fecha",
+        "select_date": "Seleccionar Fecha",
+        "already_booked": "Esta fecha ya está reservada.",
+        "full_day": "Reserva de Día Completo",
+        "available_slots": "Horarios Disponibles",
+        "closed": "Cerrado",
+        "holiday_closed": "Cerrado por Festivo/Mantenimiento",
+        "no_slots": "No hay horarios disponibles",
+        "request": "Solicitar"
     },
     "maintenance": {
         "admin_title": "Gestión de Cuotas de Mantenimiento",

@@ -75,14 +75,7 @@ const BilledVsCollectedChart = ({ className }) => {
     return () => abortController.abort();
   }, [activeCommunity]);
 
-  if (loading) {
-    return (
-      <div className={`flex flex-col items-center justify-center p-6 h-96 ${className}`}>
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-        <p className="mt-4 text-gray-500 text-sm">Loading chart data...</p>
-      </div>
-    );
-  }
+
 
   // Custom Tooltip for Glassmorphism feel
   const CustomTooltip = ({ active, payload, label }) => {
@@ -120,7 +113,22 @@ const BilledVsCollectedChart = ({ className }) => {
                 </div>
             </div>
 
-            {data.length === 0 ? (
+            {loading ? (
+                <div className="flex-1 w-full animate-pulse relative overflow-hidden">
+                    <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 400 150">
+                        {/* Wave 1 (Back) */}
+                        <path 
+                            d="M0,150 L0,60 C100,100 200,40 400,90 L400,150 Z" 
+                            className="fill-gray-200 dark:fill-neutral-800"
+                        />
+                        {/* Wave 2 (Front) */}
+                        <path 
+                            d="M0,150 L0,100 C150,130 250,70 400,120 L400,150 Z" 
+                            className="fill-gray-300 dark:fill-neutral-700" 
+                        />
+                    </svg>
+                </div>
+            ) : data.length === 0 ? (
                  <div className="flex-1 w-full flex items-center justify-center text-gray-400 dark:text-neutral-500">
                     <p>{t('dashboard.graphs.no_data', 'No financial data available')}</p>
                  </div>

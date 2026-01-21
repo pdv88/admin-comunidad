@@ -1,777 +1,820 @@
 {
-    "header": {
-        "brand": "VIDEAPP",
-        "home": "Home",
-        "features": "Features",
-        "pricing": "Pricing",
-        "dashboard": "Dashboard",
-        "login": "Log In",
-        "register": "Register",
-        "notifications": "Notifications",
-        "apps": "Apps",
-        "profile_menu": "Profile Menu",
-        "search": "Search",
-        "close_sidebar": "Close Sidebar"
-    },
-    "footer": {
-        "legal": "Legal",
-        "privacy": "Privacy Policy",
-        "terms": "Terms & Conditions",
-        "contact": "Contact",
-        "socials": "Follow Us",
-        "rights_reserved": "All rights reserved."
-    },
-    "hero": {
-        "title": "Smart Management for Your Community",
-        "subtitle": "Simplify the administration of condominiums and buildings. Control payments, residents, and common areas in a single platform.",
-        "cta_primary": "Get Started Free",
-        "cta_secondary": "Contact Sales",
-        "reviews": "4.8 / 5 - from 5k reviews",
-        "badge": "✨ Smart Community Management",
-        "metrics": {
-            "satisfaction": "Satisfaction",
-            "availability": "Availability",
-            "votes_cast": "Votes Cast",
-            "secure": "Secure",
-            "payments": "Payments"
-        }
-    },
-    "features": {
-        "main_title": "Everything you need to manage your community",
-        "main_desc": "Experience a platform designed to bring neighbors together and make administrative tasks effortless.",
-        "benefit1": "Reduce delinquency with automated reminders",
-        "benefit2": "Increase participation in community decisions",
-        "benefit3": "Transparent and auditable record keeping",
-        "voting": {
-            "title": "Secure Voting",
-            "desc": "Make decisions democratically with secure, transparent digital voting."
-        },
-        "payments": {
-            "title": "Transparent Finances",
-            "desc": "Track monthly fees, campaign contributions, and community expenses."
-        },
-        "notices": {
-            "title": "Instant Notices",
-            "desc": "Stay updated with real-time alerts for meetings, repairs, and news."
-        },
-        "reports": {
-            "title": "Easy Reporting",
-            "desc": "Report maintenance issues directly from your phone and track their status."
-        }
-    },
-    "faqs": {
-        "title": "Frequently Asked Questions",
-        "subtitle": "Answers to the most common questions about the platform.",
-        "q1": "Can I cancel at any time?",
-        "a1": "Yes, you can cancel your subscription at any time without questions.",
-        "q2": "How do I manage neighbor access?",
-        "a2": "From the admin panel, you can invite neighbors via email and assign specific roles.",
-        "q3": "How do payments work?",
-        "a3": "We accept credit cards and bank transfers. Billing can be monthly or annual with a discount.",
-        "q4": "Is the platform secure?",
-        "a4": "Protecting your data is our priority. We use SSL encryption and secure servers to guarantee privacy."
-    },
-    "pricing": {
-        "title": "Pricing",
-        "subtitle": "Choose the plan that best fits your community needs.",
-        "monthly": "Monthly",
-        "annual": "Annual",
-        "save": "Save 10%",
-        "basic": {
-            "title": "Basic",
-            "price": "Free",
-            "desc": "To get started organizing",
-            "btn": "Sign up"
-        },
-        "pro": {
-            "badge": "Most Popular",
-            "title": "Pro",
-            "desc": "For active communities",
-            "btn": "Buy Pro",
-            "price_monthly": "€39",
-            "price_annual": "€29"
-        },
-        "enterprise": {
-            "title": "Enterprise",
-            "desc": "For property managers",
-            "btn": "Contact us",
-            "price_monthly": "€109",
-            "price_annual": "€89"
-        },
-        "features": {
-            "neighbors": "neighbors",
-            "docs": "Basic document management",
-            "email_support": "Email support",
-            "unlimited": "Unlimited neighbors",
-            "incidents": "Incident management",
-            "voting": "Online voting",
-            "multi": "Multi-community",
-            "api": "API Integration",
-            "priority": "24/7 Priority support"
-        },
-        "plan_features": {
-            "units_20": "Up to 20 Units",
-            "basic_reports": "Basic Reports",
-            "community_board": "Community Board",
-            "units_100": "Up to 100 Units",
-            "voting": "Voting & Polling",
-            "payment_gateway": "Payment Gateway",
-            "priority_support": "Priority Support",
-            "unlimited_units": "Unlimited Units",
-            "multi_community": "Multi-Community",
-            "dedicated_manager": "Dedicated Manager"
-        },
-        "most_popular": "Most Popular"
-    },
-    "testimonials": {
-        "title": "Efficiency and Speed",
-        "desc": "We offer a trial account that sets up in seconds. Our goal is to make management easier for you as soon as possible.",
-        "quote": "Amazing people to work with. A very fast and professional partner.",
-        "role": "Director Payments & Risk | Airbnb",
-        "stats": {
-            "users": "users",
-            "users_desc": "from small communities to large companies",
-            "efficiency": "increase in management efficiency",
-            "satisfaction": "increase in neighbor satisfaction",
-            "faster": "faster than other management methods",
-            "active_users": "Active Users",
-            "uptime": "Uptime",
-            "processed": "Processed",
-            "communities": "Communities"
-        },
-        "roles": {
-            "president": "Community President",
-            "resident": "Resident"
-        },
-        "t1": {
-            "quote": "Since switching to this platform, our community meetings are shorter and more productive. The voting system is a game changer."
-        },
-        "t2": {
-            "quote": "I love being able to pay my fees from my phone. No more bank transfers or lost receipts!"
-        },
-        "t3": {
-            "quote": "Reporting maintenance issues is so easy now. I take a photo, upload it, and it gets fixed."
-        }
-    },
-    "auth": {
-        "signin_title": "Sign in",
-        "signup_title": "Sign up",
-        "no_account": "Don't have an account yet?",
-        "has_account": "Already have an account?",
-        "signup_here": "Sign up here",
-        "signin_here": "Sign in here",
-        "email": "Email address",
-        "password": "Password",
-        "forgot_password": "Forgot password?",
-        "fullname": "Full Name",
-        "confirm_password": "Confirm Password",
-        "password_mismatch": "Passwords do not match",
-        "registration_success": "Registration successful! Please check your email to verify account.",
-        "signin_btn": "Sign in",
-        "signing_in": "Signing in...",
-        "signup_btn": "Sign up",
-        "forgot_pass_title": "Forgot password?",
-        "remember_pass": "Remember your password?",
-        "enter_email_placeholder": "Enter your email",
-        "reset_pass_btn": "Reset Password",
-        "sending": "Sending...",
-        "check_email": "Check your email for the password reset link.",
-        "community_name": "Community Name",
-        "community_name_placeholder": "e.g. My Community",
-        "community_address": "Address",
-        "community_address_placeholder": "e.g. 123 Main St"
-    },
-    "dashboard": {
-        "total_users": "Total Users",
-        "total_revenue": "Total Revenue",
-        "welcome": "Welcome",
-        "role": "Role",
-        "unit": "Unit",
-        "admin": {
-            "title": "Admin Overview",
-            "revenue": "Revenue",
-            "expenses": "Expenses",
-            "delinquency": "Delinquency",
-            "monthly": "This month",
-            "active_cases": "active cases",
-            "tickets": "Open Tickets",
-            "urgent": "urgent",
-            "pending_actions": "Pending Actions",
-            "recent_activity": "Recent Activity"
-        },
-        "president": {
-            "title": "President's Overview",
-            "balance": "Consolidated Balance",
-            "next_meeting": "Next Meeting",
-            "participation": "Voting Participation",
-            "approvals": "Pending Approvals"
-        },
-        "vocal": {
-            "title": "Vocal's Overview",
-            "active_polls": "Active Polls",
-            "recent_minutes": "Recent Minutes",
-            "agreements": "Agreements Status",
-            "observations": "Observations & Comments"
-        },
-        "resident": {
-            "title": "My Home",
-            "balance": "My Balance",
-            "up_to_date": "Up to date",
-            "next_payment": "Next Payment",
-            "due_date": "Due date",
-            "my_incidents": "My Incidents",
-            "in_progress": "In progress",
-            "recent_notices": "Community Notices",
-            "quick_links": "Quick Links",
-            "report_issue": "Report Issue",
-            "vote": "Vote",
-            "reserve": "Reserve Area",
-            "directory": "Directory"
-        },
-        "monthly_fee": "Monthly Fee",
-        "pay": "Pay",
-        "visit": "Visit",
-        "report_btn": "Report",
-        "recent_reports": "Recent Reports",
-        "my_reports": "My Reports",
-        "graphs": {
-            "financial_overview": "Financial Overview",
-            "billed_vs_collected": "Billed vs Collected (Last 6 Months)",
-            "no_data": "No financial data available",
-            "billed": "Billed",
-            "collected": "Collected"
-        }
-    },
-    "dashboard_layout": {
-        "brand": "Admin Community",
-        "nav": {
-            "dashboard": "Dashboard",
-            "notices": "Notices",
-            "reports": "Reports",
-            "voting": "Voting",
-            "properties": "Properties",
-            "payments": "Payments",
-            "maintenance": "Community Fees",
-            "campaigns": "Campaigns",
-            "users": "Users",
-            "administration": "Administration",
-            "community_settings": "Community Settings",
-            "community_info": "Community Info"
-        },
-        "sign_out": "Sign out"
-    },
-    "notices": {
-        "title": "Community Notices",
-        "post_notice": "Post Notice",
-        "loading": "Loading notices...",
-        "no_notices": "No notices at the moment.",
-        "posted_on": "Posted on",
-        "subtitle": "Manage community announcements",
-        "global_notice": "Global Notice",
-        "block_notice": "Block Notice",
-        "form": {
-            "title": "Title",
-            "priority": "Priority",
-            "target": "Target Audience",
-            "content": "Content"
-        },
-        "priority": {
-            "normal": "Normal",
-            "high": "High",
-            "urgent": "Urgent"
-        },
-        "target": {
-            "global": "Entire Community"
-        },
-        "create_success": "Notice posted successfully!",
-        "delete_success": "Notice deleted successfully!"
-    },
-    "properties": {
-        "title": "Property Structure",
-        "loading": "Loading properties...",
-        "add_block": "Add Building/Street",
-        "add_block_btn": "Add Block",
-        "block_placeholder": "Name (e.g. Tower A)",
-        "add_unit": "Add Unit",
-        "add_unit_btn": "Add Unit",
-        "select_block": "Select Block",
-        "select_blocks": "Select Blocks",
-        "unit_placeholder": "Unit Number (e.g. 101)",
-        "unit_type": {
-            "apartment": "Apartment",
-            "house": "House",
-            "parking": "Parking",
-            "storage": "Storage"
-        },
-        "current_structure": "Current Structure",
-        "representative": "Block Vocal",
-        "none": "None",
-        "no_units": "No units in this block yet.",
-        "delete_block": "Delete Block",
-        "delete_unit": "Delete Unit",
-        "confirm_delete_block": "Are you sure you want to delete this block? This action cannot be undone.",
-        "confirm_delete_unit": "Are you sure you want to delete this unit? This action cannot be undone.",
-        "unoccupied": "Unoccupied",
-        "edit_tenant_info": "Edit Tenant Info",
-        "tenant_name": "Tenant Name",
-        "tenant_email": "Tenant Email",
-        "tenant_phone": "Tenant Phone",
-        "tenant": "Tenant",
-        "owner": "Owner",
-        "block_created": "Block created successfully",
-        "unit_created": "Unit created successfully",
-        "update_success": "Tenant info updated",
-        "delete_success": "Deleted successfully"
-    },
-    "reports": {
-        "title": "Issues & Maintenance",
-        "report_issue": "Report Issue",
-        "cancel": "Cancel",
-        "loading": "Loading...",
-        "categories": {
-            "maintenance": "Maintenance",
-            "security": "Security",
-            "other": "Other",
-            "cleanliness": "Cleanliness"
-        },
-        "tabs": {
-            "my": "My Reports",
-            "block": "Block Reports",
-            "all": "All Reports"
-        },
-        "status": {
-            "pending": "Pending",
-            "in_progress": "In Progress",
-            "resolved": "Resolved",
-            "rejected": "Rejected"
-        },
-        "actions": {
-            "start": "Start Progress",
-            "resolve": "Mark Resolved",
-            "reject": "Reject"
-        },
-        "no_reports": "No reports found.",
-        "form": {
-            "title": "Title",
-            "issue_title": "Issue Title",
-            "category": "Category",
-            "unit": "Unit",
-            "desc": "Description",
-            "placeholder_title": "e.g. Broken Light",
-            "placeholder_desc": "Describe the issue...",
-            "submit": "Submit Report"
-        },
-        "create_success": "Report created successfully",
-        "delete_success": "Report deleted successfully",
-        "status_updated": "Status updated",
-        "modal": {
-            "details": "Details",
-            "notes": "Notes & Activity",
-            "images": "Images",
-            "report_id": "Report ID",
-            "created_at": "Created",
-            "status": "Status",
-            "no_notes": "No notes yet.",
-            "type_note": "Type a note...",
-            "send_note": "Send note",
-            "gallery": "Image Gallery",
-            "gallery_desc": "Upload photos of the issue.",
-            "primary": "Primary",
-            "no_images": "No images uploaded yet.",
-            "max_images": "Max 5 images reached"
-        },
-        "export_pdf": "Download PDF",
-        "pdf_exported": "PDF downloaded successfully",
-        "reporter": "Reported by",
-        "date": "Date",
-        "scope_label": "Scope",
-        "status_label": "Status",
-        "category_label": "Category",
-        "details": "Report Details",
-        "description": "Description",
-        "notes": "Notes & Comments",
-        "images": "Attached Images",
-        "images_note": "Images are available in the online report.",
-        "generated_on": "Generated on"
-    },
+  "days": {
+    "sun": "Sun",
+    "mon": "Mon",
+    "tue": "Tue",
+    "wed": "Wed",
+    "thu": "Thu",
+    "fri": "Fri",
+    "sat": "Sat"
+  },
+  "header": {
+    "brand": "VIDEAPP",
+    "home": "Home",
+    "features": "Features",
+    "pricing": "Pricing",
+    "dashboard": "Dashboard",
+    "login": "Log In",
+    "register": "Register",
+    "notifications": "Notifications",
+    "apps": "Apps",
+    "profile_menu": "Profile Menu",
+    "search": "Search",
+    "close_sidebar": "Close Sidebar"
+  },
+  "footer": {
+    "legal": "Legal",
+    "privacy": "Privacy Policy",
+    "terms": "Terms & Conditions",
+    "contact": "Contact",
+    "socials": "Follow Us",
+    "rights_reserved": "All rights reserved."
+  },
+  "hero": {
+    "title": "Smart Management for Your Community",
+    "subtitle": "Simplify the administration of condominiums and buildings. Control payments, residents, and common areas in a single platform.",
+    "cta_primary": "Get Started Free",
+    "cta_secondary": "Contact Sales",
+    "reviews": "4.8 / 5 - from 5k reviews",
+    "badge": "✨ Smart Community Management",
+    "metrics": {
+      "satisfaction": "Satisfaction",
+      "availability": "Availability",
+      "votes_cast": "Votes Cast",
+      "secure": "Secure",
+      "payments": "Payments"
+    }
+  },
+  "features": {
+    "main_title": "Everything you need to manage your community",
+    "main_desc": "Experience a platform designed to bring neighbors together and make administrative tasks effortless.",
+    "benefit1": "Reduce delinquency with automated reminders",
+    "benefit2": "Increase participation in community decisions",
+    "benefit3": "Transparent and auditable record keeping",
     "voting": {
-        "title": "Active Polls",
-        "create_poll": "Create Poll",
-        "loading": "Loading polls...",
-        "ends": "Ends:",
-        "votes": "votes",
-        "vote_now": "Vote Now",
-        "no_active_polls": "No active polls",
-        "check_later": "Check back later for new votes",
-        "your_vote": "You",
-        "active_polls": "Active Polls",
-        "past_polls": "Past Polls",
-        "total_votes": "Total Votes",
-        "edit_poll": "Edit Poll",
-        "poll_title": "Poll Title",
-        "poll_desc": "Description",
-        "options": "Options",
-        "add_option": "Add Option",
-        "edit_warning": "Options cannot be edited to preserve vote integrity.",
-        "deadline": "Deadline",
-        "target_audience": "Target Audience",
-        "delete_confirm_title": "Delete Poll?",
-        "confirm_delete": "Are you sure you want to delete this poll? This action cannot be undone.",
-        "no_polls": "No polls found."
-    },
-    "user_management": {
-        "title": "User Management",
-        "loading": "Loading users...",
-        "invite": {
-            "title": "Invite New User",
-            "email": "Email Address",
-            "fullname": "Full Name",
-            "role": "Role",
-            "assign_unit": "Assign Unit (Optional)",
-            "send": "Send Invitation"
-        },
-        "table": {
-            "name": "Name",
-            "role": "Role",
-            "unit": "Unit",
-            "actions": "Actions"
-        },
-        "roles": {
-            "neighbor": "Neighbor",
-            "president": "President",
-            "secretary": "Secretary",
-            "vice_president": "Vice President",
-            "admin": "Administrator",
-            "treasurer": "Treasurer",
-            "maintenance": "Maintenance",
-            "vocal": "Block Representative"
-        },
-        "edit": {
-            "title": "Edit User",
-            "cancel": "Cancel",
-            "save": "Save Changes"
-        },
-        "messages": {
-            "updating": "Updating user...",
-            "update_success": "User updated successfully!",
-            "update_error": "Error updating user",
-            "sending_invite": "Sending invitation...",
-            "invite_success": "Invitation sent successfully!",
-            "invite_error": "Error sending invitation",
-            "error_prefix": "Error: "
-        }
-    },
-    "update_password": {
-        "title": "Set New Password",
-        "placeholder": "New Password",
-        "btn": "Set Password",
-        "updating": "Updating...",
-        "success": "Password updated successfully. Redirecting...",
-        "error": "Failed to update password"
-    },
-    "email_verification": {
-        "title": "Email Verification",
-        "error_title": "Error verifying email",
-        "success_title": "Email verified successfully",
-        "invalid_token": "Invalid Token",
-        "no_token": "No Token Found",
-        "login_btn": "Login"
-    },
-    "settings": {
-        "title": "Account Settings",
-        "subtitle": "Manage your account profile and preferences.",
-        "fullname": "Full Name",
-        "email": "Email Address",
-        "role": "Role",
-        "save": "Save Changes",
-        "update_success": "Profile updated successfully.",
-        "subscription": {
-            "title": "Subscription & Payment",
-            "plan": "Current Plan",
-            "active": "Active",
-            "next_billing": "Next billing date"
-        },
-        "preferences": {
-            "title": "Preferences",
-            "language": "Language",
-            "select": "Select Language"
-        }
-    },
-    "common": {
-        "review": "Review",
-        "approve": "Approve",
-        "reject": "Reject",
-        "view_all": "View All",
-        "download": "Download PDF",
-        "add_comment": "Add Observation",
-        "view": "View",
-        "loading": "Loading...",
-        "delete": "Delete",
-        "cancel": "Cancel",
-        "close": "Close",
-        "confirm": "Confirm",
-        "confirm_delete_report": "Are you sure you want to delete this report? This cannot be undone.",
-        "error_occurred": "An error occurred",
-        "edit": "Edit",
-        "save": "Save",
-        "voted": "Voted",
-        "view_results": "View Results",
-        "confirm_delete_notice": "Are you sure you want to delete this notice?",
-        "all_blocks": "All Blocks",
-        "unauthorized": "Unauthorized access",
-        "learn_more": "Learn more",
-        "filter_block": "Filter Block...",
-        "search_unit": "Search Unit...",
-        "page": "Page",
-        "of": "of",
-        "total": "total",
-        "prev": "Previous",
-        "next": "Next",
-        "show_filters": "Filter Data",
-        "hide_filters": "Hide Filters",
-        "export": "Export",
-        "export_excel": "Export to Excel",
-        "optional": "optional",
-        "copy": "Copy",
-        "copied": "Copied"
+      "title": "Secure Voting",
+      "desc": "Make decisions democratically with secure, transparent digital voting."
     },
     "payments": {
-        "title": "Payments & Contributions",
-        "success": "Payment registered successfully",
-        "error": "Error registering payment",
-        "target_all": "All Community",
-        "target_blocks": "Specific Blocks",
-        "new_payment": "New Payment",
-        "upload_title": "Register New Payment",
-        "tabs": {
-            "maintenance": "Monthly Fees",
-            "campaigns": "Campaigns"
-        },
-        "campaign": {
-            "funded": "Funded"
-        },
-        "upload": {
-            "title": "Register Payment",
-            "date": "Payment Date",
-            "amount": "Amount",
-            "notes": "Notes (Optional)",
-            "receipt": "Receipt (Image)",
-            "submit": "Submit Payment",
-            "user_select": "Select Resident (Admin)",
-            "myself": "Myself"
-        },
-        "list": {
-            "title": "Payment History",
-            "title_admin": "Review Payments",
-            "title_community": "Community Payments (By Block)",
-            "my_title": "My Payment History",
-            "empty": "No payments found.",
-            "all_maintenance": "Community Maintenance Payments",
-            "all_campaigns": "Community Campaign Contributions",
-            "my_maintenance": "My Monthly Fees",
-            "my_campaigns": "My Campaign Contributions"
-        },
-        "table": {
-            "date": "Date",
-            "user": "Resident",
-            "unit": "Block / Unit",
-            "amount": "Amount",
-            "status": "Status",
-            "proof": "Receipt",
-            "actions": "Actions"
-        },
-        "status": {
-            "pending": "Pending",
-            "confirmed": "Confirmed",
-            "rejected": "Rejected"
-        },
-        "campaigns": {
-            "title": "Funding Campaigns",
-            "active_campaigns": "Campaigns",
-            "create_title": "Create New Campaign",
-            "name": "Campaign Name",
-            "goal": "Goal Amount",
-            "description": "Description",
-            "deadline": "Deadline",
-            "create_btn": "Create Campaign",
-            "success": "Campaign created successfully!",
-            "error": "Error creating campaign",
-            "no_desc": "No description provided",
-            "collected": "Collected",
-            "empty": "No active campaigns found.",
-            "no_active_campaigns": "No active campaigns",
-            "check_later": "New campaigns will appear here"
-        }
+      "title": "Transparent Finances",
+      "desc": "Track monthly fees, campaign contributions, and community expenses."
+    },
+    "notices": {
+      "title": "Instant Notices",
+      "desc": "Stay updated with real-time alerts for meetings, repairs, and news."
+    },
+    "reports": {
+      "title": "Easy Reporting",
+      "desc": "Report maintenance issues directly from your phone and track their status."
+    }
+  },
+  "faqs": {
+    "title": "Frequently Asked Questions",
+    "subtitle": "Answers to the most common questions about the platform.",
+    "q1": "Can I cancel at any time?",
+    "a1": "Yes, you can cancel your subscription at any time without questions.",
+    "q2": "How do I manage neighbor access?",
+    "a2": "From the admin panel, you can invite neighbors via email and assign specific roles.",
+    "q3": "How do payments work?",
+    "a3": "We accept credit cards and bank transfers. Billing can be monthly or annual with a discount.",
+    "q4": "Is the platform secure?",
+    "a4": "Protecting your data is our priority. We use SSL encryption and secure servers to guarantee privacy."
+  },
+  "pricing": {
+    "title": "Pricing",
+    "subtitle": "Choose the plan that best fits your community needs.",
+    "monthly": "Monthly",
+    "annual": "Annual",
+    "save": "Save 10%",
+    "basic": {
+      "title": "Basic",
+      "price": "Free",
+      "desc": "To get started organizing",
+      "btn": "Sign up"
+    },
+    "pro": {
+      "badge": "Most Popular",
+      "title": "Pro",
+      "desc": "For active communities",
+      "btn": "Buy Pro",
+      "price_monthly": "€39",
+      "price_annual": "€29"
+    },
+    "enterprise": {
+      "title": "Enterprise",
+      "desc": "For property managers",
+      "btn": "Contact us",
+      "price_monthly": "€109",
+      "price_annual": "€89"
+    },
+    "features": {
+      "neighbors": "neighbors",
+      "docs": "Basic document management",
+      "email_support": "Email support",
+      "unlimited": "Unlimited neighbors",
+      "incidents": "Incident management",
+      "voting": "Online voting",
+      "multi": "Multi-community",
+      "api": "API Integration",
+      "priority": "24/7 Priority support"
+    },
+    "plan_features": {
+      "units_20": "Up to 20 Units",
+      "basic_reports": "Basic Reports",
+      "community_board": "Community Board",
+      "units_100": "Up to 100 Units",
+      "voting": "Voting & Polling",
+      "payment_gateway": "Payment Gateway",
+      "priority_support": "Priority Support",
+      "unlimited_units": "Unlimited Units",
+      "multi_community": "Multi-Community",
+      "dedicated_manager": "Dedicated Manager"
+    },
+    "most_popular": "Most Popular"
+  },
+  "testimonials": {
+    "title": "Efficiency and Speed",
+    "desc": "We offer a trial account that sets up in seconds. Our goal is to make management easier for you as soon as possible.",
+    "quote": "Amazing people to work with. A very fast and professional partner.",
+    "role": "Director Payments & Risk | Airbnb",
+    "stats": {
+      "users": "users",
+      "users_desc": "from small communities to large companies",
+      "efficiency": "increase in management efficiency",
+      "satisfaction": "increase in neighbor satisfaction",
+      "faster": "faster than other management methods",
+      "active_users": "Active Users",
+      "uptime": "Uptime",
+      "processed": "Processed",
+      "communities": "Communities"
+    },
+    "roles": {
+      "president": "Community President",
+      "resident": "Resident"
+    },
+    "t1": {
+      "quote": "Since switching to this platform, our community meetings are shorter and more productive. The voting system is a game changer."
+    },
+    "t2": {
+      "quote": "I love being able to pay my fees from my phone. No more bank transfers or lost receipts!"
+    },
+    "t3": {
+      "quote": "Reporting maintenance issues is so easy now. I take a photo, upload it, and it gets fixed."
+    }
+  },
+  "auth": {
+    "signin_title": "Sign in",
+    "signup_title": "Sign up",
+    "no_account": "Don't have an account yet?",
+    "has_account": "Already have an account?",
+    "signup_here": "Sign up here",
+    "signin_here": "Sign in here",
+    "email": "Email address",
+    "password": "Password",
+    "forgot_password": "Forgot password?",
+    "fullname": "Full Name",
+    "confirm_password": "Confirm Password",
+    "password_mismatch": "Passwords do not match",
+    "registration_success": "Registration successful! Please check your email to verify account.",
+    "signin_btn": "Sign in",
+    "signing_in": "Signing in...",
+    "signup_btn": "Sign up",
+    "forgot_pass_title": "Forgot password?",
+    "remember_pass": "Remember your password?",
+    "enter_email_placeholder": "Enter your email",
+    "reset_pass_btn": "Reset Password",
+    "sending": "Sending...",
+    "check_email": "Check your email for the password reset link.",
+    "community_name": "Community Name",
+    "community_name_placeholder": "e.g. My Community",
+    "community_address": "Address",
+    "community_address_placeholder": "e.g. 123 Main St"
+  },
+  "dashboard": {
+    "total_users": "Total Users",
+    "total_revenue": "Total Revenue",
+    "welcome": "Welcome",
+    "role": "Role",
+    "unit": "Unit",
+    "admin": {
+      "title": "Admin Overview",
+      "revenue": "Revenue",
+      "expenses": "Expenses",
+      "delinquency": "Delinquency",
+      "monthly": "This month",
+      "active_cases": "active cases",
+      "tickets": "Open Tickets",
+      "urgent": "urgent",
+      "pending_actions": "Pending Actions",
+      "recent_activity": "Recent Activity"
+    },
+    "president": {
+      "title": "President's Overview",
+      "balance": "Consolidated Balance",
+      "next_meeting": "Next Meeting",
+      "participation": "Voting Participation",
+      "approvals": "Pending Approvals"
+    },
+    "vocal": {
+      "title": "Vocal's Overview",
+      "active_polls": "Active Polls",
+      "recent_minutes": "Recent Minutes",
+      "agreements": "Agreements Status",
+      "observations": "Observations & Comments"
+    },
+    "resident": {
+      "title": "My Home",
+      "balance": "My Balance",
+      "up_to_date": "Up to date",
+      "next_payment": "Next Payment",
+      "due_date": "Due date",
+      "my_incidents": "My Incidents",
+      "in_progress": "In progress",
+      "recent_notices": "Community Notices",
+      "quick_links": "Quick Links",
+      "report_issue": "Report Issue",
+      "vote": "Vote",
+      "reserve": "Reserve Area",
+      "directory": "Directory"
+    },
+    "monthly_fee": "Monthly Fee",
+    "pay": "Pay",
+    "visit": "Visit",
+    "report_btn": "Report",
+    "recent_reports": "Recent Reports",
+    "my_reports": "My Reports",
+    "graphs": {
+      "financial_overview": "Financial Overview",
+      "billed_vs_collected": "Billed vs Collected (Last 6 Months)",
+      "no_data": "No financial data available",
+      "billed": "Billed",
+      "collected": "Collected"
+    }
+  },
+  "dashboard_layout": {
+    "brand": "Admin Community",
+    "nav": {
+      "dashboard": "Dashboard",
+      "notices": "Notices",
+      "reports": "Reports",
+      "voting": "Voting",
+      "properties": "Properties",
+      "payments": "Payments",
+      "maintenance": "Community Fees",
+      "campaigns": "Campaigns",
+      "users": "Users",
+      "administration": "Administration",
+      "community_settings": "Community Settings",
+      "community_info": "Community Info"
+    },
+    "sign_out": "Sign out"
+  },
+  "notices": {
+    "title": "Community Notices",
+    "post_notice": "Post Notice",
+    "loading": "Loading notices...",
+    "no_notices": "No notices at the moment.",
+    "posted_on": "Posted on",
+    "subtitle": "Manage community announcements",
+    "global_notice": "Global Notice",
+    "block_notice": "Block Notice",
+    "form": {
+      "title": "Title",
+      "priority": "Priority",
+      "target": "Target Audience",
+      "content": "Content"
+    },
+    "priority": {
+      "normal": "Normal",
+      "high": "High",
+      "urgent": "Urgent"
+    },
+    "target": {
+      "global": "Entire Community"
+    },
+    "create_success": "Notice posted successfully!",
+    "delete_success": "Notice deleted successfully!"
+  },
+  "properties": {
+    "title": "Property Structure",
+    "loading": "Loading properties...",
+    "add_block": "Add Building/Street",
+    "add_block_btn": "Add Block",
+    "block_placeholder": "Name (e.g. Tower A)",
+    "add_unit": "Add Unit",
+    "add_unit_btn": "Add Unit",
+    "select_block": "Select Block",
+    "select_blocks": "Select Blocks",
+    "unit_placeholder": "Unit Number (e.g. 101)",
+    "unit_type": {
+      "apartment": "Apartment",
+      "house": "House",
+      "parking": "Parking",
+      "storage": "Storage"
+    },
+    "current_structure": "Current Structure",
+    "representative": "Block Vocal",
+    "none": "None",
+    "no_units": "No units in this block yet.",
+    "delete_block": "Delete Block",
+    "delete_unit": "Delete Unit",
+    "confirm_delete_block": "Are you sure you want to delete this block? This action cannot be undone.",
+    "confirm_delete_unit": "Are you sure you want to delete this unit? This action cannot be undone.",
+    "unoccupied": "Unoccupied",
+    "edit_tenant_info": "Edit Tenant Info",
+    "tenant_name": "Tenant Name",
+    "tenant_email": "Tenant Email",
+    "tenant_phone": "Tenant Phone",
+    "tenant": "Tenant",
+    "owner": "Owner",
+    "block_created": "Block created successfully",
+    "unit_created": "Unit created successfully",
+    "update_success": "Tenant info updated",
+    "delete_success": "Deleted successfully"
+  },
+  "reports": {
+    "title": "Issues & Maintenance",
+    "report_issue": "Report Issue",
+    "cancel": "Cancel",
+    "loading": "Loading...",
+    "categories": {
+      "maintenance": "Maintenance",
+      "security": "Security",
+      "other": "Other",
+      "cleanliness": "Cleanliness"
+    },
+    "tabs": {
+      "my": "My Reports",
+      "block": "Block Reports",
+      "all": "All Reports"
+    },
+    "status": {
+      "pending": "Pending",
+      "in_progress": "In Progress",
+      "resolved": "Resolved",
+      "rejected": "Rejected"
+    },
+    "actions": {
+      "start": "Start Progress",
+      "resolve": "Mark Resolved",
+      "reject": "Reject"
+    },
+    "no_reports": "No reports found.",
+    "form": {
+      "title": "Title",
+      "issue_title": "Issue Title",
+      "category": "Category",
+      "unit": "Unit",
+      "desc": "Description",
+      "placeholder_title": "e.g. Broken Light",
+      "placeholder_desc": "Describe the issue...",
+      "submit": "Submit Report"
+    },
+    "create_success": "Report created successfully",
+    "delete_success": "Report deleted successfully",
+    "status_updated": "Status updated",
+    "modal": {
+      "details": "Details",
+      "notes": "Notes & Activity",
+      "images": "Images",
+      "report_id": "Report ID",
+      "created_at": "Created",
+      "status": "Status",
+      "no_notes": "No notes yet.",
+      "type_note": "Type a note...",
+      "send_note": "Send note",
+      "gallery": "Image Gallery",
+      "gallery_desc": "Upload photos of the issue.",
+      "primary": "Primary",
+      "no_images": "No images uploaded yet.",
+      "max_images": "Max 5 images reached"
+    },
+    "export_pdf": "Download PDF",
+    "pdf_exported": "PDF downloaded successfully",
+    "reporter": "Reported by",
+    "date": "Date",
+    "scope_label": "Scope",
+    "status_label": "Status",
+    "category_label": "Category",
+    "details": "Report Details",
+    "description": "Description",
+    "notes": "Notes & Comments",
+    "images": "Attached Images",
+    "images_note": "Images are available in the online report.",
+    "generated_on": "Generated on"
+  },
+  "voting": {
+    "title": "Active Polls",
+    "create_poll": "Create Poll",
+    "loading": "Loading polls...",
+    "ends": "Ends:",
+    "votes": "votes",
+    "vote_now": "Vote Now",
+    "no_active_polls": "No active polls",
+    "check_later": "Check back later for new votes",
+    "your_vote": "You",
+    "active_polls": "Active Polls",
+    "past_polls": "Past Polls",
+    "total_votes": "Total Votes",
+    "edit_poll": "Edit Poll",
+    "poll_title": "Poll Title",
+    "poll_desc": "Description",
+    "options": "Options",
+    "add_option": "Add Option",
+    "edit_warning": "Options cannot be edited to preserve vote integrity.",
+    "deadline": "Deadline",
+    "target_audience": "Target Audience",
+    "delete_confirm_title": "Delete Poll?",
+    "confirm_delete": "Are you sure you want to delete this poll? This action cannot be undone.",
+    "no_polls": "No polls found."
+  },
+  "user_management": {
+    "title": "User Management",
+    "loading": "Loading users...",
+    "invite": {
+      "title": "Invite New User",
+      "email": "Email Address",
+      "fullname": "Full Name",
+      "role": "Role",
+      "assign_unit": "Assign Unit (Optional)",
+      "send": "Send Invitation"
+    },
+    "table": {
+      "name": "Name",
+      "role": "Role",
+      "unit": "Unit",
+      "actions": "Actions"
+    },
+    "roles": {
+      "neighbor": "Neighbor",
+      "president": "President",
+      "secretary": "Secretary",
+      "vice_president": "Vice President",
+      "admin": "Administrator",
+      "treasurer": "Treasurer",
+      "maintenance": "Maintenance",
+      "vocal": "Block Representative"
+    },
+    "edit": {
+      "title": "Edit User",
+      "cancel": "Cancel",
+      "save": "Save Changes"
+    },
+    "messages": {
+      "updating": "Updating user...",
+      "update_success": "User updated successfully!",
+      "update_error": "Error updating user",
+      "sending_invite": "Sending invitation...",
+      "invite_success": "Invitation sent successfully!",
+      "invite_error": "Error sending invitation",
+      "error_prefix": "Error: "
+    }
+  },
+  "update_password": {
+    "title": "Set New Password",
+    "placeholder": "New Password",
+    "btn": "Set Password",
+    "updating": "Updating...",
+    "success": "Password updated successfully. Redirecting...",
+    "error": "Failed to update password"
+  },
+  "email_verification": {
+    "title": "Email Verification",
+    "error_title": "Error verifying email",
+    "success_title": "Email verified successfully",
+    "invalid_token": "Invalid Token",
+    "no_token": "No Token Found",
+    "login_btn": "Login"
+  },
+  "settings": {
+    "title": "Account Settings",
+    "subtitle": "Manage your account profile and preferences.",
+    "fullname": "Full Name",
+    "email": "Email Address",
+    "role": "Role",
+    "save": "Save Changes",
+    "update_success": "Profile updated successfully.",
+    "subscription": {
+      "title": "Subscription & Payment",
+      "plan": "Current Plan",
+      "active": "Active",
+      "next_billing": "Next billing date"
+    },
+    "preferences": {
+      "title": "Preferences",
+      "language": "Language",
+      "select": "Select Language"
+    }
+  },
+  "common": {
+    "review": "Review",
+    "approve": "Approve",
+    "reject": "Reject",
+    "view_all": "View All",
+    "download": "Download PDF",
+    "add_comment": "Add Observation",
+    "view": "View",
+    "loading": "Loading...",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "close": "Close",
+    "confirm": "Confirm",
+    "confirm_delete_report": "Are you sure you want to delete this report? This cannot be undone.",
+    "error_occurred": "An error occurred",
+    "edit": "Edit",
+    "save": "Save",
+    "voted": "Voted",
+    "view_results": "View Results",
+    "confirm_delete_notice": "Are you sure you want to delete this notice?",
+    "all_blocks": "All Blocks",
+    "unauthorized": "Unauthorized access",
+    "learn_more": "Learn more",
+    "filter_block": "Filter Block...",
+    "search_unit": "Search Unit...",
+    "page": "Page",
+    "of": "of",
+    "total": "total",
+    "prev": "Previous",
+    "next": "Next",
+    "show_filters": "Filter Data",
+    "hide_filters": "Hide Filters",
+    "export": "Export",
+    "export_excel": "Export to Excel",
+    "optional": "optional",
+    "copy": "Copy",
+    "copied": "Copied",
+    "days": "days",
+    "no_description": "No description."
+  },
+  "payments": {
+    "title": "Payments & Contributions",
+    "success": "Payment registered successfully",
+    "error": "Error registering payment",
+    "target_all": "All Community",
+    "target_blocks": "Specific Blocks",
+    "new_payment": "New Payment",
+    "upload_title": "Register New Payment",
+    "tabs": {
+      "maintenance": "Monthly Fees",
+      "campaigns": "Campaigns"
+    },
+    "campaign": {
+      "funded": "Funded"
+    },
+    "upload": {
+      "title": "Register Payment",
+      "date": "Payment Date",
+      "amount": "Amount",
+      "notes": "Notes (Optional)",
+      "receipt": "Receipt (Image)",
+      "submit": "Submit Payment",
+      "user_select": "Select Resident (Admin)",
+      "myself": "Myself"
+    },
+    "list": {
+      "title": "Payment History",
+      "title_admin": "Review Payments",
+      "title_community": "Community Payments (By Block)",
+      "my_title": "My Payment History",
+      "empty": "No payments found.",
+      "all_maintenance": "Community Maintenance Payments",
+      "all_campaigns": "Community Campaign Contributions",
+      "my_maintenance": "My Monthly Fees",
+      "my_campaigns": "My Campaign Contributions"
+    },
+    "table": {
+      "date": "Date",
+      "user": "Resident",
+      "unit": "Block / Unit",
+      "amount": "Amount",
+      "status": "Status",
+      "proof": "Receipt",
+      "actions": "Actions"
+    },
+    "status": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "rejected": "Rejected"
     },
     "campaigns": {
-        "title": "Funding Campaigns",
-        "create_btn": "Create Campaign",
-        "create_title": "Create New Campaign",
-        "success": "Campaign created successfully!",
-        "error": "Error creating campaign",
-        "update_success": "Campaign updated successfully!",
-        "update_error": "Error updating campaign",
-        "name": "Campaign Name",
-        "goal": "Goal Amount",
-        "description": "Description",
-        "deadline": "Deadline",
-        "deadline_label": "Deadline",
-        "target_audience": "Target Audience",
-        "target_all": "All Community",
-        "target_blocks": "Specific Blocks",
-        "select_blocks": "Select Blocks",
-        "active": "Active",
-        "closed": "Closed",
-        "no_desc": "No description provided.",
-        "collected": "Collected",
-        "edit_title": "Edit Campaign",
-        "ongoing_hint": "Leave empty for ongoing",
-        "is_active": "Active Campaign",
-        "contribute": "Contribute",
-        "back_to_list": "Back to Campaigns",
-        "contributions_title": "Contributions History",
-        "not_found": "Campaign not found.",
-        "stats": {
-            "goal": "Goal",
-            "raised": "Raised"
-        }
-    },
-    "cookies": {
-        "message": "We use cookies to ensure you get the best experience on our website.",
-        "accept": "Accept Cookies"
-    },
-    "community_settings": {
-        "title": "Community Settings",
-        "name": "Community Name",
-        "address": "Address",
-        "bank_accounts": "Bank Accounts",
-        "add_account": "+ Add Account",
-        "no_accounts": "No bank accounts added yet.",
-        "bank_name": "Bank Name",
-        "account_number": "Account Number",
-        "account_holder": "Account Holder",
-        "secondary_number": "CLABE / IBAN / Routing",
-        "placeholders": {
-            "bank_name": "e.g. Bank of America",
-            "account_number": "e.g. 1234567890",
-            "account_holder": "e.g. Community HOA"
-        },
-        "saving": "Saving...",
-        "save": "Save Changes",
-        "success": "Community settings updated successfully!",
-        "error": "Failed to update settings.",
-        "error_prefix": "Error: ",
-        "currency": "Currency"
-    },
-    "community_switcher": {
-        "switch_title": "Switch Community",
-        "create_new": "Create New Community",
-        "modal_title": "Create Community",
-        "name_label": "Community Name",
-        "name_placeholder": "My New Community",
-        "cancel": "Cancel",
-        "create": "Create",
-        "error": "Failed to create community",
-        "loading": "Loading..."
-    },
-    "community_info": {
-        "title": "Community Information",
-        "subtitle": "Contact details and bank information",
-        "bank_details": "Bank Details",
-        "bank_name": "Bank Name",
-        "account_number": "Account Number",
-        "account_holder": "Account Holder",
-        "no_bank_details": "No bank details available.",
-        "leaders_title": "Community Leaders & Contact",
-        "no_leaders": "No public contact information available.",
-        "no_address": "No address provided"
-    },
-    "maintenance": {
-        "admin_title": "Maintenance Fee Management",
-        "resident_title": "My Maintenance Fees",
-        "tab_community": "Community Management",
-        "tab_personal": "My Statement",
-        "generate_title": "Generate Monthly Fees",
-        "period": "Billing Period",
-        "amount": "Amount",
-        "generate_btn": "Generate Bills",
-        "community_status": "Community Status",
-        "history": "Payment History",
-        "block": "Block",
-        "unit": "Unit",
-        "owner": "Owner",
-        "status": "Status",
-        "statuses": {
-            "paid": "Paid",
-            "pending": "Pending",
-            "overdue": "Overdue",
-            "processing": "Processing"
-        },
-        "processing": "Processing",
-        "no_records": "No records found.",
-        "success_gen": "Successfully generated fees.",
-        "error_gen": "Error generating fees.",
-        "no_records_export": "No records to export.",
-        "pay": "Pay",
-        "review": "Review Payment",
-        "register": "Register",
-        "record_payment": "Record Payment",
-        "sending_email": "Sending email...",
-        "email_sent": "Email sent successfully",
-        "email_error": "Error sending email",
-        "delete_success": "Fee deleted successfully",
-        "delete_error": "Error deleting fee",
-        "payment_confirmed": "Payment confirmed successfully",
-        "payment_rejected": "Payment rejected",
-        "delete_title": "Delete Maintenance Fee",
-        "delete_confirm": "Are you sure you want to delete this fee? This action cannot be undone.",
-        "warning_gen_zero": "Warning: No new fees generated. All occupied units may already be billed for this period."
-    },
-    "terms": {
-        "title": "Terms and Conditions",
-        "updated": "Last updated: {{date}}",
-        "section1": {
-            "title": "1. Agreement to Terms",
-            "content": "These Terms and Conditions constitute a legally binding agreement made between you, whether personally or on behalf of an entity (\"you\") and Habiio (\"we,\" \"us\" or \"our\"), concerning your access to and use of the website as well as any other media form, media channel, mobile website or mobile application related, linked, or otherwise connected thereto."
-        },
-        "section2": {
-            "title": "2. Intellectual Property Rights",
-            "content": "Unless otherwise indicated, the Site is our proprietary property and all source code, databases, functionality, software, website designs, audio, video, text, photographs, and graphics on the Site and the trademarks, service marks, and logos contained therein are owned or controlled by us or licensed to us."
-        },
-        "section3": {
-            "title": "3. User Representations",
-            "content": "By using the Site, you represent and warrant that: (1) all registration information you submit will be true, accurate, current, and complete; (2) you will maintain the accuracy of such information and promptly update such registration information as necessary."
-        },
-        "section4": {
-            "title": "4. Modifications and Interruptions",
-            "content": "We reserve the right to change, modify, or remove the contents of the Site at any time or for any reason at our sole discretion without notice. However, we have no obligation to update any information on our Site."
-        }
-    },
-    "privacy": {
-        "title": "Privacy Policy",
-        "updated": "Last updated: {{date}}",
-        "section1": {
-            "title": "1. Introduction",
-            "content": "Welcome to Habiio. We respect your privacy and are committed to protecting your personal data. This privacy policy will inform you as to how we look after your personal data when you visit our website and tell you about your privacy rights and how the law protects you."
-        },
-        "section2": {
-            "title": "2. Data We Collect",
-            "content": "We may collect, use, store and transfer different kinds of personal data about you which we have grouped together follows:",
-            "list1": "Identity Data (name, username)",
-            "list2": "Contact Data (email address, telephone number)",
-            "list3": "Technical Data (IP address, browser type)",
-            "list4": "Usage Data (how you use our website)"
-        },
-        "section3": {
-            "title": "3. How We Use Your Data",
-            "content": "We will only use your personal data when the law allows us to. Most commonly, we will use your personal data in the following circumstances:",
-            "list1": "Where we need to perform the contract we are about to enter into or have entered into with you.",
-            "list2": "Where it is necessary for our legitimate interests.",
-            "list3": "Where we need to comply with a legal or regulatory obligation."
-        },
-        "section4": {
-            "title": "4. Contact Us",
-            "content": "If you have any questions about this privacy policy, please contact us."
-        }
+      "title": "Funding Campaigns",
+      "active_campaigns": "Campaigns",
+      "create_title": "Create New Campaign",
+      "name": "Campaign Name",
+      "goal": "Goal Amount",
+      "description": "Description",
+      "deadline": "Deadline",
+      "create_btn": "Create Campaign",
+      "success": "Campaign created successfully!",
+      "error": "Error creating campaign",
+      "no_desc": "No description provided",
+      "collected": "Collected",
+      "empty": "No active campaigns found.",
+      "no_active_campaigns": "No active campaigns",
+      "check_later": "New campaigns will appear here"
     }
+  },
+  "campaigns": {
+    "title": "Funding Campaigns",
+    "create_btn": "Create Campaign",
+    "create_title": "Create New Campaign",
+    "success": "Campaign created successfully!",
+    "error": "Error creating campaign",
+    "update_success": "Campaign updated successfully!",
+    "update_error": "Error updating campaign",
+    "name": "Campaign Name",
+    "goal": "Goal Amount",
+    "description": "Description",
+    "deadline": "Deadline",
+    "deadline_label": "Deadline",
+    "target_audience": "Target Audience",
+    "target_all": "All Community",
+    "target_blocks": "Specific Blocks",
+    "select_blocks": "Select Blocks",
+    "active": "Active",
+    "closed": "Closed",
+    "no_desc": "No description provided.",
+    "collected": "Collected",
+    "edit_title": "Edit Campaign",
+    "ongoing_hint": "Leave empty for ongoing",
+    "is_active": "Active Campaign",
+    "contribute": "Contribute",
+    "back_to_list": "Back to Campaigns",
+    "contributions_title": "Contributions History",
+    "not_found": "Campaign not found.",
+    "stats": {
+      "goal": "Goal",
+      "raised": "Raised"
+    }
+  },
+  "cookies": {
+    "message": "We use cookies to ensure you get the best experience on our website.",
+    "accept": "Accept Cookies"
+  },
+  "community_settings": {
+    "title": "Community Settings",
+    "name": "Community Name",
+    "address": "Address",
+    "bank_accounts": "Bank Accounts",
+    "add_account": "+ Add Account",
+    "no_accounts": "No bank accounts added yet.",
+    "bank_name": "Bank Name",
+    "account_number": "Account Number",
+    "account_holder": "Account Holder",
+    "secondary_number": "CLABE / IBAN / Routing",
+    "placeholders": {
+      "bank_name": "e.g. Bank of America",
+      "account_number": "e.g. 1234567890",
+      "account_holder": "e.g. Community HOA"
+    },
+    "saving": "Saving...",
+    "save": "Save Changes",
+    "success": "Community settings updated successfully!",
+    "error": "Failed to update settings.",
+    "error_prefix": "Error: ",
+    "currency": "Currency"
+  },
+  "community_switcher": {
+    "switch_title": "Switch Community",
+    "create_new": "Create New Community",
+    "modal_title": "Create Community",
+    "name_label": "Community Name",
+    "name_placeholder": "My New Community",
+    "cancel": "Cancel",
+    "create": "Create",
+    "error": "Failed to create community",
+    "loading": "Loading..."
+  },
+  "community_info": {
+    "title": "Community Information",
+    "subtitle": "Contact details and bank information",
+    "bank_details": "Bank Details",
+    "bank_name": "Bank Name",
+    "account_number": "Account Number",
+    "account_holder": "Account Holder",
+    "no_bank_details": "No bank details available.",
+    "leaders_title": "Community Leaders & Contact",
+    "no_leaders": "No public contact information available.",
+    "no_address": "No address provided",
+    "amenities": "Amenities & Schedules",
+    "days": "Days",
+    "hours": "Hours",
+    "every_day": "Every day",
+    "all_week": "All week",
+    "24_hours": "24 Hours",
+    "daily_reservation": "Daily Booking",
+    "no_amenities": "No amenities registered.",
+    "max_hours_badge": "Limit: {{count}}h",
+    "max_days_monthly_badge": "Limit: {{count}} days/mo",
+    "limit_hours_daily": "Reservations limited to {{count}} hours a day",
+    "limit_days_monthly": "Reservations limited to {{count}} days a month"
+  },
+  "reservations": {
+    "title": "Reservations",
+    "new_booking": "+ New Reservation",
+    "pending_approvals": "Pending Approvals",
+    "upcoming": "Upcoming Reservations",
+    "request_booking": "Request Reservation",
+    "reserve_for_resident": "Reserve for Resident (Optional)",
+    "admin_note": "If selected, limits will apply to this user.",
+    "amenity": "Amenity",
+    "select_amenity": "Select Amenity...",
+    "date": "Date",
+    "select_date": "Select Date",
+    "already_booked": "This date is already booked.",
+    "full_day": "Full Day Reservation",
+    "available_slots": "Available Time Slots",
+    "closed": "Closed",
+    "holiday_closed": "Closed for Holiday/Maintenance",
+    "no_slots": "No slots available",
+    "request": "Request"
+  },
+  "maintenance": {
+    "admin_title": "Maintenance Fee Management",
+    "resident_title": "My Maintenance Fees",
+    "tab_community": "Community Management",
+    "tab_personal": "My Statement",
+    "generate_title": "Generate Monthly Fees",
+    "period": "Billing Period",
+    "amount": "Amount",
+    "generate_btn": "Generate Bills",
+    "community_status": "Community Status",
+    "history": "Payment History",
+    "block": "Block",
+    "unit": "Unit",
+    "owner": "Owner",
+    "status": "Status",
+    "statuses": {
+      "paid": "Paid",
+      "pending": "Pending",
+      "overdue": "Overdue",
+      "processing": "Processing"
+    },
+    "processing": "Processing",
+    "no_records": "No records found.",
+    "success_gen": "Successfully generated fees.",
+    "error_gen": "Error generating fees.",
+    "no_records_export": "No records to export.",
+    "pay": "Pay",
+    "review": "Review Payment",
+    "register": "Register",
+    "record_payment": "Record Payment",
+    "sending_email": "Sending email...",
+    "email_sent": "Email sent successfully",
+    "email_error": "Error sending email",
+    "delete_success": "Fee deleted successfully",
+    "delete_error": "Error deleting fee",
+    "payment_confirmed": "Payment confirmed successfully",
+    "payment_rejected": "Payment rejected",
+    "delete_title": "Delete Maintenance Fee",
+    "delete_confirm": "Are you sure you want to delete this fee? This action cannot be undone.",
+    "warning_gen_zero": "Warning: No new fees generated. All occupied units may already be billed for this period."
+  },
+  "terms": {
+    "title": "Terms and Conditions",
+    "updated": "Last updated: {{date}}",
+    "section1": {
+      "title": "1. Agreement to Terms",
+      "content": "These Terms and Conditions constitute a legally binding agreement made between you, whether personally or on behalf of an entity (\"you\") and Habiio (\"we,\" \"us\" or \"our\"), concerning your access to and use of the website as well as any other media form, media channel, mobile website or mobile application related, linked, or otherwise connected thereto."
+    },
+    "section2": {
+      "title": "2. Intellectual Property Rights",
+      "content": "Unless otherwise indicated, the Site is our proprietary property and all source code, databases, functionality, software, website designs, audio, video, text, photographs, and graphics on the Site and the trademarks, service marks, and logos contained therein are owned or controlled by us or licensed to us."
+    },
+    "section3": {
+      "title": "3. User Representations",
+      "content": "By using the Site, you represent and warrant that: (1) all registration information you submit will be true, accurate, current, and complete; (2) you will maintain the accuracy of such information and promptly update such registration information as necessary."
+    },
+    "section4": {
+      "title": "4. Modifications and Interruptions",
+      "content": "We reserve the right to change, modify, or remove the contents of the Site at any time or for any reason at our sole discretion without notice. However, we have no obligation to update any information on our Site."
+    }
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "updated": "Last updated: {{date}}",
+    "section1": {
+      "title": "1. Introduction",
+      "content": "Welcome to Habiio. We respect your privacy and are committed to protecting your personal data. This privacy policy will inform you as to how we look after your personal data when you visit our website and tell you about your privacy rights and how the law protects you."
+    },
+    "section2": {
+      "title": "2. Data We Collect",
+      "content": "We may collect, use, store and transfer different kinds of personal data about you which we have grouped together follows:",
+      "list1": "Identity Data (name, username)",
+      "list2": "Contact Data (email address, telephone number)",
+      "list3": "Technical Data (IP address, browser type)",
+      "list4": "Usage Data (how you use our website)"
+    },
+    "section3": {
+      "title": "3. How We Use Your Data",
+      "content": "We will only use your personal data when the law allows us to. Most commonly, we will use your personal data in the following circumstances:",
+      "list1": "Where we need to perform the contract we are about to enter into or have entered into with you.",
+      "list2": "Where it is necessary for our legitimate interests.",
+      "list3": "Where we need to comply with a legal or regulatory obligation."
+    },
+    "section4": {
+      "title": "4. Contact Us",
+      "content": "If you have any questions about this privacy policy, please contact us."
+    }
+  }
 }

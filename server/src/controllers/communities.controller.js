@@ -297,6 +297,18 @@ exports.getPublicInfo = async (req, res) => {
                 }
             }
         });
+        
+        // 3. Fetch Amenities
+        const { data: amenities, error: amenitiesError } = await supabaseAdmin
+            .from('amenities')
+            .select('name, description, reservation_limits')
+            .eq('community_id', communityId)
+            .order('name');
+
+        if (amenitiesError) {
+             console.error(`[PublicInfo] Amenities Fetch Error:`, amenitiesError);
+             // Don't throw, just return empty
+        }
 
         const leaders = Array.from(leadersMap.values());
 
@@ -304,7 +316,8 @@ exports.getPublicInfo = async (req, res) => {
 
         res.json({
             community,
-            leaders
+            leaders,
+            amenities: amenities || []
         });
 
     } catch (err) {

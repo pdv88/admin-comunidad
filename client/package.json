@@ -11,9 +11,6 @@
     "start": "serve dist -s -n -l $PORT"
   },
   "dependencies": {
-    "@react-three/drei": "9.99.0",
-    "@react-three/fiber": "8.15.16",
-    "@types/three": "0.160.0",
     "axios": "^1.7.2",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.23.26",
@@ -29,8 +26,7 @@
     "react-spinners": "^0.14.1",
     "recharts": "^3.6.0",
     "serve": "^14.2.3",
-    "tailwind": "^4.0.0",
-    "three": "0.160.0"
+    "tailwind": "^4.0.0"
   },
   "devDependencies": {
     "@types/react": "^18.3.3",

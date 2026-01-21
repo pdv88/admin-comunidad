@@ -2,7 +2,7 @@ import React from 'react'
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { FadeIn } from '../AnimationWrapper';
-import Community3DScene from './Community3DScene';
+import heroCollage from '../../images/hero_collage.png';
 
 function Hero() {
   const { t } = useTranslation();
@@ -65,8 +65,12 @@ function Hero() {
             </div>
 
             {/* Right Column: 3D Scene */}
-            <FadeIn direction="left" className="relative hidden md:block w-full h-full min-h-[400px]">
-                 <Community3DScene />
+            <FadeIn direction="left" className="relative hidden md:flex w-full h-full min-h-[400px] items-center justify-center">
+                 <img 
+                    src={heroCollage} 
+                    alt="Community Management Lifestyle" 
+                    className="w-full max-w-lg object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500 rounded-2xl"
+                 />
             </FadeIn>
         </div>
       </div>

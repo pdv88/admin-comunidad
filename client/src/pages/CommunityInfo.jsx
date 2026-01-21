@@ -69,7 +69,45 @@ const CommunityInfo = () => {
         </DashboardLayout>
     );
 
-    const { community, leaders } = info || {};
+    const { community, leaders, amenities } = info || {};
+
+    // Helper to format days (e.g. [0, 1, 2] -> Mon-Wed)
+    const formatDays = (days) => {
+        if (!days || !Array.isArray(days) || days.length === 0) return t('community_info.all_week', 'All week');
+        if (days.length === 7) return t('community_info.every_day', 'Every day');
+
+        const dayNames = [
+             t('days.sun', 'Sun'), t('days.mon', 'Mon'), t('days.tue', 'Tue'), t('days.wed', 'Wed'), t('days.thu', 'Thu'), t('days.fri', 'Fri'), t('days.sat', 'Sat')
+        ];
+
+        // Check if consecutive
+        const sorted = [...days].sort((a,b) => a - b);
+        let consecutive = true;
+        for (let i = 0; i < sorted.length - 1; i++) {
+            if (sorted[i+1] !== sorted[i] + 1) {
+                // Check edge case Sat(6) -> Sun(0) is not numeric consecutive but logic consecutive
+                // But for simplicity, let's just list them if not simple numeric run
+                 consecutive = false; 
+                 break;
+            }
+        }
+        
+        if (consecutive && sorted.length > 2) {
+             return `${dayNames[sorted[0]]} - ${dayNames[sorted[sorted.length-1]]}`;
+        }
+        
+        return sorted.map(d => dayNames[d]).join(', ');
+    };
+
+    // Helper to format time (13:00 -> 01:00 PM)
+    const formatTime = (time) => {
+        if (!time) return '';
+        const [h, m] = time.split(':');
+        const hour = parseInt(h);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const hour12 = hour % 12 || 12;
+        return `${hour12}:${m} ${ampm}`;
+    };
 
     return (
         <DashboardLayout>
@@ -323,6 +361,85 @@ const CommunityInfo = () => {
                                     <p className="text-gray-500 dark:text-gray-400">
                                         {t('community_info.no_leaders', 'No public contact information available.')}
                                     </p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Amenities Section */}
+                    <div className="space-y-4 order-3 lg:order-3 lg:col-span-2">
+                        <div className="flex items-center gap-2 px-1">
+                             <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                            <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
+                                {t('community_info.amenities', 'Amenities & Schedules')}
+                            </h2>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {amenities && amenities.length > 0 ? (
+                                amenities.map((amenity, idx) => {
+                                    const limits = amenity.reservation_limits || {};
+                                    // Determine type: 'day', 'hour' (default)
+                                    const type = limits.type || 'hour';
+                                    const isDaily = type === 'day';
+
+                                    return (
+                                        <div key={idx} className="bg-white/40 dark:bg-black/20 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-xl shadow-lg p-5 hover:shadow-xl transition-all duration-300">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <h3 className="font-bold text-gray-800 dark:text-white truncate pr-2">{amenity.name}</h3>
+                                                <div className="flex flex-col items-end gap-1">
+                                                    {/* Badges */}
+                                                    {!isDaily && limits.max_hours_per_day > 0 && (
+                                                        <span className="text-[10px] bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 px-2 py-0.5 rounded-full whitespace-nowrap">
+                                                            {t('community_info.limit_hours_daily', { count: limits.max_hours_per_day })}
+                                                        </span>
+                                                    )}
+                                                    {isDaily && limits.max_days_per_month > 0 && (
+                                                        <span className="text-[10px] bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 px-2 py-0.5 rounded-full whitespace-nowrap">
+                                                            {t('community_info.limit_days_monthly', { count: limits.max_days_per_month })}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            
+                                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 line-clamp-2 min-h-[40px]">
+                                                {amenity.description || t('common.no_description', 'No description.')}
+                                            </p>
+
+                                            <div className="space-y-2 text-xs border-t border-gray-100 dark:border-white/5 pt-3">
+                                                 {/* Days */}
+                                                 <div className="flex items-center justify-between text-gray-600 dark:text-gray-300">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <svg className="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                                                        <span>{t('community_info.days', 'Days')}:</span>
+                                                    </div>
+                                                    <span className="font-medium text-right max-w-[50%] truncate">
+                                                        {limits.allowed_days ? formatDays(limits.allowed_days) : t('community_info.every_day', 'Every day')}
+                                                    </span>
+                                                 </div>
+
+                                                 {/* Hours */}
+                                                 <div className="flex items-center justify-between text-gray-600 dark:text-gray-300">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <svg className="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                        <span>{t('community_info.hours', 'Hours')}:</span>
+                                                    </div>
+                                                    <span className="font-medium">
+                                                        {limits.schedule_start && limits.schedule_end 
+                                                            ? `${formatTime(limits.schedule_start)} - ${formatTime(limits.schedule_end)}`
+                                                            : t('community_info.24_hours', '24 Hours')
+                                                        }
+                                                    </span>
+                                                 </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            ) : (
+                                <div className="col-span-full p-8 text-center bg-white/40 dark:bg-black/20 rounded-xl border border-white/40 dark:border-white/10 text-gray-500">
+                                     {t('community_info.no_amenities', 'No amenities registered.')}
                                 </div>
                             )}
                         </div>

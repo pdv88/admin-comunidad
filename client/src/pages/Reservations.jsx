@@ -271,7 +271,7 @@ const Reservations = () => {
                                         {/* Admin: Select User */}
                                         {isAdmin && (
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Reserve for Resident (Optional)</label>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('reservations.reserve_for_resident', 'Reserve for Resident (Optional)')}</label>
                                                 <select 
                                                     className="glass-input w-full"
                                                     value={newBooking.targetUserId || ''}
@@ -284,26 +284,26 @@ const Reservations = () => {
                                                         </option>
                                                     ))}
                                                 </select>
-                                                <p className="text-xs text-gray-500 mt-1">If selected, limits will apply to this user.</p>
+                                                <p className="text-xs text-gray-500 mt-1">{t('reservations.admin_note', 'If selected, limits will apply to this user.')}</p>
                                             </div>
                                         )}
 
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amenity</label>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('reservations.amenity', 'Amenity')}</label>
                                             <select 
                                                 className="glass-input w-full"
                                                 value={newBooking.amenityId}
                                                 onChange={e => setNewBooking({...newBooking, amenityId: e.target.value, startTime: '', endTime: ''})}
                                                 required
                                             >
-                                                <option value="">Select Amenity...</option>
+                                                <option value="">{t('reservations.select_amenity', 'Select Amenity...')}</option>
                                                 {amenities.filter(a => a.is_reservable).map(a => (
                                                     <option key={a.id} value={a.id}>{a.name}</option>
                                                 ))}
                                             </select>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date</label>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('reservations.date', 'Date')}</label>
                                             <div className="custom-datepicker-wrapper">
                                                 <DatePicker 
                                                     selected={newBooking.date ? new Date(newBooking.date + 'T12:00:00') : null} 
@@ -349,7 +349,7 @@ const Reservations = () => {
                                                             return new Date(y, m - 1, day);
                                                         });
                                                     })()}
-                                                    placeholderText="Select Date"
+                                                    placeholderText={t('reservations.select_date', 'Select Date')}
                                                     className="glass-input w-full"
                                                     dateFormat="yyyy-MM-dd"
                                                     required
@@ -373,14 +373,14 @@ const Reservations = () => {
                                                 if (isBooked) {
                                                      return (
                                                         <div className="mt-4 p-3 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-lg text-sm text-center">
-                                                            This date is already booked.
+                                                            {t('reservations.already_booked', 'This date is already booked.')}
                                                         </div>
                                                      );
                                                 }
 
                                                 return (
                                                     <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-lg text-sm text-center font-medium">
-                                                        Full Day Reservation ({amenity?.reservation_limits?.schedule_start || '06:00'} - {amenity?.reservation_limits?.schedule_end || '23:00'})
+                                                        {t('reservations.full_day', 'Full Day Reservation')} ({amenity?.reservation_limits?.schedule_start || '06:00'} - {amenity?.reservation_limits?.schedule_end || '23:00'})
                                                     </div>
                                                 );
                                             }
@@ -388,7 +388,7 @@ const Reservations = () => {
                                             // EXISTING HOURLY LOGIC
                                             return (
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Available Time Slots</label>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('reservations.available_slots', 'Available Time Slots')}</label>
                                                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-48 overflow-y-auto p-1 custom-scrollbar">
                                                     {(() => {
                                                         const limits = amenity?.reservation_limits || {};
@@ -397,10 +397,10 @@ const Reservations = () => {
                                                         if (limits.allowed_days) {
                                                                 const [y, m, d] = newBooking.date.split('-').map(Number);
                                                                 const day = new Date(y, m - 1, d).getDay();
-                                                                if (!limits.allowed_days.includes(day)) return <p className="col-span-full text-gray-500 text-center text-sm">Closed</p>;
+                                                                if (!limits.allowed_days.includes(day)) return <p className="col-span-full text-gray-500 text-center text-sm">{t('reservations.closed', 'Closed')}</p>;
                                                         }
                                                         if (limits.exception_days?.includes(newBooking.date)) {
-                                                            return <p className="col-span-full text-red-500 text-center text-sm font-medium">Closed for Holiday/Maintenance</p>;
+                                                            return <p className="col-span-full text-red-500 text-center text-sm font-medium">{t('reservations.holiday_closed', 'Closed for Holiday/Maintenance')}</p>;
                                                         }
 
                                                         const startHour = parseInt((limits.schedule_start || '06:00').split(':')[0]);
@@ -440,7 +440,7 @@ const Reservations = () => {
                                                             slots.push({ time: timeStr, end: nextTimeStr, disabled: isBooked || isPast, reason: isBooked ? 'Booked' : 'Past' });
                                                         }
 
-                                                        if (slots.length === 0) return <p className="col-span-full text-gray-500 text-center text-sm">No slots available</p>;
+                                                        if (slots.length === 0) return <p className="col-span-full text-gray-500 text-center text-sm">{t('reservations.no_slots', 'No slots available')}</p>;
 
                                                         return slots.map(slot => (
                                                             <button
@@ -488,14 +488,14 @@ const Reservations = () => {
                                             type="submit" 
                                             className="w-full glass-button justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium sm:col-start-2 sm:text-sm"
                                         >
-                                            Request
+                                            {t('reservations.request', 'Request')}
                                         </button>
                                         <button 
                                             type="button" 
                                             className="mt-3 w-full glass-button-secondary justify-center rounded-md border shadow-sm px-4 py-2 text-base font-medium sm:mt-0 sm:col-start-1 sm:text-sm"
                                             onClick={() => setBookingModal({ isOpen: false })}
                                         >
-                                            Cancel
+                                            {t('common.cancel', 'Cancel')}
                                         </button>
                                     </div>
                                 </form>

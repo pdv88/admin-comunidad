@@ -91,7 +91,7 @@ function Header() {
                 </Link>
               )}
 
-              <div className="flex items-center gap-x-2 md:ms-4">
+                <div className="flex items-center gap-x-2 md:ms-4">
                 {/* Language Switcher */}
                 <div className="flex bg-gray-100/50 hover:bg-gray-200/50 rounded-full transition p-1 dark:bg-neutral-700/50">
                   <button
@@ -108,18 +108,22 @@ function Header() {
                   </button>
                 </div>
 
-                <Link
-                  to="/login"
-                  className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors dark:text-gray-300 dark:hover:text-blue-400"
-                >
-                  {t("header.login")}
-                </Link>
-                <Link
-                  to="/register"
-                  className="inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-full border border-transparent bg-gradient-to-r from-blue-600 via-violet-600 to-blue-600 bg-[length:200%_auto] text-white hover:shadow-lg hover:bg-right active:scale-95 transition-all duration-500 py-2.5 px-6"
-                >
-                  {t("header.register")}
-                </Link>
+                {!user && (
+                    <>
+                        <Link
+                        to="/login"
+                        className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors dark:text-gray-300 dark:hover:text-blue-400"
+                        >
+                        {t("header.login")}
+                        </Link>
+                        <Link
+                        to="/register"
+                        className="inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-full border border-transparent bg-gradient-to-r from-blue-600 via-violet-600 to-blue-600 bg-[length:200%_auto] text-white hover:shadow-lg hover:bg-right active:scale-95 transition-all duration-500 py-2.5 px-6"
+                        >
+                        {t("header.register")}
+                        </Link>
+                    </>
+                )}
               </div>
             </div>
           </div>

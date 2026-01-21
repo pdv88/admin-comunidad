@@ -10,15 +10,15 @@
 
 @layer components {
   .glass-card {
-    @apply bg-white/70 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-2xl shadow-xl shadow-gray-200/20 dark:shadow-black/40;
+    @apply bg-white/60 dark:bg-neutral-900/30 border border-white/40 dark:border-white/10 rounded-2xl shadow-xl shadow-gray-200/20 dark:shadow-black/40;
   }
 
   .glass-panel {
-    @apply w-full mt-2 bg-white/20 dark:bg-neutral-900/20 backdrop-blur-2xl border border-white/30 dark:border-white/10 rounded-2xl shadow-lg animate-slide-down overflow-hidden backdrop-saturate-150;
+    @apply w-full mt-2 bg-white/60 dark:bg-neutral-900/50 border border-white/30 dark:border-white/10 rounded-2xl shadow-lg animate-slide-down overflow-hidden;
   }
 
   .glass-input {
-    @apply py-3 px-4 block w-full bg-white/30 dark:bg-neutral-800/40 backdrop-blur-md border border-gray-200 dark:border-neutral-700/50 rounded-full text-sm shadow-2xl focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:text-neutral-200 dark:placeholder-neutral-500 transition-all duration-300;
+    @apply py-3 px-4 block w-full bg-white/50 dark:bg-neutral-800/40 border border-gray-200 dark:border-neutral-700/50 rounded-full text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:text-neutral-200 dark:placeholder-neutral-500 transition-all duration-300;
   }
 
   select.glass-input {
@@ -34,7 +34,7 @@
   }
 
   .glass-button-secondary {
-    @apply inline-flex justify-center items-center gap-x-2 text-center bg-white/40 dark:bg-neutral-800/40 hover:bg-white/60 dark:hover:bg-neutral-800/60 text-gray-700 dark:text-neutral-200 text-sm font-medium rounded-full border border-gray-200/50 dark:border-neutral-700/50 backdrop-blur-sm transition-all duration-300 py-2.5 px-5 shadow-sm hover:shadow-md;
+    @apply inline-flex justify-center items-center gap-x-2 text-center bg-white dark:bg-neutral-800 hover:bg-gray-100 dark:hover:bg-neutral-700 text-gray-700 dark:text-neutral-200 text-sm font-medium rounded-full border border-gray-200/50 dark:border-neutral-700/50 transition-all duration-300 py-2.5 px-5 shadow-sm hover:shadow-md;
   }
 
   .glass-table {
@@ -42,7 +42,7 @@
   }
 
   .glass-table thead {
-    @apply bg-gray-50/50 dark:bg-white/5 backdrop-blur-sm;
+    @apply bg-gray-50 dark:bg-neutral-800;
   }
 
   .glass-table th {

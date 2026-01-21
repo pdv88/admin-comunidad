@@ -81,6 +81,13 @@ export const AuthProvider = ({ children }) => {
     checkUserLoggedIn();
   }, []);
 
+  // Helper to extract URL from fetch resource
+  const normalizeUrl = (resource) => {
+      if (typeof resource === 'string') return resource;
+      if (resource instanceof Request) return resource.url;
+      try { return resource.toString(); } catch (e) { return ''; }
+  };
+
   // Global Fetch Interceptor
   useEffect(() => {
     const originalFetch = window.fetch;
@@ -125,7 +132,10 @@ export const AuthProvider = ({ children }) => {
 
         const response = await originalFetch(...args);
 
-        if (response.status === 401) {
+        // Check if 401 and NOT from login endpoint
+        const isLoginRequest = normalizeUrl(resource).includes('/auth/login');
+
+        if (response.status === 401 && !isLoginRequest) {
             console.warn("Session expired (401). Redirecting to login.");
             localStorage.removeItem('token');
             localStorage.removeItem('active_community_id');
