@@ -4,7 +4,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import logo from '../assets/logos/habiio_logo_header_nobg.webp';
 
-import AnimatedBackground from '../assets/components/AnimatedBackground';
+
 import CommunitySwitcher from './CommunitySwitcher';
 
 const DashboardLayout = ({ children }) => {
@@ -46,7 +46,8 @@ const DashboardLayout = ({ children }) => {
 
     return (
         <div className="relative flex h-screen bg-slate-300 dark:bg-slate-950 overflow-hidden md:gap-2">
-            <AnimatedBackground />
+            {/* Static Background */}
+            <div className="fixed inset-0 z-0 pointer-events-none bg-gradient-to-br from-blue-100/40 via-purple-100/40 to-pink-100/40 dark:from-blue-900/10 dark:via-purple-900/10 dark:to-pink-900/10" />
             
             {/* Mobile Sidebar Overlay */}
             {isSidebarOpen && (
