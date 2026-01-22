@@ -243,42 +243,10 @@ const PaymentUpload = ({ onSuccess, onCancel, isAdmin, initialType, initialFeeId
             <h3 className="font-bold text-lg mb-4 text-gray-800 dark:text-white">{t('payments.upload.title', 'Register Payment')}</h3>
             <form onSubmit={handleSubmit} className="space-y-4">
                 
-                {isAdmin && (
-                    <div>
-                        <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('payments.upload.user_select', 'Select User (Admin)')}</label>
-                        <GlassSelect 
-                            value={selectedUserId}
-                            onChange={(e) => setSelectedUserId(e.target.value)}
-                            options={[
-                                { value: '', label: t('payments.upload.myself', 'Myself') },
-                                ...users.map(u => ({ value: u.id, label: u.full_name || u.email }))
-                            ]}
-                            placeholder={t('payments.upload.user_select', 'Select User')}
-                        />
-                    </div>
-                )}
+
 
                 {/* Unit Selection - Hide if initialUnitId provided or no units */}
-                {userUnits.length > 0 && !initialUnitId && (
-                     <div>
-                        <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('payments.upload.unit_select', 'Select Unit')} <span className="text-red-500">*</span></label>
-                        <GlassSelect 
-                            value={selectedUnitId}
-                            onChange={(e) => {
-                                setSelectedUnitId(e.target.value);
-                                setSelectedFeeId(''); // Explicitly reset fee on unit change
-                            }}
-                            options={[
-                                { value: '', label: t('common.select', 'Select Unit...') },
-                                ...userUnits.map(u => ({ value: u.id, label: u.name }))
-                            ]}
-                            placeholder={t('payments.upload.unit_select', 'Select Unit')}
-                        />
-                        <p className="text-xs text-gray-500 mt-1">
-                            {t('payments.upload.multi_unit_hint', 'If your transfer covers multiple units, please register separate payments for each.')}
-                        </p>
-                    </div>
-                )}
+
 
                 {!initialType && (
                 <div>
