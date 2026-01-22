@@ -825,7 +825,8 @@
             "family": "Familia",
             "provider": "Proveedor",
             "service": "Servicio",
-            "delivery": "Paquetería"
+            "delivery": "Paquetería",
+            "moving": "Mudanza"
         },
         "statuses": {
             "pending": "Pendiente",

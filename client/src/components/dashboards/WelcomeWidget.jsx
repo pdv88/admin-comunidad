@@ -121,7 +121,7 @@ const WelcomeWidget = ({ role }) => {
 
                     {/* Quick Buttons */}
                      <div className="flex gap-3">
-                         <Link to="/app/notices" className="flex flex-col items-center justify-center gap-1 p-3 rounded-xl backdrop-blur-md bg-white/40 dark:bg-white/5 border border-white/20 dark:border-white/10 text-violet-700 dark:text-violet-400 hover:shadow-md transition-all w-16 shadow-sm">
+                         <Link to="/app/visitors" className="flex flex-col items-center justify-center gap-1 p-3 rounded-xl backdrop-blur-md bg-white/40 dark:bg-white/5 border border-white/20 dark:border-white/10 text-violet-700 dark:text-violet-400 hover:shadow-md transition-all w-16 shadow-sm">
                             <span className="text-xl drop-shadow-sm">🔑</span>
                             <span className="text-[10px] font-bold uppercase">{t('dashboard.visit')}</span>
                         </Link>

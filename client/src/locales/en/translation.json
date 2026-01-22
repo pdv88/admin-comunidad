@@ -787,7 +787,8 @@
       "family": "Family",
       "provider": "Provider",
       "service": "Service",
-      "delivery": "Delivery"
+      "delivery": "Delivery",
+      "moving": "Moving"
     },
     "statuses": {
       "pending": "Pending",

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import axios from 'axios';
 import DashboardLayout from '../components/DashboardLayout';
 import { useAuth } from '../context/AuthContext';
 import { API_URL } from '../config';
@@ -9,8 +10,8 @@ import StatusBadge from '../components/StatusBadge';
 
 const Visitors = () => {
     const { t } = useTranslation();
-    const { user, activeCommunity, hasAnyRole } = useAuth();
-    const isAdmin = hasAnyRole(['admin', 'president', 'security']);
+    const { token, user, activeCommunity, hasAnyRole } = useAuth();
+    const isAdmin = hasAnyRole(['admin', 'president', 'security', 'concierge']);
 
     const [activeTab, setActiveTab] = useState('my'); // 'my', 'all', 'providers'
     const [visits, setVisits] = useState([]);
@@ -30,13 +31,41 @@ const Visitors = () => {
     const [availableUnits, setAvailableUnits] = useState([]);
 
     useEffect(() => {
-        fetchVisits();
-        if (isAdmin || activeCommunity?.unit_owners?.length > 0) {
-            // Load units for the dropdown
-            // If admin, all community units. If resident, only their units (usually pre-selected)
-            if (activeCommunity?.communities?.blocks) {
+        if (activeCommunity?.community_id && token) {
+            fetchVisits();
+            if (isAdmin) {
+                fetchUnits();
+            } else {
+                 // Populate units for residents from activeCommunity context
+                 if (activeCommunity?.unit_owners?.length > 0) {
+                      const units = activeCommunity.unit_owners.map(uo => ({
+                          id: uo.unit_id,
+                          name: uo.units?.name || (uo.units?.block_id ? `${uo.units.blocks?.name} - ${uo.units.name}` : uo.units?.name) || 'My Unit'
+                      }));
+                      setAvailableUnits(units);
+                      
+                      // Auto-select if only one
+                      if (units.length === 1) {
+                          setNewVisit(prev => ({ ...prev, unit_id: units[0].id }));
+                      }
+                 }
+            }
+        }
+    }, [activeCommunity, activeTab, isAdmin, token]);
+
+    const fetchUnits = async () => {
+        try {
+             // Re-using the properties/blocks endpoint which returns the hierarchy
+             const res = await axios.get(`${API_URL}/api/properties/blocks`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'x-community-id': activeCommunity?.community_id
+                }
+             });
+             
+             if (res.data) {
                 const units = [];
-                activeCommunity.communities.blocks.forEach(b => {
+                res.data.forEach(b => {
                     if (b.units) {
                          b.units.forEach(u => units.push({
                             id: u.id,
@@ -46,30 +75,40 @@ const Visitors = () => {
                     }
                 });
                 setAvailableUnits(units);
-            }
+             }
+        } catch (error) {
+            console.error('Error fetching units:', error);
         }
-    }, [activeCommunity, activeTab]);
+    };
 
     const fetchVisits = async () => {
         setLoading(true);
         try {
-            // Mock data for now as backend might not be ready
-            // In real impl, fetch from /api/visitors
-            const mockVisits = [
-                { id: 1, visitor_name: 'Juan Perez', type: 'guest', date: '2024-10-25T14:00:00', status: 'pending', unit: 'Tower A - 101', notes: 'Car Plate ABC-123' },
-                { id: 2, visitor_name: 'DHL Delivery', type: 'delivery', date: '2024-10-25T10:00:00', status: 'completed', unit: 'Tower A - 101' },
-                { id: 3, visitor_name: 'Gardener Service', type: 'provider', date: '2024-10-26T08:00:00', status: 'active', unit: null, notes: 'Routine maintenance' }
-            ];
+            const res = await axios.get(`${API_URL}/api/visitors`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'x-community-id': activeCommunity?.community_id
+                }
+            });
             
-            // Filter mock data based on tab
-            let filtered = mockVisits;
-            if (activeTab === 'my' && !isAdmin) {
-                filtered = mockVisits.filter(v => v.unit); // Simplified
-            } else if (activeTab === 'providers') {
-                filtered = mockVisits.filter(v => v.type === 'provider' || v.type === 'service');
+            let data = res.data;
+
+            // Client-side filtering if needed (though backend handles security)
+            // 'providers' tab filter
+            if (activeTab === 'providers') {
+                data = data.filter(v => ['provider', 'service', 'delivery'].includes(v.type));
+            } else if (activeTab === 'all') {
+                // Show all (except maybe strictly providers if we want to separate them? Admin usually wants to see everything mixed or filtered)
+                // Let's keep 'all' as truly ALL.
+            } else if (activeTab === 'my') {
+                 // For residents, backend only returns "my".
+                 // For admins, "my" should filter to their personal visits if any?
+                 if (isAdmin) {
+                     data = data.filter(v => v.created_by === user.id);
+                 }
             }
 
-            setVisits(filtered);
+            setVisits(data);
             setLoading(false);
         } catch (error) {
             console.error('Error fetching visits', error);
@@ -79,10 +118,28 @@ const Visitors = () => {
 
     const handleCreateVisit = async (e) => {
         e.preventDefault();
-        // Implement API call
-        console.log('Creating visit:', newVisit);
-        setModalOpen(false);
-        // Refresh list
+        try {
+            await axios.post(`${API_URL}/api/visitors`, newVisit, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'x-community-id': activeCommunity?.community_id
+                }
+            });
+            setModalOpen(false);
+            fetchVisits();
+            // Reset form
+            setNewVisit({
+                visitor_name: '',
+                visit_date: new Date().toISOString().split('T')[0],
+                visit_time: '12:00',
+                type: 'guest',
+                unit_id: '',
+                notes: ''
+            });
+        } catch (error) {
+            console.error('Error creating visit:', error);
+            alert('Failed to register visit');
+        }
     };
 
     const getStatusColor = (status) => {
@@ -155,19 +212,20 @@ const Visitors = () => {
                                 </div>
                                 <div className="text-right">
                                     <p className="text-2xl font-bold text-gray-800 dark:text-white">
-                                        {new Date(visit.date).getDate()}
+                                        {new Date(visit.visit_date).getDate()}
                                     </p>
                                     <p className="text-xs text-gray-500 uppercase">
-                                        {new Date(visit.date).toLocaleDateString(undefined, { month: 'short' })}
+                                        {new Date(visit.visit_date).toLocaleDateString(undefined, { month: 'short' })}
+                                        {visit.visit_time && ` - ${visit.visit_time}`}
                                     </p>
                                 </div>
                             </div>
                             
                             <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300 mb-4">
-                                {visit.unit && (
+                                {visit.units && (
                                     <div className="flex items-center gap-2">
                                         <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                                        <span>{visit.unit}</span>
+                                        <span>{visit.units.name} {visit.units.blocks?.name ? `(${visit.units.blocks.name})` : ''}</span>
                                     </div>
                                 )}
                                 {visit.notes && (
@@ -207,7 +265,7 @@ const Visitors = () => {
                                             <div>
                                                 <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('visitors.type', 'Type')}</label>
                                                 <div className="grid grid-cols-2 gap-2">
-                                                    {['guest', 'family', 'delivery'].map(type => (
+                                                    {['guest', 'family', 'delivery', 'moving'].map(type => (
                                                         <button
                                                             key={type}
                                                             type="button"
@@ -266,8 +324,8 @@ const Visitors = () => {
                                                 </div>
                                             </div>
 
-                                            {/* Unit Selection (Admin only and NOT provider) */}
-                                            {isAdmin && !['provider', 'service'].includes(newVisit.type) && (
+                                            {/* Unit Selection (Admin or Resident with units) */}
+                                            {(isAdmin || availableUnits.length > 0) && !['provider', 'service'].includes(newVisit.type) && (
                                                 <div>
                                                     <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('visitors.unit', 'Unit')}</label>
                                                     <GlassSelect 

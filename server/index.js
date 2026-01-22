@@ -29,6 +29,7 @@ app.use('/api/communities', require('./src/routes/communities.routes'));
 app.use('/api/payments', require('./src/routes/payments.routes'));
 app.use('/api/maintenance', require('./src/routes/maintenance.routes'));
 app.use('/api/amenities', require('./src/routes/amenities.routes')); // New Amenities Routes
+app.use('/api/visitors', require('./src/routes/visitors.routes'));
 
 // Base route
 app.get('/', (req, res) => {
