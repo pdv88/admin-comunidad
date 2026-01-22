@@ -47,7 +47,7 @@ function EmailVerification() {
   return (
     <>
       <Header />
-      <section className="flex flex-col w-full items-center justify-center p-5">
+      <section className="flex flex-col w-full items-center justify-center p-5 pt-32 min-h-screen">
         {isLoading ? (
           <div className="flex w-full min-h-[calc(100svh-4.5rem)] items-center justify-center">
             <PulseLoader color="#d3d3d3" size={15} className="p-1" />

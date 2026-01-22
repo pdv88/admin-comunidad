@@ -99,6 +99,9 @@ const DashboardLayout = ({ children }) => {
                     <Link to="/app/reservations" onClick={closeSidebar} className={`block py-1.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/reservations')}`}>
                          {t('dashboard_layout.nav.reservations', 'Reservations')}
                     </Link>
+                    <Link to="/app/visitors" onClick={closeSidebar} className={`block py-1.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/visitors')}`}>
+                         {t('visitors.title', 'Visitors')}
+                    </Link>
                     {hasAnyRole(['super_admin', 'admin', 'president']) && (
                         <>
                             <div className="pt-2 pb-1">

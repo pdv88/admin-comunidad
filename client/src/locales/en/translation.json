@@ -769,6 +769,41 @@
     "no_upcoming": "No upcoming reservations.",
     "myself": "Myself"
   },
+  "visitors": {
+    "title": "Visitors & Access",
+    "register_btn": "Register Visitor",
+    "my_visitors": "My Visitors",
+    "all_visitors": "All Visitors",
+    "providers": "Providers",
+    "visitor_name": "Visitor / Company Name",
+    "type": "Type",
+    "date": "Visit Date",
+    "time": "Estimated Time",
+    "unit": "Unit",
+    "notes": "Notes / Plate Number",
+    "status": "Status",
+    "types": {
+      "guest": "Guest",
+      "family": "Family",
+      "provider": "Provider",
+      "service": "Service",
+      "delivery": "Delivery"
+    },
+    "statuses": {
+      "pending": "Pending",
+      "active": "Active",
+      "completed": "Completed"
+    },
+    "form": {
+      "title": "Register Visit",
+      "create": "Register",
+      "update": "Update"
+    },
+    "access_code": "Access Code",
+    "share_code": "Share Code",
+    "no_visits": "No visits found.",
+    "delete_confirm": "Delete this visit?"
+  },
   "maintenance": {
     "admin_title": "Maintenance Fee Management",
     "resident_title": "My Maintenance Fees",

@@ -807,6 +807,41 @@
         "no_upcoming": "No hay reservaciones próximas.",
         "myself": "Yo mismo"
     },
+    "visitors": {
+        "title": "Visitas y Accesos",
+        "register_btn": "Registrar Visita",
+        "my_visitors": "Mis Visitas",
+        "all_visitors": "Todas las Visitas",
+        "providers": "Proveedores",
+        "visitor_name": "Visitante / Empresa",
+        "type": "Tipo",
+        "date": "Fecha Visita",
+        "time": "Hora Estimada",
+        "unit": "Unidad",
+        "notes": "Notas / Placa",
+        "status": "Estado",
+        "types": {
+            "guest": "Invitado",
+            "family": "Familia",
+            "provider": "Proveedor",
+            "service": "Servicio",
+            "delivery": "Paquetería"
+        },
+        "statuses": {
+            "pending": "Pendiente",
+            "active": "Activo",
+            "completed": "Completado"
+        },
+        "form": {
+            "title": "Registrar Visita",
+            "create": "Registrar",
+            "update": "Actualizar"
+        },
+        "access_code": "Código Acceso",
+        "share_code": "Compartir",
+        "no_visits": "No se encontraron visitas.",
+        "delete_confirm": "¿Eliminar esta visita?"
+    },
     "maintenance": {
         "admin_title": "Gestión de Cuotas de Mantenimiento",
         "resident_title": "Mis Cuotas de Mantenimiento",

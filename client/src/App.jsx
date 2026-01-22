@@ -28,6 +28,7 @@ import PrivacyNotice from "./components/PrivacyNotice";
 import Privacy from './pages/Privacy';
 import Terms from "./pages/Terms";
 import CommunityInfo from "./pages/CommunityInfo";
+import Visitors from "./pages/Visitors";
 
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -59,6 +60,7 @@ function App() {
              <Route path="/app/reports" element={<Reports />} />
              <Route path="/app/voting" element={<Voting />} />
              <Route path="/app/reservations" element={<Reservations />} />
+             <Route path="/app/visitors" element={<Visitors />} />
              
              {/* Admin/President Only Routes */}
              <Route element={<ProtectedRoute allowedRoles={['super_admin', 'admin', 'president']} />}>

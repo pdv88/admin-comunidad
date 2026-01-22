@@ -67,7 +67,7 @@ const Register = () => {
     <div className="relative flex flex-col min-h-screen">
       <Header />
       
-      <main className="flex-grow flex items-center justify-center p-4">
+      <main className="flex-grow flex items-center justify-center px-4 pt-32 pb-12">
           <div className="w-full max-w-md p-6 bg-white/40 backdrop-blur-md border border-gray-200 rounded-3xl shadow-lg dark:bg-neutral-900/40 dark:border-neutral-700">
             <div className="text-center">
               <h1 className="block text-2xl font-bold text-gray-800 dark:text-white">{t('auth.signup_title')}</h1>
