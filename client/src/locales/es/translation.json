@@ -702,6 +702,13 @@
             "account_number": "ej. 1234567890",
             "account_holder": "ej. Comunidad de Propietarios"
         },
+        "documents": "Documentos de la Comunidad",
+        "upload_new_doc": "Subir Nuevo Documento",
+        "doc_name_placeholder": "Nombre (ej. Reglamento Alberca)",
+        "no_documents": "Aún no hay documentos subidos.",
+        "doc_upload_success": "Documento subido exitosamente",
+        "doc_delete_success": "Documento eliminado",
+        "confirm_delete_doc": "¿Eliminar este documento?",
         "saving": "Guardando...",
         "save": "Guardar Cambios",
         "success": "Configuración actualizada exitosamente!",
@@ -745,7 +752,9 @@
         "max_hours_badge": "Límite: {{count}}h",
         "max_days_monthly_badge": "Límite: {{count}} días/mes",
         "limit_hours_daily": "Reservas limitadas a {{count}} horas al día",
-        "limit_days_monthly": "Reservas limitadas a {{count}} días al mes"
+        "limit_hours_daily": "Reservas limitadas a {{count}} horas al día",
+        "limit_days_monthly": "Reservas limitadas a {{count}} días al mes",
+        "documents": "Reglamentos y Documentos"
     },
     "reservations": {
         "title": "Reservas",

@@ -69,7 +69,7 @@ const CommunityInfo = () => {
         </DashboardLayout>
     );
 
-    const { community, leaders, amenities } = info || {};
+    const { community, leaders, amenities, documents } = info || {};
 
     // Helper to format days (e.g. [0, 1, 2] -> Mon-Wed)
     const formatDays = (days) => {
@@ -444,8 +444,48 @@ const CommunityInfo = () => {
                             )}
                         </div>
                     </div>
+                    </div>
+
+                    {/* Documents Section */}
+                    {documents && documents.length > 0 && (
+                        <div className="order-4 lg:order-4 lg:col-span-2 space-y-4 pt-4 border-t border-gray-200 dark:border-white/10">
+                            <div className="flex items-center gap-2 px-1">
+                                <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
+                                    {t('community_info.documents', 'Community Guidelines & Documents')}
+                                </h2>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {documents.map((doc, idx) => (
+                                    <a 
+                                        key={idx} 
+                                        href={doc.url} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="bg-white/40 dark:bg-black/20 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-xl p-4 shadow-lg hover:shadow-xl hover:bg-white/60 dark:hover:bg-white/5 transition-all duration-300 group flex items-start gap-4"
+                                    >
+                                        <div className="w-12 h-12 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center shrink-0 text-red-500 group-hover:scale-110 transition-transform">
+                                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="font-semibold text-gray-800 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                                {doc.name}
+                                            </h3>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                {new Date(doc.created_at).toLocaleDateString()}
+                                            </p>
+                                            <div className="mt-2 text-xs font-medium text-blue-600 dark:text-blue-400 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                {t('common.download', 'Download PDF')}
+                                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                                            </div>
+                                        </div>
+                                    </a>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
-            </div>
         </DashboardLayout>
     );
 };

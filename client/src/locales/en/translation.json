@@ -667,6 +667,13 @@
       "account_number": "e.g. 1234567890",
       "account_holder": "e.g. Community HOA"
     },
+    "documents": "Community Documents",
+    "upload_new_doc": "Upload New Document",
+    "doc_name_placeholder": "Document Name (e.g. Pool Rules)",
+    "no_documents": "No documents uploaded yet.",
+    "doc_upload_success": "Document uploaded successfully",
+    "doc_delete_success": "Document deleted",
+    "confirm_delete_doc": "Delete this document?",
     "saving": "Saving...",
     "save": "Save Changes",
     "success": "Community settings updated successfully!",
@@ -707,7 +714,9 @@
     "max_hours_badge": "Limit: {{count}}h",
     "max_days_monthly_badge": "Limit: {{count}} days/mo",
     "limit_hours_daily": "Reservations limited to {{count}} hours a day",
-    "limit_days_monthly": "Reservations limited to {{count}} days a month"
+    "limit_hours_daily": "Reservations limited to {{count}} hours a day",
+    "limit_days_monthly": "Reservations limited to {{count}} days a month",
+    "documents": "Community Guidelines & Documents"
   },
   "reservations": {
     "title": "Reservations",

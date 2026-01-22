@@ -3,7 +3,12 @@ const supabaseAdmin = require('../config/supabaseAdmin');
 
 exports.getMyCommunity = async (req, res) => {
     const token = req.headers.authorization?.split(' ')[1];
-    const communityId = req.headers['x-community-id'];
+    let communityId = req.headers['x-community-id'];
+
+    // Handle potential duplicate header (e.g. "id, id")
+    if (communityId && communityId.includes(',')) {
+        communityId = communityId.split(',')[0].trim();
+    }
 
     if (!token) return res.status(401).json({ error: 'No token provided' });
     if (!communityId) return res.status(400).json({ error: 'Community ID header missing' });
@@ -33,7 +38,16 @@ exports.getMyCommunity = async (req, res) => {
 
         if (commError) throw commError;
 
-        res.json(community);
+        // Fetch Documents
+        const { data: documents, error: docsError } = await supabaseAdmin
+            .from('community_documents')
+            .select('*')
+            .eq('community_id', communityId)
+            .order('created_at', { ascending: false });
+
+        if (docsError) console.error("Documents fetch error:", docsError);
+
+        res.json({ ...community, documents: documents || [] });
 
     } catch (err) {
         console.error("Get My Community Error:", err);
@@ -307,7 +321,17 @@ exports.getPublicInfo = async (req, res) => {
 
         if (amenitiesError) {
              console.error(`[PublicInfo] Amenities Fetch Error:`, amenitiesError);
-             // Don't throw, just return empty
+        }
+
+        // 4. Fetch Documents
+        const { data: documents, error: docsError } = await supabaseAdmin
+            .from('community_documents')
+            .select('id, name, url, type, created_at')
+            .eq('community_id', communityId)
+            .order('created_at', { ascending: false });
+            
+        if (docsError) {
+            console.error(`[PublicInfo] Documents Fetch Error:`, docsError);
         }
 
         const leaders = Array.from(leadersMap.values());
@@ -317,11 +341,183 @@ exports.getPublicInfo = async (req, res) => {
         res.json({
             community,
             leaders,
-            amenities: amenities || []
+            amenities: amenities || [],
+            documents: documents || []
         });
 
     } catch (err) {
-        console.error('Get Public Info Error:', err);
+        console.error("Get Public Info Error:", err);
+        res.status(500).json({ error: err.message });
+    }
+};
+
+exports.uploadDocument = async (req, res) => {
+    const token = req.headers.authorization?.split(' ')[1];
+    // Handle potential duplicate header (e.g. "id, id")
+    let communityId = req.headers['x-community-id'];
+    if (communityId && communityId.includes(',')) {
+        communityId = communityId.split(',')[0].trim();
+    }
+
+    const { name, base64File } = req.body; // base64File: "data:application/pdf;base64,..."
+
+    if (!token) return res.status(401).json({ error: 'No token' });
+    if (!communityId) return res.status(400).json({ error: 'Community ID missing' });
+    if (!name || !base64File) return res.status(400).json({ error: 'Name and File required' });
+
+    try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+        if (authError || !user) throw new Error('Invalid token');
+
+        // Check permission (Admin/President)
+        // Check permission (Support both Legacy ID and Multi-Role)
+        const { data: member } = await supabaseAdmin
+            .from('community_members')
+            .select(`
+                roles(name),
+                member_roles(
+                    roles(name)
+                )
+            `)
+            .eq('profile_id', user.id)
+            .eq('community_id', communityId)
+            .maybeSingle();
+
+        if (!member) {
+             return res.status(403).json({ error: 'Unauthorized: Member not found' });
+        }
+
+        // 1. Legacy Role
+        const legacyRole = member?.roles?.name;
+        
+        // 2. Multi-Roles
+        const multiRoles = member?.member_roles?.map(mr => mr.roles?.name) || [];
+        
+        // Combine
+        const allRoles = [legacyRole, ...multiRoles].filter(Boolean);
+        const allowedRoles = ['super_admin', 'president', 'admin', 'secretary'];
+
+        const hasPermission = allRoles.some(role => allowedRoles.includes(role));
+
+        if (!member || !hasPermission) {
+            console.error('[Upload] Unauthorized. Found roles:', allRoles);
+            return res.status(403).json({ error: 'Unauthorized', foundRoles: allRoles });
+        }
+
+        // Prepare File
+        const buffer = Buffer.from(base64File.split(',')[1], 'base64');
+        const fileName = `doc_${communityId}_${Date.now()}.pdf`; // Simple naming
+        const bucketName = 'community-documents';
+
+        // Ensure bucket exists
+        const { data: buckets } = await supabaseAdmin.storage.listBuckets();
+        if (!buckets.find(b => b.name === bucketName)) {
+            await supabaseAdmin.storage.createBucket(bucketName, { public: true });
+        }
+
+        // Upload to Storage
+        const { error: uploadError } = await supabaseAdmin
+            .storage
+            .from(bucketName)
+            .upload(fileName, buffer, {
+                contentType: 'application/pdf',
+                upsert: true
+            });
+
+        if (uploadError) throw uploadError;
+
+        const { data: publicUrlData } = supabaseAdmin
+            .storage
+            .from(bucketName)
+            .getPublicUrl(fileName);
+
+        // Insert into DB
+        const { data: doc, error: dbError } = await supabaseAdmin
+            .from('community_documents')
+            .insert([{
+                community_id: communityId,
+                name: name,
+                url: publicUrlData.publicUrl,
+                type: 'guideline',
+                created_by: user.id
+            }])
+            .select()
+            .single();
+
+        if (dbError) throw dbError;
+
+        res.json(doc);
+
+    } catch (err) {
+        console.error("Upload Document Error:", err);
+        res.status(500).json({ error: err.message });
+    }
+};
+
+exports.deleteDocument = async (req, res) => {
+    const token = req.headers.authorization?.split(' ')[1];
+    const { id } = req.params;
+
+    if (!token) return res.status(401).json({ error: 'No token' });
+
+    try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+        if (authError || !user) throw new Error('Invalid token');
+
+        // Get Document to check community ownership
+        const { data: doc, error: fetchError } = await supabaseAdmin
+            .from('community_documents')
+            .select('community_id, url')
+            .eq('id', id)
+            .single();
+
+        if (fetchError || !doc) return res.status(404).json({ error: 'Document not found' });
+
+        // Check permission for THIS community
+        const { data: member } = await supabaseAdmin
+            .from('community_members')
+            .select(`
+                roles(name),
+                member_roles(
+                    roles(name)
+                )
+            `)
+            .eq('profile_id', user.id)
+            .eq('community_id', doc.community_id)
+            .single();
+
+        const legacyRole = member?.roles?.name;
+        const multiRoles = member?.member_roles?.map(mr => mr.roles?.name) || [];
+        const allRoles = [legacyRole, ...multiRoles].filter(Boolean);
+        
+        const allowedRoles = ['super_admin', 'president', 'admin', 'secretary'];
+
+        const hasPermission = allRoles.some(role => allowedRoles.includes(role));
+
+        if (!member || !hasPermission) {
+             console.error('[Delete] Unauthorized. Found roles:', allRoles);
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        // Delete from Storage
+        const bucketName = 'community-documents';
+        // Extract filename from URL (simple split)
+        const fileName = doc.url.split('/').pop();
+        
+        await supabaseAdmin.storage.from(bucketName).remove([fileName]);
+
+        // Delete from DB
+        const { error: deleteError } = await supabaseAdmin
+            .from('community_documents')
+            .delete()
+            .eq('id', id);
+
+        if (deleteError) throw deleteError;
+
+        res.json({ message: 'Document deleted' });
+
+    } catch (err) {
+        console.error("Delete Document Error:", err);
         res.status(500).json({ error: err.message });
     }
 };

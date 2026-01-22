@@ -12,5 +12,9 @@ router.put('/update', communitiesController.updateCommunity);
 router.post('/create', communitiesController.createCommunity);
 router.delete('/:id', communitiesController.deleteCommunity);
 
+// Documents
+router.post('/documents', communitiesController.uploadDocument);
+router.delete('/documents/:id', communitiesController.deleteDocument);
+
 
 module.exports = router;

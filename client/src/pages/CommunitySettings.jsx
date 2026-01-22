@@ -11,10 +11,10 @@ import Toast from '../components/Toast';
 
 const CommunitySettings = () => {
     const { t } = useTranslation();
-    const { user, deleteCommunity, refreshActiveCommunity, hasAnyRole } = useAuth();
+    const { user, activeCommunity, deleteCommunity, refreshActiveCommunity, hasAnyRole } = useAuth();
     
     // Only super_admin and president can edit community settings
-    const canEdit = hasAnyRole(['super_admin', 'president']);
+    const canEdit = hasAnyRole(['super_admin', 'president', 'admin', 'secretary']); // Should match backend allowed roles
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [community, setCommunity] = useState({
@@ -22,21 +22,30 @@ const CommunitySettings = () => {
         address: '',
         bank_details: [],
         logo_url: '',
-        currency: DEFAULT_CURRENCY
+        currency: DEFAULT_CURRENCY,
+        documents: []
     });
+    const [documentFile, setDocumentFile] = useState(null);
+    const [docName, setDocName] = useState('');
+    const [uploadingDoc, setUploadingDoc] = useState(false);
     const [logoFile, setLogoFile] = useState(null);
     const [logoPreview, setLogoPreview] = useState('');
     const [toast, setToast] = useState({ message: '', type: 'success' });
     const [showDeleteModal, setShowDeleteModal] = useState(false);
 
     useEffect(() => {
-        fetchCommunity();
-    }, []);
+        if (activeCommunity?.community_id) {
+            fetchCommunity();
+        }
+    }, [activeCommunity]);
 
     const fetchCommunity = async () => {
         try {
             const res = await fetch(`${API_URL}/api/communities/my`, {
-                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                headers: { 
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'x-community-id': activeCommunity.community_id
+                }
             });
             if (res.ok) {
                 const data = await res.json();
@@ -44,7 +53,8 @@ const CommunitySettings = () => {
                     ...data, 
                     bank_details: Array.isArray(data.bank_details) ? data.bank_details : [],
                     logo_url: data.logo_url || '',
-                    currency: data.currency || DEFAULT_CURRENCY
+                    currency: data.currency || DEFAULT_CURRENCY,
+                    documents: data.documents || []
                 });
                 if (data.logo_url) {
                     setLogoPreview(data.logo_url);
@@ -166,6 +176,76 @@ const CommunitySettings = () => {
             newBanks[index] = { ...newBanks[index], [field]: value };
             return { ...prev, bank_details: newBanks };
         });
+    };
+
+    const handleUploadDocument = async (e) => {
+        e.preventDefault();
+        if (!documentFile || !docName) return;
+
+        setUploadingDoc(true);
+        try {
+            // Convert to base64
+            const reader = new FileReader();
+            reader.readAsDataURL(documentFile);
+            reader.onload = async () => {
+                const base64File = reader.result;
+
+                const res = await fetch(`${API_URL}/api/communities/documents`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                        'x-community-id': activeCommunity.community_id
+                    },
+                    body: JSON.stringify({ name: docName, base64File })
+                });
+
+                if (res.ok) {
+                    const newDoc = await res.json();
+                    setCommunity(prev => ({
+                        ...prev,
+                        documents: [newDoc, ...prev.documents]
+                    }));
+                    setDocumentFile(null);
+                    setDocName('');
+                    setToast({ message: t('community_settings.doc_upload_success', 'Document uploaded successfully'), type: 'success' });
+                } else {
+                    const error = await res.json();
+                    setToast({ message: error.error || 'Upload failed', type: 'error' });
+                }
+                setUploadingDoc(false);
+            };
+        } catch (error) {
+            console.error(error);
+            setUploadingDoc(false);
+            setToast({ message: 'Upload error', type: 'error' });
+        }
+    };
+
+    const handleDeleteDocument = async (docId) => {
+        if (!window.confirm(t('community_settings.confirm_delete_doc', 'Delete this document?'))) return;
+
+        try {
+            const res = await fetch(`${API_URL}/api/communities/documents/${docId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+
+            if (res.ok) {
+                setCommunity(prev => ({
+                    ...prev,
+                    documents: prev.documents.filter(d => d.id !== docId)
+                }));
+                setToast({ message: t('community_settings.doc_delete_success', 'Document deleted'), type: 'success' });
+            } else {
+                setToast({ message: 'Delete failed', type: 'error' });
+            }
+        } catch (error) {
+            console.error(error);
+            setToast({ message: 'Delete error', type: 'error' });
+        }
     };
 
     const handleDeleteCommunity = async () => {
@@ -373,6 +453,89 @@ const CommunitySettings = () => {
                                     </div>
                                 ))}
                             </div>
+                            </div>
+
+
+                        {/* Documents Section */}
+                        <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                             <h2 className="text-lg font-semibold dark:text-white mb-4">{t('community_settings.documents', 'Community Documents')}</h2>
+                             
+                             {/* Upload Form */}
+                             {canEdit && (
+                                <div className="bg-blue-50/50 dark:bg-blue-900/20 p-4 rounded-xl mb-6">
+                                    <h3 className="text-sm font-medium mb-3 dark:text-gray-200">{t('community_settings.upload_new_doc', 'Upload New Document')}</h3>
+                                    <div className="flex flex-col md:flex-row gap-4 items-end">
+                                        <div className="flex-1 w-full">
+                                            <input 
+                                                type="text" 
+                                                className="glass-input w-full"
+                                                placeholder={t('community_settings.doc_name_placeholder', 'Document Name (e.g. Pool Rules)')}
+                                                value={docName}
+                                                onChange={(e) => setDocName(e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="flex-1 w-full">
+                                             <label className="block w-full">
+                                                <span className="sr-only">Choose file</span>
+                                                <input 
+                                                    type="file" 
+                                                    accept="application/pdf"
+                                                    onChange={(e) => setDocumentFile(e.target.files[0])}
+                                                    className="block w-full text-sm text-gray-500
+                                                    file:mr-4 file:py-2 file:px-4
+                                                    file:rounded-full file:border-0
+                                                    file:text-sm file:font-semibold
+                                                    file:bg-blue-50 file:text-blue-700
+                                                    hover:file:bg-blue-100
+                                                    dark:file:bg-blue-900/40 dark:file:text-blue-300
+                                                    "
+                                                />
+                                            </label>
+                                        </div>
+                                        <button 
+                                            type="button"
+                                            disabled={!documentFile || !docName || uploadingDoc}
+                                            onClick={handleUploadDocument}
+                                            className="glass-button-secondary whitespace-nowrap"
+                                        >
+                                            {uploadingDoc ? t('common.uploading', 'Uploading...') : t('common.upload', 'Upload PDF')}
+                                        </button>
+                                    </div>
+                                    {documentFile && <p className="text-xs text-gray-500 mt-2">{documentFile.name}</p>}
+                                </div>
+                             )}
+
+                             {/* Documents List */}
+                             <div className="space-y-2">
+                                {community.documents && community.documents.length > 0 ? (
+                                    community.documents.map((doc) => (
+                                        <div key={doc.id} className="flex justify-between items-center bg-white/40 dark:bg-neutral-800/40 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 bg-red-100/50 dark:bg-red-900/30 rounded-lg text-red-500">
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                                                </div>
+                                                <div>
+                                                    <a href={doc.url} target="_blank" rel="noopener noreferrer" className="font-medium text-gray-800 dark:text-gray-200 hover:text-blue-600 hover:underline">
+                                                        {doc.name}
+                                                    </a>
+                                                    <p className="text-xs text-gray-400">{new Date(doc.created_at).toLocaleDateString()}</p>
+                                                </div>
+                                            </div>
+                                            {canEdit && (
+                                                <button 
+                                                    onClick={() => handleDeleteDocument(doc.id)}
+                                                    className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                                                    title={t('common.delete')}
+                                                >
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-sm text-gray-500 italic">{t('community_settings.no_documents', 'No documents uploaded yet.')}</p>
+                                )}
+                             </div>
                         </div>
 
                         <div className="pt-4 flex items-center justify-end gap-3">
@@ -392,6 +555,7 @@ const CommunitySettings = () => {
                         </div>
                     </form>
                 </div>
+
 
                 {/* Delete Community Button (Super Admin Only) */}
                  {hasAnyRole(['super_admin']) && (
