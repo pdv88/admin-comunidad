@@ -330,41 +330,73 @@ const Properties = () => {
                     <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t('properties.title')}</h1>
                 </div>
 
-                {/* Tabs */}
-                <div className="flex space-x-4 border-b border-gray-200 dark:border-neutral-700 mb-6">
-                    <button
-                        className={`py-2 px-4 font-medium ${activeTab === 'units' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-                        onClick={() => setActiveTab('units')}
-                    >
-                        {t('properties.units_structure', 'Units & Structure')}
-                    </button>
-                    <button
-                        className={`py-2 px-4 font-medium ${activeTab === 'amenities' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-                        onClick={() => setActiveTab('amenities')}
-                    >
-                        {t('properties.amenities', 'Common Areas / Amenities')}
-                    </button>
+                {/* Tabs & Actions */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                    <div className="flex bg-white/30 backdrop-blur-md border border-white/40 shadow-sm dark:bg-neutral-800/40 dark:border-white/10 p-1 rounded-full w-fit items-center">
+                        <button
+                            className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === 'units' 
+                                ? 'bg-white text-blue-600 shadow-md dark:bg-neutral-700 dark:text-blue-400' 
+                                : 'text-gray-600 hover:bg-white/20 dark:text-gray-300 dark:hover:bg-white/10'}`}
+                            onClick={() => setActiveTab('units')}
+                        >
+                            {t('properties.units_structure', 'Units & Structure')}
+                        </button>
+                        <button
+                            className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === 'amenities' 
+                                ? 'bg-white text-blue-600 shadow-md dark:bg-neutral-700 dark:text-blue-400' 
+                                : 'text-gray-600 hover:bg-white/20 dark:text-gray-300 dark:hover:bg-white/10'}`}
+                            onClick={() => setActiveTab('amenities')}
+                        >
+                            {t('properties.amenities', 'Common Areas / Amenities')}
+                        </button>
+                    </div>
+
+                    <div className="flex gap-2">
+                        {activeTab === 'units' ? (
+                            <>
+                                <button 
+                                    onClick={() => setBlockModalOpen(true)}
+                                    className="glass-button bg-blue-600 text-white flex items-center gap-2"
+                                >
+                                    <span>+</span> {t('properties.add_block')}
+                                </button>
+                                <button 
+                                    onClick={() => setUnitModalOpen(true)}
+                                    className="glass-button bg-gradient-to-r from-emerald-500 to-teal-500 border-none shadow-emerald-500/20 flex items-center gap-2"
+                                >
+                                    <span>+</span> {t('properties.add_unit')}
+                                </button>
+                            </>
+                        ) : (
+                            <button 
+                                onClick={() => {
+                                    setNewAmenity({
+                                        name: '', 
+                                        description: '', 
+                                        is_reservable: false, 
+                                        max_hours: 0,
+                                        max_days: 0,
+                                        type: 'hour',
+                                        disabled_days: [],
+                                        schedule_start: '06:00',
+                                        schedule_end: '23:00',
+                                        exception_days: []
+                                    });
+                                    setEditingAmenityId(null);
+                                    setAmenityModalOpen(true);
+                                }}
+                                className="glass-button bg-blue-600 text-white flex items-center gap-2"
+                            >
+                                <span>+</span>
+                                {t('properties.add_amenity', 'Add Amenity')}
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {activeTab === 'units' ? (
                 <>
-                 <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl font-bold text-gray-800 dark:text-white">{t('properties.current_structure')}</h2>
-                    <div className="flex gap-2">
-                        <button 
-                            onClick={() => setBlockModalOpen(true)}
-                            className="glass-button bg-blue-600 text-white flex items-center gap-2"
-                        >
-                            <span>+</span> {t('properties.add_block')}
-                        </button>
-                        <button 
-                            onClick={() => setUnitModalOpen(true)}
-                            className="glass-button bg-gradient-to-r from-emerald-500 to-teal-500 border-none shadow-emerald-500/20 flex items-center gap-2"
-                        >
-                            <span>+</span> {t('properties.add_unit')}
-                        </button>
-                    </div>
-                </div>
+
 
                 {/* Create Block Modal */}
                 {blockModalOpen && (
@@ -584,34 +616,7 @@ const Properties = () => {
                 ) : (
                 <div className="space-y-6">
                     {/* Top Bar with Create Button */ }
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-xl font-semibold text-gray-800 dark:text-white">
-                            {t('properties.amenities_list', 'Common Areas')}
-                        </h2>
-                        <button 
-                            onClick={() => {
-                                // Reset state manually just in case
-                                setNewAmenity({
-                                    name: '', 
-                                    description: '', 
-                                    is_reservable: false, 
-                                    max_hours: 0,
-                                    max_days: 0,
-                                    type: 'hour',
-                                    disabled_days: [],
-                                    schedule_start: '06:00',
-                                    schedule_end: '23:00',
-                                    exception_days: []
-                                });
-                                setEditingAmenityId(null);
-                                setAmenityModalOpen(true);
-                            }}
-                            className="glass-button bg-blue-600 text-white flex items-center gap-2"
-                        >
-                            <span>+</span>
-                            {t('properties.add_amenity', 'Add Amenity')}
-                        </button>
-                    </div>
+
 
                     {/* Amenity Form Modal */}
                     {amenityModalOpen && (
@@ -620,21 +625,21 @@ const Properties = () => {
                                 <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
                                     <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={cancelEditAmenity}></div>
                                     <span className="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
-                                    <div className="inline-block align-bottom bg-white dark:bg-neutral-800 rounded-lg text-left shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
-                                        <div className="px-6 py-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+                                    <div className="inline-block align-bottom glass-card p-0 text-left shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full overflow-hidden">
+                                        <div className="px-6 py-6 border-b border-white/20 dark:border-white/10 flex justify-between items-center">
                                             <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                                                {editingAmenityId ? t('properties.edit_amenity', 'Edit Amenity') : t('properties.add_amenity', 'Add Amenity')}
+                                                {editingAmenityId ? t('properties.update_amenity', 'Update Amenity') : t('properties.create_amenity', 'Create Amenity')}
                                             </h3>
                                             <button onClick={cancelEditAmenity} className="text-gray-400 hover:text-gray-500 text-2xl">&times;</button>
                                         </div>
                                         
-                                        <div className="bg-white dark:bg-neutral-800 px-6 py-6">
+                                        <div className="px-6 py-6 bg-white/50 dark:bg-black/40 backdrop-blur-md">
                                             <form onSubmit={handleCreateAmenity} className="space-y-6">
                                                 {/* Basic Info */}
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                     <div className="space-y-1">
                                                         <label className="text-sm font-medium text-gray-700 dark:text-gray-300 ml-1">
-                                                            {t('properties.namen', 'Amenity Name')}
+                                                            {t('properties.amenity_name', 'Amenity Name')}
                                                         </label>
                                                         <input 
                                                             type="text" 
@@ -668,7 +673,7 @@ const Properties = () => {
                                                         {/* Time Range */}
                                                         <div className="grid grid-cols-2 gap-4 max-w-md">
                                                             <div>
-                                                                <label className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 block">Opening Time</label>
+                                                                <label className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 block">{t('properties.opening_time', 'Opening Time')}</label>
                                                                 <input 
                                                                     type="time" 
                                                                     className="glass-input w-full py-1"
@@ -677,7 +682,7 @@ const Properties = () => {
                                                                 />
                                                             </div>
                                                             <div>
-                                                                <label className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 block">Closing Time</label>
+                                                                <label className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 block">{t('properties.closing_time', 'Closing Time')}</label>
                                                                 <input 
                                                                     type="time" 
                                                                     className="glass-input w-full py-1"
@@ -798,21 +803,21 @@ const Properties = () => {
                                                         {/* Reservation Type */}
                                                         {newAmenity.is_reservable && (
                                                             <div className="flex items-center gap-4 animate-fadeIn">
-                                                                <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Type:</label>
+                                                                <label className="text-xs font-medium text-gray-500 dark:text-gray-400">{t('properties.type', 'Type')}:</label>
                                                                 <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
                                                                     <button
                                                                         type="button"
                                                                         onClick={() => setNewAmenity({...newAmenity, type: 'hour'})}
                                                                         className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${newAmenity.type === 'hour' ? 'bg-white dark:bg-neutral-700 text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                                                                     >
-                                                                        Hourly
+                                                                        {t('properties.hourly', 'Hourly')}
                                                                     </button>
                                                                     <button
                                                                         type="button"
                                                                         onClick={() => setNewAmenity({...newAmenity, type: 'day'})}
                                                                         className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${newAmenity.type === 'day' ? 'bg-white dark:bg-neutral-700 text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                                                                     >
-                                                                        Daily
+                                                                        {t('properties.daily', 'Daily')}
                                                                     </button>
                                                                 </div>
                                                             </div>
@@ -824,7 +829,7 @@ const Properties = () => {
                                                                 <div className="w-px h-8 bg-gray-300 dark:bg-gray-700"></div>
                                                                 <div className="flex flex-col">
                                                                     <label className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                                                                        {newAmenity.type === 'day' ? 'Max Days/Month' : t('properties.max_hours', 'Max Hours/Day')}
+                                                                        {newAmenity.type === 'day' ? t('properties.max_days_month', 'Max Days/Month') : t('properties.max_hours_day', 'Max Hours/Day')}
                                                                     </label>
                                                                     <div className="flex items-center gap-2">
                                                                         <input 
@@ -842,7 +847,7 @@ const Properties = () => {
                                                                             min="0"
                                                                         />
                                                                         <span className="text-xs text-gray-400">
-                                                                            {newAmenity.type === 'day' ? 'days' : 'hrs'}
+                                                                            {newAmenity.type === 'day' ? t('common.days', 'days') : t('common.hours', 'hrs')}
                                                                         </span>
                                                                     </div>
                                                                 </div>
@@ -851,12 +856,12 @@ const Properties = () => {
                                                     </div>
                                                 </div>
 
-                                                <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
+                                                <div className="flex justify-end gap-3 pt-4 border-t border-white/20 dark:border-white/10">
                                                     <button type="button" onClick={cancelEditAmenity} className="glass-button-secondary">
-                                                        Cancel
+                                                        {t('common.cancel', 'Cancel')}
                                                     </button>
                                                     <button type="submit" className="glass-button px-8">
-                                                        {editingAmenityId ? t('properties.update_amenity', 'Update Amenity') : t('properties.add_amenity_btn', 'Create Amenity')}
+                                                        {editingAmenityId ? t('properties.update_amenity', 'Update Amenity') : t('properties.create_amenity', 'Create Amenity')}
                                                     </button>
                                                 </div>
                                             </form>
@@ -903,8 +908,8 @@ const Properties = () => {
                                     <span>
                                         {(() => {
                                             const days = amenity.reservation_limits?.allowed_days;
-                                            if (!days || days.length === 7) return 'Every Day';
-                                            if (days.length === 0) return 'Closed';
+                                            if (!days || days.length === 7) return t('properties.every_day', 'Every Day');
+                                            if (days.length === 0) return t('properties.closed', 'Closed');
                                             const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
                                             // Sort days just in case
                                             return days.slice().sort((a,b)=>a-b).map(d => dayNames[d]).join(', ');
@@ -929,8 +934,8 @@ const Properties = () => {
                                     {amenity.is_reservable && (
                                         <span className="px-2 py-1 text-xs rounded bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
                                             {amenity.reservation_limits?.type === 'day' 
-                                                ? `Max ${amenity.reservation_limits.max_days_per_month} days/month`
-                                                : `Max ${amenity.reservation_limits?.max_hours_per_day || 0}h/day`
+                                                ? t('properties.limit_days', {count: amenity.reservation_limits.max_days_per_month})
+                                                : t('properties.limit_hours', {count: amenity.reservation_limits?.max_hours_per_day || 0})
                                             }
                                         </span>
                                     )}

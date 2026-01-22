@@ -258,14 +258,15 @@
       "notices": "Notices",
       "reports": "Reports",
       "voting": "Voting",
-      "properties": "Properties",
+      "properties": "Structure",
       "payments": "Payments",
       "maintenance": "Community Fees",
       "campaigns": "Campaigns",
       "users": "Users",
       "administration": "Administration",
       "community_settings": "Community Settings",
-      "community_info": "Community Info"
+      "community_info": "Community Info",
+      "reservations": "Reservations"
     },
     "sign_out": "Sign out"
   },
@@ -296,7 +297,9 @@
     "delete_success": "Notice deleted successfully!"
   },
   "properties": {
-    "title": "Property Structure",
+    "title": "Structure",
+    "units_structure": "Units & Structure",
+    "amenities": "Common Areas / Amenities",
     "loading": "Loading properties...",
     "add_block": "Add Building/Street",
     "add_block_btn": "Add Block",
@@ -321,6 +324,30 @@
     "confirm_delete_block": "Are you sure you want to delete this block? This action cannot be undone.",
     "confirm_delete_unit": "Are you sure you want to delete this unit? This action cannot be undone.",
     "unoccupied": "Unoccupied",
+    "amenities_list": "Common Areas",
+    "add_amenity": "Add Amenity",
+    "edit_amenity": "Edit Amenity",
+    "amenity_name": "Amenity Name",
+    "description": "Description",
+    "availability": "Availability",
+    "opening_time": "Opening Time",
+    "closing_time": "Closing Time",
+    "open_days": "Open Days",
+    "exception_days": "Exception Days (Closed)",
+    "settings": "Configuration",
+    "reservable": "Reservable",
+    "type": "Type",
+    "hourly": "Hourly",
+    "daily": "Daily",
+    "max_hours_day": "Max Hours/Day",
+    "max_days_month": "Max Days/Month",
+    "create_amenity": "Create Amenity",
+    "update_amenity": "Update Amenity",
+    "every_day": "Every Day",
+    "closed": "Closed",
+    "not_reservable": "Not Reservable",
+    "limit_days": "Max {{count}} days/month",
+    "limit_hours": "Max {{count}}h/day",
     "edit_tenant_info": "Edit Tenant Info",
     "tenant_name": "Tenant Name",
     "tenant_email": "Tenant Email",
@@ -544,6 +571,7 @@
     "copy": "Copy",
     "copied": "Copied",
     "days": "days",
+    "hours": "hrs",
     "no_description": "No description."
   },
   "payments": {
@@ -713,7 +741,7 @@
     "no_amenities": "No amenities registered.",
     "max_hours_badge": "Limit: {{count}}h",
     "max_days_monthly_badge": "Limit: {{count}} days/mo",
-    "limit_hours_daily": "Reservations limited to {{count}} hours a day",
+
     "limit_hours_daily": "Reservations limited to {{count}} hours a day",
     "limit_days_monthly": "Reservations limited to {{count}} days a month",
     "documents": "Community Guidelines & Documents"
@@ -736,7 +764,10 @@
     "closed": "Closed",
     "holiday_closed": "Closed for Holiday/Maintenance",
     "no_slots": "No slots available",
-    "request": "Request"
+    "request": "Request",
+    "reserved_by": "Reserved by",
+    "no_upcoming": "No upcoming reservations.",
+    "myself": "Myself"
   },
   "maintenance": {
     "admin_title": "Maintenance Fee Management",

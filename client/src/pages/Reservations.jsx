@@ -186,14 +186,14 @@ const Reservations = () => {
                                                             disabled={!!processingId}
                                                             className="bg-green-100 text-green-700 px-3 py-1 rounded-md text-sm hover:bg-green-200"
                                                         >
-                                                            Approve
+                                                            {t('common.approve', 'Approve')}
                                                         </button>
                                                         <button 
                                                             onClick={() => handleUpdateStatus(r.id, 'rejected')}
                                                             disabled={!!processingId}
                                                             className="bg-red-100 text-red-700 px-3 py-1 rounded-md text-sm hover:bg-red-200"
                                                         >
-                                                            Reject
+                                                            {t('common.reject', 'Reject')}
                                                         </button>
                                                     </>
                                                 )}
@@ -203,7 +203,7 @@ const Reservations = () => {
                                                         disabled={!!processingId}
                                                         className="bg-gray-100 text-gray-700 px-3 py-1 rounded-md text-sm hover:bg-gray-200"
                                                     >
-                                                        Cancel
+                                                        {t('common.cancel', 'Cancel')}
                                                     </button>
                                                 )}
                                             </td>
@@ -219,7 +219,7 @@ const Reservations = () => {
                 <div className="glass-card p-6">
                     <h2 className="font-bold mb-4 dark:text-white">{t('reservations.upcoming', 'Upcoming Reservations')}</h2>
                     {upcomingReservations.length === 0 ? (
-                        <p className="text-gray-500">No upcoming reservations.</p>
+                        <p className="text-gray-500">{t('reservations.no_upcoming', 'No upcoming reservations.')}</p>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {upcomingReservations.map(r => (
@@ -235,7 +235,7 @@ const Reservations = () => {
                                                 className="text-xs text-red-500 hover:text-red-700 bg-white dark:bg-neutral-800 border border-red-200 px-2 rounded"
                                                 title="Cancel Reservation"
                                                 >
-                                                    Cancel
+                                                    {t('common.cancel', 'Cancel')}
                                                 </button>
                                             )}
                                         </div>
@@ -247,7 +247,7 @@ const Reservations = () => {
                                         {r.start_time.slice(0,5)} - {r.end_time.slice(0,5)}
                                     </div>
                                     <div className="text-xs text-gray-500 border-t pt-2 mt-2">
-                                        Reserved by: {r.profiles?.full_name} ({r.units?.unit_number})
+                                        {t('reservations.reserved_by', 'Reserved by:')} {r.profiles?.full_name} ({r.units?.unit_number})
                                     </div>
                                 </div>
                             ))}
@@ -263,8 +263,8 @@ const Reservations = () => {
                         <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
                             <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setBookingModal({ isOpen: false })}></div>
                             <span className="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
-                            <div className="inline-block align-bottom bg-white dark:bg-neutral-800 rounded-lg text-left shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                                <form onSubmit={handleCreateBooking} className="bg-white dark:bg-neutral-800 px-4 pt-5 pb-4 sm:p-6">
+                            <div className="inline-block align-bottom glass-card p-0 text-left shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full overflow-hidden">
+                                <form onSubmit={handleCreateBooking} className="px-4 pt-5 pb-4 sm:p-6 bg-white/50 dark:bg-black/40 backdrop-blur-md">
                                     <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">{t('reservations.request_booking', 'Request Reservation')}</h3>
                                     
                                     <div className="space-y-4">
@@ -277,7 +277,7 @@ const Reservations = () => {
                                                     value={newBooking.targetUserId || ''}
                                                     onChange={e => setNewBooking({...newBooking, targetUserId: e.target.value})}
                                                 >
-                                                    <option value="">Myself ({user?.email})</option>
+                                                    <option value="">{t('reservations.myself', 'Myself')} ({user?.email})</option>
                                                     {users.map(u => (
                                                         <option key={u.id} value={u.id}>
                                                             {u.full_name} ({u.email})
@@ -475,7 +475,7 @@ const Reservations = () => {
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes (Optional)</label>
                                             <textarea 
-                                                className="glass-input w-full"
+                                                className="glass-input w-full rounded-2xl"
                                                 value={newBooking.notes}
                                                 onChange={e => setNewBooking({...newBooking, notes: e.target.value})}
                                                 rows="2"
@@ -486,13 +486,13 @@ const Reservations = () => {
                                     <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
                                         <button 
                                             type="submit" 
-                                            className="w-full glass-button justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium sm:col-start-2 sm:text-sm"
+                                            className="w-full glass-button justify-center border border-transparent shadow-sm px-4 py-2 text-base font-bold sm:col-start-2 sm:text-sm"
                                         >
                                             {t('reservations.request', 'Request')}
                                         </button>
                                         <button 
                                             type="button" 
-                                            className="mt-3 w-full glass-button-secondary justify-center rounded-md border shadow-sm px-4 py-2 text-base font-medium sm:mt-0 sm:col-start-1 sm:text-sm"
+                                            className="mt-3 w-full glass-button-secondary justify-center border shadow-sm px-4 py-2 text-base font-medium sm:mt-0 sm:col-start-1 sm:text-sm"
                                             onClick={() => setBookingModal({ isOpen: false })}
                                         >
                                             {t('common.cancel', 'Cancel')}
