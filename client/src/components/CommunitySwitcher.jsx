@@ -28,7 +28,7 @@ const CommunitySwitcher = () => {
     // If we want to allow "Create Community" later, might be good to always show.
     // For now, if <= 1, just show the current block but static?
     // Let's show it anyway for consistency of "Where am I".
-    
+
     // Determine label: Loading -> Name -> Fallback
     let displayLabel = t('community_switcher.loading');
     if (!loading) {
@@ -38,7 +38,7 @@ const CommunitySwitcher = () => {
             displayLabel = t('community_switcher.no_community', 'No Community');
         } else {
             // Communities exist but active one is weird/missing name
-             displayLabel = t('community_switcher.select_community', 'Select Community');
+            displayLabel = t('community_switcher.select_community', 'Select Community');
         }
     }
     const communityName = displayLabel;
@@ -51,7 +51,7 @@ const CommunitySwitcher = () => {
         e.preventDefault();
         try {
             const token = localStorage.getItem('token');
-            const API_BASE = 'http://localhost:5000'; // Fallback
+            const API_BASE = ''; // Use proxy
 
             const res = await fetch(`${API_BASE}/api/communities/create`, {
                 method: 'POST',
@@ -65,7 +65,7 @@ const CommunitySwitcher = () => {
             if (res.ok) {
                 const data = await res.json();
                 // Refresh to load new community
-                window.location.reload(); 
+                window.location.reload();
             } else {
                 alert(t('community_switcher.error'));
             }
@@ -77,7 +77,7 @@ const CommunitySwitcher = () => {
     return (
         <div className="px-4 mb-2 relative" ref={dropdownRef}>
             <div className="relative">
-                 <button 
+                <button
                     onClick={() => setIsOpen(!isOpen)}
                     className={`w-full flex items-center justify-between p-2.5 rounded-xl bg-white/40 dark:bg-neutral-900/40 border border-white/40 dark:border-neutral-700 hover:bg-white/60 dark:hover:bg-neutral-800/60 transition-all text-sm font-medium text-gray-800 dark:text-gray-100 shadow-sm backdrop-blur-sm cursor-pointer`}
                 >
@@ -105,14 +105,13 @@ const CommunitySwitcher = () => {
                                         switchCommunity(member.community_id);
                                         setIsOpen(false);
                                     }}
-                                    className={`w-full flex items-center justify-between px-4 py-2.5 text-left text-sm transition-colors ${
-                                        member.community_id === activeCommunity?.community_id 
-                                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' 
+                                    className={`w-full flex items-center justify-between px-4 py-2.5 text-left text-sm transition-colors ${member.community_id === activeCommunity?.community_id
+                                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
                                             : 'hover:bg-gray-100 dark:hover:bg-white/5 text-gray-700 dark:text-gray-200'
-                                    }`}
+                                        }`}
                                 >
                                     <div className="flex items-center gap-3 truncate">
-                                         <div className={`w-2 h-2 rounded-full ${member.community_id === activeCommunity?.community_id ? 'bg-blue-500' : 'bg-gray-300 dark:bg-neutral-600'}`}></div>
+                                        <div className={`w-2 h-2 rounded-full ${member.community_id === activeCommunity?.community_id ? 'bg-blue-500' : 'bg-gray-300 dark:bg-neutral-600'}`}></div>
                                         <span className="truncate">{member.communities?.name}</span>
                                     </div>
                                     {member.community_id === activeCommunity?.community_id && (
@@ -120,8 +119,8 @@ const CommunitySwitcher = () => {
                                     )}
                                 </button>
                             ))}
-                            
-                            
+
+
                             {isSuperAdmin && (
                                 <div className="border-t border-gray-200 dark:border-neutral-700 mt-1 pt-1">
                                     <button
@@ -151,8 +150,8 @@ const CommunitySwitcher = () => {
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     {t('community_switcher.name_label')}
                                 </label>
-                                <input 
-                                    type="text" 
+                                <input
+                                    type="text"
                                     className="glass-input mb-6"
                                     placeholder={t('community_switcher.name_placeholder')}
                                     value={newCommunityName}
@@ -161,15 +160,15 @@ const CommunitySwitcher = () => {
                                     autoFocus
                                 />
                                 <div className="flex gap-3 justify-end">
-                                    <button 
-                                        type="button" 
+                                    <button
+                                        type="button"
                                         onClick={() => setShowCreateModal(false)}
                                         className="glass-button-secondary flex-1"
                                     >
                                         {t('community_switcher.cancel')}
                                     </button>
-                                    <button 
-                                        type="submit" 
+                                    <button
+                                        type="submit"
                                         className="glass-button flex-1"
                                     >
                                         {t('community_switcher.create')}

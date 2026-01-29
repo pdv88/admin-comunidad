@@ -143,7 +143,7 @@ exports.getReservations = async (req, res) => {
             .select(`
                 *,
                 amenities(name),
-                units(unit_number, blocks(name))
+                units(unit_number, block_id, blocks(id, name))
             `)
             .eq('community_id', communityId);
 
@@ -158,9 +158,9 @@ exports.getReservations = async (req, res) => {
                 .from('profiles')
                 .select('id, full_name, email')
                 .in('id', userIds);
-            
+
             const profileMap = (profiles || []).reduce((acc, p) => ({ ...acc, [p.id]: p }), {});
-            
+
             reservations.forEach(r => {
                 r.profiles = profileMap[r.user_id] || { full_name: 'Unknown User', email: '' };
             });
@@ -189,7 +189,7 @@ exports.createReservation = async (req, res) => {
         }
 
         const isAdmin = member.roleNames.includes('admin') || member.roleNames.includes('president');
-        
+
         // Determine Subject User (Who is this reservation for?)
         let subjectUserId = user.id;
         if (isAdmin && target_user_id) {
@@ -201,12 +201,12 @@ exports.createReservation = async (req, res) => {
             .from('unit_owners')
             .select('unit_id, units!inner(id, blocks!inner(community_id))')
             .eq('profile_id', subjectUserId)
-            .eq('units.blocks.community_id', communityId) 
+            .eq('units.blocks.community_id', communityId)
             .limit(1)
             .single();
 
         const unitId = unitOwner?.unit_id;
-        
+
         // 3. Check Availability (Overlap) - Global Check
         const { data: overlaps } = await supabaseAdmin
             .from('reservations')
@@ -225,15 +225,15 @@ exports.createReservation = async (req, res) => {
         // 4. Check Limits & Availability Rules
         // Limits now ALWAYS apply to the SUBJECT USER
         if (amenity.reservation_limits) {
-            const limits = amenity.reservation_limits; 
+            const limits = amenity.reservation_limits;
 
             // Check Allowed Days
             if (limits.allowed_days && Array.isArray(limits.allowed_days)) {
                 const [y, m, d] = date.split('-').map(Number);
                 const dayOfWeek = new Date(y, m - 1, d).getDay(); // 0 = Sun
-                
+
                 if (!limits.allowed_days.includes(dayOfWeek)) {
-                     return res.status(400).json({ error: 'Amenities are closed on this day.' });
+                    return res.status(400).json({ error: 'Amenities are closed on this day.' });
                 }
             }
 
@@ -250,17 +250,17 @@ exports.createReservation = async (req, res) => {
                 const eTime = end_time.length === 5 ? end_time + ':00' : end_time;
                 const lStart = limits.schedule_start.length === 5 ? limits.schedule_start + ':00' : limits.schedule_start;
                 const lEnd = limits.schedule_end.length === 5 ? limits.schedule_end + ':00' : limits.schedule_end;
-                
+
                 if (lStart <= lEnd) {
                     if (sTime < lStart || eTime > lEnd) {
-                         return res.status(400).json({ error: `Reservation must be within opening hours (${limits.schedule_start} - ${limits.schedule_end}).` });
+                        return res.status(400).json({ error: `Reservation must be within opening hours (${limits.schedule_start} - ${limits.schedule_end}).` });
                     }
                 } else {
                     if (sTime > lEnd && sTime < lStart) {
-                         return res.status(400).json({ error: `Reservation start time is outside opening hours (${limits.schedule_start} - ${limits.schedule_end}).` });
+                        return res.status(400).json({ error: `Reservation start time is outside opening hours (${limits.schedule_start} - ${limits.schedule_end}).` });
                     }
                     if (eTime > lEnd && eTime < lStart) {
-                         return res.status(400).json({ error: `Reservation end time is outside opening hours (${limits.schedule_start} - ${limits.schedule_end}).` });
+                        return res.status(400).json({ error: `Reservation end time is outside opening hours (${limits.schedule_start} - ${limits.schedule_end}).` });
                     }
                 }
             }
@@ -289,7 +289,7 @@ exports.createReservation = async (req, res) => {
                 if (countError) throw countError;
 
                 if (count >= limits.max_days_per_month) {
-                     return res.status(400).json({ error: `Monthly reservation limit reached. Max ${limits.max_days_per_month} reservations per month.` });
+                    return res.status(400).json({ error: `Monthly reservation limit reached. Max ${limits.max_days_per_month} reservations per month.` });
                 }
             }
 
@@ -306,7 +306,7 @@ exports.createReservation = async (req, res) => {
                     .eq('amenity_id', amenity_id)
                     .eq('date', date)
                     .in('status', ['approved', 'pending']);
-                
+
                 if (unitId) {
                     query = query.eq('unit_id', unitId);
                 } else {
@@ -314,7 +314,7 @@ exports.createReservation = async (req, res) => {
                 }
 
                 const { data: existing } = await query;
-                
+
                 const existingHours = (existing || []).reduce((acc, r) => {
                     const s = new Date(`1970-01-01T${r.start_time}`);
                     const e = new Date(`1970-01-01T${r.end_time}`);
@@ -376,7 +376,7 @@ exports.updateReservationStatus = async (req, res) => {
         }
 
         const isOwner = reservation.user_id === user.id;
-        
+
         // Authorization Logic
         // Admin: can do anything
         // Owner: can only 'cancelled'

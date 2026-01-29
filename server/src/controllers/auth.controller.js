@@ -50,19 +50,29 @@ exports.register = async (req, res) => {
             throw error;
         }
 
+        // Check if user was actually created or just returned (fake identity for existing email)
+        if (!data.user || data.user.identities?.length === 0) {
+            // User already exists - clean up and return error
+            await require('../config/supabaseAdmin').from('communities').delete().eq('id', communityId);
+            return res.status(400).json({ error: 'A user with this email address already exists. Please login instead.' });
+        }
+
         // 3. Generate Link and Send Custom Email
         // We need to generate the link using Admin API
         const { data: linkData, error: linkError } = await require('../config/supabaseAdmin').auth.admin.generateLink({
             type: 'signup',
             email: email,
-            password: password, // For signup link generation sometimes needed if user not created yet? No, generateLink works for existing users too for 'signup' type (email verification)
-            // Wait, generateLink type 'signup' Creates the user if they don't exist? No.
-            // Actually 'signup' link type acts as a confirmation link.
+            password: password,
         });
 
         if (linkError) {
             console.error("Link generation error:", linkError);
-            // Proceed but warn? Or fail? failing is safer for consistency.
+            // If email already exists, clean up and return proper error
+            if (linkError.code === 'email_exists') {
+                await require('../config/supabaseAdmin').from('communities').delete().eq('id', communityId);
+                return res.status(400).json({ error: 'A user with this email address already exists. Please login instead.' });
+            }
+            // For other link errors, continue but the user won't receive the email
         } else if (linkData && linkData.properties && linkData.properties.action_link) {
             const sendEmail = require('../utils/sendEmail');
             await sendEmail({
@@ -184,7 +194,7 @@ exports.login = async (req, res) => {
         // Fetch Units for this user
         const { data: units, error: unitsError } = await require('../config/supabaseAdmin')
             .from('unit_owners')
-            .select('*, units(*, blocks(community_id))')
+            .select('*, units(*, blocks(community_id, name))')
             .eq('profile_id', data.user.id);
 
         // Join units and roles to communities
@@ -258,7 +268,7 @@ exports.getMe = async (req, res) => {
         // Fetch Units for this user
         const { data: units, error: unitsError } = await require('../config/supabaseAdmin')
             .from('unit_owners')
-            .select('*, units(*, blocks(community_id))')
+            .select('*, units(*, blocks(community_id, name))')
             .eq('profile_id', user.id);
 
         // Join units and roles to communities

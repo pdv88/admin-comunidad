@@ -256,17 +256,54 @@ exports.getUsers = async (req, res) => {
     try {
         const { member, communityId } = await getUserAndMember(req);
 
-        // Return members of this community only
-        const { data, error } = await supabaseAdmin
+        // Get members of this community
+        const { data: members, error: membersError } = await supabaseAdmin
             .from('community_members')
             .select('profile:profile_id(*)')
             .eq('community_id', communityId);
 
-        if (error) throw error;
-        // Flatten
-        const users = data.map(m => m.profile);
+        if (membersError) throw membersError;
+
+        // Get all profiles
+        const profiles = members.map(m => m.profile).filter(Boolean);
+        const profileIds = profiles.map(p => p.id);
+
+        // Get unit_owners for these profiles
+        const { data: unitOwners, error: ownersError } = await supabaseAdmin
+            .from('unit_owners')
+            .select(`
+                profile_id,
+                unit_id,
+                units(id, unit_number, block_id)
+            `)
+            .in('profile_id', profileIds);
+
+        if (ownersError) throw ownersError;
+
+        // Create a map of profile_id -> unit info
+        const unitMap = {};
+        (unitOwners || []).forEach(uo => {
+            // Only take first unit if user has multiple
+            if (!unitMap[uo.profile_id] && uo.units) {
+                unitMap[uo.profile_id] = {
+                    unit_id: uo.units.id,
+                    unit_number: uo.units.unit_number,
+                    block_id: uo.units.block_id
+                };
+            }
+        });
+
+        // Combine profile with unit info
+        const users = profiles.map(profile => ({
+            ...profile,
+            unit_id: unitMap[profile.id]?.unit_id || null,
+            unit_number: unitMap[profile.id]?.unit_number || null,
+            block_id: unitMap[profile.id]?.block_id || null
+        }));
+
         res.json(users);
     } catch (err) {
+        console.error('getUsers error:', err);
         res.status(500).json({ error: err.message });
     }
 }
