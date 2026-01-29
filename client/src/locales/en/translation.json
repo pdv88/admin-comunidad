@@ -453,7 +453,9 @@
     "target_audience": "Target Audience",
     "delete_confirm_title": "Delete Poll?",
     "confirm_delete": "Are you sure you want to delete this poll? This action cannot be undone.",
-    "no_polls": "No polls found."
+    "no_polls": "No polls found.",
+    "winner": "Winner",
+    "tie": "Tie"
   },
   "user_management": {
     "title": "User Management",
@@ -741,7 +743,6 @@
     "no_amenities": "No amenities registered.",
     "max_hours_badge": "Limit: {{count}}h",
     "max_days_monthly_badge": "Limit: {{count}} days/mo",
-
     "limit_hours_daily": "Reservations limited to {{count}} hours a day",
     "limit_days_monthly": "Reservations limited to {{count}} days a month",
     "documents": "Community Guidelines & Documents"
@@ -844,7 +845,29 @@
     "payment_rejected": "Payment rejected",
     "delete_title": "Delete Maintenance Fee",
     "delete_confirm": "Are you sure you want to delete this fee? This action cannot be undone.",
-    "warning_gen_zero": "Warning: No new fees generated. All occupied units may already be billed for this period."
+    "warning_gen_zero": "Warning: No new fees generated. All occupied units may already be billed for this period.",
+    "selected_count": "{{count}} selected",
+    "bulk_delete": "Delete Selected",
+    "bulk_mark_paid": "Mark as Paid",
+    "clear_selection": "Clear",
+    "bulk_delete_title": "Delete Selected Fees",
+    "bulk_paid_title": "Mark Fees as Paid",
+    "bulk_delete_confirm": "Are you sure you want to delete {{count}} fee(s)? This action cannot be undone.",
+    "bulk_paid_confirm": "Mark {{count}} fee(s) as paid?",
+    "bulk_delete_success": "{{count}} fee(s) deleted successfully",
+    "bulk_paid_success": "{{count}} fee(s) marked as paid",
+    "confirm_paid": "Mark as Paid",
+    "cannot_select_paid": "Cannot select fee with payment",
+    "cannot_delete_paid": "Cannot delete paid fee",
+    "view_details": "View Details",
+    "fee_details": "Fee Details",
+    "has_payment_upload": "This fee has a payment upload",
+    "use_review": "Use the Review button to manage the payment.",
+    "marked_manually": "Marked as paid manually",
+    "can_revert": "You can revert this fee back to pending if marked by mistake.",
+    "revert_to_pending": "Revert to Pending",
+    "mark_pending": "Mark Pending",
+    "reverted_success": "Fee reverted to pending"
   },
   "terms": {
     "title": "Terms and Conditions",

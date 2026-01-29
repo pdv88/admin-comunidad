@@ -6,6 +6,7 @@ import { API_URL } from '../config';
 import ConfirmationModal from '../components/ConfirmationModal';
 import PaymentUpload from '../components/payments/PaymentUpload';
 import PaymentReviewModal from '../components/payments/PaymentReviewModal';
+import FeeDetailsModal from '../components/payments/FeeDetailsModal';
 import ModalPortal from '../components/ModalPortal';
 import GlassLoader from '../components/GlassLoader';
 import Toast from '../components/Toast';
@@ -38,6 +39,15 @@ const Maintenance = () => {
     const [sortConfig, setSortConfig] = useState({ key: 'period', direction: 'desc' });
     const [pagination, setPagination] = useState({ totalDocs: 0, totalPages: 1 });
 
+    // Bulk Selection State
+    const [selectedFees, setSelectedFees] = useState(new Set());
+    const [bulkModalOpen, setBulkModalOpen] = useState(false);
+    const [bulkAction, setBulkAction] = useState(null); // 'delete' | 'pay'
+
+    // Fee Details Modal State
+    const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+    const [selectedFeeDetails, setSelectedFeeDetails] = useState(null);
+
     // Debounce Search
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -66,7 +76,7 @@ const Maintenance = () => {
             setToast({ message: t('maintenance.sending_email', 'Sending email...'), type: 'info' });
             const res = await fetch(`${API_URL}/api/maintenance/${fee.id}/email`, {
                 method: 'POST',
-                headers: { 
+                headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
                     'X-Community-ID': activeCommunity.community_id
                 }
@@ -86,11 +96,11 @@ const Maintenance = () => {
 
     const handleConfirmDelete = async () => {
         if (!feeToDelete) return;
-        
+
         try {
             const res = await fetch(`${API_URL}/api/maintenance/${feeToDelete.id}`, {
                 method: 'DELETE',
-                headers: { 
+                headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
                     'X-Community-ID': activeCommunity.community_id
                 }
@@ -112,21 +122,99 @@ const Maintenance = () => {
         }
     };
 
+    // Bulk Selection Handlers
+    const handleSelectFee = (feeId) => {
+        setSelectedFees(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(feeId)) {
+                newSet.delete(feeId);
+            } else {
+                newSet.add(feeId);
+            }
+            return newSet;
+        });
+    };
+
+    const handleSelectAll = () => {
+        // Only select fees that can be deleted (not paid)
+        const selectableFees = fees.filter(fee => fee.status !== 'paid' && !fee.payment_id);
+        if (selectedFees.size === selectableFees.length) {
+            setSelectedFees(new Set());
+        } else {
+            setSelectedFees(new Set(selectableFees.map(fee => fee.id)));
+        }
+    };
+
+    const handleBulkAction = (action) => {
+        setBulkAction(action);
+        setBulkModalOpen(true);
+    };
+
+    const handleConfirmBulkAction = async () => {
+        if (!bulkAction || selectedFees.size === 0) return;
+
+        setActionLoading(true);
+        try {
+            const feeIds = Array.from(selectedFees);
+            const endpoint = bulkAction === 'delete'
+                ? `${API_URL}/api/maintenance/bulk`
+                : `${API_URL}/api/maintenance/bulk/pay`;
+
+            const res = await fetch(endpoint, {
+                method: bulkAction === 'delete' ? 'DELETE' : 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'X-Community-ID': activeCommunity.community_id
+                },
+                body: JSON.stringify({ feeIds })
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                const successKey = bulkAction === 'delete'
+                    ? 'maintenance.bulk_delete_success'
+                    : 'maintenance.bulk_paid_success';
+                setToast({
+                    message: t(successKey, `${data.count} fee(s) processed successfully`),
+                    type: 'success'
+                });
+                setSelectedFees(new Set());
+                fetchFees();
+            } else {
+                setToast({ message: data.error || 'Error processing request', type: 'error' });
+            }
+        } catch (error) {
+            console.error("Bulk action error:", error);
+            setToast({ message: 'Network error', type: 'error' });
+        } finally {
+            setActionLoading(false);
+            setBulkModalOpen(false);
+            setBulkAction(null);
+        }
+    };
+
+    // Clear selection when filters/page change
+    useEffect(() => {
+        setSelectedFees(new Set());
+    }, [filters, activeTab]);
+
     useEffect(() => {
         if (!authLoading && activeCommunity) {
             const rawRole = activeCommunity?.roles;
             // Handle Supabase returning array (1-to-many inference) or object (1-to-1)
             const roleName = Array.isArray(rawRole) ? rawRole[0]?.name : rawRole?.name;
-            
-            console.log("Maintenance: Role Check", { 
-                roleName, 
-                rawRole, 
-                isAdminCalc: ['admin', 'president', 'treasurer'].includes(roleName) 
+
+            console.log("Maintenance: Role Check", {
+                roleName,
+                rawRole,
+                isAdminCalc: ['admin', 'president', 'treasurer'].includes(roleName)
             });
 
             const adminRole = ['admin', 'president', 'treasurer'].includes(roleName);
             setIsAdmin(adminRole);
-            
+
             const hasUnits = activeCommunity?.unit_owners?.length > 0;
 
             // If not admin and trying to view community, force personal
@@ -137,8 +225,8 @@ const Maintenance = () => {
 
             // If admin but NO units, force community (cannot view personal)
             if (adminRole && !hasUnits && activeTab === 'personal') {
-                 console.log("Maintenance: Admin has no units, switching to community view.");
-                 setActiveTab('community');
+                console.log("Maintenance: Admin has no units, switching to community view.");
+                setActiveTab('community');
             }
         }
     }, [activeCommunity, user, authLoading, activeTab]); // Added activeTab to dependency array to catch state changes
@@ -186,7 +274,7 @@ const Maintenance = () => {
             }
 
             const res = await fetch(endpoint, {
-                headers: { 
+                headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
                     'X-Community-ID': activeCommunity.community_id
                 }
@@ -220,12 +308,12 @@ const Maintenance = () => {
     // Export to Excel (CSV)
     const handleExport = async () => {
         if (!activeCommunity) return;
-        
+
         try {
             // Fetch all records (high limit)
             const queryParams = new URLSearchParams({
                 page: 1,
-                limit: 10000, 
+                limit: 10000,
                 sortBy: filters.sortBy,
                 sortOrder: filters.sortOrder
             });
@@ -236,7 +324,7 @@ const Maintenance = () => {
             if (filters.block) queryParams.append('block', filters.block);
 
             const res = await fetch(`${API_URL}/api/maintenance/status?${queryParams}`, {
-                headers: { 
+                headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
                     'X-Community-ID': activeCommunity.community_id
                 }
@@ -244,7 +332,7 @@ const Maintenance = () => {
 
             if (res.ok) {
                 const { data } = await res.json();
-                
+
                 if (!data || data.length === 0) {
                     setToast({ message: t('maintenance.no_records_export', 'No records to export.'), type: 'error' });
                     return;
@@ -273,7 +361,7 @@ const Maintenance = () => {
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement("a");
                 link.setAttribute("href", url);
-                link.setAttribute("download", `maintenance_fees_${communityName}_${new Date().toISOString().slice(0,10)}.csv`);
+                link.setAttribute("download", `maintenance_fees_${communityName}_${new Date().toISOString().slice(0, 10)}.csv`);
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
@@ -292,7 +380,7 @@ const Maintenance = () => {
         if (!activeCommunity) return;
         try {
             const res = await fetch(`${API_URL}/api/properties/blocks`, {
-                 headers: { 
+                headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
                     'X-Community-ID': activeCommunity.community_id
                 }
@@ -337,7 +425,7 @@ const Maintenance = () => {
             const token = localStorage.getItem('token');
             const res = await fetch(`${API_URL}/api/maintenance/generate`, {
                 method: 'POST',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`,
                     'X-Community-ID': activeCommunity.community_id
@@ -366,7 +454,7 @@ const Maintenance = () => {
 
     const getStatusColor = (status, paymentId) => {
         if (status === 'pending' && paymentId) return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
-        switch(status) {
+        switch (status) {
             case 'paid': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
             case 'pending': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
             case 'overdue': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
@@ -378,37 +466,35 @@ const Maintenance = () => {
 
     return (
         <DashboardLayout>
-            <Toast 
-                message={toast.message} 
-                type={toast.type} 
-                onClose={() => setToast({ ...toast, message: '' })} 
+            <Toast
+                message={toast.message}
+                type={toast.type}
+                onClose={() => setToast({ ...toast, message: '' })}
             />
             <div className="max-w-7xl mx-auto space-y-6">
                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                     <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
                         {t('maintenance.title', 'Maintenance Fees')}
                     </h1>
-                    
+
                     {/* Tab Switcher for Admins (Only if they have units) */}
                     {isAdmin && hasUnits && (
                         <div className="p-1 rounded-full flex items-center backdrop-blur-md bg-white/30 border border-white/40 shadow-sm dark:bg-neutral-800/40 dark:border-white/10">
                             <button
                                 onClick={() => setActiveTab('community')}
-                                className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-                                    activeTab === 'community'
-                                        ? 'bg-white text-blue-600 shadow-md dark:bg-neutral-700 dark:text-blue-400'
-                                        : 'text-gray-600 hover:bg-white/20 dark:text-gray-300 dark:hover:bg-white/10'
-                                }`}
+                                className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === 'community'
+                                    ? 'bg-white text-blue-600 shadow-md dark:bg-neutral-700 dark:text-blue-400'
+                                    : 'text-gray-600 hover:bg-white/20 dark:text-gray-300 dark:hover:bg-white/10'
+                                    }`}
                             >
                                 {t('maintenance.tab_community', 'Community Management')}
                             </button>
                             <button
                                 onClick={() => setActiveTab('personal')}
-                                className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-                                    activeTab === 'personal'
-                                        ? 'bg-white text-blue-600 shadow-md dark:bg-neutral-700 dark:text-blue-400'
-                                        : 'text-gray-600 hover:bg-white/20 dark:text-gray-300 dark:hover:bg-white/10'
-                                }`}
+                                className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === 'personal'
+                                    ? 'bg-white text-blue-600 shadow-md dark:bg-neutral-700 dark:text-blue-400'
+                                    : 'text-gray-600 hover:bg-white/20 dark:text-gray-300 dark:hover:bg-white/10'
+                                    }`}
                             >
                                 {t('maintenance.tab_personal', 'My Statement')}
                             </button>
@@ -425,7 +511,7 @@ const Maintenance = () => {
                                 <div>
                                     <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('maintenance.period', 'Billing Period')}</label>
                                     <div className="flex gap-2">
-                                        <select 
+                                        <select
                                             className="glass-input flex-1"
                                             value={genPeriod.split('-')[1] || '01'}
                                             onChange={(e) => setGenPeriod(`${genPeriod.split('-')[0]}-${e.target.value}`)}
@@ -441,7 +527,7 @@ const Maintenance = () => {
                                                 );
                                             })}
                                         </select>
-                                        <select 
+                                        <select
                                             className="glass-input w-24"
                                             value={genPeriod.split('-')[0] || new Date().getFullYear()}
                                             onChange={(e) => setGenPeriod(`${e.target.value}-${genPeriod.split('-')[1] || '01'}`)}
@@ -456,8 +542,8 @@ const Maintenance = () => {
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('maintenance.amount', 'Amount')}</label>
-                                    <input 
-                                        type="number" 
+                                    <input
+                                        type="number"
                                         className="glass-input w-full"
                                         value={genAmount}
                                         onChange={(e) => setGenAmount(e.target.value)}
@@ -465,8 +551,8 @@ const Maintenance = () => {
                                     />
                                 </div>
                             </div>
-                            <button 
-                                type="submit" 
+                            <button
+                                type="submit"
                                 disabled={generating}
                                 className="glass-button w-full sm:w-auto bg-indigo-600 text-white hover:bg-indigo-700"
                             >
@@ -478,13 +564,13 @@ const Maintenance = () => {
 
                 {/* Filters & Fee List */}
                 <div className="glass-card p-6">
-                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                         <h2 className="text-lg font-bold text-gray-800 dark:text-white">
-                            {isAdmin && activeTab === 'community' 
-                                ? t('maintenance.community_status', 'Community Status') 
+                            {isAdmin && activeTab === 'community'
+                                ? t('maintenance.community_status', 'Community Status')
                                 : t('maintenance.history', 'Payment History')}
                         </h2>
-                        
+
                         {/* Filters Toggle & Export (Admin Only) */}
                         {isAdmin && activeTab === 'community' && (
                             <div className="flex flex-col items-end gap-2 w-full md:w-auto">
@@ -510,10 +596,10 @@ const Maintenance = () => {
                                         {showFilters ? t('common.hide_filters', 'Hide Filters') : t('common.show_filters', 'Filter Data')}
                                     </button>
                                 </div>
-                                
+
                             </div>
                         )}
-                        
+
                     </div>
 
                     {/* Collapsible Full Width Filters */}
@@ -525,7 +611,7 @@ const Maintenance = () => {
                                     <label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                                         {t('maintenance.block', 'Block')}
                                     </label>
-                                    <select 
+                                    <select
                                         className="glass-input text-sm py-2 px-3 w-full"
                                         value={filters.block || ''}
                                         onChange={(e) => handleFilterChange('block', e.target.value)}
@@ -542,9 +628,9 @@ const Maintenance = () => {
                                     <label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                                         {t('maintenance.unit', 'Unit')}
                                     </label>
-                                    <input 
-                                        type="text" 
-                                        placeholder={t('common.search_unit', 'Search Unit...')} 
+                                    <input
+                                        type="text"
+                                        placeholder={t('common.search_unit', 'Search Unit...')}
                                         className="glass-input text-sm py-2 px-3 w-full"
                                         value={filters.search}
                                         onChange={(e) => handleFilterChange('search', e.target.value)}
@@ -556,8 +642,8 @@ const Maintenance = () => {
                                     <label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                                         {t('maintenance.period', 'Period')}
                                     </label>
-                                    <input 
-                                        type="month" 
+                                    <input
+                                        type="month"
                                         className="glass-input text-sm py-2 px-3 w-full"
                                         value={filters.period}
                                         onChange={(e) => handleFilterChange('period', e.target.value)}
@@ -569,7 +655,7 @@ const Maintenance = () => {
                                     <label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                                         {t('maintenance.status', 'Status')}
                                     </label>
-                                    <select 
+                                    <select
                                         className="glass-input text-sm py-2 px-3 w-full"
                                         value={filters.status}
                                         onChange={(e) => handleFilterChange('status', e.target.value)}
@@ -583,7 +669,7 @@ const Maintenance = () => {
                             </div>
                         </div>
                     )}
-                    
+
 
 
 
@@ -591,11 +677,60 @@ const Maintenance = () => {
                         <GlassLoader />
                     ) : (
                         <div className="overflow-x-auto">
+                            {/* Bulk Action Bar */}
+                            {isAdmin && activeTab === 'community' && selectedFees.size > 0 && (
+                                <div className="mb-4 p-3 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-lg border border-indigo-200 dark:border-indigo-500/30 flex items-center justify-between gap-4 flex-wrap">
+                                    <span className="text-sm font-medium text-indigo-700 dark:text-indigo-300">
+                                        {t('maintenance.selected_count', '{{count}} selected').replace('{{count}}', selectedFees.size)}
+                                    </span>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => handleBulkAction('pay')}
+                                            disabled={actionLoading}
+                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-emerald-500 hover:bg-emerald-600 text-white transition-colors disabled:opacity-50"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            {t('maintenance.bulk_mark_paid', 'Mark as Paid')}
+                                        </button>
+                                        <button
+                                            onClick={() => handleBulkAction('delete')}
+                                            disabled={actionLoading}
+                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-red-500 hover:bg-red-600 text-white transition-colors disabled:opacity-50"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                            {t('maintenance.bulk_delete', 'Delete Selected')}
+                                        </button>
+                                        <button
+                                            onClick={() => setSelectedFees(new Set())}
+                                            className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white transition-colors"
+                                        >
+                                            {t('maintenance.clear_selection', 'Clear')}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
                             <table className="glass-table">
                                 <thead>
                                     <tr>
-                                        <th 
-                                            onClick={() => activeTab === 'community' && handleSort('period')} 
+                                        {/* Checkbox Column for Admin Community View */}
+                                        {isAdmin && activeTab === 'community' && (
+                                            <th className="w-10">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={fees.filter(f => f.status !== 'paid' && !f.payment_id).length > 0 && selectedFees.size === fees.filter(f => f.status !== 'paid' && !f.payment_id).length}
+                                                    onChange={handleSelectAll}
+                                                    className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-neutral-700"
+                                                    title={t('common.select_all', 'Select All')}
+                                                />
+                                            </th>
+                                        )}
+                                        <th
+                                            onClick={() => activeTab === 'community' && handleSort('period')}
                                             className={`transition-colors ${activeTab === 'community' ? 'cursor-pointer hover:bg-black/5 dark:hover:bg-white/5' : ''}`}
                                         >
                                             <div className="flex items-center gap-1">
@@ -606,15 +741,15 @@ const Maintenance = () => {
                                             </div>
                                         </th>
                                         <th>
-                                           <div className="flex items-center gap-1">
+                                            <div className="flex items-center gap-1">
                                                 {t('maintenance.block', 'Block')}
                                             </div>
                                         </th>
-                                        <th 
-                                            onClick={() => activeTab === 'community' && handleSort('unit')} 
+                                        <th
+                                            onClick={() => activeTab === 'community' && handleSort('unit')}
                                             className={`transition-colors ${activeTab === 'community' ? 'cursor-pointer hover:bg-black/5 dark:hover:bg-white/5' : ''}`}
                                         >
-                                           <div className="flex items-center gap-1">
+                                            <div className="flex items-center gap-1">
                                                 {t('maintenance.unit', 'Unit')}
                                                 {activeTab === 'community' && filters.sortBy === 'unit' && (
                                                     <span>{filters.sortOrder === 'asc' ? '↑' : '↓'}</span>
@@ -622,8 +757,8 @@ const Maintenance = () => {
                                             </div>
                                         </th>
                                         {isAdmin && activeTab === 'community' && <th>{t('maintenance.owner', 'Owner')}</th>}
-                                        <th 
-                                            onClick={() => activeTab === 'community' && handleSort('amount')} 
+                                        <th
+                                            onClick={() => activeTab === 'community' && handleSort('amount')}
                                             className={`transition-colors ${activeTab === 'community' ? 'cursor-pointer hover:bg-black/5 dark:hover:bg-white/5' : ''}`}
                                         >
                                             <div className="flex items-center gap-1">
@@ -633,8 +768,8 @@ const Maintenance = () => {
                                                 )}
                                             </div>
                                         </th>
-                                        <th 
-                                            onClick={() => activeTab === 'community' && handleSort('status')} 
+                                        <th
+                                            onClick={() => activeTab === 'community' && handleSort('status')}
                                             className={`transition-colors ${activeTab === 'community' ? 'cursor-pointer hover:bg-black/5 dark:hover:bg-white/5' : ''}`}
                                         >
                                             <div className="flex items-center gap-1">
@@ -649,7 +784,20 @@ const Maintenance = () => {
                                 </thead>
                                 <tbody>
                                     {fees.map(fee => (
-                                        <tr key={fee.id}>
+                                        <tr key={fee.id} className={selectedFees.has(fee.id) ? 'bg-indigo-50/50 dark:bg-indigo-900/10' : ''}>
+                                            {/* Checkbox Cell for Admin Community View */}
+                                            {isAdmin && activeTab === 'community' && (
+                                                <td>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedFees.has(fee.id)}
+                                                        onChange={() => handleSelectFee(fee.id)}
+                                                        disabled={fee.status === 'paid' || !!fee.payment_id}
+                                                        className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-30 disabled:cursor-not-allowed dark:border-gray-600 dark:bg-neutral-700"
+                                                        title={fee.status === 'paid' || fee.payment_id ? t('maintenance.cannot_select_paid', 'Cannot select fee with payment') : ''}
+                                                    />
+                                                </td>
+                                            )}
                                             <td className="text-gray-900 dark:text-white capitalize">
                                                 {(() => {
                                                     const date = new Date(fee.period + 'T12:00:00');
@@ -674,8 +822,8 @@ const Maintenance = () => {
                                             </td>
                                             <td>
                                                 <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(fee.status, fee.payment_id)}`}>
-                                                    {(fee.status === 'pending' && fee.payment_id) 
-                                                        ? t('maintenance.statuses.processing', 'Processing') 
+                                                    {(fee.status === 'pending' && fee.payment_id)
+                                                        ? t('maintenance.statuses.processing', 'Processing')
                                                         : (t(`maintenance.statuses.${fee.status}`, fee.status))}
                                                 </span>
                                             </td>
@@ -704,6 +852,19 @@ const Maintenance = () => {
                                                     </button>
                                                 )}
 
+                                                {/* Info Button (Admin Community View) */}
+                                                {isAdmin && activeTab === 'community' && (
+                                                    <button
+                                                        onClick={() => { setSelectedFeeDetails(fee); setDetailsModalOpen(true); }}
+                                                        className="mr-2 text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 transition-colors"
+                                                        title={t('maintenance.view_details', 'View Details')}
+                                                    >
+                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                    </button>
+                                                )}
+
                                                 {/* Resend Email Button (Admin Community View) */}
                                                 {isAdmin && activeTab === 'community' && (
                                                     <button
@@ -722,13 +883,12 @@ const Maintenance = () => {
                                                 {isAdmin && activeTab === 'community' && (
                                                     <button
                                                         onClick={() => handleDeleteClick(fee)}
-                                                        disabled={!!fee.payment_id}
-                                                        className={`transition-colors ${
-                                                            fee.payment_id 
-                                                                ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' 
-                                                                : 'text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300'
-                                                        }`}
-                                                        title={fee.payment_id ? t('maintenance.cannot_delete_paid', 'Cannot delete paid fee') : t('common.delete', 'Delete')}
+                                                        disabled={fee.status === 'paid' || !!fee.payment_id}
+                                                        className={`transition-colors ${fee.status === 'paid' || fee.payment_id
+                                                            ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                                                            : 'text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300'
+                                                            }`}
+                                                        title={fee.status === 'paid' || fee.payment_id ? t('maintenance.cannot_delete_paid', 'Cannot delete paid fee') : t('common.delete', 'Delete')}
                                                     >
                                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -790,17 +950,34 @@ const Maintenance = () => {
                     isDangerous={true}
                 />
 
+                {/* Bulk Action Confirmation Modal */}
+                <ConfirmationModal
+                    isOpen={bulkModalOpen}
+                    onClose={() => { setBulkModalOpen(false); setBulkAction(null); }}
+                    onConfirm={handleConfirmBulkAction}
+                    title={bulkAction === 'delete'
+                        ? t('maintenance.bulk_delete_title', 'Delete Selected Fees')
+                        : t('maintenance.bulk_paid_title', 'Mark Fees as Paid')}
+                    message={bulkAction === 'delete'
+                        ? t('maintenance.bulk_delete_confirm', 'Are you sure you want to delete {{count}} fee(s)? This action cannot be undone.').replace('{{count}}', selectedFees.size)
+                        : t('maintenance.bulk_paid_confirm', 'Mark {{count}} fee(s) as paid?').replace('{{count}}', selectedFees.size)}
+                    confirmText={bulkAction === 'delete'
+                        ? t('common.delete', 'Delete')
+                        : t('maintenance.confirm_paid', 'Mark as Paid')}
+                    isDangerous={bulkAction === 'delete'}
+                />
+
                 {/* Payment Upload Modal */}
                 {paymentModalOpen && (
                     <ModalPortal>
                         <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
                             <div className="w-full max-w-lg">
-                                <PaymentUpload 
+                                <PaymentUpload
                                     onSuccess={() => {
                                         setPaymentModalOpen(false);
                                         fetchFees(); // Refresh status
                                         setToast({ message: t('payment.success', 'Payment uploaded successfully'), type: 'success' });
-                                    }} 
+                                    }}
                                     onCancel={() => setPaymentModalOpen(false)}
                                     // Pass pre-filled data
                                     initialType="maintenance"
@@ -824,6 +1001,16 @@ const Maintenance = () => {
                     }}
                     onReject={() => {
                         setToast({ message: t('maintenance.payment_rejected', 'Payment rejected'), type: 'info' });
+                        fetchFees();
+                    }}
+                />
+
+                <FeeDetailsModal
+                    isOpen={detailsModalOpen}
+                    onClose={() => { setDetailsModalOpen(false); setSelectedFeeDetails(null); }}
+                    fee={selectedFeeDetails}
+                    onUpdate={(toast) => {
+                        setToast(toast);
                         fetchFees();
                     }}
                 />

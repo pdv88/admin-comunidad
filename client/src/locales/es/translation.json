@@ -463,7 +463,9 @@
         "target_audience": "Audiencia",
         "delete_confirm_title": "¿Eliminar Votación?",
         "confirm_delete": "¿Estás seguro de que quieres eliminar esta votación? Esta acción no se puede deshacer.",
-        "no_polls": "No se encontraron votaciones."
+        "no_polls": "No se encontraron votaciones.",
+        "winner": "Ganador",
+        "tie": "Empate"
     },
     "user_management": {
         "title": "Gestión de Usuarios",
@@ -779,7 +781,6 @@
         "no_amenities": "No hay amenidades registradas.",
         "max_hours_badge": "Límite: {{count}}h",
         "max_days_monthly_badge": "Límite: {{count}} días/mes",
-
         "limit_hours_daily": "Reservaciones limitadas a {{count}} horas al día",
         "limit_days_monthly": "Reservaciones limitadas a {{count}} días al mes",
         "documents": "Reglamentos y Documentos"
@@ -882,7 +883,29 @@
         "payment_rejected": "Pago rechazado",
         "delete_title": "Eliminar Cuota de Mantenimiento",
         "delete_confirm": "¿Estás seguro de que quieres eliminar esta cuota? Esta acción no se puede deshacer.",
-        "warning_gen_zero": "Advertencia: No se generaron nuevas cuotas. Todas las unidades ocupadas ya podrían estar facturadas para este periodo."
+        "warning_gen_zero": "Advertencia: No se generaron nuevas cuotas. Todas las unidades ocupadas ya podrían estar facturadas para este periodo.",
+        "selected_count": "{{count}} seleccionados",
+        "bulk_delete": "Eliminar Seleccionados",
+        "bulk_mark_paid": "Marcar como Pagado",
+        "clear_selection": "Limpiar",
+        "bulk_delete_title": "Eliminar Cuotas Seleccionadas",
+        "bulk_paid_title": "Marcar Cuotas como Pagadas",
+        "bulk_delete_confirm": "¿Estás seguro de que quieres eliminar {{count}} cuota(s)? Esta acción no se puede deshacer.",
+        "bulk_paid_confirm": "¿Marcar {{count}} cuota(s) como pagadas?",
+        "bulk_delete_success": "{{count}} cuota(s) eliminadas exitosamente",
+        "bulk_paid_success": "{{count}} cuota(s) marcadas como pagadas",
+        "confirm_paid": "Marcar como Pagado",
+        "cannot_select_paid": "No se puede seleccionar cuota con pago",
+        "cannot_delete_paid": "No se puede eliminar cuota pagada",
+        "view_details": "Ver Detalles",
+        "fee_details": "Detalles de la Cuota",
+        "has_payment_upload": "Esta cuota tiene un comprobante de pago",
+        "use_review": "Usa el botón Revisar para gestionar el pago.",
+        "marked_manually": "Marcado como pagado manualmente",
+        "can_revert": "Puedes revertir esta cuota a pendiente si fue marcada por error.",
+        "revert_to_pending": "Revertir a Pendiente",
+        "mark_pending": "Marcar Pendiente",
+        "reverted_success": "Cuota revertida a pendiente"
     },
     "terms": {
         "title": "Términos y Condiciones",

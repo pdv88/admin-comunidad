@@ -66,13 +66,13 @@ const Voting = () => {
         setEditingPoll(null);
         // Pre-fill for vocals
         const isRestrictedVocal = isVocal && !isAdmin;
-        setPollForm({ 
-            title: '', 
-            description: '', 
-            options: ['', ''], 
-            deadline: '', 
-            targetType: isRestrictedVocal ? 'blocks' : 'all', 
-            targetBlocks: isRestrictedVocal ? vocalBlocks : [] 
+        setPollForm({
+            title: '',
+            description: '',
+            options: ['', ''],
+            deadline: '',
+            targetType: isRestrictedVocal ? 'blocks' : 'all',
+            targetBlocks: isRestrictedVocal ? vocalBlocks : []
         });
         setShowPollModal(true);
     };
@@ -152,7 +152,7 @@ const Voting = () => {
                 body: JSON.stringify({
                     poll_id: pollId,
                     option_id: optionId,
-                    user_id: user?.id 
+                    user_id: user?.id
                 })
             });
             if (res.ok) {
@@ -193,7 +193,7 @@ const Voting = () => {
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t('voting.title')}</h1>
                     {canCreate && (
-                        <button 
+                        <button
                             onClick={openCreateModal}
                             className="glass-button"
                         >
@@ -204,17 +204,17 @@ const Voting = () => {
 
                 {/* Tabs */}
                 <div className="flex p-1 rounded-full items-center backdrop-blur-md bg-white/30 border border-white/40 shadow-sm dark:bg-neutral-800/40 dark:border-white/10 mb-6 w-fit">
-                    <button 
-                        className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === 'active' 
-                            ? 'bg-white text-blue-600 shadow-md dark:bg-neutral-700 dark:text-blue-400' 
+                    <button
+                        className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === 'active'
+                            ? 'bg-white text-blue-600 shadow-md dark:bg-neutral-700 dark:text-blue-400'
                             : 'text-gray-600 hover:bg-white/20 dark:text-gray-300 dark:hover:bg-white/10'}`}
                         onClick={() => setActiveTab('active')}
                     >
                         {t('voting.active_polls', 'Active Polls')}
                     </button>
-                    <button 
-                        className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === 'past' 
-                            ? 'bg-white text-blue-600 shadow-md dark:bg-neutral-700 dark:text-blue-400' 
+                    <button
+                        className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === 'past'
+                            ? 'bg-white text-blue-600 shadow-md dark:bg-neutral-700 dark:text-blue-400'
                             : 'text-gray-600 hover:bg-white/20 dark:text-gray-300 dark:hover:bg-white/10'}`}
                         onClick={() => setActiveTab('past')}
                     >
@@ -227,12 +227,12 @@ const Voting = () => {
                     {filteredPolls.map(poll => {
                         const hasVoted = poll.user_voted;
                         const isExpired = activeTab === 'past';
-                        
+
                         return (
                             <div key={poll.id} className="glass-card p-6 flex flex-col relative group">
                                 {(isAdmin || (isVocal && poll.created_by === user.id)) && (
                                     <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white dark:bg-neutral-800 p-1 rounded-lg">
-                                        <button 
+                                        <button
                                             onClick={() => openEditModal(poll)}
                                             className="text-gray-400 hover:text-blue-600"
                                             title={t('common.edit')}
@@ -240,7 +240,7 @@ const Voting = () => {
                                         >
                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                                         </button>
-                                        <button 
+                                        <button
                                             onClick={() => handleDeleteClick(poll.id)}
                                             className="text-gray-400 hover:text-red-600"
                                             title={t('common.delete')}
@@ -252,49 +252,96 @@ const Voting = () => {
                                 )}
                                 <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-2 pr-8">{poll.title}</h2>
                                 <p className="text-gray-600 dark:text-neutral-400 mb-4 text-sm">{poll.description}</p>
-                                
-                                <div className="space-y-3 flex-grow">
-                                    {poll.poll_options?.map(option => {
-                                        const voteCount = poll.results?.find(r => r.option_id === option.id)?.vote_count || 0;
-                                        const percentage = poll.total_votes > 0 ? Math.round((voteCount / poll.total_votes) * 100) : 0;
-                                        const isMyVote = poll.my_vote === option.id;
 
-                                        return (
-                                            <div key={option.id} className="relative">
-                                                {/* Visual Bar for results */}
-                                                {(hasVoted || isExpired || isAdmin || (isVocal && poll.created_by === user.id)) && (
-                                                    <div className={`absolute inset-0 rounded-full overflow-hidden ${isMyVote ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-gray-50 dark:bg-neutral-700/50'}`}>
-                                                        <div 
-                                                            className={`h-full transition-all duration-500 ${isMyVote ? 'bg-blue-200 dark:bg-blue-800/40' : 'bg-gray-200 dark:bg-neutral-600'}`} 
-                                                            style={{ width: `${percentage}%` }}
-                                                        ></div>
-                                                    </div>
-                                                )}
-                                                
-                                                <div className={`relative w-full rounded-full transition-all ${isMyVote ? 'p-[2px] bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 shadow-lg' : ''}`}>
-                                                    <button 
-                                                        disabled={isExpired || isMyVote}
-                                                        onClick={() => handleVote(poll.id, option.id)}
-                                                        className={`relative w-full text-left px-6 py-3 rounded-full border transition-all flex justify-between items-center z-10 h-full
-                                                            ${isExpired 
-                                                                ? 'border-transparent cursor-default' 
+                                <div className="space-y-3 flex-grow">
+                                    {(() => {
+                                        // Find the winner (option with most votes) for past polls
+                                        const maxVotes = Math.max(...(poll.poll_options?.map(opt =>
+                                            poll.results?.find(r => r.option_id === opt.id)?.vote_count || 0
+                                        ) || [0]));
+                                        const winnerIds = poll.poll_options?.filter(opt => {
+                                            const votes = poll.results?.find(r => r.option_id === opt.id)?.vote_count || 0;
+                                            return votes === maxVotes && maxVotes > 0;
+                                        }).map(opt => opt.id) || [];
+
+                                        return poll.poll_options?.map(option => {
+                                            const voteCount = poll.results?.find(r => r.option_id === option.id)?.vote_count || 0;
+                                            const percentage = poll.total_votes > 0 ? Math.round((voteCount / poll.total_votes) * 100) : 0;
+                                            const isMyVote = poll.my_vote === option.id;
+                                            const isTopOption = isExpired && winnerIds.includes(option.id);
+                                            const isTie = winnerIds.length > 1;
+                                            const isWinner = isTopOption && !isTie;
+
+                                            return (
+                                                <div key={option.id} className="relative">
+                                                    {/* Visual Bar for results */}
+                                                    {(hasVoted || isExpired || isAdmin || (isVocal && poll.created_by === user.id)) && (
+                                                        <div className={`absolute inset-0 rounded-full overflow-hidden ${isWinner
+                                                            ? 'bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 dark:from-blue-900/20 dark:via-purple-900/20 dark:to-pink-900/20'
+                                                            : isTopOption && isTie
+                                                                ? 'bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20'
                                                                 : isMyVote
-                                                                    ? 'border-transparent bg-white/90 dark:bg-neutral-800/90 cursor-default'
-                                                                    : 'backdrop-blur-md bg-white/70 border-white/60 shadow-sm hover:bg-white/90 hover:shadow-md dark:bg-neutral-800/70 dark:border-white/20 dark:hover:bg-neutral-800/90'
-                                                            }
-                                                        `}
-                                                    >
-                                                        <span className="font-medium text-gray-800 dark:text-white flex items-center">
-                                                            {option.option_text} {isMyVote && <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded ml-2">{t('voting.your_vote', 'You')}</span>}
-                                                        </span>
-                                                        {(hasVoted || isExpired || isAdmin) && (
-                                                            <span className="text-sm text-gray-500 dark:text-neutral-400 font-semibold">{percentage}% ({voteCount})</span>
-                                                        )}
-                                                    </button>
+                                                                    ? 'bg-blue-50 dark:bg-blue-900/20'
+                                                                    : 'bg-gray-50 dark:bg-neutral-700/50'
+                                                            }`}>
+                                                            <div
+                                                                className={`h-full transition-all duration-500 ${isWinner
+                                                                    ? 'bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200 dark:from-blue-800/40 dark:via-purple-800/40 dark:to-pink-800/40'
+                                                                    : isTopOption && isTie
+                                                                        ? 'bg-gradient-to-r from-amber-200 to-orange-200 dark:from-amber-800/40 dark:to-orange-800/40'
+                                                                        : isMyVote
+                                                                            ? 'bg-blue-200 dark:bg-blue-800/40'
+                                                                            : 'bg-gray-200 dark:bg-neutral-600'
+                                                                    }`}
+                                                                style={{ width: `${percentage}%` }}
+                                                            ></div>
+                                                        </div>
+                                                    )}
+
+                                                    <div className="relative w-full rounded-full transition-all">
+                                                        <button
+                                                            disabled={isExpired || isMyVote}
+                                                            onClick={() => handleVote(poll.id, option.id)}
+                                                            className={`relative w-full text-left px-6 py-3 rounded-full border-2 transition-all flex justify-between items-center z-10 h-full
+                                                                ${isExpired
+                                                                    ? isMyVote
+                                                                        ? 'border-blue-500 dark:border-blue-400 cursor-default'
+                                                                        : 'border-transparent cursor-default'
+                                                                    : isMyVote
+                                                                        ? 'border-blue-500 dark:border-blue-400 bg-white/90 dark:bg-neutral-800/90 cursor-default'
+                                                                        : 'border-transparent backdrop-blur-md bg-white/70 shadow-sm hover:bg-white/90 hover:shadow-md dark:bg-neutral-800/70 dark:hover:bg-neutral-800/90'
+                                                                }
+                                                            `}
+                                                        >
+                                                            <span className="font-medium text-gray-800 dark:text-white flex items-center gap-2">
+                                                                {option.option_text}
+                                                                {isWinner && (
+                                                                    <span className="text-xs bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white px-2 py-0.5 rounded-full flex items-center gap-1">
+                                                                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                                                                        {t('voting.winner', 'Winner')}
+                                                                    </span>
+                                                                )}
+                                                                {isTopOption && isTie && (
+                                                                    <span className="text-xs bg-gradient-to-r from-amber-500 to-orange-500 text-white px-2 py-0.5 rounded-full flex items-center gap-1">
+                                                                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>
+                                                                        {t('voting.tie', 'Tie')}
+                                                                    </span>
+                                                                )}
+                                                                {isMyVote && (
+                                                                    <span className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 px-2 py-0.5 rounded-full">
+                                                                        {t('voting.your_vote', 'You')}
+                                                                    </span>
+                                                                )}
+                                                            </span>
+                                                            {(hasVoted || isExpired || isAdmin) && (
+                                                                <span className="text-sm text-gray-500 dark:text-neutral-400 font-semibold">{percentage}% ({voteCount})</span>
+                                                            )}
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        );
-                                    })}
+                                            );
+                                        });
+                                    })()}
                                 </div>
                                 <div className="mt-4 pt-4 border-t border-gray-100 dark:border-neutral-700 flex justify-between text-xs text-gray-500">
                                     <span>{t('voting.total_votes', 'Total Votes')}: {poll.total_votes}</span>
@@ -309,147 +356,147 @@ const Voting = () => {
             {showPollModal && (
                 <ModalPortal>
                     <div className="fixed inset-0 z-[60] overflow-y-auto bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="glass-card max-w-lg w-full p-6">
-                        <h2 className="text-xl font-bold mb-4 dark:text-white">
-                            {editingPoll ? t('voting.edit_poll', 'Edit Poll') : t('voting.create_poll')}
-                        </h2>
-                        <form onSubmit={handleSavePoll}>
-                            <input 
-                                className="glass-input mb-3"
-                                placeholder={t('voting.poll_title', 'Poll Title')}
-                                value={pollForm.title}
-                                onChange={e => setPollForm({...pollForm, title: e.target.value})}
-                                required
-                            />
-                            <textarea 
-                                className="glass-input mb-3 min-h-[100px] rounded-2xl"
-                                placeholder={t('voting.poll_desc', 'Description')}
-                                value={pollForm.description}
-                                onChange={e => setPollForm({...pollForm, description: e.target.value})}
-                            />
-                            
-                            {!editingPoll && (
-                                <div className="mb-3">
-                                    <label className="block text-sm font-medium mb-1 dark:text-neutral-300">{t('voting.options', 'Options')}</label>
-                                    {pollForm.options.map((opt, idx) => (
-                                        <input 
-                                            key={idx}
-                                            className="glass-input mb-2"
-                                            placeholder={`Option ${idx + 1}`}
-                                            value={opt}
-                                            onChange={e => handleOptionChange(idx, e.target.value)}
-                                            required
-                                        />
-                                    ))}
-                                    <button type="button" onClick={addOption} className="text-sm text-blue-600 hover:text-blue-500">+ {t('voting.add_option', 'Add Option')}</button>
-                                </div>
-                            )}
-
-                            {editingPoll && <p className="text-xs text-yellow-600 dark:text-yellow-400 mb-3">{t('voting.edit_warning', 'Options cannot be edited to preserve vote integrity.')}</p>}
-
-                            <div className="mb-3">
-                                <label className="block text-sm font-medium mb-1 dark:text-neutral-300">{t('voting.deadline', 'Deadline')}</label>
-                                <input 
-                                    type="date"
-                                    className="glass-input"
-                                    value={pollForm.deadline}
-                                    onChange={e => setPollForm({...pollForm, deadline: e.target.value})}
+                        <div className="glass-card max-w-lg w-full p-6">
+                            <h2 className="text-xl font-bold mb-4 dark:text-white">
+                                {editingPoll ? t('voting.edit_poll', 'Edit Poll') : t('voting.create_poll')}
+                            </h2>
+                            <form onSubmit={handleSavePoll}>
+                                <input
+                                    className="glass-input mb-3"
+                                    placeholder={t('voting.poll_title', 'Poll Title')}
+                                    value={pollForm.title}
+                                    onChange={e => setPollForm({ ...pollForm, title: e.target.value })}
                                     required
                                 />
-                            </div>
+                                <textarea
+                                    className="glass-input mb-3 min-h-[100px] rounded-2xl"
+                                    placeholder={t('voting.poll_desc', 'Description')}
+                                    value={pollForm.description}
+                                    onChange={e => setPollForm({ ...pollForm, description: e.target.value })}
+                                />
 
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium mb-1 dark:text-neutral-300">{t('voting.target_audience', 'Target Audience')}</label>
-                                <div className="flex gap-4 mb-2">
-                                    <label className={`flex items-center gap-2 dark:text-white ${(isVocal && !isAdmin) ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                                        <input 
-                                            type="radio" 
-                                            name="targetType" 
-                                            value="all"
-                                            checked={pollForm.targetType === 'all'}
-                                            onChange={e => setPollForm({...pollForm, targetType: e.target.value})}
-                                            disabled={isVocal && !isAdmin}
-                                        />
-                                        {t('payments.target_all', 'All Community')}
-                                    </label>
-                                    <label className="flex items-center gap-2 dark:text-white">
-                                        <input 
-                                            type="radio" 
-                                            name="targetType" 
-                                            value="blocks"
-                                            checked={pollForm.targetType === 'blocks'}
-                                            onChange={e => setPollForm({...pollForm, targetType: e.target.value})}
-                                        />
-                                        {t('payments.target_blocks', 'Specific Blocks')}
-                                    </label>
-                                </div>
-                                {pollForm.targetType === 'blocks' && (
-                                    <div className="max-h-32 overflow-y-auto border rounded p-2 dark:border-neutral-700">
-                                        {blocks
-                                            .filter(b => (!isVocal || isAdmin) || vocalBlocks.includes(b.id))
-                                            .map(b => (
-                                            <label key={b.id} className="flex items-center gap-2 mb-1 dark:text-neutral-300">
-                                                <input 
-                                                    type="checkbox"
-                                                    checked={pollForm.targetBlocks.includes(b.id)}
-                                                    onChange={e => {
-                                                        const id = b.id;
-                                                        setPollForm(prev => ({
-                                                            ...prev,
-                                                            targetBlocks: e.target.checked 
-                                                                ? [...prev.targetBlocks, id]
-                                                                : prev.targetBlocks.filter(bid => bid !== id)
-                                                        }));
-                                                    }}
-                                                />
-                                                {b.name}
-                                            </label>
+                                {!editingPoll && (
+                                    <div className="mb-3">
+                                        <label className="block text-sm font-medium mb-1 dark:text-neutral-300">{t('voting.options', 'Options')}</label>
+                                        {pollForm.options.map((opt, idx) => (
+                                            <input
+                                                key={idx}
+                                                className="glass-input mb-2"
+                                                placeholder={`Option ${idx + 1}`}
+                                                value={opt}
+                                                onChange={e => handleOptionChange(idx, e.target.value)}
+                                                required
+                                            />
                                         ))}
+                                        <button type="button" onClick={addOption} className="text-sm text-blue-600 hover:text-blue-500">+ {t('voting.add_option', 'Add Option')}</button>
                                     </div>
                                 )}
-                            </div>
 
-                            <div className="flex justify-end gap-3 mt-6">
-                                <button type="button" onClick={() => setShowPollModal(false)} className="glass-button-secondary">{t('common.cancel')}</button>
-                                <button type="submit" className="glass-button">
-                                    {editingPoll ? t('common.save') : t('voting.create_poll')}
-                                </button>
-                            </div>
-                        </form>
+                                {editingPoll && <p className="text-xs text-yellow-600 dark:text-yellow-400 mb-3">{t('voting.edit_warning', 'Options cannot be edited to preserve vote integrity.')}</p>}
+
+                                <div className="mb-3">
+                                    <label className="block text-sm font-medium mb-1 dark:text-neutral-300">{t('voting.deadline', 'Deadline')}</label>
+                                    <input
+                                        type="date"
+                                        className="glass-input"
+                                        value={pollForm.deadline}
+                                        onChange={e => setPollForm({ ...pollForm, deadline: e.target.value })}
+                                        required
+                                    />
+                                </div>
+
+                                <div className="mb-4">
+                                    <label className="block text-sm font-medium mb-1 dark:text-neutral-300">{t('voting.target_audience', 'Target Audience')}</label>
+                                    <div className="flex gap-4 mb-2">
+                                        <label className={`flex items-center gap-2 dark:text-white ${(isVocal && !isAdmin) ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                                            <input
+                                                type="radio"
+                                                name="targetType"
+                                                value="all"
+                                                checked={pollForm.targetType === 'all'}
+                                                onChange={e => setPollForm({ ...pollForm, targetType: e.target.value })}
+                                                disabled={isVocal && !isAdmin}
+                                            />
+                                            {t('payments.target_all', 'All Community')}
+                                        </label>
+                                        <label className="flex items-center gap-2 dark:text-white">
+                                            <input
+                                                type="radio"
+                                                name="targetType"
+                                                value="blocks"
+                                                checked={pollForm.targetType === 'blocks'}
+                                                onChange={e => setPollForm({ ...pollForm, targetType: e.target.value })}
+                                            />
+                                            {t('payments.target_blocks', 'Specific Blocks')}
+                                        </label>
+                                    </div>
+                                    {pollForm.targetType === 'blocks' && (
+                                        <div className="max-h-32 overflow-y-auto border rounded p-2 dark:border-neutral-700">
+                                            {blocks
+                                                .filter(b => (!isVocal || isAdmin) || vocalBlocks.includes(b.id))
+                                                .map(b => (
+                                                    <label key={b.id} className="flex items-center gap-2 mb-1 dark:text-neutral-300">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={pollForm.targetBlocks.includes(b.id)}
+                                                            onChange={e => {
+                                                                const id = b.id;
+                                                                setPollForm(prev => ({
+                                                                    ...prev,
+                                                                    targetBlocks: e.target.checked
+                                                                        ? [...prev.targetBlocks, id]
+                                                                        : prev.targetBlocks.filter(bid => bid !== id)
+                                                                }));
+                                                            }}
+                                                        />
+                                                        {b.name}
+                                                    </label>
+                                                ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="flex justify-end gap-3 mt-6">
+                                    <button type="button" onClick={() => setShowPollModal(false)} className="glass-button-secondary">{t('common.cancel')}</button>
+                                    <button type="submit" className="glass-button">
+                                        {editingPoll ? t('common.save') : t('voting.create_poll')}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                </div>
                 </ModalPortal>
             )}
 
             {deleteId && (
                 <ModalPortal>
                     <div className="fixed inset-0 z-[60] overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-neutral-800 rounded-xl max-w-sm w-full p-6 text-center">
-                        <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/30 mb-4">
-                            <svg className="h-6 w-6 text-red-600 dark:text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                            </svg>
-                        </div>
-                        <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-2">{t('voting.delete_confirm_title', 'Delete Poll?')}</h3>
-                        <p className="text-sm text-gray-500 dark:text-neutral-400 mb-6">
-                            {t('voting.confirm_delete', 'Are you sure you want to delete this poll? This action cannot be undone.')}
-                        </p>
-                        <div className="flex justify-center gap-3">
-                            <button 
-                                onClick={() => setDeleteId(null)}
-                                className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-neutral-700 dark:text-white dark:border-neutral-600 dark:hover:bg-neutral-600"
-                            >
-                                {t('common.cancel')}
-                            </button>
-                            <button 
-                                onClick={confirmDelete}
-                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                            >
-                                {t('common.delete')}
-                            </button>
+                        <div className="bg-white dark:bg-neutral-800 rounded-xl max-w-sm w-full p-6 text-center">
+                            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/30 mb-4">
+                                <svg className="h-6 w-6 text-red-600 dark:text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-2">{t('voting.delete_confirm_title', 'Delete Poll?')}</h3>
+                            <p className="text-sm text-gray-500 dark:text-neutral-400 mb-6">
+                                {t('voting.confirm_delete', 'Are you sure you want to delete this poll? This action cannot be undone.')}
+                            </p>
+                            <div className="flex justify-center gap-3">
+                                <button
+                                    onClick={() => setDeleteId(null)}
+                                    className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-neutral-700 dark:text-white dark:border-neutral-600 dark:hover:bg-neutral-600"
+                                >
+                                    {t('common.cancel')}
+                                </button>
+                                <button
+                                    onClick={confirmDelete}
+                                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                                >
+                                    {t('common.delete')}
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
                 </ModalPortal>
             )}
         </DashboardLayout>

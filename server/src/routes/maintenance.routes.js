@@ -10,7 +10,14 @@ router.use(authMiddleware);
 router.post('/generate', maintenanceController.generateMonthlyFees);
 router.get('/stats', maintenanceController.getFinancialStats);
 router.get('/status', maintenanceController.getCommunityStatus);
+
+// Bulk Actions (before parameterized routes)
+router.delete('/bulk', maintenanceController.bulkDeleteFees);
+router.put('/bulk/pay', maintenanceController.bulkMarkAsPaid);
+
+// Single Fee Actions
 router.put('/:feeId/pay', maintenanceController.markAsPaid);
+router.put('/:feeId/revert', maintenanceController.revertToPending);
 router.delete('/:feeId', maintenanceController.deleteFee);
 
 // Resident Routes

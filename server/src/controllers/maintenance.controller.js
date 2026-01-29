@@ -471,16 +471,16 @@ exports.deleteFee = async (req, res) => {
 
         const { feeId } = req.params;
 
-        // Check if fee has payments
+        // Check if fee has payments or is paid
         const { data: fee } = await supabaseAdmin
             .from('monthly_fees')
-            .select('payment_id')
+            .select('payment_id, status')
             .eq('id', feeId)
             .eq('community_id', communityId)
             .single();
 
-        if (fee?.payment_id) {
-            return res.status(400).json({ error: 'Cannot delete a fee with a registered payment.' });
+        if (fee?.payment_id || fee?.status === 'paid') {
+            return res.status(400).json({ error: 'Cannot delete a paid fee.' });
         }
 
         const { error } = await supabaseAdmin
@@ -684,6 +684,151 @@ exports.getFinancialStats = async (req, res) => {
 
     } catch (error) {
         console.error("Financial Stats Error:", error);
+        res.status(400).json({ error: error.message });
+    }
+};
+
+// Bulk delete fees (only those without payments)
+exports.bulkDeleteFees = async (req, res) => {
+    try {
+        const { member, communityId } = await getUserAndMember(req);
+        const role = member.roles?.name;
+
+        if (role !== 'admin' && role !== 'president' && role !== 'treasurer') {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        const { feeIds } = req.body;
+
+        if (!feeIds || !Array.isArray(feeIds) || feeIds.length === 0) {
+            return res.status(400).json({ error: 'feeIds array is required' });
+        }
+
+        // Find fees without payment_id and not paid (deletable)
+        const { data: deletableFees, error: fetchError } = await supabaseAdmin
+            .from('monthly_fees')
+            .select('id')
+            .eq('community_id', communityId)
+            .in('id', feeIds)
+            .is('payment_id', null)
+            .neq('status', 'paid');
+
+        if (fetchError) throw fetchError;
+
+        const deletableIds = deletableFees?.map(f => f.id) || [];
+
+        if (deletableIds.length === 0) {
+            return res.status(400).json({ error: 'No deletable fees found (all are paid or have payments).' });
+        }
+
+        // Delete the fees
+        const { error: deleteError } = await supabaseAdmin
+            .from('monthly_fees')
+            .delete()
+            .eq('community_id', communityId)
+            .in('id', deletableIds);
+
+        if (deleteError) throw deleteError;
+
+        res.json({
+            message: `${deletableIds.length} fee(s) deleted successfully`,
+            count: deletableIds.length,
+            skipped: feeIds.length - deletableIds.length
+        });
+
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+};
+
+// Bulk mark fees as paid
+exports.bulkMarkAsPaid = async (req, res) => {
+    try {
+        const { member, communityId } = await getUserAndMember(req);
+        const role = member.roles?.name;
+
+        if (role !== 'admin' && role !== 'president' && role !== 'treasurer') {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        const { feeIds } = req.body;
+
+        if (!feeIds || !Array.isArray(feeIds) || feeIds.length === 0) {
+            return res.status(400).json({ error: 'feeIds array is required' });
+        }
+
+        // Update all fees to paid status
+        const { data, error } = await supabaseAdmin
+            .from('monthly_fees')
+            .update({
+                status: 'paid',
+                updated_at: new Date().toISOString()
+            })
+            .eq('community_id', communityId)
+            .in('id', feeIds)
+            .select('id');
+
+        if (error) throw error;
+
+        res.json({
+            message: `${data.length} fee(s) marked as paid`,
+            count: data.length
+        });
+
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+};
+
+// Revert a paid fee back to pending (only if no payment upload)
+exports.revertToPending = async (req, res) => {
+    try {
+        const { member, communityId } = await getUserAndMember(req);
+        const role = member.roles?.name;
+
+        if (role !== 'admin' && role !== 'president' && role !== 'treasurer') {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        const { feeId } = req.params;
+
+        // Check if fee exists and has no payment upload
+        const { data: fee, error: fetchError } = await supabaseAdmin
+            .from('monthly_fees')
+            .select('id, status, payment_id')
+            .eq('id', feeId)
+            .eq('community_id', communityId)
+            .single();
+
+        if (fetchError || !fee) {
+            return res.status(404).json({ error: 'Fee not found' });
+        }
+
+        if (fee.payment_id) {
+            return res.status(400).json({ error: 'Cannot revert a fee with a payment upload. Review the payment instead.' });
+        }
+
+        if (fee.status !== 'paid') {
+            return res.status(400).json({ error: 'Fee is not marked as paid.' });
+        }
+
+        // Revert to pending
+        const { data, error } = await supabaseAdmin
+            .from('monthly_fees')
+            .update({
+                status: 'pending',
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', feeId)
+            .eq('community_id', communityId)
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        res.json({ message: 'Fee reverted to pending', data });
+
+    } catch (error) {
         res.status(400).json({ error: error.message });
     }
 };
