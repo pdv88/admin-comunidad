@@ -770,6 +770,67 @@ exports.bulkMarkAsPaid = async (req, res) => {
 
         if (error) throw error;
 
+        // 2. Send emails for all marked fees (Async)
+        (async () => {
+            // Fetch full details for these fees to get owner emails
+            const { data: fullFees } = await supabaseAdmin
+                .from('monthly_fees')
+                .select(`
+                    id, amount, period, payment_id, updated_at,
+                    units (
+                        unit_number,
+                        blocks (name),
+                        unit_owners (
+                            profile:profile_id (email, full_name)
+                        )
+                    )
+                `)
+                .in('id', feeIds);
+
+            if (!fullFees) return;
+
+            // Fetch Community Info
+            const { data: communityData } = await supabaseAdmin
+                .from('communities')
+                .select('name, logo_url, currency')
+                .eq('id', communityId)
+                .single();
+
+            const communityName = communityData?.name || 'Su Comunidad';
+            const communityLogo = communityData?.logo_url;
+            const communityCurrency = communityData?.currency || 'EUR';
+            const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+
+            for (const fee of fullFees) {
+                try {
+                    const ownerProfile = fee.units?.unit_owners?.[0]?.profile;
+                    const ownerEmail = ownerProfile?.email;
+
+                    if (ownerEmail) {
+                        await sendEmail({
+                            email: ownerEmail,
+                            from: `${communityName} <info@habiio.com>`,
+                            subject: `Comprobante de Pago - ${communityName}`,
+                            templateName: 'payment_receipt.html',
+                            context: {
+                                user_name: ownerProfile?.full_name || 'Vecino',
+                                amount_formatted: formatCurrency(fee.amount, communityCurrency),
+                                period_name: fee.period,
+                                unit_details: `${fee.units?.blocks?.name} - ${fee.units?.unit_number}`,
+                                community_name: communityName,
+                                community_logo: communityLogo,
+                                payment_date: new Date(fee.updated_at || new Date()).toLocaleDateString('es-ES'),
+                                payment_id: fee.payment_id || fee.id.slice(0, 8),
+                                link: `${clientUrl}/app/maintenance`
+                            }
+                        });
+                    }
+                } catch (emailErr) {
+                    console.error(`Failed to send bulk receipt for fee ${fee.id}:`, emailErr);
+                }
+            }
+        })();
+
         res.json({
             message: `${data.length} fee(s) marked as paid`,
             count: data.length

@@ -16,10 +16,27 @@ const Reservations = () => {
     const [amenities, setAmenities] = useState([]);
     const [reservations, setReservations] = useState([]);
 
-    const { user, hasAnyRole } = useAuth();
-    const isAdmin = hasAnyRole(['admin', 'president']);
+    const { user, hasAnyRole, hasRole } = useAuth();
+    const isAdmin = hasAnyRole(['admin', 'president', 'secretary']);
+    const isVocal = hasRole('vocal');
+
+    const [activeTab, setActiveTab] = useState('personal'); // 'personal', 'block', 'community'
+    const [showPast, setShowPast] = useState(false);
+
+    // Pagination & Filters State
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(10);
+    const [totalCount, setTotalCount] = useState(0);
+    const [filters, setFilters] = useState({
+        status: '',
+        amenityId: '',
+        startDate: '',
+        endDate: '',
+        search: ''
+    });
+
     const [toast, setToast] = useState({ message: '', type: 'success' });
-    
+
     // Booking Modal
     const [bookingModal, setBookingModal] = useState({ isOpen: false });
     const [newBooking, setNewBooking] = useState({
@@ -38,28 +55,43 @@ const Reservations = () => {
         fetchData();
         // Fetch current user details for ID comparison
         // User is now coming from AuthContext
-    }, [isAdmin]); // Re-fetch if admin status changes (though usually static)
+    }, [isAdmin, activeTab, currentPage, filters]); // Re-fetch on all changes
 
     const fetchData = async () => {
         try {
             setLoading(true);
+            const backendType = activeTab === 'personal' ? 'my' : activeTab;
+
+            const params = new URLSearchParams({
+                type: backendType,
+                page: currentPage,
+                limit: itemsPerPage,
+                ...filters
+            });
+
+            // Clean empty filters
+            Object.keys(filters).forEach(key => {
+                if (!filters[key]) params.delete(key);
+            });
+
             const promises = [
                 fetch(`${API_URL}/api/amenities`),
-                fetch(`${API_URL}/api/amenities/reservations`)
+                fetch(`${API_URL}/api/amenities/reservations?${params.toString()}`)
             ];
-            
+
             if (isAdmin) {
                 promises.push(fetch(`${API_URL}/api/properties/users`));
             }
 
             const results = await Promise.all(promises);
-            
+
             const amenitiesData = await results[0].json();
-            const reservationsData = await results[1].json();
+            const reservationsResponse = await results[1].json();
             const usersData = isAdmin ? await results[2].json() : [];
 
             setAmenities(Array.isArray(amenitiesData) ? amenitiesData : []);
-            setReservations(Array.isArray(reservationsData) ? reservationsData : []);
+            setReservations(reservationsResponse.data || []);
+            setTotalCount(reservationsResponse.count || 0);
             setUsers(Array.isArray(usersData) ? usersData : []);
         } catch (error) {
             console.error(error);
@@ -121,11 +153,40 @@ const Reservations = () => {
         }
     };
 
-    // Filter Logic
-    // Pending (Admin View)
+    const handleFilterChange = (key, value) => {
+        setFilters(prev => ({ ...prev, [key]: value }));
+        setCurrentPage(1);
+    };
+
+    const clearFilters = () => {
+        setFilters({
+            status: '',
+            amenityId: '',
+            startDate: '',
+            endDate: '',
+            search: ''
+        });
+        setCurrentPage(1);
+    };
+
+    const hasActiveFilters = Object.values(filters).some(val => val !== '');
+
+    // Filter Logic for Local Display (only if no server filters active)
+    const today = new Date().setHours(0, 0, 0, 0);
+
+    // If filters are active, we show a unified list
+    // Otherwise we show the sections
     const pendingReservations = reservations.filter(r => r.status === 'pending');
-    // Approved/Upcoming
-    const upcomingReservations = reservations.filter(r => r.status === 'approved' && new Date(r.date) >= new Date().setHours(0,0,0,0));
+
+    const upcomingReservations = reservations.filter(r =>
+        r.status === 'approved' &&
+        new Date(r.date + 'T12:00:00').setHours(0, 0, 0, 0) >= today
+    );
+
+    const pastReservationsList = reservations.filter(r =>
+        (r.status === 'approved' && new Date(r.date + 'T12:00:00').setHours(0, 0, 0, 0) < today) ||
+        ['rejected', 'cancelled'].includes(r.status)
+    );
 
     if (loading) {
         return (
@@ -137,123 +198,365 @@ const Reservations = () => {
 
     return (
         <DashboardLayout>
-             <Toast 
-                message={toast.message} 
-                type={toast.type} 
-                onClose={() => setToast({ ...toast, message: '' })} 
+            <Toast
+                message={toast.message}
+                type={toast.type}
+                onClose={() => setToast({ ...toast, message: '' })}
             />
-            <div className="max-w-7xl mx-auto space-y-8">
+            <div className="max-w-7xl mx-auto space-y-4 md:space-y-8">
                 <div className="flex justify-between items-center">
                     <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t('reservations.title', 'Reservations')}</h1>
-                    <button 
+                    <button
                         onClick={() => setBookingModal({ isOpen: true })}
-                        className="glass-button bg-blue-600 text-white"
+                        className="glass-button"
                     >
-                        {t('reservations.new_booking', '+ New Reservation')}
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
+                        {t('reservations.new_booking', 'New Reservation')}
                     </button>
                 </div>
 
-                {/* Pending Approvals */}
-                {pendingReservations.length > 0 && (
-                    <div className="glass-card p-6">
-                        <h2 className="font-bold mb-4 text-orange-600 dark:text-orange-400">{t('reservations.pending_approvals', 'Pending Approvals')}</h2>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left">
-                                <thead>
-                                    <tr className="text-gray-500 border-b border-gray-200 dark:border-gray-700">
-                                        <th className="pb-3 px-2">Amenity</th>
-                                        <th className="pb-3 px-2">Date/Time</th>
-                                        <th className="pb-3 px-2">Resident</th>
-                                        <th className="pb-3 px-2">Unit</th>
-                                        <th className="pb-3 px-2">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {pendingReservations.map(r => (
-                                        <tr key={r.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                                            <td className="py-3 px-2 font-medium">{r.amenities?.name}</td>
-                                            <td className="py-3 px-2">
-                                                {r.date} <br/> 
-                                                <span className="text-xs text-gray-500">{r.start_time.slice(0,5)} - {r.end_time.slice(0,5)}</span>
-                                            </td>
-                                            <td className="py-3 px-2">{r.profiles?.full_name}</td>
-                                            <td className="py-3 px-2">{r.units?.unit_number} ({r.units?.blocks?.name})</td>
-                                            <td className="py-3 px-2 flex space-x-2">
-                                                {isAdmin && (
-                                                    <>
-                                                        <button 
-                                                            onClick={() => handleUpdateStatus(r.id, 'approved')}
-                                                            disabled={!!processingId}
-                                                            className="bg-green-100 text-green-700 px-3 py-1 rounded-md text-sm hover:bg-green-200"
-                                                        >
-                                                            {t('common.approve', 'Approve')}
-                                                        </button>
-                                                        <button 
-                                                            onClick={() => handleUpdateStatus(r.id, 'rejected')}
-                                                            disabled={!!processingId}
-                                                            className="bg-red-100 text-red-700 px-3 py-1 rounded-md text-sm hover:bg-red-200"
-                                                        >
-                                                            {t('common.reject', 'Reject')}
-                                                        </button>
-                                                    </>
-                                                )}
-                                                {user?.id === r.user_id && (
-                                                    <button 
-                                                        onClick={() => handleUpdateStatus(r.id, 'cancelled')}
-                                                        disabled={!!processingId}
-                                                        className="bg-gray-100 text-gray-700 px-3 py-1 rounded-md text-sm hover:bg-gray-200"
-                                                    >
-                                                        {t('common.cancel', 'Cancel')}
-                                                    </button>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                )}
-
-                {/* Upcoming Schedule */}
-                <div className="glass-card p-6">
-                    <h2 className="font-bold mb-4 dark:text-white">{t('reservations.upcoming', 'Upcoming Reservations')}</h2>
-                    {upcomingReservations.length === 0 ? (
-                        <p className="text-gray-500">{t('reservations.no_upcoming', 'No upcoming reservations.')}</p>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {upcomingReservations.map(r => (
-                                <div key={r.id} className="bg-white/50 dark:bg-neutral-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <span className="font-bold text-blue-600 dark:text-blue-400">{r.amenities?.name}</span>
-                                        <div className="flex gap-2">
-                                            <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full capitalize">{r.status}</span>
-                                            {r.user_id === user?.id && (
-                                                <button 
-                                                onClick={() => handleUpdateStatus(r.id, 'cancelled')}
-                                                disabled={!!processingId}
-                                                className="text-xs text-red-500 hover:text-red-700 bg-white dark:bg-neutral-800 border border-red-200 px-2 rounded"
-                                                title="Cancel Reservation"
-                                                >
-                                                    {t('common.cancel', 'Cancel')}
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div className="text-sm text-gray-800 dark:text-gray-200 font-medium mb-1">
-                                        {new Date(r.date).toLocaleDateString()}
-                                    </div>
-                                    <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                                        {r.start_time.slice(0,5)} - {r.end_time.slice(0,5)}
-                                    </div>
-                                    <div className="text-xs text-gray-500 border-t pt-2 mt-2">
-                                        {t('reservations.reserved_by', 'Reserved by:')} {r.profiles?.full_name} ({r.units?.unit_number})
-                                    </div>
-                                </div>
-                            ))}
+                {/* Tab Switcher & Filter Bar */}
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-2">
+                    {(isAdmin || isVocal) && (
+                        <div className="flex p-1 rounded-full items-center backdrop-blur-md bg-white/30 border border-white/40 shadow-sm dark:bg-neutral-800/40 dark:border-white/10 w-fit">
+                            <button
+                                onClick={() => { setActiveTab('personal'); setCurrentPage(1); }}
+                                className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === 'personal'
+                                    ? 'bg-white text-blue-600 shadow-md dark:bg-neutral-700 dark:text-blue-400'
+                                    : 'text-gray-600 hover:bg-white/20 dark:text-gray-300 dark:hover:bg-white/10'
+                                    }`}
+                            >
+                                {t('reservations.tab_personal', 'My Reservations')}
+                            </button>
+                            {isVocal && (
+                                <button
+                                    onClick={() => { setActiveTab('block'); setCurrentPage(1); }}
+                                    className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === 'block'
+                                        ? 'bg-white text-blue-600 shadow-md dark:bg-neutral-700 dark:text-blue-400'
+                                        : 'text-gray-600 hover:bg-white/20 dark:text-gray-300 dark:hover:bg-white/10'
+                                        }`}
+                                >
+                                    {t('reservations.tab_block', 'Block')}
+                                </button>
+                            )}
+                            {isAdmin && (
+                                <button
+                                    onClick={() => { setActiveTab('community'); setCurrentPage(1); }}
+                                    className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === 'community'
+                                        ? 'bg-white text-blue-600 shadow-md dark:bg-neutral-700 dark:text-blue-400'
+                                        : 'text-gray-600 hover:bg-white/20 dark:text-gray-300 dark:hover:bg-white/10'
+                                        }`}
+                                >
+                                    {t('reservations.tab_community', 'Community')}
+                                </button>
+                            )}
                         </div>
                     )}
                 </div>
+
+                {/* Filter Bar */}
+                <div className="glass-card p-4 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <div className="relative">
+                            <input
+                                type="text"
+                                placeholder={t('user_management.search_placeholder', 'Search...')}
+                                className="glass-input pl-10"
+                                value={filters.search}
+                                onChange={(e) => handleFilterChange('search', e.target.value)}
+                            />
+                            <svg className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+
+                        <select
+                            className="glass-input"
+                            value={filters.amenityId}
+                            onChange={(e) => handleFilterChange('amenityId', e.target.value)}
+                        >
+                            <option value="">{t('reservations.all_amenities', 'All Amenities')}</option>
+                            {amenities.map(a => (
+                                <option key={a.id} value={a.id}>{a.name}</option>
+                            ))}
+                        </select>
+
+                        <select
+                            className="glass-input"
+                            value={filters.status}
+                            onChange={(e) => handleFilterChange('status', e.target.value)}
+                        >
+                            <option value="">{t('reservations.all_statuses', 'All Statuses')}</option>
+                            <option value="pending">{t('reservations.statuses.pending')}</option>
+                            <option value="approved">{t('reservations.statuses.approved')}</option>
+                            <option value="rejected">{t('reservations.statuses.rejected')}</option>
+                            <option value="cancelled">{t('reservations.statuses.cancelled')}</option>
+                        </select>
+
+                        <div className="flex gap-2">
+                            <input
+                                type="date"
+                                className="glass-input text-xs"
+                                value={filters.startDate}
+                                onChange={(e) => handleFilterChange('startDate', e.target.value)}
+                            />
+                            <input
+                                type="date"
+                                className="glass-input text-xs"
+                                value={filters.endDate}
+                                onChange={(e) => handleFilterChange('endDate', e.target.value)}
+                            />
+                        </div>
+
+                        <div className="flex gap-2">
+                            <button
+                                onClick={clearFilters}
+                                className="glass-button-secondary w-full"
+                            >
+                                {t('common.clear', 'Clear')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Content Sections */}
+                {hasActiveFilters && (
+                    <div className="glass-card p-6">
+                        <h2 className="font-bold mb-4 dark:text-white">{t('reservations.search_results', 'Filtered Results')} ({totalCount})</h2>
+                        {reservations.length === 0 ? (
+                            <p className="text-gray-500">{t('reservations.no_results', 'No reservations found for these filters.')}</p>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead>
+                                        <tr className="text-gray-500 border-b border-gray-200 dark:border-gray-700">
+                                            <th className="pb-3 px-2">{t('reservations.amenity', 'Amenity')}</th>
+                                            <th className="pb-3 px-2">{t('reservations.date_time', 'Date/Time')}</th>
+                                            <th className="pb-3 px-2">{t('reservations.resident', 'Resident')}</th>
+                                            <th className="pb-3 px-2">{t('reservations.status', 'Status')}</th>
+                                            <th className="pb-3 px-2">{t('reservations.actions', 'Actions')}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {reservations.map(r => (
+                                            <tr key={r.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                                                <td className="py-3 px-2 font-medium">{r.amenities?.name}</td>
+                                                <td className="py-3 px-2">
+                                                    {r.date} <br />
+                                                    <span className="text-xs text-gray-500">{r.start_time.slice(0, 5)} - {r.end_time.slice(0, 5)}</span>
+                                                </td>
+                                                <td className="py-3 px-2">{r.profiles?.full_name} ({r.units?.unit_number})</td>
+                                                <td className="py-3 px-2">
+                                                    <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${r.status === 'approved' ? 'bg-green-100/50 text-green-700 dark:bg-green-500/10 dark:text-green-400' :
+                                                        r.status === 'pending' ? 'bg-orange-100/50 text-orange-700 dark:bg-orange-500/10 dark:text-orange-400' :
+                                                            r.status === 'rejected' ? 'bg-red-100/50 text-red-700 dark:bg-red-500/10 dark:text-red-400' :
+                                                                'bg-gray-100 text-gray-600 dark:bg-neutral-800 dark:text-gray-400'
+                                                        }`}>{t(`reservations.statuses.${r.status}`, r.status)}</span>
+                                                </td>
+                                                <td className="py-3 px-2">
+                                                    <div className="flex gap-2">
+                                                        {r.status === 'pending' && isAdmin && (
+                                                            <>
+                                                                <button onClick={() => handleUpdateStatus(r.id, 'approved')} className="text-green-600 hover:underline">{t('common.approve')}</button>
+                                                                <button onClick={() => handleUpdateStatus(r.id, 'rejected')} className="text-red-600 hover:underline">{t('common.reject')}</button>
+                                                            </>
+                                                        )}
+                                                        {(r.user_id === user?.id || isAdmin) && r.status === 'approved' && (
+                                                            <button onClick={() => handleUpdateStatus(r.id, 'cancelled')} className="text-red-500 hover:underline">{t('common.cancel')}</button>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {!hasActiveFilters && (
+                    <>
+                        {/* Pending Approvals */}
+                        {pendingReservations.length > 0 && (
+                            <div className="glass-card p-6">
+                                <h2 className="font-bold mb-4 text-orange-600 dark:text-orange-400">{t('reservations.pending_approvals', 'Pending Approvals')}</h2>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left">
+                                        <thead>
+                                            <tr className="text-gray-500 border-b border-gray-200 dark:border-gray-700">
+                                                <th className="pb-3 px-2">Amenity</th>
+                                                <th className="pb-3 px-2">Date/Time</th>
+                                                <th className="pb-3 px-2">Resident</th>
+                                                <th className="pb-3 px-2">Unit</th>
+                                                <th className="pb-3 px-2">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {pendingReservations.map(r => (
+                                                <tr key={r.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                                                    <td className="py-3 px-2 font-medium">{r.amenities?.name}</td>
+                                                    <td className="py-3 px-2">
+                                                        {r.date} <br />
+                                                        <span className="text-xs text-gray-500">{r.start_time.slice(0, 5)} - {r.end_time.slice(0, 5)}</span>
+                                                    </td>
+                                                    <td className="py-3 px-2">{r.profiles?.full_name}</td>
+                                                    <td className="py-3 px-2">{r.units?.unit_number} ({r.units?.blocks?.name})</td>
+                                                    <td className="py-3 px-2 flex space-x-2">
+                                                        {isAdmin && (
+                                                            <>
+                                                                <button
+                                                                    onClick={() => handleUpdateStatus(r.id, 'approved')}
+                                                                    disabled={!!processingId}
+                                                                    className="bg-green-100 text-green-700 px-3 py-1 rounded-md text-sm hover:bg-green-200"
+                                                                >
+                                                                    {t('common.approve', 'Approve')}
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleUpdateStatus(r.id, 'rejected')}
+                                                                    disabled={!!processingId}
+                                                                    className="bg-red-100 text-red-700 px-3 py-1 rounded-md text-sm hover:bg-red-200"
+                                                                >
+                                                                    {t('common.reject', 'Reject')}
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                        {user?.id === r.user_id && (
+                                                            <button
+                                                                onClick={() => handleUpdateStatus(r.id, 'cancelled')}
+                                                                disabled={!!processingId}
+                                                                className="bg-gray-100 text-gray-700 px-3 py-1 rounded-md text-sm hover:bg-gray-200"
+                                                            >
+                                                                {t('common.cancel', 'Cancel')}
+                                                            </button>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Upcoming Schedule */}
+                        <div className="glass-card p-6">
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="font-bold dark:text-white">{t('reservations.upcoming', 'Upcoming Reservations')}</h2>
+                                <button
+                                    onClick={() => setShowPast(!showPast)}
+                                    className="text-sm text-blue-600 dark:text-blue-400 font-medium hover:underline flex items-center gap-1"
+                                >
+                                    <svg className={`w-4 h-4 transition-transform ${showPast ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                    {showPast ? t('reservations.hide_past', 'Hide Past') : t('reservations.show_history', 'View History')}
+                                </button>
+                            </div>
+                            {upcomingReservations.length === 0 ? (
+                                <p className="text-gray-500">{t('reservations.no_upcoming', 'No upcoming reservations.')}</p>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {upcomingReservations.map(r => (
+                                        <div key={r.id} className="bg-white/50 dark:bg-neutral-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <span className="font-bold text-blue-600 dark:text-blue-400">{r.amenities?.name}</span>
+                                                <div className="flex gap-2">
+                                                    <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full capitalize">{t(`reservations.statuses.${r.status}`, r.status)}</span>
+                                                    {r.user_id === user?.id && (
+                                                        <button
+                                                            onClick={() => handleUpdateStatus(r.id, 'cancelled')}
+                                                            disabled={!!processingId}
+                                                            className="text-xs text-red-500 hover:text-red-700 bg-white dark:bg-neutral-800 border border-red-200 px-2 rounded"
+                                                            title="Cancel Reservation"
+                                                        >
+                                                            {t('common.cancel', 'Cancel')}
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="text-sm text-gray-800 dark:text-gray-200 font-medium mb-1">
+                                                {new Date(r.date + 'T12:00:00').toLocaleDateString()}
+                                            </div>
+                                            <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                                                {r.start_time.slice(0, 5)} - {r.end_time.slice(0, 5)}
+                                            </div>
+                                            <div className="text-xs text-gray-500 border-t pt-2 mt-2">
+                                                {t('reservations.reserved_by', 'Reserved by:')} {r.profiles?.full_name} ({r.units?.unit_number})
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Past Reservations (History) */}
+                        {showPast && (
+                            <div className="glass-card p-6 animate-fadeIn">
+                                <h2 className="font-bold mb-4 text-gray-600 dark:text-gray-400">{t('reservations.past', 'Past Reservations & History')}</h2>
+                                {pastReservationsList.length === 0 ? (
+                                    <p className="text-gray-500">{t('reservations.no_past', 'No past reservations.')}</p>
+                                ) : (
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-left text-sm">
+                                            <thead>
+                                                <tr className="text-gray-500 border-b border-gray-200 dark:border-gray-700">
+                                                    <th className="pb-3 px-2">{t('reservations.amenity', 'Amenity')}</th>
+                                                    <th className="pb-3 px-2">{t('reservations.date_time', 'Date/Time')}</th>
+                                                    <th className="pb-3 px-2">{t('reservations.resident', 'Resident')}</th>
+                                                    <th className="pb-3 px-2">{t('reservations.status', 'Status')}</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {pastReservationsList.map(r => (
+                                                    <tr key={r.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                                                        <td className="py-3 px-2 font-medium">{r.amenities?.name}</td>
+                                                        <td className="py-3 px-2">
+                                                            {r.date} <br />
+                                                            <span className="text-xs text-gray-500">{r.start_time.slice(0, 5)} - {r.end_time.slice(0, 5)}</span>
+                                                        </td>
+                                                        <td className="py-3 px-2">{r.profiles?.full_name} ({r.units?.unit_number})</td>
+                                                        <td className="py-3 px-2">
+                                                            <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${r.status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                                                                r.status === 'cancelled' ? 'bg-gray-100 text-gray-800' :
+                                                                    'bg-red-100 text-red-800'
+                                                                }`}>{t(`reservations.statuses.${r.status}`, r.status)}</span>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </>
+                )}
+
+                {/* Pagination Controls */}
+                {totalCount > itemsPerPage && (
+                    <div className="flex justify-between items-center bg-white/30 dark:bg-neutral-800/30 p-4 rounded-2xl border border-white/20">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                            {t('common.showing', 'Showing')} {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, totalCount)} {t('common.of', 'of')} {totalCount}
+                        </span>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                disabled={currentPage === 1}
+                                className="glass-button-secondary py-1.5 px-3 text-xs disabled:opacity-50"
+                            >
+                                {t('common.previous', 'Previous')}
+                            </button>
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(totalCount / itemsPerPage)))}
+                                disabled={currentPage >= Math.ceil(totalCount / itemsPerPage)}
+                                className="glass-button-secondary py-1.5 px-3 text-xs disabled:opacity-50"
+                            >
+                                {t('common.next', 'Next')}
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Booking Modal */}
@@ -266,16 +569,16 @@ const Reservations = () => {
                             <div className="inline-block align-bottom glass-card p-0 text-left shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full overflow-hidden">
                                 <form onSubmit={handleCreateBooking} className="px-4 pt-5 pb-4 sm:p-6 bg-white/50 dark:bg-black/40 backdrop-blur-md">
                                     <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">{t('reservations.request_booking', 'Request Reservation')}</h3>
-                                    
+
                                     <div className="space-y-4">
                                         {/* Admin: Select User */}
                                         {isAdmin && (
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('reservations.reserve_for_resident', 'Reserve for Resident (Optional)')}</label>
-                                                <select 
+                                                <select
                                                     className="glass-input w-full"
                                                     value={newBooking.targetUserId || ''}
-                                                    onChange={e => setNewBooking({...newBooking, targetUserId: e.target.value})}
+                                                    onChange={e => setNewBooking({ ...newBooking, targetUserId: e.target.value })}
                                                 >
                                                     <option value="">{t('reservations.myself', 'Myself')} ({user?.email})</option>
                                                     {users.map(u => (
@@ -290,10 +593,10 @@ const Reservations = () => {
 
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('reservations.amenity', 'Amenity')}</label>
-                                            <select 
+                                            <select
                                                 className="glass-input w-full"
                                                 value={newBooking.amenityId}
-                                                onChange={e => setNewBooking({...newBooking, amenityId: e.target.value, startTime: '', endTime: ''})}
+                                                onChange={e => setNewBooking({ ...newBooking, amenityId: e.target.value, startTime: '', endTime: '' })}
                                                 required
                                             >
                                                 <option value="">{t('reservations.select_amenity', 'Select Amenity...')}</option>
@@ -305,29 +608,27 @@ const Reservations = () => {
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('reservations.date', 'Date')}</label>
                                             <div className="custom-datepicker-wrapper">
-                                                <DatePicker 
-                                                    selected={newBooking.date ? new Date(newBooking.date + 'T12:00:00') : null} 
+                                                <DatePicker
+                                                    selected={newBooking.date ? new Date(newBooking.date + 'T12:00:00') : null}
                                                     onChange={(date) => {
                                                         if (!date) {
-                                                            setNewBooking({...newBooking, date: '', startTime: '', endTime: ''});
+                                                            setNewBooking({ ...newBooking, date: '', startTime: '', endTime: '' });
                                                             return;
                                                         }
-                                                        // Format manually to YYYY-MM-DD to avoid timezone shifts
                                                         const year = date.getFullYear();
                                                         const month = String(date.getMonth() + 1).padStart(2, '0');
                                                         const day = String(date.getDate()).padStart(2, '0');
                                                         const dateStr = `${year}-${month}-${day}`;
-                                                        
-                                                        // Check Amenity Type
+
                                                         const amenity = amenities.find(a => a.id === newBooking.amenityId);
                                                         const type = amenity?.reservation_limits?.type || 'hour';
-                                                        
+
                                                         if (type === 'day') {
                                                             const s = amenity?.reservation_limits?.schedule_start || '06:00';
                                                             const e = amenity?.reservation_limits?.schedule_end || '23:00';
-                                                            setNewBooking({...newBooking, date: dateStr, startTime: s, endTime: e});
+                                                            setNewBooking({ ...newBooking, date: dateStr, startTime: s, endTime: e });
                                                         } else {
-                                                            setNewBooking({...newBooking, date: dateStr, startTime: '', endTime: ''});
+                                                            setNewBooking({ ...newBooking, date: dateStr, startTime: '', endTime: '' });
                                                         }
                                                     }}
                                                     minDate={new Date()}
@@ -361,21 +662,20 @@ const Reservations = () => {
                                         {newBooking.amenityId && newBooking.date && (() => {
                                             const amenity = amenities.find(a => a.id === newBooking.amenityId);
                                             const type = amenity?.reservation_limits?.type || 'hour';
-                                            
-                                            // If daily, no slots shown, just confirmation
+
                                             if (type === 'day') {
-                                                const isBooked = reservations.some(r => 
-                                                    r.amenity_id === newBooking.amenityId && 
-                                                    r.date === newBooking.date && 
+                                                const isBooked = reservations.some(r =>
+                                                    r.amenity_id === newBooking.amenityId &&
+                                                    r.date === newBooking.date &&
                                                     ['approved', 'pending'].includes(r.status)
                                                 );
-                                                
+
                                                 if (isBooked) {
-                                                     return (
+                                                    return (
                                                         <div className="mt-4 p-3 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-lg text-sm text-center">
                                                             {t('reservations.already_booked', 'This date is already booked.')}
                                                         </div>
-                                                     );
+                                                    );
                                                 }
 
                                                 return (
@@ -385,113 +685,94 @@ const Reservations = () => {
                                                 );
                                             }
 
-                                            // EXISTING HOURLY LOGIC
                                             return (
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('reservations.available_slots', 'Available Time Slots')}</label>
-                                                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-48 overflow-y-auto p-1 custom-scrollbar">
-                                                    {(() => {
-                                                        const limits = amenity?.reservation_limits || {};
-                                                        
-                                                        // Check if closed first
-                                                        if (limits.allowed_days) {
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('reservations.available_slots', 'Available Time Slots')}</label>
+                                                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-48 overflow-y-auto p-1 custom-scrollbar">
+                                                        {(() => {
+                                                            const limits = amenity?.reservation_limits || {};
+
+                                                            if (limits.allowed_days) {
                                                                 const [y, m, d] = newBooking.date.split('-').map(Number);
                                                                 const day = new Date(y, m - 1, d).getDay();
                                                                 if (!limits.allowed_days.includes(day)) return <p className="col-span-full text-gray-500 text-center text-sm">{t('reservations.closed', 'Closed')}</p>;
-                                                        }
-                                                        if (limits.exception_days?.includes(newBooking.date)) {
-                                                            return <p className="col-span-full text-red-500 text-center text-sm font-medium">{t('reservations.holiday_closed', 'Closed for Holiday/Maintenance')}</p>;
-                                                        }
+                                                            }
+                                                            if (limits.exception_days?.includes(newBooking.date)) {
+                                                                return <p className="col-span-full text-red-500 text-center text-sm font-medium">{t('reservations.holiday_closed', 'Closed for Holiday/Maintenance')}</p>;
+                                                            }
 
-                                                        const startHour = parseInt((limits.schedule_start || '06:00').split(':')[0]);
-                                                        const endHourRaw = parseInt((limits.schedule_end || '23:00').split(':')[0]);
-                                                        // Handle overnight (e.g. Start 13:00, End 01:00) -> Loop until 25 (01:00 next day)
-                                                        const endHour = endHourRaw <= startHour ? endHourRaw + 24 : endHourRaw;
-                                                        
-                                                        const slots = [];
+                                                            const startHour = parseInt((limits.schedule_start || '06:00').split(':')[0]);
+                                                            const endHourRaw = parseInt((limits.schedule_end || '23:00').split(':')[0]);
+                                                            const endHour = endHourRaw <= startHour ? endHourRaw + 24 : endHourRaw;
 
-                                                        // Get existing bookings for this day/amenity
-                                                        const dayReservations = reservations.filter(r => 
-                                                            r.amenity_id === newBooking.amenityId && 
-                                                            r.date === newBooking.date && 
-                                                            ['approved', 'pending'].includes(r.status)
-                                                        );
+                                                            const slots = [];
+                                                            const dayReservations = reservations.filter(r =>
+                                                                r.amenity_id === newBooking.amenityId &&
+                                                                r.date === newBooking.date &&
+                                                                ['approved', 'pending'].includes(r.status)
+                                                            );
 
-                                                        for (let h = startHour; h < endHour; h++) {
-                                                            const currentH = h % 24;
-                                                            const nextH = (h + 1) % 24;
+                                                            for (let h = startHour; h < endHour; h++) {
+                                                                const currentH = h % 24;
+                                                                const nextH = (h + 1) % 24;
+                                                                const timeStr = `${currentH.toString().padStart(2, '0')}:00`;
+                                                                const nextTimeStr = `${nextH.toString().padStart(2, '0')}:00`;
 
-                                                            const timeStr = `${currentH.toString().padStart(2, '0')}:00`;
-                                                            const nextTimeStr = `${nextH.toString().padStart(2, '0')}:00`;
-                                                            
-                                                            // Check overlap
-                                                            // Simple overlap: if a reservation starts at this hour or covers it.
-                                                            // Res: 10:00 - 12:00. Slots 10:00 (blocked), 11:00 (blocked).
-                                                            const isBooked = dayReservations.some(r => {
-                                                                return (r.start_time <= timeStr && r.end_time > timeStr); // Strict inequality for end time?
-                                                                // r.start < slotEnd && r.end > slotStart
-                                                                // slot: timeStr to nextTimeStr
-                                                            });
-                                                            
-                                                            // Check past time if today
-                                                            const isPast = new Date().toISOString().split('T')[0] === newBooking.date && 
-                                                                            h <= new Date().getHours();
+                                                                const isBooked = dayReservations.some(r => {
+                                                                    return (r.start_time <= timeStr && r.end_time > timeStr);
+                                                                });
 
-                                                            slots.push({ time: timeStr, end: nextTimeStr, disabled: isBooked || isPast, reason: isBooked ? 'Booked' : 'Past' });
-                                                        }
+                                                                const isPast = new Date().toISOString().split('T')[0] === newBooking.date &&
+                                                                    h <= new Date().getHours();
 
-                                                        if (slots.length === 0) return <p className="col-span-full text-gray-500 text-center text-sm">{t('reservations.no_slots', 'No slots available')}</p>;
+                                                                slots.push({ time: timeStr, end: nextTimeStr, disabled: isBooked || isPast });
+                                                            }
 
-                                                        return slots.map(slot => (
-                                                            <button
-                                                                key={slot.time}
-                                                                type="button"
-                                                                disabled={slot.disabled}
-                                                                onClick={() => setNewBooking({...newBooking, startTime: slot.time, endTime: slot.end})}
-                                                                className={`
-                                                                    py-2 px-1 rounded-lg text-sm font-medium transition-all
-                                                                    ${newBooking.startTime === slot.time 
-                                                                        ? 'bg-blue-600 text-white shadow-md transform scale-105' 
-                                                                        : slot.disabled 
-                                                                            ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 cursor-not-allowed' 
-                                                                            : 'bg-white/50 dark:bg-white/10 hover:bg-blue-50 dark:hover:bg-blue-900/30 text-gray-700 dark:text-gray-200 border border-transparent hover:border-blue-200'}
-                                                                `}
-                                                            >
-                                                                {slot.time}
-                                                            </button>
-                                                        ));
-                                                    })()}
-                                                </div>
-                                                {/* Selected summary */}
-                                                    {newBooking.startTime && (
-                                                    <div className="mt-2 text-sm text-blue-600 dark:text-blue-400 font-medium text-center">
-                                                        Selected: {newBooking.startTime} - {newBooking.endTime}
+                                                            if (slots.length === 0) return <p className="col-span-full text-gray-500 text-center text-sm">{t('reservations.no_slots', 'No slots available')}</p>;
+
+                                                            return slots.map(slot => (
+                                                                <button
+                                                                    key={slot.time}
+                                                                    type="button"
+                                                                    disabled={slot.disabled}
+                                                                    onClick={() => setNewBooking({ ...newBooking, startTime: slot.time, endTime: slot.end })}
+                                                                    className={`py-2 px-1 rounded-lg text-sm font-medium transition-all ${newBooking.startTime === slot.time ? 'bg-blue-600 text-white shadow-md transform scale-105' : slot.disabled ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 cursor-not-allowed' : 'bg-white/50 dark:bg-white/10 hover:bg-blue-50 dark:hover:bg-blue-900/30 text-gray-700 dark:text-gray-200 border border-transparent hover:border-blue-200'}`}
+                                                                >
+                                                                    {slot.time}
+                                                                </button>
+                                                            ));
+                                                        })()}
                                                     </div>
-                                                )}
-                                            </div>
+                                                    {/* Selected summary */}
+                                                    {newBooking.startTime && (
+                                                        <div className="mt-2 text-sm text-blue-600 dark:text-blue-400 font-medium text-center">
+                                                            Selected: {newBooking.startTime} - {newBooking.endTime}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             );
                                         })()}
 
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes (Optional)</label>
-                                            <textarea 
+                                            <textarea
                                                 className="glass-input w-full rounded-2xl"
                                                 value={newBooking.notes}
-                                                onChange={e => setNewBooking({...newBooking, notes: e.target.value})}
+                                                onChange={e => setNewBooking({ ...newBooking, notes: e.target.value })}
                                                 rows="2"
                                             />
                                         </div>
                                     </div>
 
                                     <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
-                                        <button 
-                                            type="submit" 
+                                        <button
+                                            type="submit"
                                             className="w-full glass-button justify-center border border-transparent shadow-sm px-4 py-2 text-base font-bold sm:col-start-2 sm:text-sm"
                                         >
                                             {t('reservations.request', 'Request')}
                                         </button>
-                                        <button 
-                                            type="button" 
+                                        <button
+                                            type="button"
                                             className="mt-3 w-full glass-button-secondary justify-center border shadow-sm px-4 py-2 text-base font-medium sm:mt-0 sm:col-start-1 sm:text-sm"
                                             onClick={() => setBookingModal({ isOpen: false })}
                                         >

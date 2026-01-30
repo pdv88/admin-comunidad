@@ -1,8 +1,11 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light only">
+  <meta name="supported-color-schemes" content="light only">
   <title>Nuevo Recibo de Mantenimiento</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap');
@@ -12,23 +15,68 @@
       .content {
         padding: 20px !important;
       }
+
       .responsive-table td {
         padding: 20px 10px !important;
       }
     }
+
+    /* Force Light Mode */
+    :root {
+      color-scheme: light only;
+      supported-color-schemes: light only;
+    }
+
+    @media (prefers-color-scheme: dark) {
+
+      body,
+      .body-table,
+      .main-bg {
+        background-color: #f9fafb !important;
+      }
+
+      .content-box {
+        background-color: rgba(255, 255, 255, 0.7) !important;
+        background: rgba(255, 255, 255, 0.7) !important;
+        color: #1f2937 !important;
+      }
+
+      .inner-box {
+        background: rgba(255, 255, 255, 0.6) !important;
+        color: #1f2937 !important;
+      }
+
+      h2 {
+        color: #1f2937 !important;
+      }
+
+      p {
+        color: #4b5563 !important;
+      }
+
+      .footer-text {
+        color: #6b7280 !important;
+      }
+
+      .amount-text {
+        color: #1f2937 !important;
+      }
+    }
   </style>
 </head>
+
 <body style="margin: 0; padding: 0; font-family: 'Outfit', sans-serif; background: #f9fafb; color: #1f2937;">
-  
-  <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="width: 100%; min-height: 100vh; background-color: #f9fafb;" class="responsive-table">
+
+  <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0"
+    style="width: 100%; min-height: 100vh; background-color: #f9fafb;" class="responsive-table">
     <tr>
       <td align="center" valign="middle" style="
         padding: 40px 20px; 
         background-color: #f9fafb;
         background-image: radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.1) 0%, transparent 40%), radial-gradient(circle at 90% 80%, rgba(79, 70, 229, 0.1) 0%, transparent 40%);
       ">
-    
-    <div class="content" style="
+
+        <div class="content content-box" style="
       max-width: 600px;
       margin: 0 auto;
       box-sizing: border-box;
@@ -41,54 +89,56 @@
       backdrop-filter: blur(24px);
       -webkit-backdrop-filter: blur(24px);
     ">
-      
 
 
-      <h2 style="
+
+          <h2 style="
         font-size: 1.5rem;
         font-weight: 600;
         margin-bottom: 1rem;
         color: #1f2937;
       ">Nuevo Recibo Generado</h2>
-      
-      <div style="text-align: center; margin-bottom: 2rem;">
-        {{#if community_logo}}
-          <img src="{{community_logo}}" alt="{{community_name}}" style="max-height: 100px; max-width: 200px; object-fit: contain; margin-bottom: 0.5rem;">
-          <h2 style="margin: 0; color: #1f2937; font-size: 1.25rem;">{{community_name}}</h2>
-        {{else}}
-          <h2 style="margin: 0; color: #2563eb; font-size: 1.5rem; font-weight: bold;">{{community_name}}</h2>
-        {{/if}}
-      </div>
-      <p style="
+
+          <div style="text-align: center; margin-bottom: 2rem;">
+            {{#if community_logo}}
+            <img src="{{community_logo}}" alt="{{community_name}}"
+              style="max-height: 100px; max-width: 200px; object-fit: contain; margin-bottom: 0.5rem;">
+            <h2 style="margin: 0; color: #1f2937; font-size: 1.25rem;">{{community_name}}</h2>
+            {{else}}
+            <h2 style="margin: 0; color: #2563eb; font-size: 1.5rem; font-weight: bold;">{{community_name}}</h2>
+            {{/if}}
+          </div>
+          <p style="
         font-size: 1rem;
         line-height: 1.6;
         color: #4b5563;
         margin-bottom: 0.5rem;
       ">
-        Hola <strong>{{user_name}}</strong>,<br><br>
-        Se ha generado un nuevo recibo de mantenimiento de <strong>{{community_name}}</strong> para el periodo de <strong>{{period}}</strong>.
-      </p>
+            Hola <strong>{{user_name}}</strong>,<br><br>
+            Se ha generado un nuevo recibo de mantenimiento de <strong>{{community_name}}</strong> para el periodo de
+            <strong>{{period}}</strong>.
+          </p>
 
-      <div style="
+          <div style="
         margin: 2rem 0;
         padding: 1.5rem;
         background: rgba(255, 255, 255, 0.6);
         border-radius: 12px;
         border: 1px solid rgba(0,0,0,0.05);
-      ">
-        <p style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: #6b7280;">Monto a pagar</p>
-        <p style="
+      " class="inner-box">
+            <p style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: #6b7280;">Monto a pagar</p>
+            <p style="
             margin: 0; 
             font-size: 2.5rem; 
             font-weight: 700; 
         color: #1f2937;
-        ">{{currency_symbol}}{{amount}}</p>
-         <p style="margin: 1rem 0 0 0; font-size: 0.9rem; color: #4b5563;">
-            {{unit_details}}
-         </p>
-      </div>
+        " class="amount-text">{{currency_symbol}}{{amount}}</p>
+            <p style="margin: 1rem 0 0 0; font-size: 0.9rem; color: #4b5563;">
+              {{unit_details}}
+            </p>
+          </div>
 
-      <a href="{{link}}" style="
+          <a href="{{link}}" style="
         display: inline-block;
         padding: 0.875rem 2.5rem;
         font-size: 0.95rem;
@@ -100,19 +150,21 @@
         box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.4);
       ">Pagar Ahora</a>
 
-      <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid rgba(0,0,0,0.05);">
-        <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 0.5rem;">Gestiona tus pagos en:</p>
-         <a href="{{link}}" style="font-size: 0.85rem; color: #4f46e5;">{{link}}</a>
-      </div>
+          <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid rgba(0,0,0,0.05);" class="footer-text">
+            <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 0.5rem;">Gestiona tus pagos en:</p>
+            <a href="{{link}}" style="font-size: 0.85rem; color: #4f46e5;">{{link}}</a>
+          </div>
 
-      <div style="margin-top: 3rem; text-align: center; opacity: 0.8;">
-         <p style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem;">Powered by</p>
-         <img src="https://habiio.com/assets/habiio_logo_header_nobg-KEmvXxNA.webp" alt="Habiio" style="max-width: 70px; display: inline-block;">
-      </div>
-    </div>
-    
+          <div style="margin-top: 3rem; text-align: center; opacity: 0.8;" class="footer-text">
+            <p style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem;">Powered by</p>
+            <img src="https://habiio.com/assets/habiio_logo_header_nobg-KEmvXxNA.webp" alt="Habiio"
+              style="max-width: 70px; display: inline-block;">
+          </div>
+        </div>
+
       </td>
     </tr>
   </table>
 </body>
+
 </html>

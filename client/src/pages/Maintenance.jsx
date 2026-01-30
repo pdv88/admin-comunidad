@@ -177,7 +177,7 @@ const Maintenance = () => {
                     ? 'maintenance.bulk_delete_success'
                     : 'maintenance.bulk_paid_success';
                 setToast({
-                    message: t(successKey, `${data.count} fee(s) processed successfully`),
+                    message: t(successKey, { count: data.count || selectedFees.size }),
                     type: 'success'
                 });
                 setSelectedFees(new Set());
@@ -681,7 +681,7 @@ const Maintenance = () => {
                             {isAdmin && activeTab === 'community' && selectedFees.size > 0 && (
                                 <div className="mb-4 p-3 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-lg border border-indigo-200 dark:border-indigo-500/30 flex items-center justify-between gap-4 flex-wrap">
                                     <span className="text-sm font-medium text-indigo-700 dark:text-indigo-300">
-                                        {t('maintenance.selected_count', '{{count}} selected').replace('{{count}}', selectedFees.size)}
+                                        {t('maintenance.selected_count', { count: selectedFees.size })}
                                     </span>
                                     <div className="flex gap-2">
                                         <button

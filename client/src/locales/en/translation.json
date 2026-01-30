@@ -597,7 +597,7 @@
       "amount": "Amount",
       "notes": "Notes (Optional)",
       "receipt": "Receipt (Image)",
-      "submit": "Submit Payment",
+      "submit": "Register",
       "user_select": "Select Resident (Admin)",
       "myself": "Myself"
     },
@@ -749,7 +749,7 @@
   },
   "reservations": {
     "title": "Reservations",
-    "new_booking": "+ New Reservation",
+    "new_booking": "New Reservation",
     "pending_approvals": "Pending Approvals",
     "upcoming": "Upcoming Reservations",
     "request_booking": "Request Reservation",
@@ -768,7 +768,24 @@
     "request": "Request",
     "reserved_by": "Reserved by",
     "no_upcoming": "No upcoming reservations.",
-    "myself": "Myself"
+    "myself": "Myself",
+    "tab_personal": "My Reservations",
+    "tab_block": "Block",
+    "tab_community": "Community",
+    "show_history": "View History",
+    "hide_past": "Hide Past",
+    "past": "Reservation History",
+    "no_past": "No past reservations found.",
+    "date_time": "Date / Time",
+    "resident": "Resident",
+    "status": "Status",
+    "statuses": {
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "rejected": "Rejected",
+      "approved": "Approved",
+      "pending": "Pending"
+    }
   },
   "visitors": {
     "title": "Visitors & Access",

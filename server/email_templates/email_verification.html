@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light only">
+  <meta name="supported-color-schemes" content="light only">
   <title>Verificación de correo</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap');
@@ -15,6 +17,27 @@
       .responsive-table td {
         padding: 20px 10px !important;
       }
+    }
+
+    /* Force Light Mode */
+    :root {
+      color-scheme: light only;
+      supported-color-schemes: light only;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body, .body-table, .main-bg {
+        background-color: #f9fafb !important;
+      }
+      .content-box {
+        background-color: rgba(255, 255, 255, 0.7) !important;
+        background: rgba(255, 255, 255, 0.7) !important;
+        color: #1f2937 !important;
+      }
+      h2 { color: #1f2937 !important; }
+      p { color: #4b5563 !important; }
+      .footer-text { color: #9ca3af !important; }
+      .link-backup { background: rgba(255, 255, 255, 0.5) !important; color: #4f46e5 !important; }
     }
   </style>
 </head>
@@ -30,7 +53,7 @@
       ">
     
     <!-- Glass Card: Light Mode (.glass-card: bg-white/70, border-white/40, shadow-xl shadow-gray-200/20) -->
-    <div class="content" style="
+    <div class="content content-box" style="
       max-width: 600px;
       margin: 0 auto;
       box-sizing: border-box;
@@ -82,7 +105,7 @@
 
       <!-- Link Backup -->
       <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid rgba(0,0,0,0.05);">
-        <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 0.5rem;">o copia este enlace en tu navegador:</p>
+        <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 0.5rem;" class="footer-text">o copia este enlace en tu navegador:</p>
         <div style="
           background: rgba(255, 255, 255, 0.5);
           padding: 0.75rem;
@@ -92,10 +115,10 @@
           color: #4f46e5; /* indigo-600 */
           font-family: monospace;
           border: 1px solid rgba(0,0,0,0.05);
-        ">{{link}}</div>
+        " class="link-backup">{{link}}</div>
       </div>
       
-      <div style="margin-top: 2rem; font-size: 0.75rem; color: #9ca3af;">
+      <div style="margin-top: 2rem; font-size: 0.75rem; color: #9ca3af;" class="footer-text">
         &copy; Admin Comunidad. Todos los derechos reservados.
       </div>
 

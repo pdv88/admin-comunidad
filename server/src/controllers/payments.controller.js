@@ -1,5 +1,73 @@
 const supabase = require('../config/supabaseClient');
 const supabaseAdmin = require('../config/supabaseAdmin');
+const sendEmail = require('../utils/sendEmail');
+const { formatCurrency } = require('../utils/currencyUtils');
+
+// Helper to send payment confirmation email
+const sendPaymentConfirmationEmail = async (paymentId, communityId) => {
+    try {
+        // 1. Fetch Payment with necessary details
+        const { data: payment, error: paymentError } = await supabaseAdmin
+            .from('payments')
+            .select(`
+                *,
+                profiles (full_name, email),
+                units (unit_number, blocks (name)),
+                communities (name, logo_url, currency)
+            `)
+            .eq('id', paymentId)
+            .single();
+
+        if (paymentError || !payment) throw new Error('Payment not found for email');
+
+        // Identify recipient
+        const ownerEmail = payment.profiles?.email;
+        if (!ownerEmail) return; // No email, skip
+
+        const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+        const communityCurrency = payment.communities?.currency || 'USD';
+
+        // 2. Fetch specific period from linked fee if any
+        let periodName = '';
+        const { data: linkedFee } = await supabaseAdmin
+            .from('monthly_fees')
+            .select('period')
+            .eq('payment_id', paymentId)
+            .maybeSingle();
+
+        if (linkedFee) {
+            periodName = linkedFee.period;
+        } else if (payment.campaign_id) {
+            const { data: campaign } = await supabaseAdmin
+                .from('campaigns')
+                .select('name')
+                .eq('id', payment.campaign_id)
+                .maybeSingle();
+            periodName = campaign?.name || 'Campaign Contribution';
+        }
+
+        await sendEmail({
+            email: ownerEmail,
+            from: `${payment.communities?.name} <info@habiio.com>`,
+            subject: `Comprobante de Pago - ${payment.communities?.name}`,
+            templateName: 'payment_receipt.html',
+            context: {
+                user_name: payment.profiles?.full_name || 'Vecino',
+                amount_formatted: formatCurrency(payment.amount, communityCurrency),
+                period_name: periodName,
+                unit_details: payment.units ? `${payment.units.blocks?.name} - ${payment.units.unit_number}` : '',
+                community_name: payment.communities?.name,
+                community_logo: payment.communities?.logo_url,
+                payment_date: new Date(payment.payment_date || payment.created_at).toLocaleDateString('es-ES'),
+                payment_id: paymentId.slice(0, 8),
+                link: `${clientUrl}/app/maintenance`
+            }
+        });
+        console.log(`Confirmation email sent to ${ownerEmail} for payment ${paymentId}`);
+    } catch (error) {
+        console.error("Error sending payment confirmation email:", error);
+    }
+};
 
 // Helper to get block IDs that a user represents as vocal
 const getVocalBlocks = async (memberId) => {
@@ -181,6 +249,11 @@ exports.createPayment = async (req, res) => {
         }
 
         res.status(201).json(data);
+
+        // Async: Send Confirmation Email if auto-confirmed (admin manual registration)
+        if (initialStatus === 'confirmed') {
+            sendPaymentConfirmationEmail(data.id, communityId);
+        }
 
     } catch (error) {
         console.error('Create payment error:', error);
@@ -391,6 +464,9 @@ exports.updatePaymentStatus = async (req, res) => {
                         .eq('id', linkedFee.id);
                 }
             } catch (ignore) { console.error('Error updating fee status', ignore); }
+
+            // Send Confirmation Email
+            sendPaymentConfirmationEmail(data.id, communityId);
         }
 
         res.json(data);

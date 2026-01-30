@@ -632,7 +632,7 @@
             "amount": "Monto",
             "notes": "Notas (Opcional)",
             "receipt": "Comprobante (Imagen)",
-            "submit": "Enviar Pago",
+            "submit": "Registrar",
             "user_select": "Seleccionar Residente (Admin)",
             "myself": "Mí mismo"
         },
@@ -787,7 +787,7 @@
     },
     "reservations": {
         "title": "Reservaciones",
-        "new_booking": "+ Nueva Reservación",
+        "new_booking": "Nueva Reservación",
         "pending_approvals": "Aprobaciones Pendientes",
         "upcoming": "Próximas Reservaciones",
         "request_booking": "Solicitar Reservación",
@@ -806,7 +806,24 @@
         "request": "Solicitar",
         "reserved_by": "Reservado por",
         "no_upcoming": "No hay reservaciones próximas.",
-        "myself": "Yo mismo"
+        "myself": "Yo mismo",
+        "tab_personal": "Mis Reservas",
+        "tab_block": "Bloque",
+        "tab_community": "Comunidad",
+        "show_history": "Ver Historial",
+        "hide_past": "Ocultar Pasado",
+        "past": "Historial de Reservas",
+        "no_past": "No hay reservaciones pasadas.",
+        "date_time": "Fecha / Hora",
+        "resident": "Residente",
+        "status": "Estado",
+        "statuses": {
+            "completed": "Completada",
+            "cancelled": "Cancelada",
+            "rejected": "Rechazada",
+            "approved": "Aprobada",
+            "pending": "Pendiente"
+        }
     },
     "visitors": {
         "title": "Visitas y Accesos",

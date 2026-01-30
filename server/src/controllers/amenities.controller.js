@@ -1,5 +1,16 @@
 const supabase = require('../config/supabaseClient');
 const supabaseAdmin = require('../config/supabaseAdmin');
+const sendEmail = require('../utils/sendEmail');
+
+// Helper to get block IDs that a user represents as vocal
+const getVocalBlocks = async (memberId) => {
+    const { data } = await supabaseAdmin
+        .from('member_roles')
+        .select('block_id, roles!inner(name)')
+        .eq('member_id', memberId)
+        .eq('roles.name', 'vocal');
+    return data?.map(r => r.block_id).filter(Boolean) || [];
+};
 
 // Helper to get user and their member info
 const getUserAndMember = async (req) => {
@@ -39,6 +50,59 @@ const getUserAndMember = async (req) => {
     member.roleNames = roles;
 
     return { user, member, communityId };
+};
+
+// --- Helper: Send Reservation Email ---
+const sendReservationEmail = async (reservationId, communityId, templateType) => {
+    try {
+        const { data: reservation, error } = await supabaseAdmin
+            .from('reservations')
+            .select(`
+                *,
+                amenities(name),
+                communities(name, logo_url)
+            `)
+            .eq('id', reservationId)
+            .single();
+
+        if (error || !reservation) throw new Error('Reservation not found for email');
+
+        // Fetch profile for name and email
+        const { data: profile } = await supabaseAdmin
+            .from('profiles')
+            .select('full_name, email')
+            .eq('id', reservation.user_id)
+            .single();
+
+        if (!profile || !profile.email) return;
+
+        const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+        const templateName = templateType === 'requested' ? 'reservation_requested.html' : 'reservation_status_update.html';
+        const subjectPrefix = templateType === 'requested' ? 'Solicitud de Reserva Recibida' : 'Actualización de tu Reserva';
+
+        await sendEmail({
+            email: profile.email,
+            from: `${reservation.communities?.name} <info@habiio.com>`,
+            subject: `${subjectPrefix} - ${reservation.communities?.name}`,
+            templateName: templateName,
+            context: {
+                userName: profile.full_name,
+                communityName: reservation.communities?.name,
+                communityLogo: reservation.communities?.logo_url,
+                amenityName: reservation.amenities?.name,
+                date: reservation.date,
+                startTime: reservation.start_time.slice(0, 5),
+                endTime: reservation.end_time.slice(0, 5),
+                status: reservation.status,
+                adminNotes: reservation.admin_notes,
+                link: `${clientUrl}/app/reservations`
+            }
+        });
+
+        console.log(`✅ Reservation email (${templateType}) sent to ${profile.email}`);
+    } catch (err) {
+        console.error("❌ Error sending reservation email:", err);
+    }
 };
 
 exports.getAmenities = async (req, res) => {
@@ -137,17 +201,95 @@ exports.getReservations = async (req, res) => {
     try {
         const { user, member, communityId } = await getUserAndMember(req);
         const isAdmin = member.roleNames.includes('admin') || member.roleNames.includes('president') || member.roleNames.includes('secretary');
+        const isVocal = member.roleNames.includes('vocal');
+        const {
+            type,
+            page = 1,
+            limit = 10,
+            status,
+            amenityId,
+            startDate,
+            endDate,
+            search
+        } = req.query;
+
+        const from = (parseInt(page) - 1) * parseInt(limit);
+        const to = from + parseInt(limit) - 1;
 
         let query = supabaseAdmin
             .from('reservations')
             .select(`
                 *,
                 amenities(name),
-                units(unit_number, block_id, blocks(id, name))
-            `)
+                units!inner(unit_number, block_id, blocks(id, name))
+            `, { count: 'exact' })
             .eq('community_id', communityId);
 
-        const { data: reservations, error } = await query.order('date', { ascending: false });
+        // Filter by Status
+        if (status) {
+            query = query.eq('status', status);
+        }
+
+        // Filter by Amenity
+        if (amenityId) {
+            query = query.eq('amenity_id', amenityId);
+        }
+
+        // Filter by Date Range
+        if (startDate) {
+            query = query.gte('date', startDate);
+        }
+        if (endDate) {
+            query = query.lte('date', endDate);
+        }
+
+        // Role-based filtering
+        if (type === 'my') {
+            query = query.eq('user_id', user.id);
+        } else if (type === 'block') {
+            if (!isVocal && !isAdmin) return res.status(403).json({ error: 'Unauthorized. Vocal or Admin only.' });
+
+            const vocalBlockIds = await getVocalBlocks(member.id);
+            if (vocalBlockIds.length > 0) {
+                query = query.in('units.block_id', vocalBlockIds);
+            } else if (!isAdmin) {
+                return res.json({ data: [], count: 0 });
+            }
+        } else if (type === 'community') {
+            if (!isAdmin) return res.status(403).json({ error: 'Unauthorized. Admin only.' });
+        } else {
+            // Default: Users see their own, Admins see all
+            if (!isAdmin) {
+                query = query.eq('user_id', user.id);
+            }
+        }
+
+        // Search Logic
+        if (search) {
+            const isNumeric = !isNaN(search);
+            if (isNumeric) {
+                // Search in unit_number
+                query = query.ilike('units.unit_number', `%${search}%`);
+            } else {
+                // Search in profiles full_name
+                const { data: profiles } = await supabaseAdmin
+                    .from('profiles')
+                    .select('id')
+                    .ilike('full_name', `%${search}%`);
+
+                const profileIds = (profiles || []).map(p => p.id);
+                if (profileIds.length > 0) {
+                    query = query.in('user_id', profileIds);
+                } else {
+                    // No profile matches the search
+                    return res.json({ data: [], count: 0 });
+                }
+            }
+        }
+
+        const { data: reservations, count, error } = await query
+            .order('date', { ascending: false })
+            .range(from, to);
 
         if (error) throw error;
 
@@ -166,7 +308,7 @@ exports.getReservations = async (req, res) => {
             });
         }
 
-        res.json(reservations || []);
+        res.json({ data: reservations || [], count: count || 0 });
     } catch (err) {
         res.status(400).json({ error: err.message });
     }
@@ -345,6 +487,13 @@ exports.createReservation = async (req, res) => {
 
         if (error) throw error;
         res.status(201).json(data[0]);
+
+        // Async: Send Confirmation Email
+        if (data[0].status === 'pending') {
+            sendReservationEmail(data[0].id, communityId, 'requested');
+        } else if (data[0].status === 'approved') {
+            sendReservationEmail(data[0].id, communityId, 'status_update');
+        }
     } catch (err) {
         console.error("Create Reservation Error:", err);
         res.status(400).json({ error: err.message });
@@ -393,6 +542,9 @@ exports.updateReservationStatus = async (req, res) => {
 
         if (error) throw error;
         res.json(data[0]);
+
+        // Async: Send Status Update Email
+        sendReservationEmail(data[0].id, communityId, 'status_update');
     } catch (err) {
         res.status(400).json({ error: err.message });
     }

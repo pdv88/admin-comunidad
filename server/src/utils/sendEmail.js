@@ -3,6 +3,11 @@ const handlebars = require('handlebars');
 const fs = require('fs');
 const path = require('path');
 
+// Register Handlebars helpers
+handlebars.registerHelper('eq', function (a, b) {
+    return a === b;
+});
+
 // Initialize Resend with API Key
 const resend = new Resend(process.env.RESEND_API_KEY);
 
