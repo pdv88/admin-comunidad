@@ -210,7 +210,8 @@ exports.getReservations = async (req, res) => {
             amenityId,
             startDate,
             endDate,
-            search
+            search,
+            time_range
         } = req.query;
 
         const from = (parseInt(page) - 1) * parseInt(limit);
@@ -241,6 +242,15 @@ exports.getReservations = async (req, res) => {
         }
         if (endDate) {
             query = query.lte('date', endDate);
+        }
+
+        // Time Range Filtering (Upcoming vs Past)
+        if (time_range === 'upcoming') {
+            const today = new Date().toISOString().split('T')[0];
+            query = query.or(`and(status.eq.approved,date.gte.${today}),status.eq.pending`);
+        } else if (time_range === 'past') {
+            const today = new Date().toISOString().split('T')[0];
+            query = query.or(`and(status.eq.approved,date.lt.${today}),status.in.(completed,cancelled,rejected)`);
         }
 
         // Role-based filtering
@@ -287,9 +297,14 @@ exports.getReservations = async (req, res) => {
             }
         }
 
-        const { data: reservations, count, error } = await query
-            .order('date', { ascending: false })
-            .range(from, to);
+        // Sorting
+        if (time_range === 'upcoming') {
+            query = query.order('date', { ascending: true }).order('start_time', { ascending: true });
+        } else {
+            query = query.order('date', { ascending: false }).order('start_time', { ascending: false });
+        }
+
+        const { data: reservations, count, error } = await query.range(from, to);
 
         if (error) throw error;
 
