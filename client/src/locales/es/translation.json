@@ -862,6 +862,10 @@
         "no_visits": "No se encontraron visitas.",
         "delete_confirm": "¿Eliminar esta visita?"
     },
+    "alerts": {
+        "title": "Alertas del Sistema",
+        "no_alerts": "Todos los sistemas operativos. No se encontraron alertas."
+    },
     "maintenance": {
         "admin_title": "Gestión de Cuotas de Mantenimiento",
         "resident_title": "Mis Cuotas de Mantenimiento",

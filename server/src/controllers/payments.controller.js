@@ -60,7 +60,8 @@ const sendPaymentConfirmationEmail = async (paymentId, communityId) => {
                 community_logo: payment.communities?.logo_url,
                 payment_date: new Date(payment.payment_date || payment.created_at).toLocaleDateString('es-ES'),
                 payment_id: paymentId.slice(0, 8),
-                link: `${clientUrl}/app/maintenance`
+                link: `${clientUrl}/app/maintenance`,
+                community_id: communityId // For logging
             }
         });
         console.log(`Confirmation email sent to ${ownerEmail} for payment ${paymentId}`);

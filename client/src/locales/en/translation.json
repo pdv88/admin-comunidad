@@ -788,6 +788,10 @@
       "pending": "Pending"
     }
   },
+  "alerts": {
+    "title": "System Alerts",
+    "no_alerts": "All systems operational. No alerts found."
+  },
   "visitors": {
     "title": "Visitors & Access",
     "register_btn": "Register Visitor",

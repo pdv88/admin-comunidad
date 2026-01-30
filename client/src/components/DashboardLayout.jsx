@@ -24,8 +24,8 @@ const DashboardLayout = ({ children }) => {
     };
 
     const isActive = (path) => {
-        return location.pathname === path ? 
-            "bg-gradient-to-r from-blue-600/10 to-violet-600/10 text-blue-700 dark:text-blue-300 font-bold backdrop-blur-md shadow-lg border border-blue-200/50 dark:border-blue-500/20 translate-x-1" : 
+        return location.pathname === path ?
+            "bg-gradient-to-r from-blue-600/10 to-violet-600/10 text-blue-700 dark:text-blue-300 font-bold backdrop-blur-md shadow-lg border border-blue-200/50 dark:border-blue-500/20 translate-x-1" :
             "text-gray-600 dark:text-neutral-400 hover:bg-white/40 dark:hover:bg-white/5 hover:text-blue-600 dark:hover:text-blue-300 hover:shadow-md hover:backdrop-blur-sm hover:translate-x-1 transition-all duration-300";
     };
 
@@ -48,10 +48,10 @@ const DashboardLayout = ({ children }) => {
         <div className="relative flex h-screen bg-slate-300 dark:bg-slate-950 overflow-hidden md:gap-2">
             {/* Static Background */}
             <div className="fixed inset-0 z-0 pointer-events-none bg-gradient-to-br from-blue-100/40 via-purple-100/40 to-pink-100/40 dark:from-blue-900/10 dark:via-purple-900/10 dark:to-pink-900/10" />
-            
+
             {/* Mobile Sidebar Overlay */}
             {isSidebarOpen && (
-                <div 
+                <div
                     className="fixed inset-0 z-40 bg-gray-900/50 md:hidden"
                     onClick={closeSidebar}
                 />
@@ -67,7 +67,7 @@ const DashboardLayout = ({ children }) => {
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
-                
+
                 {/* Community Switcher */}
                 <CommunitySwitcher />
 
@@ -81,26 +81,26 @@ const DashboardLayout = ({ children }) => {
                     </Link>
                     {hasAnyRole(['admin', 'president', 'secretary', 'vocal']) && (
                         <Link to="/app/notices" onClick={closeSidebar} className={`block py-1.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/notices')}`}>
-                             {t('dashboard_layout.nav.notices')}
+                            {t('dashboard_layout.nav.notices')}
                         </Link>
                     )}
                     <Link to="/app/reports" onClick={closeSidebar} className={`block py-1.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/reports')}`}>
-                         {t('dashboard_layout.nav.reports')}
+                        {t('dashboard_layout.nav.reports')}
                     </Link>
                     <Link to="/app/voting" onClick={closeSidebar} className={`block py-1.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/voting')}`}>
-                         {t('dashboard_layout.nav.voting')}
+                        {t('dashboard_layout.nav.voting')}
                     </Link>
                     <Link to="/app/maintenance" onClick={closeSidebar} className={`block py-1.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/maintenance')}`}>
-                         {t('dashboard_layout.nav.maintenance', 'Maintenance Fees')}
+                        {t('dashboard_layout.nav.maintenance', 'Maintenance Fees')}
                     </Link>
                     <Link to="/app/campaigns" onClick={closeSidebar} className={`block py-1.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/campaigns')}`}>
                         {t('dashboard_layout.nav.campaigns')}
                     </Link>
                     <Link to="/app/reservations" onClick={closeSidebar} className={`block py-1.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/reservations')}`}>
-                         {t('dashboard_layout.nav.reservations', 'Reservations')}
+                        {t('dashboard_layout.nav.reservations', 'Reservations')}
                     </Link>
                     <Link to="/app/visitors" onClick={closeSidebar} className={`block py-1.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/visitors')}`}>
-                         {t('visitors.title', 'Visitors')}
+                        {t('visitors.title', 'Visitors')}
                     </Link>
                     {hasAnyRole(['super_admin', 'admin', 'president']) && (
                         <>
@@ -118,6 +118,9 @@ const DashboardLayout = ({ children }) => {
 
                             <Link to="/app/community" onClick={closeSidebar} className={`block py-1.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/community')}`}>
                                 {t('dashboard_layout.nav.community_settings', 'Community Settings')}
+                            </Link>
+                            <Link to="/app/alerts" onClick={closeSidebar} className={`block py-1.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/alerts')}`}>
+                                {t('dashboard_layout.nav.alerts', 'System Alerts')}
                             </Link>
                         </>
                     )}
@@ -149,17 +152,17 @@ const DashboardLayout = ({ children }) => {
 
             {/* Main Content */}
             <div className="flex-1 flex flex-col overflow-hidden relative">
-                 {/* Mobile Header - Visible only on mobile */}
+                {/* Mobile Header - Visible only on mobile */}
                 {/* Mobile Header - Visible only on mobile */}
                 <div className="md:hidden flex items-center justify-between px-4 py-1 bg-white/40 dark:bg-black/20 backdrop-blur-md border-b border-white/20 dark:border-white/5 shrink-0 z-20">
-                     {/* Logo Left */}
-                     <span className="font-bold text-lg bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-400 dark:to-violet-400 flex items-center gap-2">
+                    {/* Logo Left */}
+                    <span className="font-bold text-lg bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-400 dark:to-violet-400 flex items-center gap-2">
                         <img src={logo} alt="Logo" className="h-10 w-auto object-contain drop-shadow-[0_0_1px_rgba(255,255,255,0.8)_0_0_10px_rgba(0,0,0,0.2)]" />
-                        
+
                     </span>
-                     
-                     {/* Burger Right */}
-                     <button 
+
+                    {/* Burger Right */}
+                    <button
                         className="p-2 -mr-2 text-gray-600 hover:text-blue-600 dark:text-neutral-400 dark:hover:text-blue-400 rounded-lg transition-colors"
                         onClick={() => setIsSidebarOpen(true)}
                     >

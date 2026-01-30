@@ -30,6 +30,7 @@ app.use('/api/payments', require('./src/routes/payments.routes'));
 app.use('/api/maintenance', require('./src/routes/maintenance.routes'));
 app.use('/api/amenities', require('./src/routes/amenities.routes')); // New Amenities Routes
 app.use('/api/visitors', require('./src/routes/visitors.routes'));
+app.use('/api/alerts', require('./src/routes/alerts.routes'));
 
 // Base route
 app.get('/', (req, res) => {

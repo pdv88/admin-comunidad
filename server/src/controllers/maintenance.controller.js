@@ -144,7 +144,8 @@ exports.generateMonthlyFees = async (req, res) => {
                                     link: link,
                                     community_name: communityName,
                                     community_logo: communityLogo,
-                                    user_name: ownerProfile.full_name || 'Vecino'
+                                    user_name: ownerProfile.full_name || 'Vecino',
+                                    community_id: communityId // For logging
                                 }
                             });
 
@@ -445,7 +446,8 @@ exports.markAsPaid = async (req, res) => {
                             community_logo: communityData?.logo_url,
                             payment_date: new Date().toLocaleDateString('es-ES'),
                             payment_id: paymentId || data.id.slice(0, 8),
-                            link: `${clientUrl}/app/maintenance`
+                            link: `${clientUrl}/app/maintenance`,
+                            community_id: communityId // For logging
                         }
                     });
                     // console.log(`Receipt sent to ${ownerEmail}`);
@@ -605,7 +607,10 @@ exports.resendFeeEmail = async (req, res) => {
             from: `${communityName} <info@habiio.com>`,
             subject: emailConfig.subject,
             templateName: emailConfig.template,
-            context: emailConfig.context
+            context: {
+                ...emailConfig.context,
+                community_id: communityId // For logging
+            }
         });
 
         res.json({ message: `Email (${isPaid ? 'Receipt' : 'Bill'}) resent to ${ownerEmail}` });
@@ -822,7 +827,8 @@ exports.bulkMarkAsPaid = async (req, res) => {
                                 community_logo: communityLogo,
                                 payment_date: new Date(fee.updated_at || new Date()).toLocaleDateString('es-ES'),
                                 payment_id: fee.payment_id || fee.id.slice(0, 8),
-                                link: `${clientUrl}/app/maintenance`
+                                link: `${clientUrl}/app/maintenance`,
+                                community_id: communityId // For logging
                             }
                         });
                     }
