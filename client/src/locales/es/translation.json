@@ -497,7 +497,8 @@
             "admin": "Administrador",
             "treasurer": "Tesorero",
             "maintenance": "Mantenimiento",
-            "vocal": "Vocal"
+            "vocal": "Vocal",
+            "security": "Seguridad"
         },
         "edit": {
             "title": "Editar Usuario",
@@ -581,6 +582,9 @@
         "confirm_delete_report": "¿Estás seguro de que quieres eliminar este reporte? No se puede deshacer.",
         "confirm_delete_image": "¿Estás seguro de que quieres eliminar esta imagen?",
         "error_occurred": "Ocurrió un error",
+        "loading": "Cargando...",
+        "sending": "Enviando...",
+        "view": "Ver",
         "edit": "Editar",
         "save": "Guardar",
         "saving": "Guardando...",

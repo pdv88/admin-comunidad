@@ -268,7 +268,7 @@ exports.inviteUser = async (req, res) => {
                 type: 'magiclink',
                 email: email,
                 options: {
-                    redirectTo: baseUrl + '/update-password'
+                    redirectTo: baseUrl + '/login'
                 }
             });
 
@@ -348,7 +348,7 @@ exports.inviteUser = async (req, res) => {
                                 type: 'magiclink',
                                 email: email,
                                 options: {
-                                    redirectTo: baseUrl + '/update-password'
+                                    redirectTo: baseUrl + '/login'
                                 }
                             });
 

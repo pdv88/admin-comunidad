@@ -14,16 +14,16 @@ export const AuthProvider = ({ children }) => {
   // Helper to set active community
   const selectCommunity = (communityId, communitiesList = userCommunities) => {
 
-      const selected = communitiesList.find(c => c.community_id === communityId) || communitiesList[0];
-      
-      if (selected) {
+    const selected = communitiesList.find(c => c.community_id === communityId) || communitiesList[0];
 
-          setActiveCommunity(selected);
-          localStorage.setItem('active_community_id', selected.community_id);
-      } else {
+    if (selected) {
 
-      }
-      return selected;
+      setActiveCommunity(selected);
+      localStorage.setItem('active_community_id', selected.community_id);
+    } else {
+
+    }
+    return selected;
   };
 
   useEffect(() => {
@@ -34,9 +34,9 @@ export const AuthProvider = ({ children }) => {
         const params = new URLSearchParams(hash.substring(1)); // remove #
         const accessToken = params.get('access_token');
         if (accessToken) {
-            localStorage.setItem('token', accessToken);
-            // Optional: clean URL
-            window.history.replaceState(null, '', window.location.pathname);
+          localStorage.setItem('token', accessToken);
+          // Optional: clean URL
+          window.history.replaceState(null, '', window.location.pathname);
         }
       }
 
@@ -44,35 +44,35 @@ export const AuthProvider = ({ children }) => {
       if (token) {
         try {
 
-            const response = await fetch(`${API_URL}/api/auth/me`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            
-            if (response.ok) {
-                const data = await response.json();
-
-                setUser({ ...data.user, token }); 
-                
-                // Handle Communities
-                const communities = data.communities || [];
-                setUserCommunities(communities);
-
-                // Restore active community
-                const savedCommunityId = localStorage.getItem('active_community_id');
-
-                selectCommunity(savedCommunityId, communities);
- 
-            } else {
-                // If token is invalid or expired (401), remove it
-                localStorage.removeItem('token');
-                setUser(null);
+          const response = await fetch(`${API_URL}/api/auth/me`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
             }
-        } catch (error) {
-            console.error("Session verification failed:", error);
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+
+            setUser({ ...data.user, token });
+
+            // Handle Communities
+            const communities = data.communities || [];
+            setUserCommunities(communities);
+
+            // Restore active community
+            const savedCommunityId = localStorage.getItem('active_community_id');
+
+            selectCommunity(savedCommunityId, communities);
+
+          } else {
+            // If token is invalid or expired (401), remove it
             localStorage.removeItem('token');
             setUser(null);
+          }
+        } catch (error) {
+          console.error("Session verification failed:", error);
+          localStorage.removeItem('token');
+          setUser(null);
         }
       }
       setLoading(false);
@@ -83,9 +83,9 @@ export const AuthProvider = ({ children }) => {
 
   // Helper to extract URL from fetch resource
   const normalizeUrl = (resource) => {
-      if (typeof resource === 'string') return resource;
-      if (resource instanceof Request) return resource.url;
-      try { return resource.toString(); } catch (e) { return ''; }
+    if (typeof resource === 'string') return resource;
+    if (resource instanceof Request) return resource.url;
+    try { return resource.toString(); } catch (e) { return ''; }
   };
 
   // Global Fetch Interceptor
@@ -94,38 +94,38 @@ export const AuthProvider = ({ children }) => {
     window.fetch = async (...args) => {
       try {
         let [resource, config] = args;
-        
+
         // Inject Header if activeCommunity exists
         // Note: We need a way to access the *current* activeCommunity value inside this closure
         // But useEffect closure might be stale.
         // Best practice: Use a ref or read from localStorage directly for the header if state is tricky.
         // Let's rely on localStorage as the source of truth for the request header to avoid stale closure issues.
-        
+
         const currentActiveId = localStorage.getItem('active_community_id');
         const token = localStorage.getItem('token');
-        
+
         config = config || {};
         config.headers = config.headers || {};
 
         // Handle Headers object vs plain object
         const setHeader = (key, value) => {
-            if (config.headers instanceof Headers) {
-                config.headers.set(key, value);
-            } else {
-                config.headers[key] = value;
-            }
+          if (config.headers instanceof Headers) {
+            config.headers.set(key, value);
+          } else {
+            config.headers[key] = value;
+          }
         };
 
         if (currentActiveId) {
-            setHeader('X-Community-ID', currentActiveId);
+          setHeader('X-Community-ID', currentActiveId);
         }
 
         if (token) {
-             // Only add if not already present (optional, but good practice to allow override)
-             // Or just always add/overwrite to ensure it's fresh.
-             // Notices.jsx adds it manually. If we add it here, it might duplicate if using append on Headers object.
-             // set on Headers overwrites. Plain object overwrites.
-             setHeader('Authorization', `Bearer ${token}`);
+          // Only add if not already present (optional, but good practice to allow override)
+          // Or just always add/overwrite to ensure it's fresh.
+          // Notices.jsx adds it manually. If we add it here, it might duplicate if using append on Headers object.
+          // set on Headers overwrites. Plain object overwrites.
+          setHeader('Authorization', `Bearer ${token}`);
         }
 
         args = [resource, config];
@@ -136,11 +136,11 @@ export const AuthProvider = ({ children }) => {
         const isLoginRequest = normalizeUrl(resource).includes('/auth/login');
 
         if (response.status === 401 && !isLoginRequest) {
-            console.warn("Session expired (401). Redirecting to login.");
-            localStorage.removeItem('token');
-            localStorage.removeItem('active_community_id');
-            setUser(null);
-            window.location.href = '/login';
+          console.warn("Session expired (401). Redirecting to login.");
+          localStorage.removeItem('token');
+          localStorage.removeItem('active_community_id');
+          setUser(null);
+          window.location.href = '/login';
         }
         return response;
       } catch (error) {
@@ -149,7 +149,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return () => {
-        window.fetch = originalFetch;
+      window.fetch = originalFetch;
     };
   }, []); // Empty dependency array ensures we only monkey-patch once. Using localStorage avoids stale state.
 
@@ -170,13 +170,13 @@ export const AuthProvider = ({ children }) => {
 
       const data = await response.json();
       localStorage.setItem('token', data.token);
-      
+
       setUser(data.user);
-      
+
       // Update Communities
       const communities = data.communities || [];
       setUserCommunities(communities);
-      
+
       // Set Active Community
       selectCommunity(null, communities); // Defaults to first if null
 
@@ -197,93 +197,93 @@ export const AuthProvider = ({ children }) => {
 
   const updateProfile = async (userData) => {
     try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/api/auth/me`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(userData)
-        });
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/auth/me`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(userData)
+      });
 
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Failed to update profile');
-        }
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to update profile');
+      }
 
-        const data = await response.json();
-        const updatedUser = { ...user, ...data.user, user_metadata: { ...user.user_metadata, ...userData } };
-        
-        setUser(updatedUser);
-        return updatedUser;
+      const data = await response.json();
+      const updatedUser = { ...user, ...data.user, user_metadata: { ...user.user_metadata, ...userData } };
+
+      setUser(updatedUser);
+      return updatedUser;
     } catch (error) {
-        console.error("Update profile error:", error);
-        throw error;
+      console.error("Update profile error:", error);
+      throw error;
     }
   };
 
   const switchCommunity = (communityId) => {
 
-      selectCommunity(communityId);
-      // Reload to ensure all components fetch fresh data
-      window.location.reload(); 
+    selectCommunity(communityId);
+    // Reload to ensure all components fetch fresh data
+    window.location.reload();
   };
 
   // Refresh the active community data (e.g., after settings update)
   const refreshActiveCommunity = async () => {
-      try {
-          const token = localStorage.getItem('token');
-          const res = await fetch(`${API_URL}/api/communities/my`, {
-              headers: { 'Authorization': `Bearer ${token}` }
-          });
-          if (res.ok) {
-              const updatedCommunityData = await res.json();
-              // Update the activeCommunity with the new data while preserving membership info
-              setActiveCommunity(prev => ({
-                  ...prev,
-                  communities: updatedCommunityData
-              }));
-          }
-      } catch (error) {
-          console.error('Error refreshing community:', error);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_URL}/api/communities/my`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const updatedCommunityData = await res.json();
+        // Update the activeCommunity with the new data while preserving membership info
+        setActiveCommunity(prev => ({
+          ...prev,
+          communities: updatedCommunityData
+        }));
       }
+    } catch (error) {
+      console.error('Error refreshing community:', error);
+    }
   };
 
   const deleteCommunity = async (communityId) => {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/api/communities/${communityId}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Failed to delete community');
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/communities/${communityId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
+      });
 
-        // Remove from local state
-        const updatedCommunities = userCommunities.filter(c => c.community_id !== communityId);
-        setUserCommunities(updatedCommunities);
-
-        // If active community was deleted, switch to another or clear
-        if (activeCommunity?.community_id === communityId) {
-            if (updatedCommunities.length > 0) {
-                switchCommunity(updatedCommunities[0].community_id);
-            } else {
-                setActiveCommunity(null);
-                localStorage.removeItem('active_community_id');
-                window.location.reload();
-            }
-        }
-        return true;
-      } catch (error) {
-          console.error("Delete community error:", error);
-          throw error;
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to delete community');
       }
+
+      // Remove from local state
+      const updatedCommunities = userCommunities.filter(c => c.community_id !== communityId);
+      setUserCommunities(updatedCommunities);
+
+      // If active community was deleted, switch to another or clear
+      if (activeCommunity?.community_id === communityId) {
+        if (updatedCommunities.length > 0) {
+          switchCommunity(updatedCommunities[0].community_id);
+        } else {
+          setActiveCommunity(null);
+          localStorage.removeItem('active_community_id');
+          window.location.reload();
+        }
+      }
+      return true;
+    } catch (error) {
+      console.error("Delete community error:", error);
+      throw error;
+    }
   };
 
   // Helper function to check if user has a specific role
@@ -301,7 +301,7 @@ export const AuthProvider = ({ children }) => {
   // Get the primary/highest role for display purposes
   const getPrimaryRole = () => {
     const roles = activeCommunity?.roles || [];
-    const hierarchy = ['super_admin', 'admin', 'president', 'treasurer', 'secretary', 'vocal', 'maintenance', 'resident'];
+    const hierarchy = ['super_admin', 'admin', 'president', 'treasurer', 'secretary', 'vocal', 'security', 'maintenance', 'resident'];
     for (const role of hierarchy) {
       if (roles.some(r => r.name === role)) {
         return role;

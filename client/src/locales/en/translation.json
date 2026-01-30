@@ -483,7 +483,8 @@
       "admin": "Administrator",
       "treasurer": "Treasurer",
       "maintenance": "Maintenance",
-      "vocal": "Block Representative"
+      "vocal": "Block Representative",
+      "security": "Security"
     },
     "edit": {
       "title": "Edit User",
@@ -545,6 +546,7 @@
     "add_comment": "Add Observation",
     "view": "View",
     "loading": "Loading...",
+    "sending": "Sending...",
     "delete": "Delete",
     "cancel": "Cancel",
     "close": "Close",

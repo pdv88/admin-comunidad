@@ -53,15 +53,36 @@ function App() {
             <Route path="/terms-and-conditions" element={<Terms />} />
           </Route>
 
+
           {/* Protected Routes */}
+          {/* Universal Routes (Dashboard, Reservations, Settings, Profile) */}
           <Route element={<ProtectedRoute />}>
             <Route path="/app/dashboard" element={<Dashboard />} />
-            <Route path="/app/community-info" element={<CommunityInfo />} />
-            <Route path="/app/notices" element={<Notices />} />
-            <Route path="/app/reports" element={<Reports />} />
-            <Route path="/app/voting" element={<Voting />} />
             <Route path="/app/reservations" element={<Reservations />} />
-            <Route path="/app/visitors" element={<Visitors />} />
+            <Route path="/app/settings" element={<Settings />} />
+            <Route path="/app/community-info" element={<CommunityInfo />} />
+            <Route path="/update-password" element={<UpdatePassword />} />
+
+            {/* Security Access (Security, Residents, Admins) - EXCLUDES Maintenance */}
+            <Route element={<ProtectedRoute allowedRoles={['super_admin', 'admin', 'president', 'secretary', 'treasurer', 'vocal', 'resident', 'security']} />}>
+              <Route path="/app/visitors" element={<Visitors />} />
+            </Route>
+
+            {/* Reports Access (Maintenance, Residents, Admins) - EXCLUDES Security */}
+            <Route element={<ProtectedRoute allowedRoles={['super_admin', 'admin', 'president', 'secretary', 'treasurer', 'vocal', 'resident', 'maintenance']} />}>
+              <Route path="/app/reports" element={<Reports />} />
+            </Route>
+
+            {/* Resident/Admin Features - EXCLUDES Security & Maintenance */}
+            <Route element={<ProtectedRoute allowedRoles={['super_admin', 'admin', 'president', 'secretary', 'treasurer', 'vocal', 'resident']} />}>
+              <Route path="/app/notices" element={<Notices />} />
+              <Route path="/app/voting" element={<Voting />} />
+              <Route path="/app/maintenance" element={<Maintenance />} />
+              <Route path="/app/campaigns" element={<Campaigns />} />
+              <Route path="/app/campaigns/:id" element={<CampaignDetails />} />
+              {/* Redirect /app/payments to /app/maintenance */}
+              <Route path="/app/payments" element={<Navigate to="/app/maintenance" replace />} />
+            </Route>
 
             {/* Admin/President Only Routes */}
             <Route element={<ProtectedRoute allowedRoles={['super_admin', 'admin', 'president']} />}>
@@ -71,12 +92,6 @@ function App() {
               <Route path="/app/alerts" element={<Alerts />} />
             </Route>
 
-            <Route path="/app/settings" element={<Settings />} />
-            <Route path="/app/campaigns" element={<Campaigns />} />
-            <Route path="/app/campaigns/:id" element={<CampaignDetails />} />
-            <Route path="/app/maintenance" element={<Maintenance />} />
-            {/* Redirect /app/payments to /app/maintenance */}
-            <Route path="/app/payments" element={<Navigate to="/app/maintenance" replace />} />
             {/* Redirect /dashboard to /app/dashboard for backward compatibility if needed */}
             <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
           </Route>
