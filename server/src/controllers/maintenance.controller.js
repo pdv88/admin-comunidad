@@ -47,8 +47,9 @@ exports.generateMonthlyFees = async (req, res) => {
     try {
         const { member, communityId } = await getUserAndMember(req);
         const role = member.roles?.name;
+        console.log('[DEBUG] Maintenance Role Check:', { role, required: ['super_admin', 'admin', 'president', 'treasurer'] });
 
-        if (role !== 'admin' && role !== 'president' && role !== 'treasurer') {
+        if (role !== 'super_admin' && role !== 'admin' && role !== 'president' && role !== 'treasurer') {
             return res.status(403).json({ error: 'Unauthorized' });
         }
 
@@ -168,7 +169,7 @@ exports.getCommunityStatus = async (req, res) => {
         const { member, communityId } = await getUserAndMember(req);
         const role = member.roles?.name;
 
-        if (role !== 'admin' && role !== 'president' && role !== 'treasurer') {
+        if (role !== 'super_admin' && role !== 'admin' && role !== 'president' && role !== 'treasurer') {
             return res.status(403).json({ error: 'Unauthorized' });
         }
 
@@ -369,7 +370,7 @@ exports.markAsPaid = async (req, res) => {
         const { member, communityId } = await getUserAndMember(req);
         const role = member.roles?.name;
 
-        if (role !== 'admin' && role !== 'president' && role !== 'treasurer') {
+        if (role !== 'super_admin' && role !== 'admin' && role !== 'president' && role !== 'treasurer') {
             return res.status(403).json({ error: 'Unauthorized' });
         }
 
@@ -465,7 +466,7 @@ exports.deleteFee = async (req, res) => {
         const { member, communityId } = await getUserAndMember(req);
         const role = member.roles?.name;
 
-        if (role !== 'admin' && role !== 'president' && role !== 'treasurer') {
+        if (role !== 'super_admin' && role !== 'admin' && role !== 'president' && role !== 'treasurer') {
             return res.status(403).json({ error: 'Unauthorized' });
         }
 
@@ -503,7 +504,7 @@ exports.resendFeeEmail = async (req, res) => {
         const { member, communityId } = await getUserAndMember(req);
         const role = member.roles?.name;
 
-        if (role !== 'admin' && role !== 'president' && role !== 'treasurer') {
+        if (role !== 'super_admin' && role !== 'admin' && role !== 'president' && role !== 'treasurer') {
             return res.status(403).json({ error: 'Unauthorized' });
         }
 
@@ -620,7 +621,7 @@ exports.getFinancialStats = async (req, res) => {
         const { member, communityId } = await getUserAndMember(req);
         const role = member.roles?.name;
 
-        if (role !== 'admin' && role !== 'president' && role !== 'treasurer') {
+        if (role !== 'super_admin' && role !== 'admin' && role !== 'president' && role !== 'treasurer') {
             return res.status(403).json({ error: 'Unauthorized' });
         }
 
@@ -694,7 +695,7 @@ exports.bulkDeleteFees = async (req, res) => {
         const { member, communityId } = await getUserAndMember(req);
         const role = member.roles?.name;
 
-        if (role !== 'admin' && role !== 'president' && role !== 'treasurer') {
+        if (role !== 'super_admin' && role !== 'admin' && role !== 'president' && role !== 'treasurer') {
             return res.status(403).json({ error: 'Unauthorized' });
         }
 
@@ -747,7 +748,7 @@ exports.bulkMarkAsPaid = async (req, res) => {
         const { member, communityId } = await getUserAndMember(req);
         const role = member.roles?.name;
 
-        if (role !== 'admin' && role !== 'president' && role !== 'treasurer') {
+        if (role !== 'super_admin' && role !== 'admin' && role !== 'president' && role !== 'treasurer') {
             return res.status(403).json({ error: 'Unauthorized' });
         }
 

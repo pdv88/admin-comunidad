@@ -129,7 +129,7 @@ exports.create = async (req, res) => {
         const roles = await getMemberRoles(member.id);
 
         // Permission Check - admins + vocals can create polls
-        const allowedRoles = ['admin', 'president', 'secretary', 'vocal'];
+        const allowedRoles = ['super_admin', 'admin', 'president', 'secretary', 'vocal'];
         const hasPermission = roles.some(role => allowedRoles.includes(role));
 
         if (!hasPermission) {
@@ -138,7 +138,7 @@ exports.create = async (req, res) => {
 
         // Scope Check for vocals
         const isVocal = roles.includes('vocal');
-        const isAdmin = roles.some(r => ['admin', 'president', 'secretary'].includes(r));
+        const isAdmin = roles.some(r => ['super_admin', 'admin', 'president', 'secretary'].includes(r));
 
         let finalTargetType = targetType || 'all';
         let finalTargetBlocks = targetBlocks || null;
@@ -324,7 +324,7 @@ exports.update = async (req, res) => {
 
         // Get user's roles from member_roles table
         const roles = await getMemberRoles(member.id);
-        const isAdmin = roles.some(r => ['admin', 'president', 'secretary'].includes(r));
+        const isAdmin = roles.some(r => ['super_admin', 'admin', 'president', 'secretary'].includes(r));
         const isVocal = roles.includes('vocal');
 
         if (!isAdmin && !isVocal) {

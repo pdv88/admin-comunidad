@@ -63,7 +63,7 @@ exports.getAll = async (req, res) => {
             .order('created_at', { ascending: false });
 
         // RBAC Filtering - Block Level
-        if (['admin', 'president', 'secretary', 'maintenance'].includes(role)) {
+        if (['super_admin', 'admin', 'president', 'secretary', 'maintenance'].includes(role)) {
             // See ALL notices in this community
         } else {
             // Vocals and Residents: See Global (block_id IS NULL) + Their Blocks
@@ -113,7 +113,7 @@ exports.create = async (req, res) => {
         const roles = await getMemberRoles(member.id);
 
         // 1. Permission Check - check if user has any of the allowed roles
-        const allowedRoles = ['admin', 'president', 'secretary', 'vocal'];
+        const allowedRoles = ['super_admin', 'admin', 'president', 'secretary', 'vocal'];
         const hasPermission = roles.some(role => allowedRoles.includes(role));
 
         if (!hasPermission) {
@@ -123,7 +123,7 @@ exports.create = async (req, res) => {
         // 2. Scope Check for vocals
         let finalBlockId = block_id || null;
         const isVocal = roles.includes('vocal');
-        const isAdmin = roles.some(r => ['admin', 'president', 'secretary'].includes(r));
+        const isAdmin = roles.some(r => ['super_admin', 'admin', 'president', 'secretary'].includes(r));
 
         if (isVocal && !isAdmin) {
             // Vocals can only post to their assigned blocks
@@ -185,7 +185,7 @@ exports.delete = async (req, res) => {
         if (!member) return res.status(403).json({ error: 'Not a member' });
         const role = member.roles?.name;
 
-        if (['admin', 'president'].includes(role)) {
+        if (['super_admin', 'admin', 'president'].includes(role)) {
             const { error } = await supabaseAdmin.from('notices').delete().eq('id', id);
             if (error) throw error;
         } else {

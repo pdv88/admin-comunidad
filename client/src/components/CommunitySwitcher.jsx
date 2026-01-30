@@ -46,9 +46,11 @@ const CommunitySwitcher = () => {
     // Create State
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [newCommunityName, setNewCommunityName] = useState('');
+    const [isCreating, setIsCreating] = useState(false);
 
     const handleCreate = async (e) => {
         e.preventDefault();
+        setIsCreating(true);
         try {
             const token = localStorage.getItem('token');
             const API_BASE = ''; // Use proxy
@@ -71,6 +73,8 @@ const CommunitySwitcher = () => {
             }
         } catch (error) {
             console.error(error);
+        } finally {
+            setIsCreating(false);
         }
     };
 
@@ -106,8 +110,8 @@ const CommunitySwitcher = () => {
                                         setIsOpen(false);
                                     }}
                                     className={`w-full flex items-center justify-between px-4 py-2.5 text-left text-sm transition-colors ${member.community_id === activeCommunity?.community_id
-                                            ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                            : 'hover:bg-gray-100 dark:hover:bg-white/5 text-gray-700 dark:text-gray-200'
+                                        ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                                        : 'hover:bg-gray-100 dark:hover:bg-white/5 text-gray-700 dark:text-gray-200'
                                         }`}
                                 >
                                     <div className="flex items-center gap-3 truncate">
@@ -169,9 +173,15 @@ const CommunitySwitcher = () => {
                                     </button>
                                     <button
                                         type="submit"
-                                        className="glass-button flex-1"
+                                        disabled={isCreating}
+                                        className="glass-button flex-1 flex justify-center items-center disabled:opacity-70 disabled:cursor-not-allowed"
                                     >
-                                        {t('community_switcher.create')}
+                                        {isCreating ? (
+                                            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                        ) : t('community_switcher.create')}
                                     </button>
                                 </div>
                             </form>

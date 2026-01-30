@@ -155,6 +155,13 @@ exports.createCommunity = async (req, res) => {
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
         if (authError || !user) throw new Error('Invalid token');
 
+        // Check for Super Admin (Registration Account)
+        const isSuperAdmin = user.user_metadata?.is_admin_registration === true;
+
+        if (!isSuperAdmin) {
+            return res.status(403).json({ error: 'Only the Super Admin can create new communities.' });
+        }
+
         // 1. Create Community
         const { data: community, error: commError } = await supabaseAdmin
             .from('communities')
@@ -164,25 +171,39 @@ exports.createCommunity = async (req, res) => {
 
         if (commError) throw commError;
 
-        // 2. Get Admin Role ID
-        const { data: roleData, error: roleError } = await supabase
+        // 2. Get Super Admin Role ID (Since only Super Admins can create)
+        const { data: roleData, error: roleError } = await supabaseAdmin
             .from('roles')
             .select('id')
-            .eq('name', 'admin')
+            .eq('name', 'super_admin')
             .single();
 
         if (roleError) throw new Error('Admin role not found');
 
         // 3. Add User as Admin Member
-        const { error: memberError } = await supabaseAdmin
+        const { data: memberData, error: memberError } = await supabaseAdmin
             .from('community_members')
             .insert([{
                 community_id: community.id,
                 profile_id: user.id,
                 role_id: roleData.id
-            }]);
+            }])
+            .select()
+            .single();
 
         if (memberError) throw memberError;
+
+        // 4. Add to member_roles (Critical for permissions/display)
+        if (memberData) {
+            const { error: rolesError } = await supabaseAdmin
+                .from('member_roles')
+                .insert([{
+                    member_id: memberData.id,
+                    role_id: roleData.id
+                }]);
+
+            if (rolesError) throw rolesError;
+        }
 
         res.status(201).json(community);
 
@@ -311,7 +332,7 @@ exports.getPublicInfo = async (req, res) => {
                 }
             }
         });
-        
+
         // 3. Fetch Amenities
         const { data: amenities, error: amenitiesError } = await supabaseAdmin
             .from('amenities')
@@ -320,7 +341,7 @@ exports.getPublicInfo = async (req, res) => {
             .order('name');
 
         if (amenitiesError) {
-             console.error(`[PublicInfo] Amenities Fetch Error:`, amenitiesError);
+            console.error(`[PublicInfo] Amenities Fetch Error:`, amenitiesError);
         }
 
         // 4. Fetch Documents
@@ -329,7 +350,7 @@ exports.getPublicInfo = async (req, res) => {
             .select('id, name, url, type, created_at')
             .eq('community_id', communityId)
             .order('created_at', { ascending: false });
-            
+
         if (docsError) {
             console.error(`[PublicInfo] Documents Fetch Error:`, docsError);
         }
@@ -384,15 +405,15 @@ exports.uploadDocument = async (req, res) => {
             .maybeSingle();
 
         if (!member) {
-             return res.status(403).json({ error: 'Unauthorized: Member not found' });
+            return res.status(403).json({ error: 'Unauthorized: Member not found' });
         }
 
         // 1. Legacy Role
         const legacyRole = member?.roles?.name;
-        
+
         // 2. Multi-Roles
         const multiRoles = member?.member_roles?.map(mr => mr.roles?.name) || [];
-        
+
         // Combine
         const allRoles = [legacyRole, ...multiRoles].filter(Boolean);
         const allowedRoles = ['super_admin', 'president', 'admin', 'secretary'];
@@ -489,13 +510,13 @@ exports.deleteDocument = async (req, res) => {
         const legacyRole = member?.roles?.name;
         const multiRoles = member?.member_roles?.map(mr => mr.roles?.name) || [];
         const allRoles = [legacyRole, ...multiRoles].filter(Boolean);
-        
+
         const allowedRoles = ['super_admin', 'president', 'admin', 'secretary'];
 
         const hasPermission = allRoles.some(role => allowedRoles.includes(role));
 
         if (!member || !hasPermission) {
-             console.error('[Delete] Unauthorized. Found roles:', allRoles);
+            console.error('[Delete] Unauthorized. Found roles:', allRoles);
             return res.status(403).json({ error: 'Unauthorized' });
         }
 
@@ -503,7 +524,7 @@ exports.deleteDocument = async (req, res) => {
         const bucketName = 'community-documents';
         // Extract filename from URL (simple split)
         const fileName = doc.url.split('/').pop();
-        
+
         await supabaseAdmin.storage.from(bucketName).remove([fileName]);
 
         // Delete from DB

@@ -74,7 +74,7 @@ exports.getAll = async (req, res) => {
             .eq('community_id', communityId);
 
         // RBAC Filtering (Base Scope)
-        if (roles.includes('admin') || roles.includes('president') || roles.includes('maintenance') || roles.includes('secretary')) {
+        if (roles.includes('super_admin') || roles.includes('admin') || roles.includes('president') || roles.includes('maintenance') || roles.includes('secretary')) {
             // See ALL reports in community
         } else if (roles.includes('vocal')) {
             // Vocal Logic: Can see BLOCK reports or OWN reports
@@ -161,7 +161,7 @@ exports.create = async (req, res) => {
         if (!member) return res.status(403).json({ error: 'Not a member of this community' });
 
         const roles = await getMemberRoles(member.id);
-        const isAdmin = roles.includes('admin') || roles.includes('president') || roles.includes('secretary');
+        const isAdmin = roles.includes('super_admin') || roles.includes('admin') || roles.includes('president') || roles.includes('secretary');
         const isVocal = roles.includes('vocal');
 
         // If unit_id provided, fetch block_id
@@ -273,7 +273,7 @@ exports.update = async (req, res) => {
         let canEditContent = false;
 
         // 1. Status Update Rights
-        if (['admin', 'president', 'maintenance'].includes(role)) {
+        if (['super_admin', 'admin', 'president', 'maintenance'].includes(role)) {
             canUpdateStatus = true;
             canEditContent = true; // Admins can edit content too
         } else if (role === 'vocal') {
@@ -446,7 +446,7 @@ exports.deleteImage = async (req, res) => {
                     .single();
 
                 const role = member?.roles?.name;
-                if (['admin', 'president'].includes(role)) {
+                if (['super_admin', 'admin', 'president'].includes(role)) {
                     canDelete = true;
                 }
             }
@@ -488,7 +488,7 @@ exports.delete = async (req, res) => {
         if (!member) return res.status(403).json({ error: 'Not a member' });
         const role = member.roles?.name;
 
-        if (['admin', 'president'].includes(role)) {
+        if (['super_admin', 'admin', 'president'].includes(role)) {
             // Verify report belongs to community
             const { error } = await supabaseAdmin.from('reports').delete().eq('id', id).eq('community_id', communityId);
             if (error) throw error;
