@@ -37,6 +37,10 @@
     @apply inline-flex justify-center items-center gap-x-2 text-center bg-white dark:bg-neutral-800 hover:bg-gray-100 dark:hover:bg-neutral-700 text-gray-700 dark:text-neutral-200 text-sm font-medium rounded-full border border-gray-200/50 dark:border-neutral-700/50 transition-all duration-300 py-2.5 px-5 shadow-sm hover:shadow-md;
   }
 
+  .glass-button-danger {
+    @apply inline-flex justify-center items-center gap-x-2 text-center bg-gradient-to-r from-red-600 via-rose-600 to-red-600 bg-[length:200%_auto] text-white text-sm font-semibold rounded-full hover:shadow-lg hover:bg-right active:scale-95 transition-all duration-500 py-2.5 px-5 shadow-lg shadow-red-500/30 disabled:opacity-50 disabled:pointer-events-none;
+  }
+
   .glass-table {
     @apply min-w-full divide-y divide-gray-300 dark:divide-neutral-700;
   }

@@ -352,7 +352,8 @@
         "block_created": "Bloque creado exitosamente",
         "unit_created": "Unidad creada exitosamente",
         "update_success": "Información del inquilino actualizada",
-        "delete_success": "Eliminado exitosamente"
+        "delete_success": "Eliminado exitosamente",
+        "unit_exists_error": "Este número de unidad ya existe en este bloque."
     },
     "reports": {
         "title": "Incidencias y Mantenimiento",

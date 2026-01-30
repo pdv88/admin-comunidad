@@ -24,3 +24,5 @@
 [2026-01-30T00:08:41.791Z] Auth Failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired
 [2026-01-30T00:08:41.795Z] Auth Failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired
 [2026-01-30T00:08:41.796Z] Auth Failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired
+[2026-01-30T17:07:50.896Z] Auth Failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired
+[2026-01-30T18:44:22.186Z] Auth Failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired

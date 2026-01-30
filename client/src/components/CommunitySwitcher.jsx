@@ -86,7 +86,15 @@ const CommunitySwitcher = () => {
                     className={`w-full flex items-center justify-between p-2.5 rounded-xl bg-white/40 dark:bg-neutral-900/40 border border-white/40 dark:border-neutral-700 hover:bg-white/60 dark:hover:bg-neutral-800/60 transition-all text-sm font-medium text-gray-800 dark:text-gray-100 shadow-sm backdrop-blur-sm cursor-pointer`}
                 >
                     <div className="flex items-center gap-3 truncate">
-                        <div className="w-6 h-6 rounded-md bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                        {activeCommunity?.communities?.logo_url ? (
+                            <img
+                                src={activeCommunity.communities.logo_url}
+                                alt="Logo"
+                                className="w-6 h-6 rounded-md object-cover shrink-0 bg-white"
+                                onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                            />
+                        ) : null}
+                        <div className={`w-6 h-6 rounded-md bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold shrink-0 ${activeCommunity?.communities?.logo_url ? 'hidden' : 'flex'}`}>
                             {communityName.charAt(0).toUpperCase()}
                         </div>
                         <span className="truncate">{communityName}</span>
@@ -115,7 +123,17 @@ const CommunitySwitcher = () => {
                                         }`}
                                 >
                                     <div className="flex items-center gap-3 truncate">
-                                        <div className={`w-2 h-2 rounded-full ${member.community_id === activeCommunity?.community_id ? 'bg-blue-500' : 'bg-gray-300 dark:bg-neutral-600'}`}></div>
+                                        {member.communities?.logo_url ? (
+                                            <img
+                                                src={member.communities.logo_url}
+                                                alt={member.communities?.name}
+                                                className="w-6 h-6 rounded-md object-cover shrink-0 bg-white"
+                                                onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                                            />
+                                        ) : null}
+                                        <div className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold shrink-0 text-white ${member.communities?.logo_url ? 'hidden' : 'flex'} ${member.community_id === activeCommunity?.community_id ? 'bg-blue-500' : 'bg-gray-400 dark:bg-neutral-600'}`}>
+                                            {member.communities?.name?.charAt(0).toUpperCase()}
+                                        </div>
                                         <span className="truncate">{member.communities?.name}</span>
                                     </div>
                                     {member.community_id === activeCommunity?.community_id && (
@@ -174,14 +192,17 @@ const CommunitySwitcher = () => {
                                     <button
                                         type="submit"
                                         disabled={isCreating}
-                                        className="glass-button flex-1 flex justify-center items-center disabled:opacity-70 disabled:cursor-not-allowed"
+                                        className="glass-button flex-1 relative flex justify-center items-center disabled:opacity-70 disabled:cursor-not-allowed"
                                     >
-                                        {isCreating ? (
-                                            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                            </svg>
-                                        ) : t('community_switcher.create')}
+                                        <span className={isCreating ? 'invisible' : ''}>{t('community_switcher.create')}</span>
+                                        {isCreating && (
+                                            <div className="absolute inset-0 flex items-center justify-center">
+                                                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                            </div>
+                                        )}
                                     </button>
                                 </div>
                             </form>

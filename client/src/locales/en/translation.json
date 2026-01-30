@@ -357,7 +357,8 @@
     "block_created": "Block created successfully",
     "unit_created": "Unit created successfully",
     "update_success": "Tenant info updated",
-    "delete_success": "Deleted successfully"
+    "delete_success": "Deleted successfully",
+    "unit_exists_error": "This unit number already exists in this block."
   },
   "reports": {
     "title": "Issues & Maintenance",

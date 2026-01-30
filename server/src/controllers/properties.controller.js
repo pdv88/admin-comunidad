@@ -85,13 +85,26 @@ exports.getAllBlocks = async (req, res) => {
 exports.createBlock = async (req, res) => {
     try {
         const { member, communityId } = await getUserAndMember(req);
-        const role = member.roles?.name;
+        const allowedRoles = ['admin', 'president', 'super_admin'];
+        const hasPermission = member.allRoles?.some(role => allowedRoles.includes(role));
 
-        if (role !== 'admin' && role !== 'president') {
+        if (!hasPermission) {
             return res.status(403).json({ error: 'Unauthorized' });
         }
 
         const blockData = { ...req.body, community_id: communityId };
+
+        // Check for duplicate block name
+        const { data: existingBlock } = await supabaseAdmin
+            .from('blocks')
+            .select('id')
+            .eq('community_id', communityId)
+            .ilike('name', blockData.name)
+            .maybeSingle();
+
+        if (existingBlock) {
+            return res.status(400).json({ error: 'A block with this name already exists in the community.' });
+        }
 
         const { data, error } = await supabaseAdmin.from('blocks').insert([blockData]).select();
         if (error) throw error;
@@ -108,7 +121,7 @@ exports.updateBlock = async (req, res) => {
 
     try {
         const { member, communityId } = await getUserAndMember(req);
-        const allowedRoles = ['admin', 'president'];
+        const allowedRoles = ['admin', 'president', 'super_admin'];
         const hasPermission = member.allRoles?.some(role => allowedRoles.includes(role));
 
         if (!hasPermission) {
@@ -188,7 +201,10 @@ exports.updateBlock = async (req, res) => {
 exports.createUnit = async (req, res) => {
     try {
         const { member, communityId } = await getUserAndMember(req);
-        if (member.roles.name !== 'admin' && member.roles.name !== 'president') {
+        const allowedRoles = ['admin', 'president', 'super_admin'];
+        const hasPermission = member.allRoles?.some(role => allowedRoles.includes(role));
+
+        if (!hasPermission) {
             return res.status(403).json({ error: 'Unauthorized' });
         }
 
@@ -206,6 +222,19 @@ exports.createUnit = async (req, res) => {
             }
         }
 
+        // Check for duplicate unit number in this block
+        const { unit_number } = req.body;
+        const { data: existingUnit } = await supabaseAdmin
+            .from('units')
+            .select('id')
+            .eq('block_id', block_id)
+            .ilike('unit_number', unit_number)
+            .maybeSingle();
+
+        if (existingUnit) {
+            return res.status(400).json({ error: 'A unit with this number already exists in this block.' });
+        }
+
         const { data, error } = await supabaseAdmin.from('units').insert([req.body]).select();
         if (error) throw error;
         res.status(201).json(data[0]);
@@ -218,7 +247,10 @@ exports.assignUnitToUser = async (req, res) => {
     const { userId, unitId } = req.body;
     try {
         const { member, communityId } = await getUserAndMember(req);
-        if (member.roles.name !== 'admin' && member.roles.name !== 'president') {
+        const allowedRoles = ['admin', 'president', 'super_admin'];
+        const hasPermission = member.allRoles?.some(role => allowedRoles.includes(role));
+
+        if (!hasPermission) {
             return res.status(403).json({ error: 'Unauthorized' });
         }
 
@@ -312,7 +344,10 @@ exports.deleteBlock = async (req, res) => {
     const { id } = req.params;
     try {
         const { member, communityId } = await getUserAndMember(req);
-        if (member.roles.name !== 'admin' && member.roles.name !== 'president') {
+        const allowedRoles = ['admin', 'president', 'super_admin'];
+        const hasPermission = member.allRoles?.some(role => allowedRoles.includes(role));
+
+        if (!hasPermission) {
             return res.status(403).json({ error: 'Unauthorized' });
         }
 
@@ -333,7 +368,10 @@ exports.deleteUnit = async (req, res) => {
     const { id } = req.params;
     try {
         const { member, communityId } = await getUserAndMember(req);
-        if (member.roles.name !== 'admin' && member.roles.name !== 'president') {
+        const allowedRoles = ['admin', 'president', 'super_admin'];
+        const hasPermission = member.allRoles?.some(role => allowedRoles.includes(role));
+
+        if (!hasPermission) {
             return res.status(403).json({ error: 'Unauthorized' });
         }
 
@@ -359,7 +397,10 @@ exports.updateUnit = async (req, res) => {
 
     try {
         const { member, communityId } = await getUserAndMember(req);
-        if (member.roles.name !== 'admin' && member.roles.name !== 'president') {
+        const allowedRoles = ['admin', 'president', 'super_admin'];
+        const hasPermission = member.allRoles?.some(role => allowedRoles.includes(role));
+
+        if (!hasPermission) {
             return res.status(403).json({ error: 'Unauthorized' });
         }
 
