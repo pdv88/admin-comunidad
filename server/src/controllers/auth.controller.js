@@ -22,107 +22,108 @@ exports.register = async (req, res) => {
         if (communityError) throw communityError;
         const communityId = communityData.id;
 
-        // 2. Register User in Supabase Auth
-        // Use signUp to create the user. 
-        // IMPORTANT: In Supabase Dashboard, disable "Enable Confirm Email" to prevent default email, 
-        // OR rely on the fact that we can send a DUPLICATE custom one.
-        // Better approach: Use Admin API to generate link, but we first need the user to exist? 
-        // Actually, signUp sends the email automatically if enabled. 
-        // To control it completely, we should ideally use Admin API to createUser (no email sent by default usually if email confirm is off??) 
-        // or just let signUp happen and THEN send our own? No, that causes double emails.
-        // The standard way to 'Custom Email' is to DISABLE default emails in Supabase and send your own.
-        // We will assume the user has disabled the default emails.
-
-        const { data, error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-                data: {
-                    full_name: fullName,
-                    is_admin_registration: true
-                },
-            },
-        });
-
-        if (error) {
-            // Cleanup ghost community
-            await require('../config/supabaseAdmin').from('communities').delete().eq('id', communityId);
-            throw error;
-        }
-
-        // Check if user was actually created or just returned (fake identity for existing email)
-        if (!data.user || data.user.identities?.length === 0) {
-            // User already exists - clean up and return error
-            await require('../config/supabaseAdmin').from('communities').delete().eq('id', communityId);
-            return res.status(400).json({ error: 'A user with this email address already exists. Please login instead.' });
-        }
-
-        // 3. Generate Link and Send Custom Email
-        // We need to generate the link using Admin API
+        // 2 & 3. Create User AND Generate Link (Atomic-ish)
+        // Use generateLink to create the user if they don't exist and get the setup link.
         const { data: linkData, error: linkError } = await require('../config/supabaseAdmin').auth.admin.generateLink({
             type: 'signup',
             email: email,
             password: password,
+            options: {
+                data: {
+                    full_name: fullName,
+                    is_admin_registration: true
+                    // Note: community_id in metadata could be useful too
+                }
+            }
         });
 
         if (linkError) {
-            console.error("Link generation error:", linkError);
-            // If email already exists, clean up and return proper error
-            if (linkError.code === 'email_exists') {
+            console.error("User creation/Link error:", linkError);
+
+            // If user already exists, generateLink returns an error. 
+            // We should catch this specific case.
+            if (linkError.code === 'email_exists' || linkError.message?.includes('registered')) {
                 await require('../config/supabaseAdmin').from('communities').delete().eq('id', communityId);
                 return res.status(400).json({ error: 'A user with this email address already exists. Please login instead.' });
             }
-            // For other link errors, continue but the user won't receive the email
-        } else if (linkData && linkData.properties && linkData.properties.action_link) {
+
+            // For other errors, rollback community
+            await require('../config/supabaseAdmin').from('communities').delete().eq('id', communityId);
+            throw linkError;
+        }
+
+        // At this point, USER IS CREATED (by generateLink)
+        // linkData.user contains the user info
+        const user = linkData.user;
+
+        // Send Custom Email
+        if (linkData && linkData.properties && linkData.properties.action_link) {
             const sendEmail = require('../utils/sendEmail');
             await sendEmail({
                 email: email,
                 subject: 'Verifica tu correo - Admin Comunidad',
                 templateName: 'email_verification.html',
                 context: {
-                    link: linkData.properties.action_link // The verification link
+                    link: linkData.properties.action_link
                 }
             });
         }
 
-
-        // 4. Create Profile (if not exists)
-        // Note: data.user might be null if email confirmation is required and we are waiting? 
-        // Supabase returns user object even if unconfirmed.
-        if (data.user) {
+        // 4. Create Profile, Link to Community, Assign Super Admin Role
+        if (user) {
+            // A. Create Profile
             const { error: profileError } = await require('../config/supabaseAdmin')
                 .from('profiles')
                 .upsert({
-                    id: data.user.id,
+                    id: user.id,
                     email: email,
                     full_name: fullName
-                })
-                .select();
+                });
 
-            if (profileError) console.error("Profile creation error:", profileError);
+            if (profileError) {
+                console.error("Profile creation error:", profileError);
+                // Non-critical, but good to log
+            }
 
-            // 5. Link User to Community and add Admin role
-            // First, create community_members entry (without role_id - roles are in member_roles now)
-            const { data: memberData, error: memberError } = await require('../config/supabaseAdmin')
-                .from('community_members')
-                .insert({
-                    profile_id: data.user.id,
-                    community_id: communityId
-                })
+            // B. Fetch Role ID for 'super_admin'
+            const { data: roleData, error: roleError } = await require('../config/supabaseAdmin')
+                .from('roles')
                 .select('id')
+                .eq('name', 'super_admin')
                 .single();
 
-            if (memberError) console.error("Community member creation error:", memberError);
+            if (roleError || !roleData) {
+                // Critical failure only if we can't find the role to assign permissions
+                console.error("Super Admin role not found:", roleError);
+                // We might want to rollback user here too for strict correctness, 
+                // but usually this is a clear config error.
+            }
 
-            // Then add super_admin role to member_roles (subscriber who registered gets elevated permissions)
-            if (memberData) {
-                const { data: roleData } = await require('../config/supabaseAdmin')
-                    .from('roles')
+            // C. Create Community Member (WITH ROLE!)
+            // Only proceed if we have role data, otherwise we create broken state
+            if (roleData) {
+                const { data: memberData, error: memberError } = await require('../config/supabaseAdmin')
+                    .from('community_members')
+                    .insert({
+                        profile_id: user.id,
+                        community_id: communityId,
+                        role_id: roleData.id
+                    })
                     .select('id')
-                    .eq('name', 'super_admin')
                     .single();
 
-                if (roleData) {
+                if (memberError) {
+                    console.error("Community member creation error:", memberError);
+                    // Cleanup community if member creation fails
+                    await require('../config/supabaseAdmin').from('communities').delete().eq('id', communityId);
+                    // Cleanup user? Maybe, since they are useless without a community link in this flow.
+                    await require('../config/supabaseAdmin').auth.admin.deleteUser(user.id);
+
+                    throw new Error("Failed to link user to community.");
+                }
+
+                // D. Assign Role in member_roles
+                if (memberData) {
                     await require('../config/supabaseAdmin')
                         .from('member_roles')
                         .insert({
@@ -135,7 +136,7 @@ exports.register = async (req, res) => {
 
         res.status(201).json({
             message: 'Community and Admin created successfully. Please check your email to verify your account.',
-            user: data.user,
+            user: user,
             community: communityData
         });
 
