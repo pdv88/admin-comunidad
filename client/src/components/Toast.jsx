@@ -16,16 +16,16 @@ const Toast = ({ message, type = 'success', onClose, duration = 3000 }) => {
 
     if (!message && !isVisible) return null;
 
-    const baseStyles = "fixed top-20 right-5 z-50 px-6 py-3 rounded-xl shadow-lg backdrop-blur-md transition-all duration-300 transform flex items-center gap-3 border";
-    
+    const baseStyles = "fixed top-20 right-5 z-[70] px-6 py-3 rounded-xl shadow-lg backdrop-blur-md transition-all duration-300 transform flex items-center gap-3 border";
+
     // Distinct styles for Success (Green) and Error (Red)
-    const typeStyles = type === 'error' 
+    const typeStyles = type === 'error'
         ? "bg-red-500/20 border-red-200/50 text-red-700 dark:text-red-200 dark:border-red-500/30 dark:bg-red-500/10"
         : "bg-emerald-500/20 border-emerald-200/50 text-emerald-700 dark:text-emerald-200 dark:border-emerald-500/30 dark:bg-emerald-500/10";
 
     // Animation classes
-    const animationStyles = isVisible 
-        ? "translate-y-0 opacity-100 scale-100" 
+    const animationStyles = isVisible
+        ? "translate-y-0 opacity-100 scale-100"
         : "-translate-y-4 opacity-0 scale-95";
 
     return (

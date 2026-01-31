@@ -798,6 +798,109 @@ exports.deleteAccount = async (req, res) => {
             return res.status(403).json({ error: 'Only subscriber accounts can perform self-deletion.' });
         }
 
+        // Pre-Delete Cleanup: Nullify or Delete dependencies to avoid Foreign Key constraints (RESTRICT)
+        // 1. Nullify 'created_by' in Campaigns
+        await supabaseAdmin.from('campaigns').update({ created_by: null }).eq('created_by', id);
+
+        // 2. Nullify 'created_by' in Notices
+        await supabaseAdmin.from('notices').update({ created_by: null }).eq('created_by', id);
+
+        // 3. Nullify 'created_by' in Polls
+        await supabaseAdmin.from('polls').update({ created_by: null }).eq('created_by', id);
+
+        // 4. Cleanup Reports (Try Set Null, if fails/not-nullable, Delete)
+        // Reports usually require a user, so we might need to delete them if user goes away
+        const { error: reportError } = await supabaseAdmin.from('reports').update({ user_id: null }).eq('user_id', id);
+        if (reportError) {
+            // If Set Null failed (e.g. Not Null constraint), Delete them
+            await supabaseAdmin.from('reports').delete().eq('user_id', id);
+        }
+
+        // 1. Find all communities where this user is a super_admin (to cascade delete)
+        const { data: adminMemberships } = await supabaseAdmin
+            .from('community_members')
+            .select(`
+                community_id,
+                roles!inner (name)
+            `)
+            .eq('profile_id', id)
+            .eq('roles.name', 'super_admin');
+
+        // 2. Explicitly remove Community Membership & Unit Ownership for SELF
+        await supabaseAdmin.from('unit_owners').delete().eq('profile_id', id);
+        await supabaseAdmin.from('community_members').delete().eq('profile_id', id);
+
+        if (adminMemberships && adminMemberships.length > 0) {
+            for (const membership of adminMemberships) {
+                const commId = membership.community_id;
+
+                // A. Delete All OTHER Members of this Community (Residents, etc.)
+                const { data: otherMembers } = await supabaseAdmin
+                    .from('community_members')
+                    .select('profile_id')
+                    .eq('community_id', commId)
+                    .neq('profile_id', id);
+
+                if (otherMembers && otherMembers.length > 0) {
+                    for (const member of otherMembers) {
+                        // SAFETY CHECK: Only delete Auth User if they have NO other community memberships
+                        // We check how many memberships they have EXCLUDING the one being deleted.
+                        const { count: otherMemCount } = await supabaseAdmin
+                            .from('community_members')
+                            .select('*', { count: 'exact', head: true })
+                            .eq('profile_id', member.profile_id)
+                            .neq('community_id', commId);
+
+                        if (otherMemCount === 0) {
+                            // Delete Auth User (Cascades to Profile, Unit Owners, etc.)
+                            await supabaseAdmin.auth.admin.deleteUser(member.profile_id);
+                        } else {
+                            // Just remove from THIS community explicitly (though community deletion will also cascade)
+                            await supabaseAdmin.from('community_members').delete().eq('profile_id', member.profile_id).eq('community_id', commId);
+                        }
+                    }
+                }
+
+                // B. Delete Community Assets (Blocks, Documents, etc.)
+                // Explicitly delete everything to ensure no RESTRICT constraints fail
+
+                // 1. Delete Dependencies of Blocks -> Units
+                const { data: blocks } = await supabaseAdmin.from('blocks').select('id').eq('community_id', commId);
+                const blockIds = blocks?.map(b => b.id) || [];
+
+                if (blockIds.length > 0) {
+                    // Delete Units in these blocks (and unit_owners via cascade or manual?)
+                    // unit_owners usually reference units on delete cascade? Or profile? 
+                    // We deleted profiles, so unit_owners might be gone if profile-bound. 
+                    // But let's delete units which might have other ties.
+                    await supabaseAdmin.from('unit_owners').delete().in('unit_id',
+                        (await supabaseAdmin.from('units').select('id').in('block_id', blockIds)).data?.map(u => u.id) || []
+                    );
+                    await supabaseAdmin.from('units').delete().in('block_id', blockIds);
+                }
+
+                // 2. Delete Community Tables
+                await supabaseAdmin.from('community_documents').delete().eq('community_id', commId);
+                await supabaseAdmin.from('amenities').delete().eq('community_id', commId); // Cascades reservations
+                await supabaseAdmin.from('reservations').delete().eq('community_id', commId); // Explicit safety
+                await supabaseAdmin.from('reports').delete().eq('community_id', commId); // Explicit safety
+                await supabaseAdmin.from('notices').delete().eq('community_id', commId);
+                await supabaseAdmin.from('polls').delete().eq('community_id', commId); // Cascades options/votes?
+                await supabaseAdmin.from('campaigns').delete().eq('community_id', commId);
+
+                // Payments often track history. Deleting community deletes all payment records?
+                // Yes, per "permanently delete... associated data".
+                await supabaseAdmin.from('payments').delete().eq('community_id', commId);
+                await supabaseAdmin.from('visits').delete().eq('community_id', commId);
+
+                // 3. Delete Blocks
+                await supabaseAdmin.from('blocks').delete().eq('community_id', commId);
+
+                // C. Delete Community
+                await supabaseAdmin.from('communities').delete().eq('id', commId);
+            }
+        }
+
         // Perform Deletion via Admin Client (Hard Delete)
         const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(id);
 

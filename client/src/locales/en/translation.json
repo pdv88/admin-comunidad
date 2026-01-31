@@ -8,6 +8,17 @@
     "fri": "Fri",
     "sat": "Sat"
   },
+  "roles": {
+    "super_admin": "Super Admin",
+    "admin": "Administrator",
+    "president": "President",
+    "treasurer": "Treasurer",
+    "secretary": "Secretary",
+    "vocal": "Vocal",
+    "resident": "Resident",
+    "security": "Security",
+    "maintenance": "Maintenance"
+  },
   "header": {
     "brand": "VIDEAPP",
     "home": "Home",
@@ -506,7 +517,15 @@
       "sending_invite": "Sending invitation...",
       "invite_success": "Invitation sent successfully!",
       "invite_error": "Error sending invitation",
-      "error_prefix": "Error: "
+      "error_prefix": "Error: ",
+      "community_missing": "Community ID header missing",
+      "insufficient_permissions": "Insufficient permissions to invite users",
+      "invalid_token": "Invalid token",
+      "inviter_not_member": "Inviter is not a member of this community",
+      "create_failed": "Create User Failed",
+      "user_exists": "User already exists",
+      "email_exists": "User with this email already exists",
+      "invalid_email_format": "Invalid email address"
     }
   },
   "update_password": {
@@ -565,7 +584,8 @@
       "confirm_1": "Are you SURE you want to delete your account? This will permanently delete all data.",
       "confirm_2": "This action is IRREVERSIBLE. Click OK to confirm.",
       "delete_btn": "Delete Account",
-      "delete_error": "Error deleting account: "
+      "delete_error": "Error deleting account: ",
+      "delete_warning_modal": "This action cannot be undone. This will permanently delete your account and all associated data."
     },
     "preferences": {
       "title": "Preferences",
@@ -586,6 +606,8 @@
     "delete": "Delete",
     "cancel": "Cancel",
     "close": "Close",
+    "type_to_confirm": "Please type \"{{word}}\" to confirm:",
+    "confirm": "Confirm",
     "confirm": "Confirm",
     "confirm_delete_report": "Are you sure you want to delete this report? This cannot be undone.",
     "error_occurred": "An error occurred",

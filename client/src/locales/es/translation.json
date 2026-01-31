@@ -8,6 +8,17 @@
         "fri": "Vie",
         "sat": "Sáb"
     },
+    "roles": {
+        "super_admin": "Súper Admin",
+        "admin": "Administrador",
+        "president": "Presidente",
+        "treasurer": "Tesorero",
+        "secretary": "Secretario",
+        "vocal": "Vocal",
+        "resident": "Residente",
+        "security": "Seguridad",
+        "maintenance": "Mantenimiento"
+    },
     "header": {
         "brand": "VIDEAPP",
         "home": "Inicio",
@@ -518,7 +529,16 @@
             "resend_invite": "Reenviar Invitación",
             "resend_success": "Invitación reenviada exitosamente!",
             "resend_error": "Error al reenviar invitación",
+            "resend_error": "Error al reenviar invitación",
             "error_prefix": "Error: ",
+            "community_missing": "Falta el ID de la comunidad",
+            "insufficient_permissions": "Permisos insuficientes para invitar usuarios",
+            "invalid_token": "Token inválido",
+            "inviter_not_member": "El invitador no es miembro de esta comunidad",
+            "create_failed": "Error al crear usuario",
+            "user_exists": "El usuario ya existe",
+            "email_exists": "Ya existe un usuario con este correo electrónico",
+            "invalid_email_format": "Correo electrónico inválido",
             "role_change_restricted": "Solo el Super Admin puede cambiar roles."
         }
     },
@@ -580,7 +600,8 @@
             "confirm_1": "¿Estás SEGURO de que quieres eliminar tu cuenta? Esto eliminará permanentemente todos tus datos.",
             "confirm_2": "Esta acción es IRREVERSIBLE. Haz clic en Aceptar para confirmar.",
             "delete_btn": "Eliminar Cuenta",
-            "delete_error": "Error al eliminar cuenta: "
+            "delete_error": "Error al eliminar cuenta: ",
+            "delete_warning_modal": "Esta acción no se puede deshacer. Esto eliminará permanentemente tu cuenta y todos los datos asociados."
         },
         "preferences": {
             "title": "Preferencias",
@@ -600,6 +621,7 @@
         "delete": "Eliminar",
         "cancel": "Cancelar",
         "close": "Cerrar",
+        "type_to_confirm": "Por favor escribe \"{{word}}\" para confirmar:",
         "confirm": "Confirmar",
         "confirm_delete_report": "¿Estás seguro de que quieres eliminar este reporte? No se puede deshacer.",
         "confirm_delete_image": "¿Estás seguro de que quieres eliminar esta imagen?",

@@ -28,6 +28,7 @@ const UserManagement = () => {
     const [isDeleting, setIsDeleting] = useState(false); // Loading state for deletes
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [userToDelete, setUserToDelete] = useState(null);
+    const [inviteError, setInviteError] = useState(''); // New state for inline modal errors
     const { t } = useTranslation();
     const { user, activeCommunity } = useAuth();
 
@@ -155,6 +156,7 @@ const UserManagement = () => {
     const handleInvite = async (e) => {
         e.preventDefault();
         setIsInviting(true);
+        setInviteError(''); // Clear previous errors
         try {
             const res = await fetch(`${API_URL}/api/users/invite`, {
                 method: 'POST',
@@ -170,10 +172,20 @@ const UserManagement = () => {
                 setShowInviteModal(false);
                 fetchData();
             } else {
-                setToast({ message: t('user_management.messages.error_prefix') + data.error, type: 'error' });
+                // Map backend errors to translation keys
+                let errorMsg = data.error;
+                if (errorMsg === 'Community ID header missing') errorMsg = t('user_management.messages.community_missing');
+                else if (errorMsg === 'Insufficient permissions to invite users') errorMsg = t('user_management.messages.insufficient_permissions');
+                else if (errorMsg === 'Invalid token') errorMsg = t('user_management.messages.invalid_token');
+                else if (errorMsg === 'Inviter is not a member of this community') errorMsg = t('user_management.messages.inviter_not_member');
+                else if (errorMsg === 'User already exists' || errorMsg?.includes('email_exists')) errorMsg = t('user_management.messages.email_exists');
+                else if (errorMsg?.includes('Invalid') && errorMsg?.includes('to') && errorMsg?.includes('field')) errorMsg = t('user_management.messages.invalid_email_format');
+                else if (errorMsg?.includes('Invalid email')) errorMsg = t('user_management.messages.invalid_email_format');
+
+                setInviteError(errorMsg || t('user_management.messages.error_prefix') + (data.error || 'Unknown error'));
             }
         } catch (error) {
-            setToast({ message: t('user_management.messages.invite_error'), type: 'error' });
+            setInviteError(t('user_management.messages.invite_error'));
         } finally {
             setIsInviting(false);
         }
@@ -297,7 +309,10 @@ const UserManagement = () => {
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t('user_management.title')}</h1>
                     <button
-                        onClick={() => setShowInviteModal(true)}
+                        onClick={() => {
+                            setShowInviteModal(true);
+                            setInviteError('');
+                        }}
                         className="glass-button gap-2"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
@@ -319,6 +334,12 @@ const UserManagement = () => {
                                 </button>
 
                                 <h2 className="font-bold mb-6 text-xl dark:text-white">{t('user_management.invite.title')}</h2>
+
+                                {inviteError && (
+                                    <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded relative">
+                                        <span className="block sm:inline">{inviteError}</span>
+                                    </div>
+                                )}
 
                                 <form onSubmit={handleInvite} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
                                     <div className="lg:col-span-2">
@@ -521,7 +542,10 @@ const UserManagement = () => {
                                             </button>
                                             <button
                                                 onClick={() => handleDeleteClick(user)}
-                                                className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors"
+                                                disabled={user.roles?.some(r => r.name === 'super_admin')}
+                                                className={`transition-colors ${user.roles?.some(r => r.name === 'super_admin')
+                                                    ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                                                    : 'text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300'}`}
                                                 title={t('common.delete', 'Delete')}
                                                 aria-label={t('common.delete', 'Delete')}
                                             >

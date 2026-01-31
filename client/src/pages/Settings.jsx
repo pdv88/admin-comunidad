@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
 import Toast from '../components/Toast';
+import ConfirmationModal from '../components/ConfirmationModal';
 
 const Settings = () => {
     const { user, updateProfile, logout, hasAnyRole, activeCommunity } = useAuth();
@@ -13,7 +14,9 @@ const Settings = () => {
     const [fullName, setFullName] = React.useState(user?.user_metadata?.full_name || '');
     const [phone, setPhone] = React.useState(user?.profile?.phone || user?.phone || '');
     const [loading, setLoading] = React.useState(false);
+    const [deleteLoading, setDeleteLoading] = React.useState(false);
     const [toast, setToast] = React.useState({ message: '', type: 'success' });
+    const [showDeleteModal, setShowDeleteModal] = React.useState(false);
 
     const handleUpdateProfile = async () => {
         setLoading(true);
@@ -196,13 +199,7 @@ const Settings = () => {
                                                         </p>
                                                     </div>
                                                     <button
-                                                        onClick={() => {
-                                                            if (window.confirm(t('settings.danger_zone.confirm_1', 'Are you SURE you want to delete your account? This will permanently delete all data.'))) {
-                                                                if (window.confirm(t('settings.danger_zone.confirm_2', 'This action is IRREVERSIBLE. Type OK to confirm.'))) {
-                                                                    handleDeleteAccount();
-                                                                }
-                                                            }
-                                                        }}
+                                                        onClick={() => setShowDeleteModal(true)}
                                                         className="glass-button-danger"
                                                     >
                                                         {t('settings.danger_zone.delete_btn', 'Delete Account')}
@@ -218,6 +215,17 @@ const Settings = () => {
                     </div>
                 </div>
             </div>
+            <ConfirmationModal
+                isOpen={showDeleteModal}
+                onClose={() => setShowDeleteModal(false)}
+                onConfirm={handleDeleteAccount}
+                title={t('settings.danger_zone.delete_account', 'Delete Account')}
+                message={t('settings.danger_zone.delete_warning_modal', 'This action cannot be undone. This will permanently delete your account and all associated data.')}
+                confirmText={t('settings.danger_zone.delete_btn', 'Delete Account')}
+                isDangerous={true}
+                inputConfirmation="DELETE"
+                isLoading={deleteLoading}
+            />
         </DashboardLayout >
     );
 };
