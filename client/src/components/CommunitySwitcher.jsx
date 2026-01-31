@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import ModalPortal from './ModalPortal';
+import { API_URL } from '../config';
 
 const CommunitySwitcher = () => {
     const { t } = useTranslation();
@@ -53,9 +54,7 @@ const CommunitySwitcher = () => {
         setIsCreating(true);
         try {
             const token = localStorage.getItem('token');
-            const API_BASE = ''; // Use proxy
-
-            const res = await fetch(`${API_BASE}/api/communities/create`, {
+            const res = await fetch(`${API_URL}/api/communities/create`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
