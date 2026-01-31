@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { API_URL } from '../config';
-import axios from 'axios';
 import GlassLoader from '../components/GlassLoader';
 import DashboardLayout from '../components/DashboardLayout';
 
@@ -41,13 +40,19 @@ const CommunityInfo = () => {
                 return;
             }
 
-            const response = await axios.get(`${API_URL}/api/communities/public-info`, {
+            const response = await fetch(`${API_URL}/api/communities/public-info`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'X-Community-ID': communityId
                 }
             });
-            setInfo(response.data);
+
+            if (!response.ok) {
+                throw new Error('Failed to load information');
+            }
+
+            const data = await response.json();
+            setInfo(data);
         } catch (err) {
             console.error('Error fetching community info:', err);
             setError('Failed to load information');

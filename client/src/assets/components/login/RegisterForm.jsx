@@ -3,11 +3,11 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import { PulseLoader } from "react-spinners";
 
-import { API_URL } from "../../config";
+import { API_URL } from "../../../config";
 
 function RegisterForm() {
 
-  document.title = "Register | VIDEAPP";
+  document.title = "Register | Habiio";
 
   const url = API_URL;
 

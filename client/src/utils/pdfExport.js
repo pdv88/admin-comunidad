@@ -1,4 +1,5 @@
 import { jsPDF } from 'jspdf';
+import { API_URL } from '../config';
 
 /**
  * Generates and downloads a branded PDF for a single report
@@ -54,7 +55,12 @@ export const exportReportToPDF = async (report, notes = [], images = [], t, logo
     // Helper to get base64
     const getBase64FromUrl = async (url) => {
         try {
-            const res = await fetch(url);
+            // Construct full URL if it's relative
+            const fullUrl = url.startsWith('http') || url.startsWith('data:')
+                ? url
+                : `${API_URL}${url.startsWith('/') ? '' : '/'}${url}`;
+
+            const res = await fetch(fullUrl);
             const blob = await res.blob();
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -62,6 +68,7 @@ export const exportReportToPDF = async (report, notes = [], images = [], t, logo
                 reader.readAsDataURL(blob);
             });
         } catch (error) {
+            console.error('Error fetching image for PDF:', error);
             return null;
         }
     };
