@@ -234,7 +234,7 @@ exports.inviteUser = async (req, res) => {
 
         const inviterRole = inviterRoleData?.name;
 
-        const allowedRoles = ['president', 'admin', 'secretary'];
+        const allowedRoles = ['super_admin', 'president', 'admin', 'secretary'];
         if (!allowedRoles.includes(inviterRole)) {
             throw new Error('Insufficient permissions to invite users');
         }
@@ -479,6 +479,28 @@ exports.updateUser = async (req, res) => {
     if (communityId && communityId.includes(',')) communityId = communityId.split(',')[0].trim();
 
     try {
+        // PERMISSION CHECK
+        const token = req.headers.authorization?.split(' ')[1];
+        if (!token) throw new Error('No token provided');
+
+        const { data: { user: requester }, error: permAuthError } = await supabase.auth.getUser(token);
+        if (permAuthError || !requester) throw new Error('Invalid token');
+
+        // Check if requester is Admin/President in this community
+        const { data: membership, error: memberError } = await supabaseAdmin
+            .from('community_members')
+            .select('roles(name)')
+            .eq('profile_id', requester.id)
+            .eq('community_id', communityId)
+            .single();
+
+        if (memberError || !membership) throw new Error('Insufficient permissions: Not a member');
+
+        const requesterRole = Array.isArray(membership.roles) ? membership.roles[0]?.name : membership.roles?.name;
+        if (!['super_admin', 'admin', 'president'].includes(requesterRole)) {
+            throw new Error('Insufficient permissions to update users');
+        }
+
         // Update Profile Name/Phone passed
         if (fullName || phone !== undefined) {
             const updates = {};
@@ -613,6 +635,27 @@ exports.deleteUser = async (req, res) => {
     }
 
     try {
+        // PERMISSION CHECK
+        const token = req.headers.authorization?.split(' ')[1];
+        if (!token) throw new Error('No token provided');
+
+        const { data: { user: requester }, error: authError } = await supabase.auth.getUser(token);
+        if (authError || !requester) throw new Error('Invalid token');
+
+        const { data: membership, error: permError } = await supabaseAdmin
+            .from('community_members')
+            .select('roles(name)')
+            .eq('profile_id', requester.id)
+            .eq('community_id', communityId)
+            .single();
+
+        if (permError || !membership) throw new Error('Insufficient permissions');
+
+        const requesterRole = Array.isArray(membership.roles) ? membership.roles[0]?.name : membership.roles?.name;
+        if (!['super_admin', 'admin', 'president'].includes(requesterRole)) {
+            throw new Error('Insufficient permissions to delete users');
+        }
+
         // 1. Unassign units belonging to this community
         const { data: communityUnits } = await supabaseAdmin
             .from('units')
@@ -652,6 +695,28 @@ exports.resendInvitation = async (req, res) => {
     if (!communityId) return res.status(400).json({ error: 'Community ID required' });
 
     try {
+        // PERMISSION CHECK
+        const token = req.headers.authorization?.split(' ')[1];
+        if (!token) throw new Error('No token provided');
+
+        const { data: { user: requester }, error: permAuthError } = await supabase.auth.getUser(token);
+        if (permAuthError || !requester) throw new Error('Invalid token');
+
+        const { data: membership, error: permError } = await supabaseAdmin
+            .from('community_members')
+            .select('roles(name)')
+            .eq('profile_id', requester.id)
+            .eq('community_id', communityId)
+            .single();
+
+        if (permError || !membership) throw new Error('Insufficient permissions');
+
+        const requesterRole = Array.isArray(membership.roles) ? membership.roles[0]?.name : membership.roles?.name;
+        // Allows secretary as well for resending invites
+        if (!['super_admin', 'admin', 'president', 'secretary'].includes(requesterRole)) {
+            throw new Error('Insufficient permissions to resend invitations');
+        }
+
         // 1. Fetch User Profile & Auth
         const { data: { user }, error: authError } = await supabaseAdmin.auth.admin.getUserById(id);
         if (authError || !user) throw new Error('User not found');

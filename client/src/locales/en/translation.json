@@ -390,6 +390,7 @@
     "no_reports": "No reports found.",
     "form": {
       "title": "Title",
+      "create_title": "Create Report",
       "issue_title": "Issue Title",
       "category": "Category",
       "unit": "Unit",
@@ -422,6 +423,11 @@
     "reporter": "Reported by",
     "date": "Date",
     "scope_label": "Scope",
+    "scope": {
+      "community": "Community",
+      "specific": "Specific Area (Block / Unit)",
+      "whole_block": "Entire Block / Common Area"
+    },
     "status_label": "Status",
     "category_label": "Category",
     "details": "Report Details",
@@ -429,6 +435,8 @@
     "notes": "Notes & Comments",
     "images": "Attached Images",
     "images_note": "Images are available in the online report.",
+    "delete_title": "Delete Report?",
+    "delete_confirm": "Are you sure you want to delete this report? This cannot be undone.",
     "generated_on": "Generated on"
   },
   "voting": {

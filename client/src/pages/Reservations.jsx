@@ -20,7 +20,7 @@ const Reservations = () => {
     const [selectedDateReservations, setSelectedDateReservations] = useState([]);
 
     const { user, hasAnyRole, hasRole } = useAuth();
-    const isAdmin = hasAnyRole(['admin', 'president', 'secretary']);
+    const isAdmin = hasAnyRole(['super_admin', 'admin', 'president', 'secretary']);
     const isVocal = hasRole('vocal');
 
     const [activeTab, setActiveTab] = useState('personal'); // 'personal', 'block', 'community'
@@ -137,8 +137,12 @@ const Reservations = () => {
         }
     };
 
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
     const handleCreateBooking = async (e) => {
         e.preventDefault();
+        if (isSubmitting) return;
+        setIsSubmitting(true);
         try {
             const res = await fetch(`${API_URL}/api/amenities/reservations`, {
                 method: 'POST',
@@ -149,7 +153,7 @@ const Reservations = () => {
                     start_time: newBooking.startTime,
                     end_time: newBooking.endTime,
                     notes: newBooking.notes,
-                    target_user_id: newBooking.targetUserId // Added
+                    target_user_id: newBooking.targetUserId
                 })
             });
 
@@ -164,6 +168,8 @@ const Reservations = () => {
             }
         } catch (error) {
             setToast({ message: 'Error creating reservation', type: 'error' });
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -460,7 +466,7 @@ const Reservations = () => {
                                                                     <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full capitalize">{t(`reservations.statuses.${r.status}`, r.status)}</span>
                                                                 </td>
                                                                 <td className="py-3 px-2">
-                                                                    {r.user_id === user?.id && (
+                                                                    {(r.user_id === user?.id || isAdmin) && (
                                                                         <button
                                                                             onClick={() => handleUpdateStatus(r.id, 'cancelled')}
                                                                             disabled={!!processingId}
@@ -787,9 +793,20 @@ const Reservations = () => {
                                         <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
                                             <button
                                                 type="submit"
-                                                className="w-full glass-button justify-center border border-transparent shadow-sm px-4 py-2 text-base font-bold sm:col-start-2 sm:text-sm"
+                                                disabled={isSubmitting}
+                                                className="w-full glass-button justify-center border border-transparent shadow-sm px-4 py-2 text-base font-bold sm:col-start-2 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                             >
-                                                {t('reservations.request', 'Request')}
+                                                {isSubmitting ? (
+                                                    <>
+                                                        <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                        </svg>
+                                                        {t('common.processing', 'Processing...')}
+                                                    </>
+                                                ) : (
+                                                    t('reservations.request', 'Request')
+                                                )}
                                             </button>
                                             <button
                                                 type="button"

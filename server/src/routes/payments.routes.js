@@ -13,6 +13,7 @@ router.delete('/:id', paymentsController.deletePayment);
 router.get('/campaigns', paymentsController.getCampaigns);
 router.post('/campaigns', paymentsController.createCampaign);
 router.put('/campaigns/:id', paymentsController.updateCampaign);
+router.delete('/campaigns/:id', paymentsController.deleteCampaign);
 router.get('/campaigns/:id', paymentsController.getCampaignById);
 router.get('/stats', paymentsController.getStats);
 router.get('/:id', paymentsController.getPaymentById);

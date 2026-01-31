@@ -14,7 +14,7 @@ const CampaignDetails = () => {
     const { t } = useTranslation();
     const { user, activeCommunity, hasAnyRole } = useAuth();
     const navigate = useNavigate();
-    const isAdmin = hasAnyRole(['super_admin', 'admin', 'president']);
+    const isAdmin = hasAnyRole(['super_admin', 'admin', 'president', 'treasurer']);
 
     const [campaign, setCampaign] = useState(null);
     const [payments, setPayments] = useState([]);
@@ -46,7 +46,7 @@ const CampaignDetails = () => {
             // If a resident views this, they might only see their own or we assume transparency (usually campaigns are public).
             // But `getPayments` enforces strict ownership for non-admins unless we change it.
             // Let's stick to current backend logic: Admin sees all, User sees own.
-            
+
             const payRes = await fetch(`${API_URL}/api/payments?campaign_id=${id}`, { headers });
             if (payRes.ok) {
                 const payData = await payRes.json();
@@ -84,9 +84,9 @@ const CampaignDetails = () => {
     return (
         <DashboardLayout>
             <div className="max-w-7xl mx-auto space-y-6">
-                
+
                 {/* Header / Back */}
-                <button 
+                <button
                     onClick={() => navigate('/app/campaigns')}
                     className="flex items-center text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
                 >
@@ -104,8 +104,8 @@ const CampaignDetails = () => {
                             </span>
                         </div>
                         <div className="text-right">
-                             <p className="text-sm text-gray-500 dark:text-gray-400">{t('campaigns.deadline_label', 'Deadline')}</p>
-                             <p className="font-semibold text-gray-800 dark:text-white">{campaign.deadline ? new Date(campaign.deadline).toLocaleDateString() : t('common.ongoing', 'Ongoing')}</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">{t('campaigns.deadline_label', 'Deadline')}</p>
+                            <p className="font-semibold text-gray-800 dark:text-white">{campaign.deadline ? new Date(campaign.deadline).toLocaleDateString() : t('common.ongoing', 'Ongoing')}</p>
                         </div>
                     </div>
 
@@ -114,7 +114,7 @@ const CampaignDetails = () => {
                     </p>
 
                     <CampaignProgress campaign={campaign} />
-                    
+
                     <div className="mt-4 grid grid-cols-2 gap-4 text-center">
                         <div className="p-4 rounded-xl bg-gray-50 dark:bg-white/5">
                             <p className="text-xs text-gray-500 uppercase">{t('campaigns.stats.goal', 'Goal')}</p>
@@ -132,10 +132,10 @@ const CampaignDetails = () => {
                     <h2 className="text-xl font-semibold text-gray-800 dark:text-white px-1">
                         {t('campaigns.contributions_title', 'Contributions History')}
                     </h2>
-                    
-                    <PaymentList 
-                        payments={payments} 
-                        isAdmin={isAdmin} 
+
+                    <PaymentList
+                        payments={payments}
+                        isAdmin={isAdmin}
                         onRefresh={fetchData}
                         showResidentInfo={isAdmin}
                         currencyCode={activeCommunity?.communities?.currency}

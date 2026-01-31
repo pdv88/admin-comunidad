@@ -9,7 +9,9 @@ import Toast from './Toast';
 import ConfirmationModal from './ConfirmationModal';
 import { exportReportToPDF } from '../utils/pdfExport';
 
-const ReportDetailsPanel = ({ report, onUpdate }) => {
+import GlassSelect from './GlassSelect';
+
+const ReportDetailsPanel = ({ report, onUpdate, blocks = [], userUnits = [] }) => {
     const { t } = useTranslation();
     const { user, activeCommunity, hasAnyRole } = useAuth();
     const [activeTab, setActiveTab] = useState('details'); // details, notes, images
@@ -18,13 +20,16 @@ const ReportDetailsPanel = ({ report, onUpdate }) => {
     const [loadingNotes, setLoadingNotes] = useState(false);
     const [loadingImages, setLoadingImages] = useState(false);
     const [expandedImage, setExpandedImage] = useState(null);
-    
+
     // Edit Form State
     const [isEditing, setIsEditing] = useState(false);
     const [editForm, setEditForm] = useState({
         title: report.title,
         description: report.description,
-        category: report.category
+        category: report.category,
+        scope: report.unit_id ? 'specific' : (report.block_id ? 'specific' : 'community'),
+        block_id: report.block_id || '',
+        unit_id: report.unit_id || ''
     });
     const [savingEdit, setSavingEdit] = useState(false);
 
@@ -33,7 +38,7 @@ const ReportDetailsPanel = ({ report, onUpdate }) => {
 
     // Delete Confirmation State
     const [showDeleteModal, setShowDeleteModal] = useState(false);
-    
+
     // New Note State
     const [newNote, setNewNote] = useState('');
     const [sendingNote, setSendingNote] = useState(false);
@@ -41,9 +46,16 @@ const ReportDetailsPanel = ({ report, onUpdate }) => {
     const notesContainerRef = useRef(null);
 
     // Permissions (using hasAnyRole helper)
-    const canEdit = hasAnyRole(['super_admin', 'admin', 'president', 'maintenance']) || 
-                   (hasAnyRole(['vocal']) && activeCommunity?.blocks?.some(b => b.id === report.block_id && b.representative_id === user.id)) ||
-                   (report.user_id === user.id && report.status === 'pending');
+    const canEdit = hasAnyRole(['super_admin', 'admin', 'president', 'maintenance']) ||
+        (hasAnyRole(['vocal']) && activeCommunity?.blocks?.some(b => b.id === report.block_id && b.representative_id === user.id)) ||
+        (report.user_id === user.id && report.status === 'pending');
+
+    // Permission helpers for scope selection (similar to Reports.jsx)
+    const isVocal = hasAnyRole(['vocal']);
+    // We can assume if they can edit (checked below), they strictly have permission.
+    // However, for the dropdown logic we might need 'isAdminOrPres' logic.
+    // Let's rely on the passed-in canEdit check regarding 'isAdminOrPres' equivalent roles.
+    const isAdminOrPres = hasAnyRole(['super_admin', 'admin', 'president', 'maintenance']); // Maintenance included in edit rights
 
     // Toast State
     const [toast, setToast] = useState({ message: '', type: 'success' });
@@ -54,7 +66,7 @@ const ReportDetailsPanel = ({ report, onUpdate }) => {
             // Fetch notes and images if not already loaded
             let notesData = notes;
             let imagesData = images;
-            
+
             if (notesData.length === 0) {
                 const token = localStorage.getItem('token');
                 const notesRes = await fetch(`${API_URL}/api/reports/${report.id}/notes`, {
@@ -62,7 +74,7 @@ const ReportDetailsPanel = ({ report, onUpdate }) => {
                 });
                 if (notesRes.ok) notesData = await notesRes.json();
             }
-            
+
             if (imagesData.length === 0) {
                 const token = localStorage.getItem('token');
                 const imagesRes = await fetch(`${API_URL}/api/reports/${report.id}/images`, {
@@ -70,7 +82,7 @@ const ReportDetailsPanel = ({ report, onUpdate }) => {
                 });
                 if (imagesRes.ok) imagesData = await imagesRes.json();
             }
-            
+
             // Try to get logo and brand from nested communities object or direct property
             const logoUrl = activeCommunity?.communities?.logo_url || activeCommunity?.logo_url;
             const brandColor = activeCommunity?.communities?.brand_color || activeCommunity?.brand_color || '#3B82F6';
@@ -95,6 +107,20 @@ const ReportDetailsPanel = ({ report, onUpdate }) => {
             notesContainerRef.current.scrollTo({ top: scrollHeight, behavior: 'smooth' });
         }
     }, [notes, activeTab]);
+
+    // Update editForm when report changes if needed, or when opening edit mode
+    useEffect(() => {
+        if (isEditing) {
+            setEditForm({
+                title: report.title,
+                description: report.description,
+                category: report.category,
+                scope: report.unit_id ? 'specific' : (report.block_id ? 'specific' : 'community'),
+                block_id: report.block_id || '',
+                unit_id: report.unit_id || ''
+            });
+        }
+    }, [isEditing, report]);
 
     const fetchNotes = async () => {
         setLoadingNotes(true);
@@ -133,21 +159,33 @@ const ReportDetailsPanel = ({ report, onUpdate }) => {
         setSavingEdit(true);
         try {
             const token = localStorage.getItem('token');
+
+            // Prepare payload
+            const payload = {
+                title: editForm.title,
+                description: editForm.description,
+                category: editForm.category,
+                // Scope logic
+                unit_id: editForm.scope === 'specific' ? (editForm.unit_id || null) : null,
+                block_id: editForm.scope === 'specific' ? editForm.block_id : null
+            };
+
             const res = await fetch(`${API_URL}/api/reports/${report.id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                    'x-community-id': activeCommunity.community_id
+                    'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify(editForm)
+                body: JSON.stringify(payload)
             });
-            
+
             if (res.ok) {
                 onUpdate(); // refresh parent
                 setIsEditing(false);
                 setToast({ message: t('reports.update_success', 'Report updated successfully'), type: 'success' });
             } else {
+                const errData = await res.json();
+                console.error('Update Error Response:', errData);
                 setToast({ message: t('common.error_occurred'), type: 'error' });
             }
         } catch (err) {
@@ -229,7 +267,7 @@ const ReportDetailsPanel = ({ report, onUpdate }) => {
                 fetchImages();
                 setToast({ message: t('common.delete_success', 'Image deleted successfully'), type: 'success' });
             } else {
-                 setToast({ message: t('common.error_occurred'), type: 'error' });
+                setToast({ message: t('common.error_occurred'), type: 'error' });
             }
         } catch (err) {
             console.error(err);
@@ -241,16 +279,16 @@ const ReportDetailsPanel = ({ report, onUpdate }) => {
 
     return (
         <div className="glass-panel">
-             {/* Toast Container - absolute within this panel or relative */}
-             {toast.message && (
-                <Toast 
-                    message={toast.message} 
-                    type={toast.type} 
-                    onClose={() => setToast({ message: '', type: '' })} 
+            {/* Toast Container - absolute within this panel or relative */}
+            {toast.message && (
+                <Toast
+                    message={toast.message}
+                    type={toast.type}
+                    onClose={() => setToast({ message: '', type: '' })}
                 />
             )}
-            
-            <ConfirmationModal 
+
+            <ConfirmationModal
                 isOpen={confirmModal.isOpen}
                 onClose={() => setConfirmModal({ isOpen: false, imageId: null })}
                 onConfirm={confirmDeleteImage}
@@ -263,30 +301,30 @@ const ReportDetailsPanel = ({ report, onUpdate }) => {
             <div className="flex flex-col md:flex-row h-[500px]">
                 {/* Tabs / Sidebar */}
                 <div className="w-full md:w-56 bg-white/5 dark:bg-neutral-900/50 border-r border-white/10 dark:border-white/5 flex flex-row md:flex-col overflow-x-auto md:overflow-visible shrink-0 backdrop-blur-sm p-2 gap-2">
-                    <button 
+                    <button
                         onClick={() => setActiveTab('details')}
                         className={`flex-1 md:flex-none p-3 text-left font-medium transition-all rounded-xl border ${activeTab === 'details' ? 'bg-white/40 dark:bg-neutral-800/40 text-blue-600 border-white/40 shadow-lg backdrop-blur-md' : 'text-gray-600 dark:text-neutral-400 border-transparent hover:bg-white/10 dark:hover:bg-neutral-800/20'}`}
                     >
                         {t('reports.modal.details', 'Details')}
                     </button>
-                    <button 
+                    <button
                         onClick={() => setActiveTab('notes')}
                         className={`flex-1 md:flex-none p-3 text-left font-medium transition-all rounded-xl border ${activeTab === 'notes' ? 'bg-white/40 dark:bg-neutral-800/40 text-blue-600 border-white/40 shadow-lg backdrop-blur-md' : 'text-gray-600 dark:text-neutral-400 border-transparent hover:bg-white/10 dark:hover:bg-neutral-800/20'}`}
                     >
                         {t('reports.modal.notes', 'Notes & Activity')}
                     </button>
-                    <button 
+                    <button
                         onClick={() => setActiveTab('images')}
                         className={`flex-1 md:flex-none p-3 text-left font-medium transition-all rounded-xl border ${activeTab === 'images' ? 'bg-white/40 dark:bg-neutral-800/40 text-blue-600 border-white/40 shadow-lg backdrop-blur-md' : 'text-gray-600 dark:text-neutral-400 border-transparent hover:bg-white/10 dark:hover:bg-neutral-800/20'}`}
                     >
                         {t('reports.modal.images', 'Images')}
                     </button>
-                    
+
                     {/* Divider */}
                     <div className="hidden md:block border-t border-white/10 dark:border-white/5 my-2"></div>
-                    
+
                     {/* Export PDF Button */}
-                    <button 
+                    <button
                         onClick={handleExportPDF}
                         className="flex-1 md:flex-none p-3 text-left font-medium transition-all rounded-xl border text-gray-600 dark:text-neutral-400 border-transparent hover:bg-white/10 dark:hover:bg-neutral-800/20 flex items-center gap-2"
                     >
@@ -299,7 +337,7 @@ const ReportDetailsPanel = ({ report, onUpdate }) => {
 
                 {/* Content Area */}
                 <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-transparent relative">
-                    
+
                     {/* DETAILS TAB */}
                     {activeTab === 'details' && (
                         <div className="space-y-6">
@@ -316,7 +354,7 @@ const ReportDetailsPanel = ({ report, onUpdate }) => {
                                     </div>
                                 </div>
                                 {canEdit && !isEditing && (
-                                    <button 
+                                    <button
                                         onClick={() => setIsEditing(true)}
                                         className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 flex items-center gap-1"
                                     >
@@ -328,21 +366,86 @@ const ReportDetailsPanel = ({ report, onUpdate }) => {
 
                             {isEditing ? (
                                 <form onSubmit={handleSaveEdit} className="space-y-4 animate-fade-in">
+                                    {/* Scope Selection */}
+                                    {(isAdminOrPres || isVocal) && (
+                                        <>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">{t('reports.form.scope', 'Scope')}</label>
+                                                <GlassSelect
+                                                    value={editForm.scope}
+                                                    onChange={(e) => {
+                                                        const newScope = e.target.value;
+                                                        setEditForm(prev => ({
+                                                            ...prev,
+                                                            scope: newScope,
+                                                            block_id: newScope === 'specific' ? (Array.isArray(userUnits) && userUnits.length === 1 ? userUnits[0].block_id : '') : '',
+                                                            unit_id: ''
+                                                        }));
+                                                    }}
+                                                    options={[
+                                                        { value: 'community', label: t('reports.scope.community', 'Community (General)') },
+                                                        { value: 'specific', label: t('reports.scope.specific', 'Specific Area (Block / Unit)') }
+                                                    ]}
+                                                />
+                                            </div>
+
+                                            {editForm.scope === 'specific' && (
+                                                <>
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">{t('reports.form.select_block', 'Select Block')}</label>
+                                                        <GlassSelect
+                                                            value={editForm.block_id}
+                                                            onChange={(e) => setEditForm(prev => ({ ...prev, block_id: e.target.value, unit_id: '' }))}
+                                                            options={[
+                                                                { value: '', label: t('common.select', 'Select...') },
+                                                                ...(blocks || [])
+                                                                    .filter(b => isAdminOrPres || (userUnits || []).some(u => u.block_id === b.id))
+                                                                    .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
+                                                                    .map(b => ({ value: b.id, label: b.name }))
+                                                            ]}
+                                                            required={editForm.scope === 'specific'}
+                                                        />
+                                                    </div>
+
+                                                    {editForm.block_id && (
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">{t('reports.form.unit', 'Unit')}</label>
+                                                            <GlassSelect
+                                                                value={editForm.unit_id}
+                                                                onChange={(e) => setEditForm(prev => ({ ...prev, unit_id: e.target.value }))}
+                                                                options={[
+                                                                    { value: '', label: t('reports.scope.whole_block', 'Entire Block / Common Area') },
+                                                                    ...(blocks.find(b => b.id === editForm.block_id)?.units
+                                                                        ?.filter(u => isAdminOrPres ? true : (userUnits || []).some(myU => myU.id === u.id))
+                                                                        ?.sort((a, b) => a.unit_number.localeCompare(b.unit_number, undefined, { numeric: true }))
+                                                                        ?.map(u => ({
+                                                                            value: u.id,
+                                                                            label: u.unit_number
+                                                                        })) || [])
+                                                                ]}
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </>
+                                            )}
+                                        </>
+                                    )}
+
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300">{t('reports.form.issue_title', 'Title')}</label>
-                                        <input 
-                                            type="text" 
+                                        <input
+                                            type="text"
                                             className="glass-input"
-                                            value={editForm.title} 
-                                            onChange={e => setEditForm({...editForm, title: e.target.value})} 
+                                            value={editForm.title}
+                                            onChange={e => setEditForm({ ...editForm, title: e.target.value })}
                                         />
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300">{t('reports.form.category', 'Category')}</label>
-                                        <select 
+                                        <select
                                             className="glass-input"
                                             value={editForm.category}
-                                            onChange={e => setEditForm({...editForm, category: e.target.value})}
+                                            onChange={e => setEditForm({ ...editForm, category: e.target.value })}
                                         >
                                             <option value="maintenance">{t('reports.categories.maintenance')}</option>
                                             <option value="security">{t('reports.categories.security')}</option>
@@ -352,11 +455,11 @@ const ReportDetailsPanel = ({ report, onUpdate }) => {
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300">{t('reports.form.desc', 'Description')}</label>
-                                        <textarea 
+                                        <textarea
                                             className="glass-input rounded-3xl"
                                             rows="5"
                                             value={editForm.description}
-                                            onChange={e => setEditForm({...editForm, description: e.target.value})}
+                                            onChange={e => setEditForm({ ...editForm, description: e.target.value })}
                                         ></textarea>
                                     </div>
                                     <div className="flex justify-end gap-2">
@@ -371,7 +474,7 @@ const ReportDetailsPanel = ({ report, onUpdate }) => {
                                     <h3 className="font-bold text-xl mb-3 text-gray-800 dark:text-white">{report.title}</h3>
                                     <p className="whitespace-pre-wrap text-gray-700 dark:text-neutral-200 leading-relaxed">{report.description}</p>
                                     <div className="mt-6 pt-4 border-t border-white/20 dark:border-white/10 flex gap-4 text-sm text-gray-600 dark:text-neutral-400">
-                                       <span>{t('reports.form.category')}: <span className="font-medium text-gray-800 dark:text-neutral-200 capitalize">{t(`reports.categories.${report.category}`, report.category)}</span></span>
+                                        <span>{t('reports.form.category')}: <span className="font-medium text-gray-800 dark:text-neutral-200 capitalize">{t(`reports.categories.${report.category}`, report.category)}</span></span>
                                     </div>
                                 </div>
                             )}
@@ -398,16 +501,16 @@ const ReportDetailsPanel = ({ report, onUpdate }) => {
                                 ))}
                             </div>
                             <form onSubmit={handleSendNote} className="relative">
-                                <input 
-                                    type="text" 
+                                <input
+                                    type="text"
                                     placeholder={t('reports.modal.type_note', 'Type a note...')}
                                     className="w-full pl-4 pr-12 py-3 bg-gray-50 dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-full focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
                                     value={newNote}
                                     onChange={e => setNewNote(e.target.value)}
                                     disabled={sendingNote}
                                 />
-                                <button 
-                                    type="submit" 
+                                <button
+                                    type="submit"
                                     disabled={!newNote.trim() || sendingNote}
                                     className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:hover:bg-blue-600 transition-colors"
                                     aria-label={t('reports.modal.send_note', 'Send note')}
@@ -427,29 +530,29 @@ const ReportDetailsPanel = ({ report, onUpdate }) => {
                                         {t('reports.modal.max_images', 'Max 5 images reached')}
                                     </span>
                                 )}
-                                <ImageUploader 
-                                    onImageSelected={handleImageUpload} 
+                                <ImageUploader
+                                    onImageSelected={handleImageUpload}
                                     disabled={((report.image_url ? 1 : 0) + images.length) >= 5}
                                 />
                             </div>
-                            
+
                             {loadingImages ? (
                                 <GlassLoader />
                             ) : (
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                     {/* Original Primary Image from Report */}
                                     {report.image_url && (
-                                        <div 
+                                        <div
                                             className="relative aspect-square group rounded-xl overflow-hidden shadow-sm cursor-zoom-in"
                                             onClick={() => setExpandedImage(report.image_url)}
                                         >
-                                             <img src={report.image_url} alt="Primary" className="w-full h-full object-cover transition-transform group-hover:scale-105" />
-                                             <div className="absolute bottom-0 inset-x-0 bg-black/50 text-white text-xs p-1 text-center backdrop-blur-sm">
-                                                 {t('reports.modal.primary', 'Primary')}
-                                             </div>
+                                            <img src={report.image_url} alt="Primary" className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                                            <div className="absolute bottom-0 inset-x-0 bg-black/50 text-white text-xs p-1 text-center backdrop-blur-sm">
+                                                {t('reports.modal.primary', 'Primary')}
+                                            </div>
                                         </div>
                                     )}
-                                    
+
                                     {images.length === 0 && !report.image_url && (
                                         <div className="col-span-full py-12 text-center text-gray-400 dark:text-neutral-500 border-2 border-dashed border-gray-200 dark:border-neutral-700 rounded-xl">
                                             {t('reports.modal.no_images', 'No images uploaded yet.')}
@@ -458,17 +561,17 @@ const ReportDetailsPanel = ({ report, onUpdate }) => {
 
                                     {images.map(img => (
                                         <div key={img.id} className="relative aspect-square group rounded-xl overflow-hidden shadow-sm bg-gray-100 dark:bg-neutral-900 cursor-zoom-in">
-                                            <img 
-                                                src={img.url} 
-                                                alt="Uploaded" 
+                                            <img
+                                                src={img.url}
+                                                alt="Uploaded"
                                                 className="w-full h-full object-cover transition-transform group-hover:scale-105"
                                                 onClick={() => setExpandedImage(img.url)}
                                             />
                                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors pointer-events-none"></div>
-                                            
+
                                             {/* Delete Button */}
                                             {(img.uploaded_by === user.id || ['admin', 'president'].includes(role)) && (
-                                                <button 
+                                                <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         handleDeleteImage(img.id);
@@ -490,24 +593,24 @@ const ReportDetailsPanel = ({ report, onUpdate }) => {
                 </div>
             </div>
 
-             {/* Lightbox / Expanded Image */}
-             {expandedImage && createPortal(
-                <div 
+            {/* Lightbox / Expanded Image */}
+            {expandedImage && createPortal(
+                <div
                     className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4 animate-fade-in"
                     onClick={() => setExpandedImage(null)}
                 >
-                    <button 
+                    <button
                         onClick={() => setExpandedImage(null)}
                         className="absolute top-4 right-4 text-white hover:text-gray-300 p-2"
                         aria-label={t('common.close', 'Close')}
                     >
-                         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
-                    <img 
-                        src={expandedImage} 
-                        alt="Expanded" 
+                    <img
+                        src={expandedImage}
+                        alt="Expanded"
                         className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-                        onClick={e => e.stopPropagation()} 
+                        onClick={e => e.stopPropagation()}
                     />
                 </div>,
                 document.body

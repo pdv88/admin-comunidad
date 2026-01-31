@@ -9,19 +9,20 @@ import ModalPortal from '../components/ModalPortal';
 import PaymentUpload from '../components/payments/PaymentUpload';
 import GlassLoader from '../components/GlassLoader';
 import Toast from '../components/Toast';
+import ConfirmationModal from '../components/ConfirmationModal';
 import { getCurrencySymbol } from '../utils/currencyUtils';
 
 const Campaigns = () => {
     const { t } = useTranslation();
-    const { user, activeCommunity, hasAnyRole } = useAuth(); 
-    const isAdmin = hasAnyRole(['super_admin', 'admin', 'president']);
-    const canCreate = hasAnyRole(['super_admin', 'admin', 'president', 'vocal']);
+    const { user, activeCommunity, hasAnyRole } = useAuth();
+    const isAdmin = hasAnyRole(['super_admin', 'admin', 'president', 'treasurer']);
+    const canCreate = hasAnyRole(['super_admin', 'admin', 'president', 'treasurer', 'vocal']);
     const isVocal = hasAnyRole(['vocal']);
 
     const vocalBlocks = activeCommunity?.roles
         ?.filter(r => r.name === 'vocal' && r.block_id)
         .map(r => r.block_id) || [];
-    
+
     const [campaigns, setCampaigns] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('active'); // 'active' | 'closed'
@@ -35,11 +36,52 @@ const Campaigns = () => {
     const [toast, setToast] = useState({ message: '', type: 'success' });
     const [showCreateForm, setShowCreateForm] = useState(false);
 
+    const [createError, setCreateError] = useState('');
+
     // Targeting State
     const [availableBlocks, setAvailableBlocks] = useState([]);
     const [targetType, setTargetType] = useState('all'); // 'all' or 'blocks'
     const [selectedBlocks, setSelectedBlocks] = useState([]); // Array of block IDs
-    
+
+    // Delete State
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [campaignToDelete, setCampaignToDelete] = useState(null);
+    const [deleting, setDeleting] = useState(false);
+
+    const handleDeleteClick = (campaign) => {
+        setCampaignToDelete(campaign);
+        setDeleteModalOpen(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!campaignToDelete) return;
+        setDeleting(true);
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${API_URL}/api/payments/campaigns/${campaignToDelete.id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || 'Failed to delete campaign');
+            }
+
+            setToast({ message: t('campaigns.delete_success', 'Campaign deleted successfully'), type: 'success' });
+            setDeleteModalOpen(false);
+            setCampaignToDelete(null);
+            fetchCampaigns();
+        } catch (error) {
+            console.error(error);
+            setToast({ message: error.message || t('campaigns.delete_error', 'Error deleting campaign'), type: 'error' });
+        } finally {
+            setDeleting(false);
+        }
+    };
+
     // Payment State
     const [paymentModalOpen, setPaymentModalOpen] = useState(false);
     const [selectedCampaignForPayment, setSelectedCampaignForPayment] = useState(null);
@@ -56,6 +98,7 @@ const Campaigns = () => {
         setGoal('');
         setDesc('');
         setDeadline('');
+        setCreateError('');
         setTargetType(isRestrictedVocal ? 'blocks' : 'all');
         setSelectedBlocks(isRestrictedVocal ? vocalBlocks : []);
         setShowCreateForm(true);
@@ -110,14 +153,15 @@ const Campaigns = () => {
     const handleCreate = async (e) => {
         e.preventDefault();
         setCreating(true);
+        setCreateError('');
 
         try {
             const token = localStorage.getItem('token');
             const res = await fetch(`${API_URL}/api/payments/campaigns`, {
                 method: 'POST',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}` 
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
                     name,
@@ -129,7 +173,11 @@ const Campaigns = () => {
                 })
             });
 
-            if (!res.ok) throw new Error('Failed to create');
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.error || 'Failed to create campaign');
+            }
 
             setToast({ message: t('campaigns.success', 'Campaign created successfully!'), type: 'success' });
             setName('');
@@ -144,7 +192,8 @@ const Campaigns = () => {
 
         } catch (error) {
             console.error(error);
-            setToast({ message: t('campaigns.error', 'Error creating campaign.'), type: 'error' });
+            setCreateError(error.message);
+            // Optionally keep toast for generic network errors, but user asked for modal warning.
         } finally {
             setCreating(false);
         }
@@ -152,6 +201,7 @@ const Campaigns = () => {
 
     const handleEditClick = (campaign) => {
         setEditingCampaign(campaign);
+        setEditError('');
         setEditForm({
             name: campaign.name,
             goal_amount: campaign.target_amount,
@@ -161,15 +211,18 @@ const Campaigns = () => {
         });
     };
 
+    const [editError, setEditError] = useState('');
+
     const handleUpdate = async (e) => {
         e.preventDefault();
+        setEditError('');
         try {
             const token = localStorage.getItem('token');
             const res = await fetch(`${API_URL}/api/payments/campaigns/${editingCampaign.id}`, {
                 method: 'PUT',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}` 
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
                     ...editForm,
@@ -177,7 +230,10 @@ const Campaigns = () => {
                 })
             });
 
-            if (!res.ok) throw new Error('Failed to update');
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || 'Failed to update');
+            }
 
             setToast({ message: t('campaigns.update_success', 'Campaign updated successfully!'), type: 'success' });
             setEditingCampaign(null);
@@ -185,7 +241,7 @@ const Campaigns = () => {
 
         } catch (error) {
             console.error(error);
-            setToast({ message: t('campaigns.update_error', 'Error updating campaign.'), type: 'error' });
+            setEditError(error.message);
         }
     };
 
@@ -199,16 +255,16 @@ const Campaigns = () => {
 
     return (
         <DashboardLayout>
-            <Toast 
-                message={toast.message} 
-                type={toast.type} 
-                onClose={() => setToast({ ...toast, message: '' })} 
+            <Toast
+                message={toast.message}
+                type={toast.type}
+                onClose={() => setToast({ ...toast, message: '' })}
             />
             <div className="max-w-7xl mx-auto space-y-4 md:space-y-8">
                 <div className="flex justify-between items-center">
                     <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t('campaigns.title', 'Funding Campaigns')}</h1>
                     {canCreate && (
-                        <button 
+                        <button
                             onClick={openCreateForm}
                             className="glass-button"
                         >
@@ -219,134 +275,141 @@ const Campaigns = () => {
 
                 {/* Create Campaign Modal */}
                 {showCreateForm && (
-                     <ModalPortal>
+                    <ModalPortal>
                         <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-sm" aria-labelledby="modal-title" role="dialog" aria-modal="true">
                             <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
                                 <div className="fixed inset-0 transition-opacity" aria-hidden="true" onClick={() => setShowCreateForm(false)}></div>
                                 <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
                                 <div className="inline-block align-bottom glass-card text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full p-6">
-                                        <h3 className="text-lg leading-6 font-bold text-gray-800 dark:text-white mb-4" id="modal-title">
-                                            {t('campaigns.create_title', 'Create New Campaign')}
-                                        </h3>
-                                        <form onSubmit={handleCreate} className="space-y-4">
-                                            <div className="grid sm:grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.name', 'Campaign Name')}</label>
-                                                    <input 
-                                                        type="text" 
-                                                        required 
-                                                        className="glass-input"
-                                                        value={name}
-                                                        onChange={(e) => setName(e.target.value)}
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.goal', 'Goal Amount')}</label>
-                                                    <input 
-                                                        type="number" 
-                                                        step="0.01" 
-                                                        required 
-                                                        className="glass-input"
-                                                        value={goal}
-                                                        onChange={(e) => setGoal(e.target.value)}
-                                                    />
-                                                </div>
-                                            </div>
+                                    <h3 className="text-lg leading-6 font-bold text-gray-800 dark:text-white mb-4" id="modal-title">
+                                        {t('campaigns.create_title', 'Create New Campaign')}
+                                    </h3>
+                                    {createError && (
+                                        <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-3 rounded-md">
+                                            <p className="text-sm text-red-600 dark:text-red-400 font-medium">
+                                                {createError}
+                                            </p>
+                                        </div>
+                                    )}
+                                    <form onSubmit={handleCreate} className="space-y-4">
+                                        <div className="grid sm:grid-cols-2 gap-4">
                                             <div>
-                                                 <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.description', 'Description')}</label>
-                                                 <textarea 
-                                                    className="glass-input !rounded-3xl"
-                                                    rows="3"
-                                                    value={desc}
-                                                    onChange={(e) => setDesc(e.target.value)}
-                                                 ></textarea>
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.deadline', 'Deadline')} <span className="text-gray-400 font-normal">({t('common.optional', 'Optional')})</span></label>
-                                                <input 
-                                                    type="date" 
+                                                <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.name', 'Campaign Name')}</label>
+                                                <input
+                                                    type="text"
+                                                    required
                                                     className="glass-input"
-                                                    value={deadline}
-                                                    onChange={(e) => setDeadline(e.target.value)}
+                                                    value={name}
+                                                    onChange={(e) => setName(e.target.value)}
                                                 />
                                             </div>
-            
-                                             {/* Targeting Options */}
-                                             <div className="pt-2">
-                                                 <label className="block text-sm font-medium mb-2 dark:text-gray-300">{t('campaigns.target_audience', 'Target Audience')}</label>
-                                                 <div className="flex gap-4 mb-3">
-                                                     <label className="flex items-center gap-2 cursor-pointer">
-                                                         <input 
-                                                             type="radio" 
-                                                             name="targetType" 
-                                                             value="all"
-                                                             checked={targetType === 'all'}
-                                                             onChange={() => setTargetType('all')}
-                                                             className="text-indigo-600 focus:ring-indigo-500"
-                                                             disabled={isVocal && !isAdmin}
-                                                         />
-                                                         <span className={`text-sm dark:text-gray-300 ${(isVocal && !isAdmin) ? 'opacity-50' : ''}`}>{t('campaigns.target_all', 'All Community')}</span>
-                                                     </label>
-                                                     <label className="flex items-center gap-2 cursor-pointer">
-                                                         <input 
-                                                             type="radio" 
-                                                             name="targetType" 
-                                                             value="blocks"
-                                                             checked={targetType === 'blocks'}
-                                                             onChange={() => setTargetType('blocks')}
-                                                             className="text-indigo-600 focus:ring-indigo-500"
-                                                         />
-                                                         <span className="text-sm dark:text-gray-300">{t('campaigns.target_blocks', 'Specific Blocks')}</span>
-                                                     </label>
-                                                 </div>
-            
-                                                 {targetType === 'blocks' && (
-                                                     <div className="mt-2 p-3 bg-gray-50/50 dark:bg-neutral-900/50 rounded-lg border border-gray-200 dark:border-neutral-700 max-h-40 overflow-y-auto backdrop-blur-sm">
-                                                         <label className="block text-xs font-semibold text-gray-500 uppercase mb-2">{t('campaigns.select_blocks', 'Select Blocks')}</label>
-                                                         <div className="grid grid-cols-2 gap-2">
-                                                             {availableBlocks
-                                                                 .filter(block => (!isVocal || isAdmin) || vocalBlocks.includes(block.id))
-                                                                 .map(block => (
-                                                                 <label key={block.id} className="flex items-center gap-2 cursor-pointer p-2 hover:bg-white/50 dark:hover:bg-neutral-800/50 rounded transition-colors">
-                                                                     <input 
-                                                                         type="checkbox"
-                                                                         value={block.id}
-                                                                         checked={selectedBlocks.includes(block.id)}
-                                                                         onChange={(e) => {
-                                                                             if(e.target.checked) {
-                                                                                 setSelectedBlocks([...selectedBlocks, block.id]);
-                                                                             } else {
-                                                                                 setSelectedBlocks(selectedBlocks.filter(id => id !== block.id));
-                                                                             }
-                                                                         }}
-                                                                         className="rounded text-indigo-600 focus:ring-indigo-500"
-                                                                     />
-                                                                     <span className="text-sm text-gray-700 dark:text-gray-300">{block.name}</span>
-                                                                 </label>
-                                                             ))}
-                                                         </div>
-                                                     </div>
-                                                 )}
-                                             </div>
-                                            
-                                             
-                                            <div className="flex gap-3 mt-6">
-                                                <button 
-                                                    type="button" 
-                                                    onClick={() => setShowCreateForm(false)}
-                                                    className="glass-button-secondary flex-1"
-                                                >
-                                                    {t('common.cancel', 'Cancel')}
-                                                </button>
-                                                <button 
-                                                    type="submit" 
-                                                    disabled={creating}
-                                                    className="glass-button flex-1"
-                                                >
-                                                    {creating ? t('common.loading', 'Loading...') : t('campaigns.create_btn', 'Create Campaign')}
-                                                </button>
+                                            <div>
+                                                <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.goal', 'Goal Amount')}</label>
+                                                <input
+                                                    type="number"
+                                                    step="0.01"
+                                                    required
+                                                    className="glass-input"
+                                                    value={goal}
+                                                    onChange={(e) => setGoal(e.target.value)}
+                                                />
                                             </div>
-                                        </form>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.description', 'Description')}</label>
+                                            <textarea
+                                                className="glass-input !rounded-3xl"
+                                                rows="3"
+                                                value={desc}
+                                                onChange={(e) => setDesc(e.target.value)}
+                                            ></textarea>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.deadline', 'Deadline')} <span className="text-gray-400 font-normal">({t('common.optional', 'Optional')})</span></label>
+                                            <input
+                                                type="date"
+                                                className="glass-input"
+                                                value={deadline}
+                                                onChange={(e) => setDeadline(e.target.value)}
+                                            />
+                                        </div>
+
+                                        {/* Targeting Options */}
+                                        <div className="pt-2">
+                                            <label className="block text-sm font-medium mb-2 dark:text-gray-300">{t('campaigns.target_audience', 'Target Audience')}</label>
+                                            <div className="flex gap-4 mb-3">
+                                                <label className="flex items-center gap-2 cursor-pointer">
+                                                    <input
+                                                        type="radio"
+                                                        name="targetType"
+                                                        value="all"
+                                                        checked={targetType === 'all'}
+                                                        onChange={() => setTargetType('all')}
+                                                        className="text-indigo-600 focus:ring-indigo-500"
+                                                        disabled={isVocal && !isAdmin}
+                                                    />
+                                                    <span className={`text-sm dark:text-gray-300 ${(isVocal && !isAdmin) ? 'opacity-50' : ''}`}>{t('campaigns.target_all', 'All Community')}</span>
+                                                </label>
+                                                <label className="flex items-center gap-2 cursor-pointer">
+                                                    <input
+                                                        type="radio"
+                                                        name="targetType"
+                                                        value="blocks"
+                                                        checked={targetType === 'blocks'}
+                                                        onChange={() => setTargetType('blocks')}
+                                                        className="text-indigo-600 focus:ring-indigo-500"
+                                                    />
+                                                    <span className="text-sm dark:text-gray-300">{t('campaigns.target_blocks', 'Specific Blocks')}</span>
+                                                </label>
+                                            </div>
+
+                                            {targetType === 'blocks' && (
+                                                <div className="mt-2 p-3 bg-gray-50/50 dark:bg-neutral-900/50 rounded-lg border border-gray-200 dark:border-neutral-700 max-h-40 overflow-y-auto backdrop-blur-sm">
+                                                    <label className="block text-xs font-semibold text-gray-500 uppercase mb-2">{t('campaigns.select_blocks', 'Select Blocks')}</label>
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        {availableBlocks
+                                                            .filter(block => (!isVocal || isAdmin) || vocalBlocks.includes(block.id))
+                                                            .map(block => (
+                                                                <label key={block.id} className="flex items-center gap-2 cursor-pointer p-2 hover:bg-white/50 dark:hover:bg-neutral-800/50 rounded transition-colors">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        value={block.id}
+                                                                        checked={selectedBlocks.includes(block.id)}
+                                                                        onChange={(e) => {
+                                                                            if (e.target.checked) {
+                                                                                setSelectedBlocks([...selectedBlocks, block.id]);
+                                                                            } else {
+                                                                                setSelectedBlocks(selectedBlocks.filter(id => id !== block.id));
+                                                                            }
+                                                                        }}
+                                                                        className="rounded text-indigo-600 focus:ring-indigo-500"
+                                                                    />
+                                                                    <span className="text-sm text-gray-700 dark:text-gray-300">{block.name}</span>
+                                                                </label>
+                                                            ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+
+
+                                        <div className="flex gap-3 mt-6">
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowCreateForm(false)}
+                                                className="glass-button-secondary flex-1"
+                                            >
+                                                {t('common.cancel', 'Cancel')}
+                                            </button>
+                                            <button
+                                                type="submit"
+                                                disabled={creating}
+                                                className="glass-button flex-1"
+                                            >
+                                                {creating ? t('common.loading', 'Loading...') : t('campaigns.create_btn', 'Create Campaign')}
+                                            </button>
+                                        </div>
+                                    </form>
                                 </div>
                             </div>
                         </div>
@@ -355,17 +418,17 @@ const Campaigns = () => {
 
                 {/* Tabs */}
                 <div className="flex p-1 rounded-full items-center backdrop-blur-md bg-white/30 border border-white/40 shadow-sm dark:bg-neutral-800/40 dark:border-white/10 mb-6 w-fit">
-                    <button 
-                        className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === 'active' 
-                            ? 'bg-white text-blue-600 shadow-md dark:bg-neutral-700 dark:text-blue-400' 
+                    <button
+                        className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === 'active'
+                            ? 'bg-white text-blue-600 shadow-md dark:bg-neutral-700 dark:text-blue-400'
                             : 'text-gray-600 hover:bg-white/20 dark:text-gray-300 dark:hover:bg-white/10'}`}
                         onClick={() => setActiveTab('active')}
                     >
                         {t('campaigns.tab_active', 'Active')}
                     </button>
-                    <button 
-                        className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === 'closed' 
-                            ? 'bg-white text-blue-600 shadow-md dark:bg-neutral-700 dark:text-blue-400' 
+                    <button
+                        className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === 'closed'
+                            ? 'bg-white text-blue-600 shadow-md dark:bg-neutral-700 dark:text-blue-400'
                             : 'text-gray-600 hover:bg-white/20 dark:text-gray-300 dark:hover:bg-white/10'}`}
                         onClick={() => setActiveTab('closed')}
                     >
@@ -378,56 +441,75 @@ const Campaigns = () => {
                     {campaigns
                         .filter(c => activeTab === 'active' ? c.is_active : !c.is_active)
                         .map(campaign => (
-                         <div key={campaign.id} className="glass-card p-5 flex flex-col justify-between">
-                            <div>
-                                <div className="flex justify-between items-start mb-2">
-                                    <Link to={`/app/campaigns/${campaign.id}`} className="hover:underline">
-                                        <h2 className="font-bold text-lg text-gray-800 dark:text-white">{campaign.name}</h2>
-                                    </Link>
-                                    <span className={`inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-xs font-medium ${campaign.is_active ? 'bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-500' : 'bg-gray-100 text-gray-800 dark:bg-gray-800/30 dark:text-gray-500'}`}>
-                                        {campaign.is_active ? t('campaigns.active', 'Active') : t('campaigns.closed', 'Closed')}
-                                    </span>
-                                </div>
-                                <p className="text-sm text-gray-600 dark:text-neutral-400 mb-4 h-12 overflow-hidden text-ellipsis">
-                                    {campaign.description || t('campaigns.no_desc', 'No description provided.')}
-                                </p>
-                                
-                                <CampaignProgress 
-                                    campaign={campaign} 
-                                />
+                            <div key={campaign.id} className="glass-card p-5 flex flex-col justify-between">
+                                <div>
+                                    <div className="flex justify-between items-start mb-2">
+                                        <Link to={`/app/campaigns/${campaign.id}`} className="hover:underline">
+                                            <h2 className="font-bold text-lg text-gray-800 dark:text-white">{campaign.name}</h2>
+                                        </Link>
+                                        <span className={`inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-xs font-medium ${campaign.is_active ? 'bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-500' : 'bg-gray-100 text-gray-800 dark:bg-gray-800/30 dark:text-gray-500'}`}>
+                                            {campaign.is_active ? t('campaigns.active', 'Active') : t('campaigns.closed', 'Closed')}
+                                        </span>
+                                    </div>
+                                    <p className="text-sm text-gray-600 dark:text-neutral-400 mb-4 h-12 overflow-hidden text-ellipsis">
+                                        {campaign.description || t('campaigns.no_desc', 'No description provided.')}
+                                    </p>
 
-                                <div className="mt-4 flex justify-between text-xs text-gray-500 dark:text-neutral-500 mb-4">
-                                    <span>{t('campaigns.collected', 'Collected')}: {getCurrencySymbol(activeCommunity?.communities?.currency)}{campaign.current_amount}</span>
-                                    <span>{t('campaigns.goal', 'Goal')}: {getCurrencySymbol(activeCommunity?.communities?.currency)}{campaign.target_amount}</span>
-                                </div>
-                                {campaign.deadline && (
-                                     <div className="text-xs text-gray-500 dark:text-neutral-400 mb-4 text-right">
-                                        {t('campaigns.deadline_label', 'Deadline')}: {new Date(campaign.deadline).toLocaleDateString()}
-                                     </div>
-                                )}
+                                    <CampaignProgress
+                                        campaign={campaign}
+                                    />
 
-                                { (isAdmin || (isVocal && campaign.created_by === user.id)) && (
-                                    <button 
-                                        onClick={() => handleEditClick(campaign)}
-                                        className="w-full glass-button-secondary"
-                                    >
-                                        {t('common.edit', 'Edit')}
-                                    </button>
-                                )}
-                                
-                                {/* Contribute Button (if active) */}
-                                {campaign.is_active && (
-                                    <button 
-                                        onClick={() => handleContributeClick(campaign)}
-                                        className="mt-3 w-full glass-button"
-                                    >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
-                                        {t('campaigns.contribute', 'Contribute')}
-                                    </button>
-                                )}
+                                    <div className="mt-4 flex justify-between text-xs text-gray-500 dark:text-neutral-500 mb-4">
+                                        <span>{t('campaigns.collected', 'Collected')}: {getCurrencySymbol(activeCommunity?.communities?.currency)}{campaign.current_amount}</span>
+                                        <span>{t('campaigns.goal', 'Goal')}: {getCurrencySymbol(activeCommunity?.communities?.currency)}{campaign.target_amount}</span>
+                                    </div>
+                                    {campaign.deadline && (
+                                        <div className="text-xs text-gray-500 dark:text-neutral-400 mb-4 text-right">
+                                            {t('campaigns.deadline_label', 'Deadline')}: {new Date(campaign.deadline).toLocaleDateString()}
+                                        </div>
+                                    )}
+
+                                    <div className="mt-5 pt-4 border-t border-gray-100 dark:border-white/5 flex items-center gap-3">
+                                        {/* Contribute Button */}
+                                        {campaign.is_active ? (
+                                            <button
+                                                onClick={() => handleContributeClick(campaign)}
+                                                className="glass-button flex-1 flex items-center justify-center gap-2"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
+                                                {t('campaigns.contribute', 'Contribute')}
+                                            </button>
+                                        ) : (
+                                            <div className="flex-1"></div>
+                                        )}
+
+                                        {/* Admin Actions */}
+                                        {(isAdmin || (isVocal && campaign.created_by === user.id)) && (
+                                            <div className="flex gap-1 shrink-0">
+                                                <button
+                                                    onClick={() => handleEditClick(campaign)}
+                                                    className="p-2 text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-white/10"
+                                                    title={t('common.edit', 'Edit')}
+                                                >
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                    </svg>
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteClick(campaign)}
+                                                    className="p-2 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors rounded-full hover:bg-red-50 dark:hover:bg-red-900/20"
+                                                    title={t('common.delete', 'Delete')}
+                                                >
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        ))}
                 </div>
 
                 {/* Edit Modal */}
@@ -438,79 +520,86 @@ const Campaigns = () => {
                                 <div className="fixed inset-0 transition-opacity" aria-hidden="true" onClick={() => setEditingCampaign(null)}></div>
                                 <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
                                 <div className="inline-block align-bottom glass-card text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full p-6">
-                                        <h3 className="text-lg leading-6 font-bold text-gray-800 dark:text-white mb-4" id="modal-title">
-                                            {t('campaigns.edit_title', 'Edit Campaign')}
-                                        </h3>
-                                        <form onSubmit={handleUpdate} className="space-y-4">
-                                            <div>
-                                                <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.name', 'Campaign Name')}</label>
-                                                <input 
-                                                    type="text" 
-                                                    required 
-                                                    className="glass-input"
-                                                    value={editForm.name}
-                                                    onChange={(e) => setEditForm({...editForm, name: e.target.value})}
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.goal', 'Goal Amount')}</label>
-                                                <input 
-                                                    type="number" 
-                                                    step="0.01" 
-                                                    required 
-                                                    className="glass-input"
-                                                    value={editForm.goal_amount}
-                                                    onChange={(e) => setEditForm({...editForm, goal_amount: e.target.value})}
-                                                />
-                                            </div>
-                                            <div>
-                                                 <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.description', 'Description')}</label>
-                                                 <textarea 
-                                                    className="glass-input !rounded-3xl"
-                                                    rows="3"
-                                                    value={editForm.description}
-                                                    onChange={(e) => setEditForm({...editForm, description: e.target.value})}
-                                                 ></textarea>
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.deadline', 'Deadline')} <span className="text-gray-400 font-normal">({t('campaigns.ongoing_hint', 'Leave empty for ongoing')})</span></label>
-                                                <input 
-                                                    type="date" 
-                                                    className="glass-input"
-                                                    value={editForm.deadline}
-                                                    onChange={(e) => setEditForm({...editForm, deadline: e.target.value})}
-                                                />
-                                            </div>
-                                            <div className="flex items-center">
-                                                <input 
-                                                    id="is_active" 
-                                                    name="is_active" 
-                                                    type="checkbox" 
-                                                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                                                    checked={editForm.is_active}
-                                                    onChange={(e) => setEditForm({...editForm, is_active: e.target.checked})}
-                                                />
-                                                <label htmlFor="is_active" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
-                                                    {t('campaigns.is_active', 'Active Campaign')}
-                                                </label>
-                                            </div>
-                                            <div className="flex gap-3 mt-6">
-                                                <button 
-                                                    type="button" 
-                                                    onClick={() => setEditingCampaign(null)}
-                                                    className="glass-button-secondary flex-1"
-                                                >
-                                                    {t('common.cancel', 'Cancel')}
-                                                </button>
-                                                <button 
-                                                    type="submit" 
-                                                    className="glass-button flex-1"
-                                                >
-                                                    {t('common.save', 'Save Changes')}
-                                                </button>
-                                            </div>
-                                        </form>
-                                 </div>
+                                    <h3 className="text-lg leading-6 font-bold text-gray-800 dark:text-white mb-4" id="modal-title">
+                                        {t('campaigns.edit_title', 'Edit Campaign')}
+                                    </h3>
+                                    {editError && (
+                                        <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-3 rounded-md">
+                                            <p className="text-sm text-red-600 dark:text-red-400 font-medium">
+                                                {editError}
+                                            </p>
+                                        </div>
+                                    )}
+                                    <form onSubmit={handleUpdate} className="space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.name', 'Campaign Name')}</label>
+                                            <input
+                                                type="text"
+                                                required
+                                                className="glass-input"
+                                                value={editForm.name}
+                                                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.goal', 'Goal Amount')}</label>
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                required
+                                                className="glass-input"
+                                                value={editForm.goal_amount}
+                                                onChange={(e) => setEditForm({ ...editForm, goal_amount: e.target.value })}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.description', 'Description')}</label>
+                                            <textarea
+                                                className="glass-input !rounded-3xl"
+                                                rows="3"
+                                                value={editForm.description}
+                                                onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                                            ></textarea>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.deadline', 'Deadline')} <span className="text-gray-400 font-normal">({t('campaigns.ongoing_hint', 'Leave empty for ongoing')})</span></label>
+                                            <input
+                                                type="date"
+                                                className="glass-input"
+                                                value={editForm.deadline}
+                                                onChange={(e) => setEditForm({ ...editForm, deadline: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="flex items-center">
+                                            <input
+                                                id="is_active"
+                                                name="is_active"
+                                                type="checkbox"
+                                                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                                checked={editForm.is_active}
+                                                onChange={(e) => setEditForm({ ...editForm, is_active: e.target.checked })}
+                                            />
+                                            <label htmlFor="is_active" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
+                                                {t('campaigns.is_active', 'Active Campaign')}
+                                            </label>
+                                        </div>
+                                        <div className="flex gap-3 mt-6">
+                                            <button
+                                                type="button"
+                                                onClick={() => setEditingCampaign(null)}
+                                                className="glass-button-secondary flex-1"
+                                            >
+                                                {t('common.cancel', 'Cancel')}
+                                            </button>
+                                            <button
+                                                type="submit"
+                                                className="glass-button flex-1"
+                                            >
+                                                {t('common.save', 'Save Changes')}
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     </ModalPortal>
@@ -521,23 +610,35 @@ const Campaigns = () => {
                     <ModalPortal>
                         <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
                             <div className="w-full max-w-lg">
-                                <PaymentUpload 
+                                <PaymentUpload
                                     onSuccess={() => {
                                         setPaymentModalOpen(false);
                                         fetchCampaigns();
                                         setToast({ message: t('campaigns.payment_success', 'Contribution registered!'), type: 'success' });
-                                    }} 
+                                    }}
                                     onCancel={() => setPaymentModalOpen(false)}
                                     initialType="campaign"
                                     initialCampaignId={selectedCampaignForPayment?.id}
-                                    isAdmin={false}
+                                    isAdmin={isAdmin}
                                 />
                             </div>
                         </div>
                     </ModalPortal>
                 )}
+
+
+                <ConfirmationModal
+                    isOpen={deleteModalOpen}
+                    onClose={() => setDeleteModalOpen(false)}
+                    onConfirm={handleConfirmDelete}
+                    title={t('campaigns.delete_title', 'Delete Campaign')}
+                    message={t('campaigns.delete_confirm', 'Are you sure you want to delete this campaign? This action cannot be undone.')}
+                    confirmText={t('common.delete', 'Delete')}
+                    isDangerous={true}
+                    isLoading={deleting}
+                />
             </div>
-        </DashboardLayout>
+        </DashboardLayout >
     );
 };
 

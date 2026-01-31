@@ -80,19 +80,19 @@ const DashboardLayout = ({ children }) => {
                         {t('dashboard_layout.nav.community_info', 'Community Info')}
                     </Link>
                     {/* Notices: Residents/Admins only */}
-                    {hasAnyRole(['super_admin', 'admin', 'president', 'secretary', 'treasurer', 'vocal', 'resident']) && (
+                    {hasAnyRole(['super_admin', 'admin', 'president', 'secretary', 'vocal', 'resident']) && (
                         <Link to="/app/notices" onClick={closeSidebar} className={`block py-1.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/notices')}`}>
                             {t('dashboard_layout.nav.notices')}
                         </Link>
                     )}
                     {/* Reports: Maintenance + Residents/Admins */}
-                    {hasAnyRole(['super_admin', 'admin', 'president', 'secretary', 'treasurer', 'vocal', 'resident', 'maintenance']) && (
+                    {hasAnyRole(['super_admin', 'admin', 'president', 'secretary', 'vocal', 'resident', 'maintenance']) && (
                         <Link to="/app/reports" onClick={closeSidebar} className={`block py-1.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/reports')}`}>
                             {t('dashboard_layout.nav.reports')}
                         </Link>
                     )}
                     {/* Voting: Residents/Admins only */}
-                    {hasAnyRole(['super_admin', 'admin', 'president', 'secretary', 'treasurer', 'vocal', 'resident']) && (
+                    {hasAnyRole(['super_admin', 'admin', 'president', 'secretary', 'vocal', 'resident']) && (
                         <Link to="/app/voting" onClick={closeSidebar} className={`block py-1.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/voting')}`}>
                             {t('dashboard_layout.nav.voting')}
                         </Link>
@@ -109,12 +109,14 @@ const DashboardLayout = ({ children }) => {
                             {t('dashboard_layout.nav.campaigns')}
                         </Link>
                     )}
-                    {/* Reservations: All (Security, Maintenance, Residents, Admins) */}
-                    <Link to="/app/reservations" onClick={closeSidebar} className={`block py-1.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/reservations')}`}>
-                        {t('dashboard_layout.nav.reservations', 'Reservations')}
-                    </Link>
+                    {/* Reservations: All EXCEPT Treasurer */}
+                    {hasAnyRole(['super_admin', 'admin', 'president', 'secretary', 'vocal', 'resident', 'security', 'maintenance']) && (
+                        <Link to="/app/reservations" onClick={closeSidebar} className={`block py-1.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/reservations')}`}>
+                            {t('dashboard_layout.nav.reservations', 'Reservations')}
+                        </Link>
+                    )}
                     {/* Visitors: Security + Residents/Admins */}
-                    {hasAnyRole(['super_admin', 'admin', 'president', 'secretary', 'treasurer', 'vocal', 'resident', 'security']) && (
+                    {hasAnyRole(['super_admin', 'admin', 'president', 'secretary', 'vocal', 'resident', 'security']) && (
                         <Link to="/app/visitors" onClick={closeSidebar} className={`block py-1.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/visitors')}`}>
                             {t('visitors.title', 'Visitors')}
                         </Link>

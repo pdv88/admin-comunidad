@@ -30,10 +30,10 @@ const Dashboard = () => {
     if (loading) {
         return <DashboardSkeleton />;
     }
-    
+
     // Get primary role for display (highest in hierarchy)
     const role = getPrimaryRole();
-    
+
     // Determine if the user has a role that displays a top-right section
     // Using hasAnyRole to check for multiple roles
     const hasRoleSection = hasAnyRole(['admin']);
@@ -58,26 +58,26 @@ const Dashboard = () => {
                 </div>
 
                 {/* Financial Overview Chart (Financial roles) */}
-                {hasAnyRole(['admin', 'president', 'treasurer']) && (
+                {hasAnyRole(['super_admin', 'admin', 'president', 'treasurer']) && (
                     <div className="w-full shrink-0 h-96">
-                         <BilledVsCollectedChart className="h-full" />
+                        <BilledVsCollectedChart className="h-full" />
                     </div>
                 )}
 
-                 {/* 2. Role Sections (Auto Height) */}
-                 {hasRoleSection && (
+                {/* 2. Role Sections (Auto Height) */}
+                {hasRoleSection && (
                     <div className="w-full shrink-0">
                         {hasAnyRole(['admin']) && <AdminSection className={cardClass} />}
                         {/* Other roles hidden for now */}
                     </div>
-                 )}
+                )}
 
                 {/* 3. Action Center & Reports (Fills remaining space on desktop, stacks on mobile) */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 w-full md:flex-1 md:min-h-0"> 
-                    
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 w-full md:flex-1 md:min-h-0">
+
                     {/* Polls */}
                     <div className="col-span-1 h-96 md:h-full md:min-h-0">
-                       <ActivePollsWidget className={scrollableCardClass} />
+                        <ActivePollsWidget className={scrollableCardClass} />
                     </div>
 
                     {/* Campaigns */}

@@ -373,8 +373,8 @@
         },
         "scope": {
             "community": "Comunidad",
-            "block": "Bloque",
-            "unit": "Unidad"
+            "specific": "Área Específica (Bloque / Unidad)",
+            "whole_block": "Todo el Bloque / Área Común"
         },
         "status": {
             "pending": "Pendiente",
@@ -390,6 +390,7 @@
         "no_reports": "No se encontraron reportes.",
         "form": {
             "title": "Título",
+            "create_title": "Crear Reporte",
             "scope": "Alcance",
             "select_block": "Seleccionar Bloque",
             "issue_title": "Título de Incidencia",
@@ -439,6 +440,8 @@
         "notes": "Notas y Comentarios",
         "images": "Imágenes Adjuntas",
         "images_note": "Las imágenes están disponibles en el reporte en línea.",
+        "delete_title": "¿Eliminar Reporte?",
+        "delete_confirm": "¿Estás seguro de que deseas eliminar este reporte? Esta acción no se puede deshacer.",
         "generated_on": "Generado el"
     },
     "voting": {
@@ -582,13 +585,6 @@
         "confirm_delete_report": "¿Estás seguro de que quieres eliminar este reporte? No se puede deshacer.",
         "confirm_delete_image": "¿Estás seguro de que quieres eliminar esta imagen?",
         "error_occurred": "Ocurrió un error",
-        "loading": "Cargando...",
-        "sending": "Enviando...",
-        "view": "Ver",
-        "edit": "Editar",
-        "save": "Guardar",
-        "saving": "Guardando...",
-        "voted": "Votado",
         "view_results": "Ver Resultados",
         "confirm_delete_notice": "¿Estás seguro de que quieres eliminar este aviso?",
         "all_blocks": "Todos los Bloques",

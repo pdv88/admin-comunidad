@@ -854,7 +854,7 @@ exports.revertToPending = async (req, res) => {
         const { member, communityId } = await getUserAndMember(req);
         const role = member.roles?.name;
 
-        if (role !== 'admin' && role !== 'president' && role !== 'treasurer') {
+        if (role !== 'super_admin' && role !== 'admin' && role !== 'president' && role !== 'treasurer') {
             return res.status(403).json({ error: 'Unauthorized' });
         }
 

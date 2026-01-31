@@ -97,6 +97,7 @@ const Maintenance = () => {
     const handleConfirmDelete = async () => {
         if (!feeToDelete) return;
 
+        setActionLoading(true);
         try {
             const res = await fetch(`${API_URL}/api/maintenance/${feeToDelete.id}`, {
                 method: 'DELETE',
@@ -117,6 +118,7 @@ const Maintenance = () => {
             console.error("Delete error:", error);
             setToast({ message: 'Network error', type: 'error' });
         } finally {
+            setActionLoading(false);
             setDeleteModalOpen(false);
             setFeeToDelete(null);
         }
@@ -212,7 +214,7 @@ const Maintenance = () => {
                 isAdminCalc: ['admin', 'president', 'treasurer'].includes(roleName)
             });
 
-            const adminRole = ['admin', 'president', 'treasurer'].includes(roleName);
+            const adminRole = ['super_admin', 'admin', 'president', 'treasurer'].includes(roleName);
             setIsAdmin(adminRole);
 
             const hasUnits = activeCommunity?.unit_owners?.length > 0;
@@ -247,7 +249,7 @@ const Maintenance = () => {
             // Calculate role immediately to avoid state lag from useEffect
             const rawRole = activeCommunity?.roles;
             const roleName = Array.isArray(rawRole) ? rawRole[0]?.name : rawRole?.name;
-            const isUserAdmin = ['admin', 'president', 'treasurer'].includes(roleName);
+            const isUserAdmin = ['super_admin', 'admin', 'president', 'treasurer'].includes(roleName);
 
             // Ensure UI state matches (optional sync)
             if (isUserAdmin !== isAdmin) setIsAdmin(isUserAdmin);
@@ -948,6 +950,7 @@ const Maintenance = () => {
                     message={t('maintenance.delete_confirm', 'Are you sure you want to delete this fee? This action cannot be undone.')}
                     confirmText={t('common.delete', 'Delete')}
                     isDangerous={true}
+                    isLoading={actionLoading}
                 />
 
                 {/* Bulk Action Confirmation Modal */}
@@ -965,6 +968,7 @@ const Maintenance = () => {
                         ? t('common.delete', 'Delete')
                         : t('maintenance.confirm_paid', 'Mark as Paid')}
                     isDangerous={bulkAction === 'delete'}
+                    isLoading={actionLoading}
                 />
 
                 {/* Payment Upload Modal */}
@@ -984,7 +988,7 @@ const Maintenance = () => {
                                     initialFeeId={selectedFeeForPayment?.id}
                                     initialAmount={selectedFeeForPayment?.amount}
                                     initialUnitId={selectedFeeForPayment?.unit_id} // If available in fee object? Yes, usually.
-                                    isAdmin={isAdmin} // In this context, even admins pay as residents
+                                    isAdmin={isAdmin}
                                 />
                             </div>
                         </div>

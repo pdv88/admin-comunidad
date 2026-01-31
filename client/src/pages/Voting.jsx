@@ -4,6 +4,7 @@ import DashboardLayout from '../components/DashboardLayout';
 import { useTranslation } from 'react-i18next';
 import { API_URL } from '../config';
 import ModalPortal from '../components/ModalPortal';
+import ConfirmationModal from '../components/ConfirmationModal';
 import GlassLoader from '../components/GlassLoader';
 
 const Voting = () => {
@@ -121,26 +122,42 @@ const Voting = () => {
         }
     };
 
+    const [isDeleting, setIsDeleting] = useState(false);
+
     const handleDeleteClick = (id) => setDeleteId(id);
 
     const confirmDelete = async () => {
         if (!deleteId) return;
+        setIsDeleting(true);
         try {
             const token = localStorage.getItem('token');
+            const communityId = localStorage.getItem('active_community_id');
             const res = await fetch(`${API_URL}/api/polls/${deleteId}`, {
                 method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'X-Community-ID': communityId
+                }
             });
             if (res.ok) {
                 fetchPolls();
                 setDeleteId(null);
+            } else {
+                console.error("Delete failed");
             }
         } catch (error) {
             console.error("Error deleting poll:", error);
+        } finally {
+            setIsDeleting(false);
         }
     };
 
+    const [votingState, setVotingState] = useState({}); // { [pollId]: true/false }
+
     const handleVote = async (pollId, optionId) => {
+        if (votingState[pollId]) return; // Prevent double clicks
+
+        setVotingState(prev => ({ ...prev, [pollId]: true }));
         try {
             const token = localStorage.getItem('token');
             const res = await fetch(`${API_URL}/api/polls/vote`, {
@@ -161,6 +178,8 @@ const Voting = () => {
             }
         } catch (error) {
             console.error("Error voting:", error);
+        } finally {
+            setVotingState(prev => ({ ...prev, [pollId]: false }));
         }
     };
 
@@ -300,7 +319,7 @@ const Voting = () => {
 
                                                     <div className="relative w-full rounded-full transition-all">
                                                         <button
-                                                            disabled={isExpired || isMyVote}
+                                                            disabled={isExpired || isMyVote || votingState[poll.id]}
                                                             onClick={() => handleVote(poll.id, option.id)}
                                                             className={`relative w-full text-left px-6 py-3 rounded-full border-2 transition-all flex justify-between items-center z-10 h-full
                                                                 ${isExpired
@@ -311,9 +330,16 @@ const Voting = () => {
                                                                         ? 'border-blue-500 dark:border-blue-400 bg-white/90 dark:bg-neutral-800/90 cursor-default'
                                                                         : 'border-transparent backdrop-blur-md bg-white/70 shadow-sm hover:bg-white/90 hover:shadow-md dark:bg-neutral-800/70 dark:hover:bg-neutral-800/90'
                                                                 }
+                                                                ${votingState[poll.id] === option.id ? 'cursor-wait opacity-70' : ''}
                                                             `}
                                                         >
                                                             <span className="font-medium text-gray-800 dark:text-white flex items-center gap-2">
+                                                                {votingState[poll.id] === option.id && (
+                                                                    <svg className="animate-spin h-4 w-4 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                                    </svg>
+                                                                )}
                                                                 {option.option_text}
                                                                 {isWinner && (
                                                                     <span className="text-xs bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white px-2 py-0.5 rounded-full flex items-center gap-1">
@@ -469,35 +495,17 @@ const Voting = () => {
             )}
 
             {deleteId && (
-                <ModalPortal>
-                    <div className="fixed inset-0 z-[60] overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
-                        <div className="bg-white dark:bg-neutral-800 rounded-xl max-w-sm w-full p-6 text-center">
-                            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/30 mb-4">
-                                <svg className="h-6 w-6 text-red-600 dark:text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                </svg>
-                            </div>
-                            <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-2">{t('voting.delete_confirm_title', 'Delete Poll?')}</h3>
-                            <p className="text-sm text-gray-500 dark:text-neutral-400 mb-6">
-                                {t('voting.confirm_delete', 'Are you sure you want to delete this poll? This action cannot be undone.')}
-                            </p>
-                            <div className="flex justify-center gap-3">
-                                <button
-                                    onClick={() => setDeleteId(null)}
-                                    className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-neutral-700 dark:text-white dark:border-neutral-600 dark:hover:bg-neutral-600"
-                                >
-                                    {t('common.cancel')}
-                                </button>
-                                <button
-                                    onClick={confirmDelete}
-                                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                                >
-                                    {t('common.delete')}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </ModalPortal>
+                <ConfirmationModal
+                    isOpen={!!deleteId}
+                    onClose={() => setDeleteId(null)}
+                    onConfirm={confirmDelete}
+                    title={t('voting.delete_confirm_title', 'Delete Poll?')}
+                    message={t('voting.confirm_delete', 'Are you sure you want to delete this poll? This action cannot be undone.')}
+                    confirmText={t('common.delete')}
+                    cancelText={t('common.cancel')}
+                    isDangerous={true}
+                    isLoading={isDeleting}
+                />
             )}
         </DashboardLayout>
     );

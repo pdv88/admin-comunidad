@@ -58,25 +58,37 @@ function App() {
           {/* Universal Routes (Dashboard, Reservations, Settings, Profile) */}
           <Route element={<ProtectedRoute />}>
             <Route path="/app/dashboard" element={<Dashboard />} />
-            <Route path="/app/reservations" element={<Reservations />} />
+
             <Route path="/app/settings" element={<Settings />} />
             <Route path="/app/community-info" element={<CommunityInfo />} />
             <Route path="/update-password" element={<UpdatePassword />} />
 
+            {/* Reservations Access - EXCLUDES Treasurer */}
+            <Route element={<ProtectedRoute allowedRoles={['super_admin', 'admin', 'president', 'secretary', 'vocal', 'resident', 'security', 'maintenance']} />}>
+              <Route path="/app/reservations" element={<Reservations />} />
+            </Route>
+
             {/* Security Access (Security, Residents, Admins) - EXCLUDES Maintenance */}
-            <Route element={<ProtectedRoute allowedRoles={['super_admin', 'admin', 'president', 'secretary', 'treasurer', 'vocal', 'resident', 'security']} />}>
+            {/* Security Access (Security, Residents, Admins) - EXCLUDES Maintenance & Treasurer */}
+            <Route element={<ProtectedRoute allowedRoles={['super_admin', 'admin', 'president', 'secretary', 'vocal', 'resident', 'security']} />}>
               <Route path="/app/visitors" element={<Visitors />} />
             </Route>
 
             {/* Reports Access (Maintenance, Residents, Admins) - EXCLUDES Security */}
-            <Route element={<ProtectedRoute allowedRoles={['super_admin', 'admin', 'president', 'secretary', 'treasurer', 'vocal', 'resident', 'maintenance']} />}>
+            {/* Reports Access (Maintenance, Residents, Admins) - EXCLUDES Security & Treasurer */}
+            <Route element={<ProtectedRoute allowedRoles={['super_admin', 'admin', 'president', 'secretary', 'vocal', 'resident', 'maintenance']} />}>
               <Route path="/app/reports" element={<Reports />} />
             </Route>
 
             {/* Resident/Admin Features - EXCLUDES Security & Maintenance */}
-            <Route element={<ProtectedRoute allowedRoles={['super_admin', 'admin', 'president', 'secretary', 'treasurer', 'vocal', 'resident']} />}>
+            {/* General Features - EXCLUDES Treasurer (Notices, Voting) */}
+            <Route element={<ProtectedRoute allowedRoles={['super_admin', 'admin', 'president', 'secretary', 'vocal', 'resident']} />}>
               <Route path="/app/notices" element={<Notices />} />
               <Route path="/app/voting" element={<Voting />} />
+            </Route>
+
+            {/* Financial Features - INCLUDES Treasurer */}
+            <Route element={<ProtectedRoute allowedRoles={['super_admin', 'admin', 'president', 'secretary', 'treasurer', 'vocal', 'resident']} />}>
               <Route path="/app/maintenance" element={<Maintenance />} />
               <Route path="/app/campaigns" element={<Campaigns />} />
               <Route path="/app/campaigns/:id" element={<CampaignDetails />} />

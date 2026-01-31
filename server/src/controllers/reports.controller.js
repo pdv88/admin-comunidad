@@ -69,7 +69,8 @@ exports.getAll = async (req, res) => {
             .select(`
                 *,
                 profiles:user_id (full_name, email),
-                units:unit_id (unit_number, blocks(name))
+                units:unit_id (unit_number, blocks(name)),
+                blocks:block_id (name)
             `, { count: 'exact' }) // Request total count
             .eq('community_id', communityId);
 
@@ -185,18 +186,9 @@ exports.create = async (req, res) => {
             const ownUnitIds = member.profile?.unit_owners?.map(uo => uo.unit_id) || [];
             const isOwnUnit = unit_id && ownUnitIds.includes(unit_id);
 
-            // If it's NOT their own unit, they must represent the block.
-            if (!isOwnUnit) {
-                if (!block_id) {
-                    // No block context? If they have 1 block, auto-assign.
-                    if (vocalBlockIds.length === 1) {
-                        block_id = vocalBlockIds[0];
-                    } else {
-                        // Ambiguous. 
-                        return res.status(400).json({ error: 'Block Representatives must specify a block or unit.' });
-                    }
-                }
-
+            // If it's NOT their own unit, they must represent the block IF a block is specified.
+            // If block_id is null, it's a Community report (allowed).
+            if (!isOwnUnit && block_id) {
                 // Validate permissions on the block
                 if (!vocalBlockIds.includes(block_id)) {
                     return res.status(403).json({ error: 'You can only file reports for blocks you represent or your own unit.' });
@@ -231,17 +223,27 @@ exports.create = async (req, res) => {
 exports.update = async (req, res) => {
     const { id } = req.params;
     // status is for status updates. title/desc/category for edits.
-    const { status, title, description, category } = req.body;
+    const { status, title, description, category, block_id, unit_id } = req.body;
     const token = req.headers.authorization?.split(' ')[1];
-    const communityId = req.headers['x-community-id'];
+    let communityId = req.headers['x-community-id'];
 
-    if (!communityId) return res.status(400).json({ error: 'Community ID header missing' });
+    // Handle potential duplicate headers (comma separated or array)
+    if (Array.isArray(communityId)) communityId = communityId[0];
+    if (communityId && communityId.includes(',')) {
+        communityId = communityId.split(',')[0].trim();
+    }
+
+    if (!communityId) {
+        return res.status(400).json({ error: 'Community ID header missing' });
+    }
 
     try {
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-        if (authError || !user) throw new Error('Unauthorized');
+        if (authError || !user) {
+            throw new Error('Unauthorized');
+        }
 
-        const { data: member } = await supabaseAdmin
+        const { data: member, error: memberError } = await supabaseAdmin
             .from('community_members')
             .select(`
                 roles(name),
@@ -253,20 +255,26 @@ exports.update = async (req, res) => {
             .eq('community_id', communityId)
             .single();
 
-        if (!member) return res.status(403).json({ error: 'Not a member' });
+        if (!member) {
+            return res.status(403).json({ error: 'Not a member' });
+        }
 
         const role = member.roles?.name;
         const profile = member.profile;
 
         // Fetch Report
-        const { data: report } = await supabaseAdmin
+        const { data: report, error: reportError } = await supabaseAdmin
             .from('reports')
             .select('*')
             .eq('id', id)
             .single();
 
-        if (!report) throw new Error('Report not found');
-        if (report.community_id !== communityId) return res.status(404).json({ error: 'Report not in this community' });
+        if (!report) {
+            throw new Error('Report not found');
+        }
+        if (report.community_id !== communityId) {
+            return res.status(404).json({ error: 'Report not in this community' });
+        }
 
         // Authorization Logic
         let canUpdateStatus = false;
@@ -293,16 +301,22 @@ exports.update = async (req, res) => {
 
         // Apply Status Update
         if (status) {
-            if (!canUpdateStatus) return res.status(403).json({ error: 'Unauthorized to update status' });
+            if (!canUpdateStatus) {
+                return res.status(403).json({ error: 'Unauthorized to update status' });
+            }
             updates.status = status;
         }
 
         // Apply Content Update
-        if (title || description || category) {
-            if (!canEditContent) return res.status(403).json({ error: 'Unauthorized to edit report content' });
+        if (title || description || category || block_id !== undefined || unit_id !== undefined) {
+            if (!canEditContent) {
+                return res.status(403).json({ error: 'Unauthorized to edit report content' });
+            }
             if (title) updates.title = title;
             if (description) updates.description = description;
             if (category) updates.category = category;
+            if (block_id !== undefined) updates.block_id = block_id;
+            if (unit_id !== undefined) updates.unit_id = unit_id;
         }
 
         if (Object.keys(updates).length <= 1) { // only updated_at
@@ -314,7 +328,9 @@ exports.update = async (req, res) => {
             .update(updates)
             .eq('id', id);
 
-        if (updateError) throw updateError;
+        if (updateError) {
+            throw updateError;
+        }
         res.json({ message: 'Report updated' });
     } catch (err) {
         res.status(400).json({ error: err.message });
@@ -486,31 +502,42 @@ exports.delete = async (req, res) => {
             .single();
 
         if (!member) return res.status(403).json({ error: 'Not a member' });
-        const role = member.roles?.name;
+        const roles = await getMemberRoles(member.id); // Use helper to get all roles
+        const isVocal = roles.includes('vocal');
+        const isPowerUser = roles.some(r => ['super_admin', 'admin', 'president', 'maintenance'].includes(r));
 
-        if (['super_admin', 'admin', 'president'].includes(role)) {
+        if (isPowerUser) {
             // Verify report belongs to community
             const { error } = await supabaseAdmin.from('reports').delete().eq('id', id).eq('community_id', communityId);
             if (error) throw error;
         } else {
-            // Regular users can only delete their own PENDING reports
-            const { data: report } = await supabaseAdmin.from('reports').select('user_id, status, community_id').eq('id', id).single();
+            // Fetch report to check ownership/block
+            const { data: report } = await supabaseAdmin.from('reports').select('user_id, status, community_id, block_id').eq('id', id).single();
 
             if (!report) return res.status(404).json({ error: 'Report not found' });
-
             if (report.community_id !== communityId) return res.status(403).json({ error: 'Wrong community' });
 
-            if (report.user_id !== user.id) {
-                return res.status(403).json({ error: 'Unauthorized' });
+            let canDelete = false;
+
+            // 1. Own Report (Pending/Rejected)
+            if (report.user_id === user.id && (report.status === 'pending' || report.status === 'rejected')) {
+                canDelete = true;
             }
 
-            if (report.status !== 'pending') {
-                return res.status(403).json({ error: 'Cannot delete processed reports' });
+            // 2. Vocal (Block Specific)
+            if (!canDelete && isVocal && report.block_id) {
+                const vocalBlockIds = await getVocalBlocks(member.id);
+                if (vocalBlockIds.includes(report.block_id)) {
+                    canDelete = true;
+                }
             }
+
+            if (!canDelete) return res.status(403).json({ error: 'Unauthorized' });
 
             const { error } = await supabaseAdmin.from('reports').delete().eq('id', id);
             if (error) throw error;
         }
+
 
         res.json({ message: 'Deleted' });
     } catch (err) {

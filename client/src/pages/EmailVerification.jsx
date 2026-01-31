@@ -61,6 +61,15 @@ function EmailVerification() {
                     {t('email_verification.error_title')}
                   </h2>
                   <p>{error}</p>
+                  <p className="text-sm text-gray-500 mt-2">
+                    {t('email_verification.expired_hint', 'If your link expired, please login to request a new one.')}
+                  </p>
+                  <button
+                    className="btn-primary rounded-full p-2 w-36 mt-4"
+                    onClick={() => navigate("/login")}
+                  >
+                    {t('email_verification.login_btn')}
+                  </button>
                 </div>
               </div>
             )}

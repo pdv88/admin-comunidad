@@ -31,18 +31,26 @@ exports.getAll = async (req, res) => {
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
         if (authError || !user) throw new Error('Invalid token');
 
-        // Fetch full profile to get unit info (for block targeting)
-        // Note: unit_owners might span multiple communities, but block_id usually unique.
-        const { data: profile } = await supabaseAdmin
-            .from('profiles')
-            .select('*, unit_owners(units(block_id))')
-            .eq('id', user.id)
+        // Fetch member with profile/unit info
+        const { data: member } = await supabaseAdmin
+            .from('community_members')
+            .select(`
+                id,
+                profile:profile_id (
+                     unit_owners(units(block_id))
+                )
+            `)
+            .eq('profile_id', user.id)
+            .eq('community_id', communityId)
             .single();
 
-        if (!profile) throw new Error('Profile not found');
+        if (!member) return res.status(403).json({ error: 'Not a member' });
 
-        // Get user's block IDs (could be multiple if multiple units)
-        const userBlockIds = profile.unit_owners?.map(uo => uo.units?.block_id).filter(Boolean) || [];
+        const roles = await getMemberRoles(member.id);
+        const isAdmin = roles.some(r => ['super_admin', 'admin', 'president', 'secretary'].includes(r));
+
+        // Get user's block IDs
+        const userBlockIds = member.profile?.unit_owners?.map(uo => uo.units?.block_id).filter(Boolean) || [];
 
         // 1. Fetch Polls for this Community
         let query = supabaseAdmin
@@ -75,6 +83,7 @@ exports.getAll = async (req, res) => {
 
         // 3. Filter by Targeting and Enhance with Counts
         const visiblePolls = polls.filter(p => {
+            if (isAdmin) return true; // Admins see all polls
             if (p.target_type === 'all') return true;
             if (p.target_type === 'blocks' && p.target_blocks) {
                 return p.target_blocks.some(tb => userBlockIds.includes(tb));
@@ -262,7 +271,7 @@ exports.deletePoll = async (req, res) => {
 
         // Get user's roles from member_roles table
         const roles = await getMemberRoles(member.id);
-        const isAdmin = roles.some(r => ['admin', 'president', 'secretary'].includes(r));
+        const isAdmin = roles.some(r => ['super_admin', 'admin', 'president', 'secretary'].includes(r));
         const isVocal = roles.includes('vocal');
 
         // Get poll info to check ownership/targeting

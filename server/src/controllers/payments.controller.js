@@ -143,8 +143,10 @@ exports.createPayment = async (req, res) => {
 
         let paymentUserId = user.id;
 
-        // If admin/president and targetUserId is provided, use it
-        if ((role === 'admin' || role === 'president') && targetUserId) {
+        // If admin/president/super_admin/treasurer and targetUserId is provided, use it
+        const isAdmin = ['super_admin', 'admin', 'president', 'treasurer'].includes(role);
+
+        if (isAdmin && targetUserId) {
             paymentUserId = targetUserId;
             // Verify target user is in this community? (Ideally yes, skipping for brevity)
         }
@@ -281,7 +283,13 @@ exports.getPayments = async (req, res) => {
             .eq('community_id', communityId)
             .order('created_at', { ascending: false });
 
-        if ((role !== 'admin' && role !== 'president') || type === 'own') {
+        const isAdmin = ['super_admin', 'admin', 'president', 'treasurer'].includes(role);
+
+        if (!isAdmin && type === 'own') {
+            query = query.eq('user_id', user.id);
+        } else if (!isAdmin) {
+            // By default non-admins only see own payments unless specifc logic exists?
+            // Usually getPayments defaults to own for residents.
             query = query.eq('user_id', user.id);
         }
 
@@ -310,7 +318,7 @@ exports.getPayments = async (req, res) => {
 
         // Fetch Profiles (if Admin viewing All)
         let profileMap = {};
-        if (role === 'admin' || role === 'president') {
+        if (isAdmin) {
             const userIds = [...new Set(payments.map(p => p.user_id))];
 
 
@@ -408,8 +416,8 @@ exports.updatePaymentStatus = async (req, res) => {
         const { status } = req.body;
         const role = member.roles?.name;
 
-        if (role !== 'admin' && role !== 'president') {
-            return res.status(403).json({ error: 'Unauthorized. Admin or President only.' });
+        if (role !== 'super_admin' && role !== 'admin' && role !== 'president' && role !== 'treasurer') {
+            return res.status(403).json({ error: 'Unauthorized. Admin, President or Treasurer only.' });
         }
 
         const { data: currentPayment } = await supabaseAdmin
@@ -479,7 +487,7 @@ exports.updatePaymentStatus = async (req, res) => {
 
 exports.deletePayment = async (req, res) => {
     try {
-        const { user } = await getUserAndMember(req); // Checks community membership implicitly
+        const { user, member } = await getUserAndMember(req); // Checks community membership implicitly
         const { id } = req.params;
 
         const { data: payment } = await supabaseAdmin
@@ -490,8 +498,11 @@ exports.deletePayment = async (req, res) => {
 
         if (!payment) return res.status(404).json({ error: 'Payment not found' });
 
-        // Strict ownership check
-        if (payment.user_id !== user.id) {
+        const role = member.roles?.name;
+        const isAdmin = ['super_admin', 'admin', 'president', 'treasurer'].includes(role);
+
+        // Strict ownership check (unless admin)
+        if (payment.user_id !== user.id && !isAdmin) {
             return res.status(403).json({ error: 'Unauthorized' });
         }
 
@@ -515,7 +526,7 @@ exports.createCampaign = async (req, res) => {
         const roles = member.allRoles || [];
 
         // Permission Check - admins + vocals can create campaigns
-        const isAdmin = roles.some(r => ['admin', 'president'].includes(r));
+        const isAdmin = roles.some(r => ['super_admin', 'admin', 'president', 'treasurer'].includes(r));
         const isVocal = roles.includes('vocal');
 
         if (!isAdmin && !isVocal) {
@@ -579,7 +590,7 @@ exports.updateCampaign = async (req, res) => {
         const { user, member, communityId } = await getUserAndMember(req);
         const roles = member.allRoles || [];
 
-        const isAdmin = roles.some(r => ['admin', 'president'].includes(r));
+        const isAdmin = roles.some(r => ['super_admin', 'admin', 'president', 'treasurer'].includes(r));
         const isVocal = roles.includes('vocal');
 
         if (!isAdmin && !isVocal) {
@@ -598,17 +609,29 @@ exports.updateCampaign = async (req, res) => {
 
         if (!campaign) return res.status(404).json({ error: 'Campaign not found' });
 
-        // Vocals can only update campaigns they created for their blocks
+        // Vocals can only update campaigns if they represent ALL targeted blocks
+        // (Removing strict ownership check to allow collaboration within the block)
         if (isVocal && !isAdmin) {
-            if (campaign.created_by !== user.id) {
-                return res.status(403).json({ error: 'You can only update campaigns you created' });
-            }
             const vocalBlockIds = await getVocalBlocks(member.id);
             const campaignBlocks = campaign.target_blocks || [];
-            const canUpdate = campaignBlocks.every(b => vocalBlockIds.includes(b));
+
+            // If campaign has no blocks or targets 'all', vocal generally shouldn't edit unless they are admin ?
+            // Assuming vocals only manage block-specific campaigns.
+            if (campaign.target_type === 'all') {
+                return res.status(403).json({ error: 'Unauthorized. Vocals cannot edit community-wide campaigns.' });
+            }
+
+            // Must represent ALL blocks targeted by the campaign
+            const canUpdate = campaignBlocks.length > 0 && campaignBlocks.every(b => vocalBlockIds.includes(b));
+
+            // Fallback: If they created it, they might have created it before becoming a vocal? 
+            // Better to stick to "represents block" rule. 
+            // Or keep "created_by" as a safe fallback? 
+            // User said "Vocals can crud campaigns for the blocks they represent". This implies jurisdiction over ownership.
+            // I will enforce jurisdiction.
 
             if (!canUpdate) {
-                return res.status(403).json({ error: 'Unauthorized' });
+                return res.status(403).json({ error: 'You can only update campaigns for blocks you represent' });
             }
         }
 
@@ -637,7 +660,9 @@ exports.updateCampaign = async (req, res) => {
 exports.getCampaigns = async (req, res) => {
     try {
         const { member, communityId } = await getUserAndMember(req);
-        const role = member.roles?.name;
+        const roles = member.allRoles || [];
+        const isAdmin = roles.some(r => ['super_admin', 'admin', 'president', 'treasurer'].includes(r));
+        const isVocal = roles.includes('vocal');
         const profile = member.profile;
 
         let query = supabaseAdmin
@@ -649,22 +674,31 @@ exports.getCampaigns = async (req, res) => {
         const { data: allCampaigns, error } = await query;
         if (error) throw error;
 
-        // Access Logic: Residents can only see campaigns targeting them or 'all'
-        let visibleCampaigns = allCampaigns;
-        if (role !== 'admin' && role !== 'president') {
-            // Get User's Unit/Block from profile structure
-            // We fetched profile in getUserAndMember with unit_owners
-            // Assuming user has 1 block basically? Or many.
-            const myBlockIds = profile.unit_owners?.map(uo => uo.units?.block_id).filter(Boolean) || [];
-
-            visibleCampaigns = allCampaigns.filter(c => {
-                if (c.target_type === 'all') return true;
-                if (c.target_type === 'blocks' && c.target_blocks) {
-                    return c.target_blocks.some(tb => myBlockIds.includes(tb));
-                }
-                return false;
-            });
+        // Admins see all
+        if (isAdmin) {
+            return res.json(allCampaigns);
         }
+
+        // Filter for non-admins (Vocals & Residents)
+        // Get User's Unit/Block from profile structure
+        const myBlockIds = profile.unit_owners?.map(uo => uo.units?.block_id).filter(Boolean) || [];
+
+        let vocalBlockIds = [];
+        if (isVocal) {
+            vocalBlockIds = await getVocalBlocks(member.id);
+        }
+
+        // Visible if:
+        // 1. Target is 'all'
+        // 2. Target is 'blocks' AND (targets my home block OR targets a block I represent)
+        const visibleCampaigns = allCampaigns.filter(c => {
+            if (c.target_type === 'all') return true;
+            if (c.target_type === 'blocks' && c.target_blocks) {
+                const authorizedBlocks = [...new Set([...myBlockIds, ...vocalBlockIds])];
+                return c.target_blocks.some(tb => authorizedBlocks.includes(tb));
+            }
+            return false;
+        });
 
         res.json(visibleCampaigns);
 
@@ -738,6 +772,58 @@ exports.getStats = async (req, res) => {
             pendingAmount,
             totalTransactions: payments.length
         });
+
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+};
+
+exports.deleteCampaign = async (req, res) => {
+    try {
+        const { user, member, communityId } = await getUserAndMember(req);
+        const roles = member.allRoles || [];
+        const { id } = req.params;
+
+        const isAdmin = roles.some(r => ['super_admin', 'admin', 'president', 'treasurer'].includes(r));
+        const isVocal = roles.includes('vocal');
+
+        if (!isAdmin && !isVocal) {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        // Fetch campaign to verify permissions
+        const { data: campaign, error: fetchError } = await supabaseAdmin
+            .from('campaigns')
+            .select('*')
+            .eq('id', id)
+            .eq('community_id', communityId)
+            .single();
+
+        if (fetchError || !campaign) return res.status(404).json({ error: 'Campaign not found' });
+
+        // Check Permissions
+        if (isVocal && !isAdmin) {
+            const vocalBlockIds = await getVocalBlocks(member.id);
+            const campaignBlocks = campaign.target_blocks || [];
+
+            if (campaign.target_type === 'all') {
+                return res.status(403).json({ error: 'Unauthorized. Vocals cannot delete community-wide campaigns.' });
+            }
+
+            const canDelete = campaignBlocks.length > 0 && campaignBlocks.every(b => vocalBlockIds.includes(b));
+            if (!canDelete) {
+                return res.status(403).json({ error: 'You can only delete campaigns for blocks you represent' });
+            }
+        }
+
+        const { error } = await supabaseAdmin
+            .from('campaigns')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+
+        res.json({ message: 'Campaign deleted successfully' });
 
     } catch (error) {
         res.status(400).json({ error: error.message });

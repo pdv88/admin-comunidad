@@ -125,7 +125,7 @@ exports.getAmenities = async (req, res) => {
 exports.createAmenity = async (req, res) => {
     try {
         const { member, communityId } = await getUserAndMember(req);
-        const isAdmin = member.roleNames.includes('admin') || member.roleNames.includes('president');
+        const isAdmin = member.roleNames.includes('super_admin') || member.roleNames.includes('admin') || member.roleNames.includes('president');
 
         if (!isAdmin) return res.status(403).json({ error: 'Unauthorized' });
 
@@ -152,7 +152,7 @@ exports.createAmenity = async (req, res) => {
 exports.updateAmenity = async (req, res) => {
     try {
         const { member, communityId } = await getUserAndMember(req);
-        const isAdmin = member.roleNames.includes('admin') || member.roleNames.includes('president');
+        const isAdmin = member.roleNames.includes('super_admin') || member.roleNames.includes('admin') || member.roleNames.includes('president');
 
         if (!isAdmin) return res.status(403).json({ error: 'Unauthorized' });
 
@@ -176,7 +176,7 @@ exports.updateAmenity = async (req, res) => {
 exports.deleteAmenity = async (req, res) => {
     try {
         const { member, communityId } = await getUserAndMember(req);
-        const isAdmin = member.roleNames.includes('admin') || member.roleNames.includes('president');
+        const isAdmin = member.roleNames.includes('super_admin') || member.roleNames.includes('admin') || member.roleNames.includes('president');
 
         if (!isAdmin) return res.status(403).json({ error: 'Unauthorized' });
 
@@ -200,7 +200,7 @@ exports.deleteAmenity = async (req, res) => {
 exports.getReservations = async (req, res) => {
     try {
         const { user, member, communityId } = await getUserAndMember(req);
-        const isAdmin = member.roleNames.includes('admin') || member.roleNames.includes('president') || member.roleNames.includes('secretary');
+        const isAdmin = member.roleNames.includes('super_admin') || member.roleNames.includes('admin') || member.roleNames.includes('president') || member.roleNames.includes('secretary');
         const isVocal = member.roleNames.includes('vocal');
         const {
             type,
@@ -345,7 +345,7 @@ exports.createReservation = async (req, res) => {
             return res.status(400).json({ error: 'Amenity not found or not reservable' });
         }
 
-        const isAdmin = member.roleNames.includes('admin') || member.roleNames.includes('president');
+        const isAdmin = member.roleNames.includes('super_admin') || member.roleNames.includes('admin') || member.roleNames.includes('president');
 
         // Determine Subject User (Who is this reservation for?)
         let subjectUserId = user.id;
@@ -518,7 +518,7 @@ exports.createReservation = async (req, res) => {
 exports.updateReservationStatus = async (req, res) => {
     try {
         const { user, member, communityId } = await getUserAndMember(req);
-        const isAdmin = member.roleNames.includes('admin') || member.roleNames.includes('president');
+        const isAdmin = member.roleNames.includes('super_admin') || member.roleNames.includes('admin') || member.roleNames.includes('president');
 
         const { id } = req.params;
         const { status, admin_notes } = req.body; // status: 'approved' | 'rejected' | 'cancelled'
