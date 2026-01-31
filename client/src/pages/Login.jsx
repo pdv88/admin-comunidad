@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
+import { API_URL } from '../config';
 import Header from '../assets/components/Header';
 import Footer from '../assets/components/Footer';
 
@@ -40,9 +41,8 @@ const Login = () => {
   const handleResend = async () => {
     setResending(true);
     try {
-      const url = import.meta.env.VITE_URL;
       // We assume a dedicated endpoint or use auth endpoint
-      const response = await fetch(`${url}/auth/resend-verification`, {
+      const response = await fetch(`${API_URL}/api/auth/resend-verification`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })

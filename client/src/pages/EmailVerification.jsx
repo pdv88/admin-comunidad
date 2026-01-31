@@ -6,8 +6,10 @@ import Footer from "../assets/components/Footer";
 import Header from "../assets/components/Header";
 import { useTranslation } from "react-i18next";
 
+import { API_URL } from "../config";
+
 function EmailVerification() {
-  const url = import.meta.env.VITE_URL;
+  const url = API_URL; // Using API_URL from config
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -25,8 +27,10 @@ function EmailVerification() {
     setIsLoading(true);
     console.log(token);
     const data = { token: token };
+    // FIXME: The endpoint /verifyEmail (or /api/auth/verifyEmail) does not appear to exist in the backend. 
+    // This file might be legacy or broken.
     axios
-      .put(url + "/verifyEmail", data)
+      .put(`${API_URL}/api/auth/verifyEmail`, data)
       .then((result) => {
         if (result.data.status === "success") {
           setIsVerified(true);

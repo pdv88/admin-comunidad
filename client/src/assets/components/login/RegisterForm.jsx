@@ -3,11 +3,13 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import { PulseLoader } from "react-spinners";
 
+import { API_URL } from "../../config";
+
 function RegisterForm() {
 
   document.title = "Register | VIDEAPP";
 
-  const url = import.meta.env.VITE_URL;
+  const url = API_URL;
 
   const [isRegisterLoading, setIsRegisterLoading] = useState(false);
   const [correoEnviado, setCorreoEnviado] = useState(false);
@@ -62,7 +64,7 @@ function RegisterForm() {
     setErrors(errors);
     if (Object.keys(errors).length === 0) {
       setIsRegisterLoading(true);
-      axios.post(url + "/register", register).then((result) => {
+      axios.post(`${API_URL}/api/auth/register`, register).then((result) => {
         if (result.data.status === "success") {
           setCorreoEnviado(true);
         } else if (result.data.status === "email ya en uso") {
@@ -76,18 +78,18 @@ function RegisterForm() {
 
   function handleResendToken() {
     setIsButtonDisabled(true);
-    axios.post(url + "/resendToken", { email: register.mail }).then((result) => {
+    axios.post(`${API_URL}/api/auth/resend-verification`, { email: register.mail }).then((result) => {
       if (result.data.status === "success") {
-        
+
       }
-    }).catch ((err) => {
+    }).catch((err) => {
       console.log(err);
     }
     ).finally(() => {
       setTimeout(() => {
         setIsButtonDisabled(false);
       }, 30000);
-  })
+    })
   }
 
   return (
@@ -183,11 +185,11 @@ function RegisterForm() {
                   </div>
                   {errors.name &&
                     <p
-                    className="hidden text-xs text-red-600 mt-2"
-                    id="name-error"
-                  >
-                    {errors.name}
-                  </p>}
+                      className="hidden text-xs text-red-600 mt-2"
+                      id="name-error"
+                    >
+                      {errors.name}
+                    </p>}
                 </div>
                 {/* <!-- End Form Group --> */}
 
@@ -225,11 +227,11 @@ function RegisterForm() {
                   </div>
                   {errors.lastname &&
                     <p
-                    className="hidden text-xs text-red-600 mt-2"
-                    id="name-error"
-                  >
-                    {errors.lastname}
-                  </p>}
+                      className="hidden text-xs text-red-600 mt-2"
+                      id="name-error"
+                    >
+                      {errors.lastname}
+                    </p>}
                 </div>
                 {/* <!-- End Form Group --> */}
 
@@ -267,11 +269,11 @@ function RegisterForm() {
                   </div>
                   {errors.mail &&
                     <p
-                    className="hidden text-xs text-red-600 mt-2"
-                    id="email-error"
-                  >
-                    {errors.mail}
-                  </p>}
+                      className="hidden text-xs text-red-600 mt-2"
+                      id="email-error"
+                    >
+                      {errors.mail}
+                    </p>}
                 </div>
                 {/* <!-- End Form Group --> */}
 
@@ -309,11 +311,11 @@ function RegisterForm() {
                   </div>
                   {errors.password &&
                     <p
-                    className="hidden text-xs text-red-600 mt-2"
-                    id="password-error"
-                  >
-                    {errors.password}
-                  </p>}
+                      className="hidden text-xs text-red-600 mt-2"
+                      id="password-error"
+                    >
+                      {errors.password}
+                    </p>}
                 </div>
                 {/* <!-- End Form Group --> */}
 
@@ -351,11 +353,11 @@ function RegisterForm() {
                   </div>
                   {errors.confirmPassword &&
                     <p
-                    className="hidden text-xs text-red-600 mt-2"
-                    id="confirmPassword-error"
-                  >
-                    {errors.confirmPassword}
-                  </p>}
+                      className="hidden text-xs text-red-600 mt-2"
+                      id="confirmPassword-error"
+                    >
+                      {errors.confirmPassword}
+                    </p>}
                 </div>
                 {/* <!-- End Form Group --> */}
 
@@ -388,17 +390,17 @@ function RegisterForm() {
 
                 {isRegisterLoading ? (
                   <button
-                  className="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none"
-                >
-                  <PulseLoader color="#1c2326" size={10} className="p-1" />
-                </button>
+                    className="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none"
+                  >
+                    <PulseLoader color="#1c2326" size={10} className="p-1" />
+                  </button>
                 ) : (
                   <button
-                  type="submit"
-                  className="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none"
-                >
-                  Registrarme
-                </button>)}
+                    type="submit"
+                    className="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none"
+                  >
+                    Registrarme
+                  </button>)}
               </div>
             </form>
             {/* <!-- End Form --> */}
