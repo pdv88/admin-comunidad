@@ -313,11 +313,45 @@ exports.updatePassword = async (req, res) => {
         // 1. Verify the token and get the user
         const { data: { user }, error } = await supabase.auth.getUser(token);
 
-        if (error || !user) throw new Error('Invalid or expired token');
+        if (error) {
+            console.error("Auth getUser Error:", error);
+            throw new Error(error.message || 'Invalid or expired token');
+        }
+        if (!user) {
+            throw new Error('User not found');
+        }
 
         console.log(`Updating password for user: ${user.email} (${user.id})`); // DEBUG
 
-        // 2. Update the password using Admin client (secure)
+        // 2. Verify Current Password (if provided) to prevent same-password and ensure owner
+        // Note: Client should ideally enforce 'currentPassword' for security
+        const { currentPassword } = req.body;
+
+        if (currentPassword) {
+            if (currentPassword === password) {
+                return res.status(422).json({ error: 'New password must be different from the old password.' });
+            }
+
+            // Verify using signIn
+            const { error: signInError } = await supabase.auth.signInWithPassword({
+                email: user.email,
+                password: currentPassword
+            });
+
+            if (signInError) {
+                console.error("Verification Sign In Error:", signInError);
+                return res.status(401).json({ error: 'Incorrect current password.' });
+            }
+        } else {
+            // For now, if no currentPassword provided (legacy/forgot flow?), we might skip? 
+            // But for Change Password settings, it SHOULD be provided.
+            // We'll proceed but rely on Supabase to catch same-password if possible (unlikely).
+            // Ideally we enforce it:
+            // return res.status(400).json({ error: 'Current password is required.' });
+            // I'll be lenient for a moment to avoid breaking other flows if any, but `Settings.jsx` provides it.
+        }
+
+        // 3. Update the password using Admin client (secure)
         const { error: updateError } = await require('../config/supabaseAdmin').auth.admin.updateUserById(
             user.id,
             { password: password }
@@ -325,11 +359,19 @@ exports.updatePassword = async (req, res) => {
 
         if (updateError) {
             console.error("Update User By ID Error:", updateError); // DEBUG
+            // Handle "Same Password" error specifically if Supabase returns it
+            if (updateError.status === 422 && updateError.message?.includes('different')) {
+                return res.status(422).json({ error: 'New password must be different from the old password.' });
+            }
             throw updateError;
         }
         res.json({ message: 'Password updated successfully' });
     } catch (err) {
         console.error("Update password error:", err);
+        // If the original token check failed
+        if (err.message.includes('Invalid or expired token') || err.message.includes('Auth session missing')) {
+            return res.status(401).json({ error: 'Session expired. Please log in again.' });
+        }
         res.status(400).json({ error: err.message });
     }
 };

@@ -561,6 +561,18 @@
         "profile": {
             "phone": "Teléfono"
         },
+        "security": {
+            "title": "Cambiar Contraseña",
+            "current_password": "Contraseña Actual",
+            "new_password": "Nueva Contraseña",
+            "confirm_password": "Confirmar Nueva Contraseña",
+            "btn_change": "Actualizar Contraseña",
+            "error_empty": "Por favor completa todos los campos",
+            "error_match": "Las contraseñas no coinciden",
+            "error_same": "La nueva contraseña debe ser diferente a la actual",
+            "error_length": "La contraseña debe tener al menos 6 caracteres",
+            "success": "Contraseña actualizada exitosamente"
+        },
         "danger_zone": {
             "title": "Zona de Peligro",
             "delete_account": "Eliminar Cuenta",

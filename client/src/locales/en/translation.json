@@ -546,6 +546,18 @@
     "profile": {
       "phone": "Phone Number"
     },
+    "security": {
+      "title": "Change Password",
+      "current_password": "Current Password",
+      "new_password": "New Password",
+      "confirm_password": "Confirm New Password",
+      "btn_change": "Update Password",
+      "error_empty": "Please fill in all fields",
+      "error_match": "Passwords do not match",
+      "error_same": "New password must be different from current password",
+      "error_length": "Password must be at least 6 characters",
+      "success": "Password updated successfully"
+    },
     "danger_zone": {
       "title": "Danger Zone",
       "delete_account": "Delete Account",

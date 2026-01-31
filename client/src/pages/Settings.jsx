@@ -139,6 +139,11 @@ const Settings = () => {
                                 </div>
                             </div>
 
+                            <div className="pt-6 border-t border-gray-200 dark:border-neutral-700">
+                                <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4">{t('settings.security.title', 'Change Password')}</h2>
+                                <SecuritySection t={t} setToast={setToast} />
+                            </div>
+
                             {/* Admin Only Section */}
                             {hasAnyRole(['super_admin']) && (
                                 <>
@@ -214,6 +219,108 @@ const Settings = () => {
                 </div>
             </div>
         </DashboardLayout >
+    );
+};
+
+const SecuritySection = ({ t, setToast }) => {
+    const [currentPassword, setCurrentPassword] = React.useState('');
+    const [newPassword, setNewPassword] = React.useState('');
+    const [confirmPassword, setConfirmPassword] = React.useState('');
+    const [loading, setLoading] = React.useState(false);
+
+    const handleChangePassword = async () => {
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            setToast({ message: t('settings.security.error_empty', 'Please fill in all fields'), type: 'error' });
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            setToast({ message: t('settings.security.error_match', 'Passwords do not match'), type: 'error' });
+            return;
+        }
+        if (newPassword.length < 6) {
+            setToast({ message: t('settings.security.error_length', 'Password must be at least 6 characters'), type: 'error' });
+            return;
+        }
+        if (currentPassword === newPassword) {
+            setToast({ message: t('settings.security.error_same', 'New password must be different from current password'), type: 'error' });
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${API_URL}/api/auth/update-password`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    currentPassword: currentPassword,
+                    password: newPassword
+                })
+            });
+
+            if (res.ok) {
+                setToast({ message: t('settings.security.success', 'Password updated successfully'), type: 'success' });
+                setCurrentPassword('');
+                setNewPassword('');
+                setConfirmPassword('');
+            } else {
+                const data = await res.json();
+                throw new Error(data.error || 'Failed to update password');
+            }
+        } catch (error) {
+            console.error(error);
+            setToast({ message: error.message, type: 'error' });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="space-y-4 max-w-md">
+            <div>
+                <label className="block text-sm font-medium mb-2 dark:text-gray-300">{t('settings.security.current_password', 'Current Password')}</label>
+                <input
+                    type="password"
+                    className="glass-input w-full"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    placeholder="••••••••"
+                />
+            </div>
+            <div>
+                <label className="block text-sm font-medium mb-2 dark:text-gray-300">{t('settings.security.new_password', 'New Password')}</label>
+                <input
+                    type="password"
+                    className="glass-input w-full"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="••••••••"
+                />
+            </div>
+            <div>
+                <label className="block text-sm font-medium mb-2 dark:text-gray-300">{t('settings.security.confirm_password', 'Confirm New Password')}</label>
+                <input
+                    type="password"
+                    className="glass-input w-full"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="••••••••"
+                />
+            </div>
+            <div className="pt-2">
+                <button
+                    onClick={handleChangePassword}
+                    disabled={loading || !newPassword}
+                    className="glass-button-secondary py-2 px-4 text-xs w-auto"
+                >
+                    {t('settings.security.btn_change', 'Update Password')}
+                </button>
+            </div>
+        </div>
+
     );
 };
 
