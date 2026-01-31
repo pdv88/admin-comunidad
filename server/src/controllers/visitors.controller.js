@@ -67,7 +67,7 @@ exports.getAll = async (req, res) => {
             .order('visit_time', { ascending: true });
 
         // RBAC Filtering
-        const privilegedRoles = ['admin', 'president', 'secretary', 'concierge', 'security', 'vp', 'treasurer'];
+        const privilegedRoles = ['super_admin', 'admin', 'president', 'secretary', 'concierge', 'security', 'vp', 'treasurer'];
         const isPrivileged = roles.some(r => privilegedRoles.includes(r));
 
         if (isPrivileged) {
@@ -82,7 +82,7 @@ exports.getAll = async (req, res) => {
             if (myUnitIds && myUnitIds.length > 0) {
                 conditions.push(`unit_id.in.(${myUnitIds.join(',')})`);
             }
-            
+
             // OR logic: created_by = me OR unit_id IN (my_units)
             query = query.or(conditions.join(','));
         }
@@ -124,7 +124,7 @@ exports.create = async (req, res) => {
         if (!member) return res.status(403).json({ error: 'Not a member' });
 
         const roles = await getMemberRoles(member.id);
-        const privilegedRoles = ['admin', 'president', 'secretary', 'concierge', 'security', 'vp', 'treasurer'];
+        const privilegedRoles = ['super_admin', 'admin', 'president', 'secretary', 'concierge', 'security', 'vp', 'treasurer'];
         const isPrivileged = roles.some(r => privilegedRoles.includes(r));
 
         let finalUnitId = unit_id || null;
@@ -142,7 +142,7 @@ exports.create = async (req, res) => {
             // Residents:
             // 1. Must link to one of THEIR units.
             const myUnitIds = member.profile.unit_owners?.map(uo => uo.unit_id) || [];
-            
+
             if (finalUnitId) {
                 if (!myUnitIds.includes(finalUnitId)) {
                     return res.status(403).json({ error: 'You can only register visitors for your own units' });
@@ -162,7 +162,7 @@ exports.create = async (req, res) => {
             // Prevent them from creating 'provider' visits for the whole community?
             // Usually 'provider' implies community-wide service.
             if (['provider', 'service'].includes(type)) {
-                 return res.status(403).json({ error: 'Only admins can register community providers' });
+                return res.status(403).json({ error: 'Only admins can register community providers' });
             }
         }
 
@@ -213,7 +213,7 @@ exports.updateStatus = async (req, res) => {
 
         if (!member) return res.status(403).json({ error: 'Not a member' });
         const roles = await getMemberRoles(member.id);
-        const privilegedRoles = ['admin', 'president', 'secretary', 'concierge', 'security', 'vp', 'treasurer'];
+        const privilegedRoles = ['super_admin', 'admin', 'president', 'secretary', 'concierge', 'security', 'vp', 'treasurer'];
         const isPrivileged = roles.some(r => privilegedRoles.includes(r));
 
         if (isPrivileged) {
@@ -222,13 +222,13 @@ exports.updateStatus = async (req, res) => {
             // Residents can only Cancel, and only if they created it or it's for their unit
             // And only if it's currently 'pending' (maybe?)
             const isOwner = visit.created_by === user.id; // Simplified
-            
+
             if (!isOwner) return res.status(403).json({ error: 'Unauthorized' });
 
             if (status === 'cancelled') {
-                 // Allowed to cancel
+                // Allowed to cancel
             } else {
-                 return res.status(403).json({ error: 'Residents can only cancel visits' });
+                return res.status(403).json({ error: 'Residents can only cancel visits' });
             }
         }
 
@@ -268,7 +268,7 @@ exports.delete = async (req, res) => {
             .single();
 
         const roles = await getMemberRoles(member.id);
-        const privilegedRoles = ['admin', 'president', 'secretary', 'concierge', 'security', 'vp', 'treasurer'];
+        const privilegedRoles = ['super_admin', 'admin', 'president', 'secretary', 'concierge', 'security', 'vp', 'treasurer'];
         const isPrivileged = roles.some(r => privilegedRoles.includes(r));
 
         if (isPrivileged) {

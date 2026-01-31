@@ -11,13 +11,13 @@ import StatusBadge from '../components/StatusBadge';
 const Visitors = () => {
     const { t } = useTranslation();
     const { token, user, activeCommunity, hasAnyRole } = useAuth();
-    const isAdmin = hasAnyRole(['admin', 'president', 'security', 'concierge']);
+    const isAdmin = hasAnyRole(['super_admin', 'admin', 'president', 'security', 'concierge']);
 
     const [activeTab, setActiveTab] = useState('my'); // 'my', 'all', 'providers'
     const [visits, setVisits] = useState([]);
     const [loading, setLoading] = useState(true);
     const [modalOpen, setModalOpen] = useState(false);
-    
+
     // Form State
     const [newVisit, setNewVisit] = useState({
         visitor_name: '',
@@ -36,46 +36,46 @@ const Visitors = () => {
             if (isAdmin) {
                 fetchUnits();
             } else {
-                 // Populate units for residents from activeCommunity context
-                 if (activeCommunity?.unit_owners?.length > 0) {
-                      const units = activeCommunity.unit_owners.map(uo => ({
-                          id: uo.unit_id,
-                          name: uo.units?.name || (uo.units?.block_id ? `${uo.units.blocks?.name} - ${uo.units.name}` : uo.units?.name) || 'My Unit'
-                      }));
-                      setAvailableUnits(units);
-                      
-                      // Auto-select if only one
-                      if (units.length === 1) {
-                          setNewVisit(prev => ({ ...prev, unit_id: units[0].id }));
-                      }
-                 }
+                // Populate units for residents from activeCommunity context
+                if (activeCommunity?.unit_owners?.length > 0) {
+                    const units = activeCommunity.unit_owners.map(uo => ({
+                        id: uo.unit_id,
+                        name: uo.units?.name || (uo.units?.block_id ? `${uo.units.blocks?.name} - ${uo.units.name}` : uo.units?.name) || 'My Unit'
+                    }));
+                    setAvailableUnits(units);
+
+                    // Auto-select if only one
+                    if (units.length === 1) {
+                        setNewVisit(prev => ({ ...prev, unit_id: units[0].id }));
+                    }
+                }
             }
         }
     }, [activeCommunity, activeTab, isAdmin, token]);
 
     const fetchUnits = async () => {
         try {
-             // Re-using the properties/blocks endpoint which returns the hierarchy
-             const res = await axios.get(`${API_URL}/api/properties/blocks`, {
+            // Re-using the properties/blocks endpoint which returns the hierarchy
+            const res = await axios.get(`${API_URL}/api/properties/blocks`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'x-community-id': activeCommunity?.community_id
                 }
-             });
-             
-             if (res.data) {
+            });
+
+            if (res.data) {
                 const units = [];
                 res.data.forEach(b => {
                     if (b.units) {
-                         b.units.forEach(u => units.push({
+                        b.units.forEach(u => units.push({
                             id: u.id,
                             name: `${b.name} - ${u.unit_number}`,
                             raw: u
-                         }));
+                        }));
                     }
                 });
                 setAvailableUnits(units);
-             }
+            }
         } catch (error) {
             console.error('Error fetching units:', error);
         }
@@ -90,7 +90,7 @@ const Visitors = () => {
                     'x-community-id': activeCommunity?.community_id
                 }
             });
-            
+
             let data = res.data;
 
             // Client-side filtering if needed (though backend handles security)
@@ -101,11 +101,11 @@ const Visitors = () => {
                 // Show all (except maybe strictly providers if we want to separate them? Admin usually wants to see everything mixed or filtered)
                 // Let's keep 'all' as truly ALL.
             } else if (activeTab === 'my') {
-                 // For residents, backend only returns "my".
-                 // For admins, "my" should filter to their personal visits if any?
-                 if (isAdmin) {
-                     data = data.filter(v => v.created_by === user.id);
-                 }
+                // For residents, backend only returns "my".
+                // For admins, "my" should filter to their personal visits if any?
+                if (isAdmin) {
+                    data = data.filter(v => v.created_by === user.id);
+                }
             }
 
             setVisits(data);
@@ -151,6 +151,29 @@ const Visitors = () => {
         }
     };
 
+    // --- COMING SOON BLOCK ---
+    return (
+        <DashboardLayout>
+            <div className="max-w-7xl mx-auto animate-fade-in flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-full mb-6 ring-1 ring-blue-100 dark:ring-blue-800">
+                    <svg className="w-16 h-16 text-blue-500 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                </div>
+                <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white mb-4 tracking-tight">
+                    {t('visitors.title', 'Visits & Access Control')}
+                </h1>
+                <p className="text-lg text-gray-600 dark:text-gray-300 max-w-lg mx-auto mb-8">
+                    {t('visitors.coming_soon_desc', 'We are putting the finishing touches on the new Visits & Access module. Stay tuned for a smarter way to manage your guests and deliveries!')}
+                </p>
+                <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200 text-sm font-semibold">
+                    <span className="w-2 h-2 bg-blue-500 rounded-full mr-2 animate-pulse"></span>
+                    {t('common.coming_soon', 'Coming Soon')}
+                </div>
+            </div>
+        </DashboardLayout>
+    );
+
     return (
         <DashboardLayout>
             <div className="max-w-7xl mx-auto animate-fade-in">
@@ -188,7 +211,7 @@ const Visitors = () => {
                         )}
                     </div>
 
-                    <button 
+                    <button
                         onClick={() => setModalOpen(true)}
                         className="glass-button bg-blue-600 text-white flex items-center gap-2"
                     >
@@ -220,24 +243,24 @@ const Visitors = () => {
                                     </p>
                                 </div>
                             </div>
-                            
+
                             <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300 mb-4">
                                 {visit.units && (
                                     <div className="flex items-center gap-2">
-                                        <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                                        <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
                                         <span>{visit.units.name} {visit.units.blocks?.name ? `(${visit.units.blocks.name})` : ''}</span>
                                     </div>
                                 )}
                                 {visit.notes && (
                                     <div className="flex items-start gap-2">
-                                        <svg className="w-4 h-4 text-gray-400 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                        <svg className="w-4 h-4 text-gray-400 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                                         <span className="italic">{visit.notes}</span>
                                     </div>
                                 )}
                             </div>
 
                             <button className="w-full py-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50 transition font-medium text-sm flex items-center justify-center gap-2">
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
                                 {t('visitors.share_code', 'Share Access Code')}
                             </button>
                         </div>
@@ -247,7 +270,7 @@ const Visitors = () => {
                 {/* Modal */}
                 {modalOpen && (
                     <ModalPortal>
-                         <div className="fixed inset-0 z-50 overflow-y-auto" role="dialog">
+                        <div className="fixed inset-0 z-50 overflow-y-auto" role="dialog">
                             <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
                                 <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setModalOpen(false)}></div>
                                 <span className="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
@@ -258,7 +281,7 @@ const Visitors = () => {
                                         </h3>
                                         <button onClick={() => setModalOpen(false)} className="text-gray-400 hover:text-gray-500 text-2xl">&times;</button>
                                     </div>
-                                    
+
                                     <div className="px-6 py-6 bg-white/50 dark:bg-black/40 backdrop-blur-md">
                                         <form onSubmit={handleCreateVisit} className="space-y-4">
                                             {/* Type Selection */}
@@ -269,7 +292,7 @@ const Visitors = () => {
                                                         <button
                                                             key={type}
                                                             type="button"
-                                                            onClick={() => setNewVisit({...newVisit, type})}
+                                                            onClick={() => setNewVisit({ ...newVisit, type })}
                                                             className={`py-2 px-3 rounded-lg text-sm font-medium border transition-all ${newVisit.type === type ? 'bg-blue-50 border-blue-500 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
                                                         >
                                                             {t(`visitors.types.${type}`, type)}
@@ -279,7 +302,7 @@ const Visitors = () => {
                                                         <button
                                                             key={type}
                                                             type="button"
-                                                            onClick={() => setNewVisit({...newVisit, type})}
+                                                            onClick={() => setNewVisit({ ...newVisit, type })}
                                                             className={`py-2 px-3 rounded-lg text-sm font-medium border transition-all ${newVisit.type === type ? 'bg-purple-50 border-purple-500 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
                                                         >
                                                             {t(`visitors.types.${type}`, type)}
@@ -291,12 +314,12 @@ const Visitors = () => {
                                             {/* Generic Info */}
                                             <div>
                                                 <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('visitors.visitor_name', 'Visitor Name')}</label>
-                                                <input 
-                                                    type="text" 
-                                                    className="glass-input w-full" 
+                                                <input
+                                                    type="text"
+                                                    className="glass-input w-full"
                                                     value={newVisit.visitor_name}
-                                                    onChange={e => setNewVisit({...newVisit, visitor_name: e.target.value})}
-                                                    required 
+                                                    onChange={e => setNewVisit({ ...newVisit, visitor_name: e.target.value })}
+                                                    required
                                                     placeholder="e.g. John Doe"
                                                 />
                                             </div>
@@ -304,21 +327,21 @@ const Visitors = () => {
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
                                                     <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('visitors.date', 'Date')}</label>
-                                                    <input 
-                                                        type="date" 
+                                                    <input
+                                                        type="date"
                                                         className="glass-input w-full"
                                                         value={newVisit.visit_date}
-                                                        onChange={e => setNewVisit({...newVisit, visit_date: e.target.value})}
+                                                        onChange={e => setNewVisit({ ...newVisit, visit_date: e.target.value })}
                                                         required
                                                     />
                                                 </div>
                                                 <div>
                                                     <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('visitors.time', 'Time')}</label>
-                                                    <input 
-                                                        type="time" 
+                                                    <input
+                                                        type="time"
                                                         className="glass-input w-full"
                                                         value={newVisit.visit_time}
-                                                        onChange={e => setNewVisit({...newVisit, visit_time: e.target.value})}
+                                                        onChange={e => setNewVisit({ ...newVisit, visit_time: e.target.value })}
                                                         required
                                                     />
                                                 </div>
@@ -328,9 +351,9 @@ const Visitors = () => {
                                             {(isAdmin || availableUnits.length > 0) && !['provider', 'service'].includes(newVisit.type) && (
                                                 <div>
                                                     <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('visitors.unit', 'Unit')}</label>
-                                                    <GlassSelect 
+                                                    <GlassSelect
                                                         value={newVisit.unit_id}
-                                                        onChange={e => setNewVisit({...newVisit, unit_id: e.target.value})}
+                                                        onChange={e => setNewVisit({ ...newVisit, unit_id: e.target.value })}
                                                         options={[
                                                             { value: '', label: t('common.select', 'Select Unit') },
                                                             ...availableUnits.map(u => ({ value: u.id, label: u.name }))
@@ -341,11 +364,11 @@ const Visitors = () => {
                                             )}
 
                                             <div>
-                                                 <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('visitors.notes', 'Notes')}</label>
-                                                 <textarea 
+                                                <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('visitors.notes', 'Notes')}</label>
+                                                <textarea
                                                     className="glass-input w-full h-20 resize-none"
                                                     value={newVisit.notes}
-                                                    onChange={e => setNewVisit({...newVisit, notes: e.target.value})}
+                                                    onChange={e => setNewVisit({ ...newVisit, notes: e.target.value })}
                                                     placeholder="Vehicle plate, purpose of visit..."
                                                 ></textarea>
                                             </div>

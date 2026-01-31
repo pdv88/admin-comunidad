@@ -533,11 +533,27 @@
     "role": "Role",
     "save": "Save Changes",
     "update_success": "Profile updated successfully.",
+    "update_error": "Failed to update profile",
     "subscription": {
       "title": "Subscription & Payment",
       "plan": "Current Plan",
       "active": "Active",
       "next_billing": "Next billing date"
+    },
+    "plans": {
+      "title": "Available Plans"
+    },
+    "profile": {
+      "phone": "Phone Number"
+    },
+    "danger_zone": {
+      "title": "Danger Zone",
+      "delete_account": "Delete Account",
+      "warning_text": "Once you delete your account, there is no going back. Please be certain.",
+      "confirm_1": "Are you SURE you want to delete your account? This will permanently delete all data.",
+      "confirm_2": "This action is IRREVERSIBLE. Click OK to confirm.",
+      "delete_btn": "Delete Account",
+      "delete_error": "Error deleting account: "
     },
     "preferences": {
       "title": "Preferences",
