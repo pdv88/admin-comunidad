@@ -383,8 +383,6 @@ const UserManagement = () => {
                                             options={[
                                                 { value: 'neighbor', label: t('user_management.roles.neighbor') },
                                                 { value: 'president', label: t('user_management.roles.president') },
-                                                { value: 'secretary', label: t('user_management.roles.secretary') },
-                                                { value: 'vice_president', label: t('user_management.roles.vice_president') },
                                                 { value: 'admin', label: t('user_management.roles.admin') },
                                                 { value: 'treasurer', label: t('user_management.roles.treasurer') },
                                                 { value: 'maintenance', label: t('user_management.roles.maintenance') },
@@ -624,7 +622,7 @@ const UserManagement = () => {
                                                         <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">{t('user_management.table.role')}</label>
                                                         <div className={`border border-gray-300 dark:border-neutral-700 rounded-md p-2 max-h-32 overflow-y-auto bg-white dark:bg-neutral-900 ${user?.user_metadata?.is_admin_registration !== true ? 'opacity-50 cursor-not-allowed' : ''}`}>
                                                             <div className="space-y-1">
-                                                                {['neighbor', 'president', 'secretary', 'vice_president', 'admin', 'treasurer', 'vocal', 'maintenance', 'security'].map(roleName => (
+                                                                {['neighbor', 'president', 'admin', 'treasurer', 'vocal', 'maintenance', 'security'].map(roleName => (
                                                                     <label key={roleName} className="flex items-center space-x-2 p-1 hover:bg-gray-50 dark:hover:bg-neutral-800 rounded cursor-pointer">
                                                                         <input
                                                                             type="checkbox"
