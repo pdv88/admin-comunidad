@@ -2,7 +2,6 @@ import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import DashboardLayout from '../components/DashboardLayout';
 import { useTranslation } from 'react-i18next';
-import AdminSection from '../components/dashboards/AdminSection';
 import PresidentSection from '../components/dashboards/PresidentSection';
 import VocalSection from '../components/dashboards/VocalSection';
 import ResidentSection from '../components/dashboards/ResidentSection';
@@ -34,9 +33,7 @@ const Dashboard = () => {
     // Get primary role for display (highest in hierarchy)
     const role = getPrimaryRole();
 
-    // Determine if the user has a role that displays a top-right section
-    // Using hasAnyRole to check for multiple roles
-    const hasRoleSection = hasAnyRole(['admin']);
+
 
     // Common glass card style
     // Common glass card style
@@ -64,13 +61,7 @@ const Dashboard = () => {
                     </div>
                 )}
 
-                {/* 2. Role Sections (Auto Height) */}
-                {hasRoleSection && (
-                    <div className="w-full shrink-0">
-                        {hasAnyRole(['admin']) && <AdminSection className={cardClass} />}
-                        {/* Other roles hidden for now */}
-                    </div>
-                )}
+
 
                 {/* 3. Action Center & Reports (Fills remaining space on desktop, stacks on mobile) */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2 w-full md:flex-1 md:min-h-0">
