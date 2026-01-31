@@ -66,7 +66,7 @@ exports.generateMonthlyFees = async (req, res) => {
             .eq('blocks.community_id', communityId);
 
         if (unitsError) throw unitsError;
-        if (!units || units.length === 0) return res.status(400).json({ error: 'No occupied units found in this community' });
+        if (!units || units.length === 0) return res.status(400).json({ error: 'NO_OCCUPIED_UNITS' });
 
         // 2. Check for existing fees for this period
         const { data: existingFees, error: existingError } = await supabaseAdmin

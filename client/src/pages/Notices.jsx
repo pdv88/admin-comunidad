@@ -183,7 +183,7 @@ const Notices = () => {
                 onClose={() => setToast({ ...toast, message: '' })}
             />
             <div className="max-w-5xl mx-auto space-y-4 md:space-y-8">
-                <div className="flex justify-between items-center mb-6">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-0 mb-6">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t('notices.title')}</h1>
                         <p className="text-gray-500 text-sm dark:text-neutral-400">{t('notices.subtitle', 'Manage community announcements')}</p>

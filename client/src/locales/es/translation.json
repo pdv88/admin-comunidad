@@ -932,6 +932,7 @@
         "no_records": "No se encontraron registros.",
         "success_gen": "Cuotas generadas exitosamente.",
         "error_gen": "Error al generar cuotas.",
+        "error_no_users": "No hay usuarios para generar cuotas.",
         "no_records_export": "No hay registros para exportar.",
         "pay": "Pagar",
         "review": "Revisar Pago",

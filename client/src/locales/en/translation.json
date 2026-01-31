@@ -913,6 +913,7 @@
     "no_records": "No records found.",
     "success_gen": "Successfully generated fees.",
     "error_gen": "Error generating fees.",
+    "error_no_users": "There are no users to generate fees to.",
     "no_records_export": "No records to export.",
     "pay": "Pay",
     "review": "Review Payment",

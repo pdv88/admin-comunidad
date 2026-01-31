@@ -444,7 +444,11 @@ const Maintenance = () => {
                 }
                 fetchFees();
             } else {
-                setToast({ message: t('maintenance.error_gen', `Error: ${data.error}`), type: 'error' });
+                if (data.error === 'NO_OCCUPIED_UNITS') {
+                    setToast({ message: t('maintenance.error_no_users', 'There are no users to generate fees to.'), type: 'error' });
+                } else {
+                    setToast({ message: t('maintenance.error_gen', `Error: ${data.error}`), type: 'error' });
+                }
             }
         } catch (error) {
             console.error(error);
