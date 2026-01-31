@@ -300,7 +300,7 @@ const Reports = () => {
             />
             <div className="max-w-7xl mx-auto space-y-4 md:space-y-8">
                 {/* ... Header and Tabs ... */}
-                <div className="flex justify-between items-center mb-6">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-0 mb-6">
                     <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t('reports.title', 'Issues & Maintenance')}</h1>
                     {(isAdminOrPres || isVocal) && (
                         <button
