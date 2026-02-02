@@ -128,6 +128,8 @@ exports.generateMonthlyFees = async (req, res) => {
         // 4. Prepare inserts
         let feeRecords = [];
 
+        let isPercentage = false;
+
         if (calculationMethod === 'coefficient') {
             // Distribute total_amount based on coefficient
             // Assumption: Sum of coefficients should be 100 or 1.
@@ -144,7 +146,7 @@ exports.generateMonthlyFees = async (req, res) => {
             // For now, let's treat it as a Percentage (0-100) which seems common in systems, or fraction. 
             // Let's check the max value.
             const maxCoeff = Math.max(...unitsToBill.map(u => Number(u.coefficient || 0)));
-            const isPercentage = maxCoeff > 1;
+            isPercentage = maxCoeff > 1;
 
             feeRecords = unitsToBill.map(unit => {
                 const coeff = Number(unit.coefficient || 0);
@@ -216,7 +218,12 @@ exports.generateMonthlyFees = async (req, res) => {
                                     community_name: communityName,
                                     community_logo: communityLogo,
                                     user_name: ownerProfile.full_name || 'Vecino',
-                                    community_id: communityId
+                                    community_id: communityId,
+                                    is_coefficient: calculationMethod === 'coefficient',
+                                    total_budget: formatCurrency(Number(total_amount), communityCurrency).replace(getCurrencySymbol(communityCurrency), '').trim(), // Format nicely
+                                    unit_coefficient: unit.coefficient,
+                                    is_percentage: isPercentage,
+                                    raw_total_budget: total_amount
                                 }
                             });
                         }

@@ -136,6 +136,20 @@
             <p style="margin: 1rem 0 0 0; font-size: 0.9rem; color: #4b5563;">
               {{unit_details}}
             </p>
+
+            {{#if is_coefficient}}
+            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px dashed rgba(0,0,0,0.1); text-align: left;">
+              <p style="margin: 0 0 0.5rem 0; font-size: 0.85rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Detalle de Cálculo</p>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                <span style="font-size: 0.9rem; color: #4b5563;">Presupuesto Total:</span>
+                <span style="font-size: 0.9rem; font-weight: 500; color: #1f2937;">{{currency_symbol}}{{total_budget}}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="font-size: 0.9rem; color: #4b5563;">Coeficiente Unidad:</span>
+                <span style="font-size: 0.9rem; font-weight: 500; color: #1f2937;">{{unit_coefficient}}{{#if is_percentage}}%{{/if}}</span>
+              </div>
+            </div>
+            {{/if}}
           </div>
 
           <a href="{{link}}" style="

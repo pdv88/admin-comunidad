@@ -705,12 +705,12 @@ const Maintenance = () => {
                                     <tr>
                                         {/* Checkbox Column for Admin Community View */}
                                         {isAdmin && activeTab === 'community' && (
-                                            <th className="w-10">
+                                            <th className="w-8 px-2 py-1">
                                                 <input
                                                     type="checkbox"
                                                     checked={fees.filter(f => f.status !== 'paid' && !f.payment_id).length > 0 && selectedFees.size === fees.filter(f => f.status !== 'paid' && !f.payment_id).length}
                                                     onChange={handleSelectAll}
-                                                    className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-neutral-700"
+                                                    className="w-3.5 h-3.5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-neutral-700"
                                                     title={t('common.select_all', 'Select All')}
                                                 />
                                             </th>
@@ -773,13 +773,13 @@ const Maintenance = () => {
                                         <tr key={fee.id} className={selectedFees.has(fee.id) ? 'bg-indigo-50/50 dark:bg-indigo-900/10' : ''}>
                                             {/* Checkbox Cell for Admin Community View */}
                                             {isAdmin && activeTab === 'community' && (
-                                                <td>
+                                                <td className="px-2 py-1">
                                                     <input
                                                         type="checkbox"
                                                         checked={selectedFees.has(fee.id)}
                                                         onChange={() => handleSelectFee(fee.id)}
                                                         disabled={fee.status === 'paid' || !!fee.payment_id}
-                                                        className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-30 disabled:cursor-not-allowed dark:border-gray-600 dark:bg-neutral-700"
+                                                        className="w-3.5 h-3.5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-30 disabled:cursor-not-allowed dark:border-gray-600 dark:bg-neutral-700"
                                                         title={fee.status === 'paid' || fee.payment_id ? t('maintenance.cannot_select_paid', 'Cannot select fee with payment') : ''}
                                                     />
                                                 </td>
