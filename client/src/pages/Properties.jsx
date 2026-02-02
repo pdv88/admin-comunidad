@@ -24,7 +24,8 @@ const Properties = () => {
         exception_days: []
     });
     const [editingAmenityId, setEditingAmenityId] = useState(null);
-    const [newUnit, setNewUnit] = useState({ blockId: '', number: '', type: 'apartment' });
+    const [newUnit, setNewUnit] = useState({ blockId: '', number: '', type: 'apartment', parking_slots: 0, has_storage: false, coefficient: 0, coefficientFormat: 'percentage' });
+    const [isUpdatingUnit, setIsUpdatingUnit] = useState(false);
 
     // Loading state for assigning representative
     const [assigningRepBlockId, setAssigningRepBlockId] = useState(null);
@@ -123,18 +124,25 @@ const Properties = () => {
         e.preventDefault();
         setIsCreatingUnit(true);
         try {
+            const finalCoefficient = newUnit.coefficientFormat === 'percentage'
+                ? (parseFloat(newUnit.coefficient) / 100)
+                : parseFloat(newUnit.coefficient);
+
             const res = await fetch(`${API_URL}/api/properties/units`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     block_id: newUnit.blockId,
                     unit_number: newUnit.number,
-                    type: newUnit.type
+                    type: newUnit.type,
+                    parking_slots: newUnit.parking_slots,
+                    has_storage: newUnit.has_storage,
+                    coefficient: finalCoefficient || 0
                 })
             });
 
             if (res.ok) {
-                setNewUnit({ blockId: '', number: '', type: 'apartment' });
+                setNewUnit({ blockId: '', number: '', type: 'apartment', parking_slots: 0, has_storage: false, coefficient: 0, coefficientFormat: 'percentage' });
                 setUnitModalOpen(false);
                 fetchData();
                 setToast({ message: t('properties.unit_created', 'Unit created successfully'), type: 'success' });
@@ -265,31 +273,56 @@ const Properties = () => {
     };
 
     const handleEditUnit = (unit) => {
+        // Default to percentage for display if it helps user
+        // If existing coeff is 0.05, we show 5 in percentage mode.
+        // We'll default to percentage for consistency.
+        const coeffVal = parseFloat(unit.coefficient || 0);
+        const format = 'percentage';
+        const displayVal = format === 'percentage' ? (coeffVal * 100) : coeffVal;
+
         setEditUnitModal({
             isOpen: true,
-            unit: { ...unit } // Copy unit data
+            unit: {
+                ...unit,
+                coefficient: parseFloat(displayVal.toFixed(4)), // Avoid long floating points
+                coefficientFormat: format
+            }
         });
     };
 
     const handleUpdateUnit = async (e) => {
         e.preventDefault();
+        setIsUpdatingUnit(true);
         try {
             const { id, tenant_name, tenant_email, tenant_phone } = editUnitModal.unit;
+            const finalCoefficient = editUnitModal.unit.coefficientFormat === 'percentage'
+                ? (parseFloat(editUnitModal.unit.coefficient) / 100)
+                : parseFloat(editUnitModal.unit.coefficient);
+
             const res = await fetch(`${API_URL}/api/properties/units/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ tenant_name, tenant_email, tenant_phone })
+                body: JSON.stringify({
+                    tenant_name,
+                    tenant_email,
+                    tenant_phone,
+                    parking_slots: editUnitModal.unit.parking_slots,
+                    has_storage: editUnitModal.unit.has_storage,
+                    coefficient: finalCoefficient
+                })
             });
             if (res.ok) {
-                fetchData();
-                setEditUnitModal({ isOpen: false, unit: null });
                 setToast({ message: t('properties.update_success', 'Tenant info updated'), type: 'success' });
+                setEditUnitModal({ isOpen: false, unit: null });
+                fetchData();
             } else {
-                setToast({ message: t('common.error_occurred', 'An error occurred'), type: 'error' });
+                setToast({ message: t('common.error', 'An error occurred'), type: 'error' });
             }
         } catch (error) {
             console.error(error);
-            setToast({ message: t('common.error_occurred', 'An error occurred'), type: 'error' });
+            setToast({ message: t('common.error', 'An error occurred'), type: 'error' });
+        } finally {
+            setIsUpdatingUnit(false);
         }
     };
 
@@ -517,9 +550,61 @@ const Properties = () => {
                                                         >
                                                             <option value="apartment">{t('properties.unit_type.apartment')}</option>
                                                             <option value="house">{t('properties.unit_type.house')}</option>
-                                                            <option value="parking">{t('properties.unit_type.parking')}</option>
-                                                            <option value="storage">{t('properties.unit_type.storage')}</option>
+                                                            <option value="commercial">{t('properties.unit_type.commercial')}</option>
                                                         </select>
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                            {t('properties.coefficient', 'Coefficient')}
+                                                        </label>
+                                                        <div className="flex gap-2">
+                                                            <div className="relative flex-1">
+                                                                <input
+                                                                    type="number"
+                                                                    step="0.0001"
+                                                                    placeholder={newUnit.coefficientFormat === 'percentage' ? "15.5" : "0.155"}
+                                                                    className="glass-input w-full pr-8"
+                                                                    value={newUnit.coefficient || ''}
+                                                                    onChange={(e) => setNewUnit({ ...newUnit, coefficient: e.target.value })}
+                                                                />
+                                                                {newUnit.coefficientFormat === 'percentage' && (
+                                                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold">%</span>
+                                                                )}
+                                                            </div>
+                                                            <select
+                                                                className="glass-input w-32"
+                                                                value={newUnit.coefficientFormat}
+                                                                onChange={(e) => setNewUnit({ ...newUnit, coefficientFormat: e.target.value })}
+                                                            >
+                                                                <option value="percentage">%</option>
+                                                                <option value="decimal">{t('properties.format_decimal', 'Decimal')}</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                            {t('properties.parking_slots', 'Parking Slots')}
+                                                        </label>
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            className="glass-input w-full"
+                                                            value={newUnit.parking_slots}
+                                                            onChange={(e) => setNewUnit({ ...newUnit, parking_slots: parseInt(e.target.value) || 0 })}
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="flex items-center gap-2 cursor-pointer">
+                                                            <input
+                                                                type="checkbox"
+                                                                className="rounded text-blue-600 focus:ring-blue-500"
+                                                                checked={newUnit.has_storage}
+                                                                onChange={(e) => setNewUnit({ ...newUnit, has_storage: e.target.checked })}
+                                                            />
+                                                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                                {t('properties.has_storage', 'Has Storage')}
+                                                            </span>
+                                                        </label>
                                                     </div>
                                                     <div className="flex justify-end gap-3 mt-6">
                                                         <button type="button" onClick={() => setUnitModalOpen(false)} className="glass-button-secondary">
@@ -1027,12 +1112,15 @@ const Properties = () => {
                             <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
                                 <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onClick={() => setEditUnitModal({ isOpen: false, unit: null })}></div>
                                 <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                                <div className="inline-block align-bottom bg-white dark:bg-neutral-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                                    <div className="bg-white dark:bg-neutral-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                                        <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white" id="modal-title">
+                                <div className="inline-block align-bottom glass-card p-0 text-left shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full overflow-hidden">
+                                    <div className="px-6 py-6 border-b border-white/20 dark:border-white/10 flex justify-between items-center">
+                                        <h3 className="text-lg font-bold text-gray-900 dark:text-white" id="modal-title">
                                             {t('properties.edit_tenant_info', 'Edit Tenant Info')} - {editUnitModal.unit.unit_number}
                                         </h3>
-                                        <form onSubmit={handleUpdateUnit} className="mt-4 space-y-4">
+                                        <button onClick={() => setEditUnitModal({ isOpen: false, unit: null })} className="text-gray-400 hover:text-gray-500 text-2xl">&times;</button>
+                                    </div>
+                                    <div className="bg-white/50 dark:bg-black/40 backdrop-blur-md px-6 py-6">
+                                        <form onSubmit={handleUpdateUnit} className="space-y-4">
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300">{t('properties.tenant_name', 'Tenant Name')}</label>
                                                 <input
@@ -1060,6 +1148,58 @@ const Properties = () => {
                                                     onChange={e => setEditUnitModal({ ...editUnitModal, unit: { ...editUnitModal.unit, tenant_phone: e.target.value } })}
                                                 />
                                             </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                    {t('properties.coefficient', 'Coefficient')}
+                                                </label>
+                                                <div className="flex gap-2">
+                                                    <div className="relative flex-1">
+                                                        <input
+                                                            type="number"
+                                                            step="0.0001"
+                                                            className="glass-input w-full pr-8"
+                                                            value={editUnitModal.unit.coefficient || 0}
+                                                            onChange={(e) => setEditUnitModal({ ...editUnitModal, unit: { ...editUnitModal.unit, coefficient: e.target.value } })}
+                                                        />
+                                                        {editUnitModal.unit.coefficientFormat === 'percentage' && (
+                                                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold">%</span>
+                                                        )}
+                                                    </div>
+                                                    <select
+                                                        className="glass-input w-32"
+                                                        value={editUnitModal.unit.coefficientFormat || 'percentage'}
+                                                        onChange={(e) => setEditUnitModal({ ...editUnitModal, unit: { ...editUnitModal.unit, coefficientFormat: e.target.value } })}
+                                                    >
+                                                        <option value="percentage">%</option>
+                                                        <option value="decimal">{t('properties.format_decimal', 'Decimal')}</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                    {t('properties.parking_slots', 'Parking Slots')}
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    className="glass-input w-full"
+                                                    value={editUnitModal.unit.parking_slots || 0}
+                                                    onChange={(e) => setEditUnitModal({ ...editUnitModal, unit: { ...editUnitModal.unit, parking_slots: parseInt(e.target.value) || 0 } })}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="flex items-center gap-2 cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        className="rounded text-blue-600 focus:ring-blue-500"
+                                                        checked={editUnitModal.unit.has_storage || false}
+                                                        onChange={(e) => setEditUnitModal({ ...editUnitModal, unit: { ...editUnitModal.unit, has_storage: e.target.checked } })}
+                                                    />
+                                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                        {t('properties.has_storage', 'Has Storage')}
+                                                    </span>
+                                                </label>
+                                            </div>
                                             <div className="flex justify-end pt-4 space-x-3">
                                                 <button
                                                     type="button"
@@ -1070,9 +1210,20 @@ const Properties = () => {
                                                 </button>
                                                 <button
                                                     type="submit"
-                                                    className="glass-button"
+                                                    disabled={isUpdatingUnit}
+                                                    className="glass-button relative flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed"
                                                 >
-                                                    {t('common.save', 'Save')}
+                                                    <span className={isUpdatingUnit ? 'invisible' : ''}>
+                                                        {t('common.save', 'Save')}
+                                                    </span>
+                                                    {isUpdatingUnit && (
+                                                        <div className="absolute inset-0 flex items-center justify-center">
+                                                            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                            </svg>
+                                                        </div>
+                                                    )}
                                                 </button>
                                             </div>
                                         </form>

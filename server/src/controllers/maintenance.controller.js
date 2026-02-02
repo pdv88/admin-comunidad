@@ -53,22 +53,57 @@ exports.generateMonthlyFees = async (req, res) => {
             return res.status(403).json({ error: 'Unauthorized' });
         }
 
-        const { period, amount } = req.body; // period: '2025-01-01', amount: 50.00
+        const { period, amount, method, total_amount } = req.body;
+        // method: 'fixed' | 'coefficient'
+        // amount: used for 'fixed' (amount per unit)
+        // total_amount: used for 'coefficient' (total budget to distribute)
 
-        if (!period || !amount) {
-            return res.status(400).json({ error: 'Period and Amount are required' });
+        if (!period) {
+            return res.status(400).json({ error: 'Period is required' });
         }
 
-        // 1. Get all occupied units in the community (must have at least one owner)
+        // Fetch Community Info (Country)
+        const { data: communityData } = await supabaseAdmin
+            .from('communities')
+            .select('name, logo_url, currency, country')
+            .eq('id', communityId)
+            .single();
+
+        const communityCountry = communityData?.country || 'MX';
+        const calculationMethod = method || (communityCountry === 'ES' ? 'coefficient' : 'fixed');
+
+        // Validation based on method
+        if (calculationMethod === 'fixed' && !amount) {
+            return res.status(400).json({ error: 'Amount per unit is required for Fixed method' });
+        }
+        if (calculationMethod === 'coefficient' && !total_amount) {
+            return res.status(400).json({ error: 'Total Amount (Budget) is required for Coefficient method' });
+        }
+
+        // 1. Get all occupied units
         const { data: units, error: unitsError } = await supabaseAdmin
             .from('units')
-            .select('id, unit_number, block_id, blocks!inner(community_id, name), unit_owners!inner(id, profile:profile_id(email, full_name))') // Inner join on unit_owners ensures occupancy
+            .select('id, unit_number, coefficient, block_id, blocks!inner(community_id, name), unit_owners!inner(id, profile:profile_id(email, full_name))')
             .eq('blocks.community_id', communityId);
 
         if (unitsError) throw unitsError;
         if (!units || units.length === 0) return res.status(400).json({ error: 'NO_OCCUPIED_UNITS' });
 
-        // 2. Check for existing fees for this period
+        // Validate coefficients if method is 'coefficient'
+        if (calculationMethod === 'coefficient') {
+            const unitsWithoutCoeff = units.filter(u => !u.coefficient || Number(u.coefficient) === 0);
+            if (unitsWithoutCoeff.length > 0) {
+                return res.status(400).json({
+                    error: 'MISSING_COEFFICIENTS',
+                    units: unitsWithoutCoeff.map(u => ({
+                        unit_number: u.unit_number,
+                        block_name: u.blocks?.name || 'Unknown Block'
+                    }))
+                });
+            }
+        }
+
+        // 2. Check for existing fees
         const { data: existingFees, error: existingError } = await supabaseAdmin
             .from('monthly_fees')
             .select('unit_id')
@@ -79,8 +114,7 @@ exports.generateMonthlyFees = async (req, res) => {
 
         const existingUnitIds = new Set(existingFees.map(f => f.unit_id));
 
-        // 3. Filter units that don't have a fee yet AND ensure they have at least one owner
-        // Note: unit_owners!inner in the query typically handles this, but explicit check adds safety.
+        // 3. Filter units to bill
         const unitsToBill = units.filter(unit =>
             !existingUnitIds.has(unit.id) &&
             unit.unit_owners &&
@@ -91,14 +125,59 @@ exports.generateMonthlyFees = async (req, res) => {
             return res.status(200).json({ message: 'All occupied units already have fees for this period.', count: 0 });
         }
 
-        // 4. Prepare inserts for new fees only
-        const feeRecords = unitsToBill.map(unit => ({
-            community_id: communityId,
-            unit_id: unit.id,
-            period: period, // YYYY-MM-01
-            amount: amount,
-            status: 'pending'
-        }));
+        // 4. Prepare inserts
+        let feeRecords = [];
+
+        if (calculationMethod === 'coefficient') {
+            // Distribute total_amount based on coefficient
+            // Assumption: Sum of coefficients should be 100 or 1.
+            // If they don't sum to 100/1, we calculate based on the unit's share? 
+            // Typically: Fee = TotalBudget * (UnitCoefficient / TotalCoefficients)
+            // Or just Fee = TotalBudget * (UnitCoefficient / 100) if likely %
+
+            // Let's assume coefficient is a percentage (e.g. 5.23) or fraction (0.0523). 
+            // To be safe, we might want to normalize. 
+            // BUT, usually in Spain "Coeficiente de Participación" is fixed.
+            // Let's try to detect scale. If max coefficient > 1, assume percentage (0-100). If <= 1, assume fraction.
+            // Actually simplest is: Fee = total_amount * unit.coefficient (if fraction) or total_amount * (unit.coefficient / 100).
+
+            // For now, let's treat it as a Percentage (0-100) which seems common in systems, or fraction. 
+            // Let's check the max value.
+            const maxCoeff = Math.max(...unitsToBill.map(u => Number(u.coefficient || 0)));
+            const isPercentage = maxCoeff > 1;
+
+            feeRecords = unitsToBill.map(unit => {
+                const coeff = Number(unit.coefficient || 0);
+                let feeAmount = 0;
+
+                if (isPercentage) {
+                    feeAmount = (Number(total_amount) * coeff) / 100;
+                } else {
+                    feeAmount = Number(total_amount) * coeff;
+                }
+
+                // Round to 2 decimals
+                feeAmount = Math.round(feeAmount * 100) / 100;
+
+                return {
+                    community_id: communityId,
+                    unit_id: unit.id,
+                    period: period,
+                    amount: feeAmount,
+                    status: 'pending'
+                };
+            });
+
+        } else {
+            // Fixed Amount
+            feeRecords = unitsToBill.map(unit => ({
+                community_id: communityId,
+                unit_id: unit.id,
+                period: period,
+                amount: amount,
+                status: 'pending'
+            }));
+        }
 
         // 5. Insert new records
         const { data, error } = await supabaseAdmin
@@ -108,27 +187,19 @@ exports.generateMonthlyFees = async (req, res) => {
 
         if (error) throw error;
 
-        // Fetch Community Name, Logo and Currency
-        const { data: communityData } = await supabaseAdmin
-            .from('communities')
-            .select('name, logo_url, currency')
-            .eq('id', communityId)
-            .single();
         const communityName = communityData?.name || 'Su Comunidad';
         const communityLogo = communityData?.logo_url;
         const communityCurrency = communityData?.currency || 'EUR';
 
-        // 6. Send Email Notifications (Async, don't block response)
+        // 6. Send Email Notifications
         (async () => {
             const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
             const link = `${clientUrl}/app/payments`;
 
             for (const fee of data) {
                 try {
-                    // Find unit info for this fee
                     const unit = units.find(u => u.id === fee.unit_id);
                     if (unit && unit.unit_owners && unit.unit_owners.length > 0) {
-                        // Notify all owners? Or just the first one? Let's notify primary (0) for now.
                         const ownerProfile = unit.unit_owners[0].profile;
                         if (ownerProfile && ownerProfile.email) {
                             await sendEmail({
@@ -145,10 +216,9 @@ exports.generateMonthlyFees = async (req, res) => {
                                     community_name: communityName,
                                     community_logo: communityLogo,
                                     user_name: ownerProfile.full_name || 'Vecino',
-                                    community_id: communityId // For logging
+                                    community_id: communityId
                                 }
                             });
-
                         }
                     }
                 } catch (emailErr) {
@@ -157,7 +227,11 @@ exports.generateMonthlyFees = async (req, res) => {
             }
         })();
 
-        res.status(201).json({ message: `Generated ${data.length} new fees. (${existingUnitIds.size} already existed)`, count: data.length });
+        res.status(201).json({
+            message: `Generated ${data.length} new fees. (${existingUnitIds.size} already existed)`,
+            count: data.length,
+            method: calculationMethod
+        });
 
     } catch (error) {
         console.error('Generate fees error:', error);

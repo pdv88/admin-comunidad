@@ -12,7 +12,7 @@ import Toast from '../components/Toast';
 const CommunitySettings = () => {
     const { t } = useTranslation();
     const { user, activeCommunity, deleteCommunity, refreshActiveCommunity, hasAnyRole } = useAuth();
-    
+
     // Only super_admin and president can edit community settings
     const canEdit = hasAnyRole(['super_admin', 'president', 'admin', 'secretary']); // Should match backend allowed roles
     const [loading, setLoading] = useState(true);
@@ -23,6 +23,7 @@ const CommunitySettings = () => {
         bank_details: [],
         logo_url: '',
         currency: DEFAULT_CURRENCY,
+        country: 'MX',
         documents: []
     });
     const [documentFile, setDocumentFile] = useState(null);
@@ -42,18 +43,19 @@ const CommunitySettings = () => {
     const fetchCommunity = async () => {
         try {
             const res = await fetch(`${API_URL}/api/communities/my`, {
-                headers: { 
+                headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
                     'x-community-id': activeCommunity.community_id
                 }
             });
             if (res.ok) {
                 const data = await res.json();
-                setCommunity({ 
-                    ...data, 
+                setCommunity({
+                    ...data,
                     bank_details: Array.isArray(data.bank_details) ? data.bank_details : [],
                     logo_url: data.logo_url || '',
                     currency: data.currency || DEFAULT_CURRENCY,
+                    country: data.country || 'MX',
                     documents: data.documents || []
                 });
                 if (data.logo_url) {
@@ -78,7 +80,7 @@ const CommunitySettings = () => {
             img.onload = () => {
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
-                
+
                 // Calculate new dimensions
                 const MAX_WIDTH = 300;
                 let width = img.width;
@@ -96,7 +98,7 @@ const CommunitySettings = () => {
                 const dataUrl = canvas.toDataURL('image/png');
                 setLogoPreview(dataUrl);
                 // We'll send this dataUrl (base64) to backend
-                setLogoFile(dataUrl); 
+                setLogoFile(dataUrl);
             };
             img.src = event.target.result;
         };
@@ -152,9 +154,9 @@ const CommunitySettings = () => {
     const addBankAccount = () => {
         setCommunity(prev => ({
             ...prev,
-            bank_details: [...prev.bank_details, { 
-                bank_name: '', 
-                account_number: '', 
+            bank_details: [...prev.bank_details, {
+                bank_name: '',
+                account_number: '',
                 account_holder: '',
                 secondary_number: '',
                 secondary_type: 'clabe' // Default to CLABE for Mexico
@@ -275,13 +277,13 @@ const CommunitySettings = () => {
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t('community_settings.title')}</h1>
                 </div>
-                
-                <Toast 
-                    message={toast.message} 
-                    type={toast.type} 
-                    onClose={() => setToast({ ...toast, message: '' })} 
+
+                <Toast
+                    message={toast.message}
+                    type={toast.type}
+                    onClose={() => setToast({ ...toast, message: '' })}
                 />
-                
+
                 <div className="glass-card p-6 rounded-xl">
                     <form onSubmit={handleSave} className="space-y-6">
                         {/* Basic Info - Logo left, inputs right on desktop; logo top on mobile */}
@@ -292,9 +294,9 @@ const CommunitySettings = () => {
                                     <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{t('community_settings.logo', 'Community Logo')}</span>
                                     {logoPreview || community.logo_url ? (
                                         <div className="relative group">
-                                            <img 
-                                                src={logoPreview || community.logo_url} 
-                                                alt="Logo Preview" 
+                                            <img
+                                                src={logoPreview || community.logo_url}
+                                                alt="Logo Preview"
                                                 className="h-20 object-contain rounded-lg shadow-sm"
                                             />
                                             <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
@@ -303,13 +305,13 @@ const CommunitySettings = () => {
                                         </div>
                                     ) : (
                                         <div className="h-16 w-16 bg-gray-100 dark:bg-gray-700/50 rounded-full flex items-center justify-center text-gray-400">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></svg>
                                         </div>
                                     )}
-                                    <input 
-                                        type="file" 
-                                        accept="image/*" 
-                                        className="hidden" 
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
                                         onChange={handleLogoChange}
                                     />
                                     <span className="text-xs text-gray-500">{t('community_settings.logo_hint', 'Click to upload (max 300px)')}</span>
@@ -349,11 +351,31 @@ const CommunitySettings = () => {
                                         className="glass-input w-full"
                                         value={community.currency}
                                         onChange={(e) => setCommunity({ ...community, currency: e.target.value })}
+                                        disabled={!canEdit}
                                     >
                                         {SUPPORTED_CURRENCIES.map(c => (
                                             <option key={c.code} value={c.code}>{c.name}</option>
                                         ))}
                                     </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        {t('community_settings.country', 'Country')}
+                                    </label>
+                                    <select
+                                        className="glass-input w-full"
+                                        value={community.country || 'MX'}
+                                        onChange={(e) => setCommunity({ ...community, country: e.target.value })}
+                                        disabled={!canEdit}
+                                    >
+                                        <option value="MX">México 🇲🇽</option>
+                                        <option value="ES">España 🇪🇸</option>
+                                    </select>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        {community.country === 'ES'
+                                            ? t('community_settings.country_hint_es', 'Enables coefficient-based fees.')
+                                            : t('community_settings.country_hint_mx', 'Enables fixed fees per unit.')}
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -361,8 +383,8 @@ const CommunitySettings = () => {
                         <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="text-lg font-semibold dark:text-white">{t('community_settings.bank_accounts')}</h2>
-                                <button 
-                                    type="button" 
+                                <button
+                                    type="button"
                                     onClick={addBankAccount}
                                     className="glass-button-secondary py-2 px-4 text-xs"
                                 >
@@ -439,11 +461,11 @@ const CommunitySettings = () => {
                                                     <input
                                                         type="text"
                                                         className="glass-input w-full text-sm font-mono"
-                                                        placeholder={bank.secondary_type === 'clabe' ? '18 digits' : 
-                                                                    bank.secondary_type === 'iban' ? 'e.g. ES91 2100 0418...' :
-                                                                    bank.secondary_type === 'routing' ? '9 digits' :
+                                                        placeholder={bank.secondary_type === 'clabe' ? '18 digits' :
+                                                            bank.secondary_type === 'iban' ? 'e.g. ES91 2100 0418...' :
+                                                                bank.secondary_type === 'routing' ? '9 digits' :
                                                                     bank.secondary_type === 'swift' ? 'e.g. BSCHESMMXXX' :
-                                                                    '8-11 characters'}
+                                                                        '8-11 characters'}
                                                         value={bank.secondary_number || ''}
                                                         onChange={(e) => updateBankAccount(index, 'secondary_number', e.target.value)}
                                                     />
@@ -453,21 +475,21 @@ const CommunitySettings = () => {
                                     </div>
                                 ))}
                             </div>
-                            </div>
+                        </div>
 
 
                         {/* Documents Section */}
                         <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                             <h2 className="text-lg font-semibold dark:text-white mb-4">{t('community_settings.documents', 'Community Documents')}</h2>
-                             
-                             {/* Upload Form */}
-                             {canEdit && (
+                            <h2 className="text-lg font-semibold dark:text-white mb-4">{t('community_settings.documents', 'Community Documents')}</h2>
+
+                            {/* Upload Form */}
+                            {canEdit && (
                                 <div className="bg-blue-50/50 dark:bg-blue-900/20 p-4 rounded-xl mb-6">
                                     <h3 className="text-sm font-medium mb-3 dark:text-gray-200">{t('community_settings.upload_new_doc', 'Upload New Document')}</h3>
                                     <div className="flex flex-col md:flex-row gap-4 items-end">
                                         <div className="flex-1 w-full">
-                                            <input 
-                                                type="text" 
+                                            <input
+                                                type="text"
                                                 className="glass-input w-full"
                                                 placeholder={t('community_settings.doc_name_placeholder', 'Document Name (e.g. Pool Rules)')}
                                                 value={docName}
@@ -475,10 +497,10 @@ const CommunitySettings = () => {
                                             />
                                         </div>
                                         <div className="flex-1 w-full">
-                                             <label className="block w-full">
+                                            <label className="block w-full">
                                                 <span className="sr-only">Choose file</span>
-                                                <input 
-                                                    type="file" 
+                                                <input
+                                                    type="file"
                                                     accept="application/pdf"
                                                     onChange={(e) => setDocumentFile(e.target.files[0])}
                                                     className="block w-full text-sm text-gray-500
@@ -492,7 +514,7 @@ const CommunitySettings = () => {
                                                 />
                                             </label>
                                         </div>
-                                        <button 
+                                        <button
                                             type="button"
                                             disabled={!documentFile || !docName || uploadingDoc}
                                             onClick={handleUploadDocument}
@@ -503,10 +525,10 @@ const CommunitySettings = () => {
                                     </div>
                                     {documentFile && <p className="text-xs text-gray-500 mt-2">{documentFile.name}</p>}
                                 </div>
-                             )}
+                            )}
 
-                             {/* Documents List */}
-                             <div className="space-y-2">
+                            {/* Documents List */}
+                            <div className="space-y-2">
                                 {community.documents && community.documents.length > 0 ? (
                                     community.documents.map((doc) => (
                                         <div key={doc.id} className="flex justify-between items-center bg-white/40 dark:bg-neutral-800/40 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
@@ -522,7 +544,7 @@ const CommunitySettings = () => {
                                                 </div>
                                             </div>
                                             {canEdit && (
-                                                <button 
+                                                <button
                                                     onClick={() => handleDeleteDocument(doc.id)}
                                                     className="p-2 text-gray-400 hover:text-red-500 transition-colors"
                                                     title={t('common.delete')}
@@ -535,13 +557,13 @@ const CommunitySettings = () => {
                                 ) : (
                                     <p className="text-sm text-gray-500 italic">{t('community_settings.no_documents', 'No documents uploaded yet.')}</p>
                                 )}
-                             </div>
+                            </div>
                         </div>
 
                         <div className="pt-4 flex items-center justify-end gap-3">
                             {canEdit ? (
-                                <button 
-                                    type="submit" 
+                                <button
+                                    type="submit"
                                     disabled={saving}
                                     className="glass-button"
                                 >
@@ -558,9 +580,9 @@ const CommunitySettings = () => {
 
 
                 {/* Delete Community Button (Super Admin Only) */}
-                 {hasAnyRole(['super_admin']) && (
+                {hasAnyRole(['super_admin']) && (
                     <div className="flex justify-end mt-8 border-t border-gray-200 dark:border-gray-700 pt-6">
-                         <button
+                        <button
                             type="button"
                             onClick={() => setShowDeleteModal(true)}
                             disabled={!community?.id}

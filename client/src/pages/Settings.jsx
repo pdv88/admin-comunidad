@@ -136,8 +136,9 @@ const Settings = () => {
                                         value={i18n.language}
                                         onChange={(e) => i18n.changeLanguage(e.target.value)}
                                     >
-                                        <option value="en">English</option>
-                                        <option value="es">Español</option>
+                                        <option value="en">English (US)</option>
+                                        <option value="es-MX">Español (México) 🇲🇽</option>
+                                        <option value="es-ES">Español (España) 🇪🇸</option>
                                     </select>
                                 </div>
                             </div>

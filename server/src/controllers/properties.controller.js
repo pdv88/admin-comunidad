@@ -412,7 +412,14 @@ exports.updateUnit = async (req, res) => {
 
         const { data, error } = await supabaseAdmin
             .from('units')
-            .update({ tenant_name, tenant_email, tenant_phone })
+            .update({
+                tenant_name,
+                tenant_email,
+                tenant_phone,
+                parking_slots: req.body.parking_slots,
+                has_storage: req.body.has_storage,
+                coefficient: req.body.coefficient
+            })
             .eq('id', id)
             .select();
 

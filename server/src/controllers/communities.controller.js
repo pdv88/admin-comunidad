@@ -82,7 +82,7 @@ exports.updateCommunity = async (req, res) => {
             return res.status(403).json({ error: 'Unauthorized to update community settings.' });
         }
 
-        const { name, address, bank_details, base64Logo, currency } = req.body;
+        const { name, address, bank_details, base64Logo, currency, country } = req.body;
 
         // 3. Update Community
         const updates = {};
@@ -90,6 +90,7 @@ exports.updateCommunity = async (req, res) => {
         if (address !== undefined) updates.address = address;
         if (bank_details !== undefined) updates.bank_details = bank_details;
         if (currency !== undefined) updates.currency = currency;
+        if (country !== undefined) updates.country = country;
 
         // Handle Logo Upload
         if (base64Logo) {

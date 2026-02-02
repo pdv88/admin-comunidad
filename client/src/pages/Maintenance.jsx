@@ -25,7 +25,10 @@ const Maintenance = () => {
     // Admin Generation State
     const [genPeriod, setGenPeriod] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
     const [genAmount, setGenAmount] = useState('50');
+    const [genTotalAmount, setGenTotalAmount] = useState('0'); // For coefficient method
+    const [genMethod, setGenMethod] = useState('fixed'); // 'fixed' | 'coefficient'
     const [generating, setGenerating] = useState(false);
+    const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [feeToDelete, setFeeToDelete] = useState(null);
     const [paymentModalOpen, setPaymentModalOpen] = useState(false);
@@ -33,6 +36,7 @@ const Maintenance = () => {
     const [reviewModalOpen, setReviewModalOpen] = useState(false);
     const [selectedReviewId, setSelectedReviewId] = useState(null);
     const [toast, setToast] = useState({ message: '', type: 'success' });
+    const [missingCoeffError, setMissingCoeffError] = useState(null);
 
     // Filters & Pagination State
     const [filters, setFilters] = useState({ page: 1, limit: 10, period: '', status: '', search: '', block: '', sortBy: 'period', sortOrder: 'desc' });
@@ -425,6 +429,22 @@ const Maintenance = () => {
 
         try {
             const token = localStorage.getItem('token');
+            const payload = {
+                period: `${genPeriod}-01`,
+                method: genMethod
+            };
+
+            if (genMethod === 'coefficient') {
+                payload.total_amount = parseFloat(genTotalAmount);
+                if (payload.total_amount <= 0) {
+                    setToast({ message: t('maintenance.error_zero_budget', 'Total budget must be greater than 0'), type: 'warning' });
+                    setGenerating(false);
+                    return;
+                }
+            } else {
+                payload.amount = parseFloat(genAmount);
+            }
+
             const res = await fetch(`${API_URL}/api/maintenance/generate`, {
                 method: 'POST',
                 headers: {
@@ -432,7 +452,7 @@ const Maintenance = () => {
                     'Authorization': `Bearer ${token}`,
                     'X-Community-ID': activeCommunity.community_id
                 },
-                body: JSON.stringify({ period: `${genPeriod}-01`, amount: parseFloat(genAmount) })
+                body: JSON.stringify(payload)
             });
 
             const data = await res.json();
@@ -441,10 +461,13 @@ const Maintenance = () => {
                     setToast({ message: t('maintenance.warning_gen_zero', 'Warning: No new fees generated. All occupied units may already be billed for this period.'), type: 'warning' });
                 } else {
                     setToast({ message: t('maintenance.success_gen', `Success: Generated ${data.count} fees successfully.`), type: 'success' });
+                    setIsGeneratorOpen(false); // Close modal on success
                 }
                 fetchFees();
             } else {
-                if (data.error === 'NO_OCCUPIED_UNITS') {
+                if (data.error === 'MISSING_COEFFICIENTS') {
+                    setMissingCoeffError(data.units);
+                } else if (data.error === 'NO_OCCUPIED_UNITS') {
                     setToast({ message: t('maintenance.error_no_users', 'There are no users to generate fees to.'), type: 'error' });
                 } else {
                     setToast({ message: t('maintenance.error_gen', `Error: ${data.error}`), type: 'error' });
@@ -478,95 +501,52 @@ const Maintenance = () => {
                 onClose={() => setToast({ ...toast, message: '' })}
             />
             <div className="max-w-7xl mx-auto space-y-6">
-                <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
-                        {t('maintenance.title', 'Maintenance Fees')}
-                    </h1>
+                <div className="flex flex-col gap-4">
+                    <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
+                            {t('maintenance.title', 'Maintenance Fees')}
+                        </h1>
 
-                    {/* Tab Switcher for Admins (Only if they have units) */}
+                        {/* Generate Button */}
+                        {isAdmin && activeTab === 'community' && (
+                            <button
+                                onClick={() => setIsGeneratorOpen(true)}
+                                className="glass-button bg-indigo-600 text-white hover:bg-indigo-700 flex items-center gap-2"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                                {t('maintenance.generate_btn_short', 'Generate Fees')}
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Tab Switcher */}
                     {isAdmin && hasUnits && (
-                        <div className="p-1 rounded-full flex items-center backdrop-blur-md bg-white/30 border border-white/40 shadow-sm dark:bg-neutral-800/40 dark:border-white/10">
-                            <button
-                                onClick={() => setActiveTab('community')}
-                                className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === 'community'
-                                    ? 'bg-white text-blue-600 shadow-md dark:bg-neutral-700 dark:text-blue-400'
-                                    : 'text-gray-600 hover:bg-white/20 dark:text-gray-300 dark:hover:bg-white/10'
-                                    }`}
-                            >
-                                {t('maintenance.tab_community', 'Community Management')}
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('personal')}
-                                className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === 'personal'
-                                    ? 'bg-white text-blue-600 shadow-md dark:bg-neutral-700 dark:text-blue-400'
-                                    : 'text-gray-600 hover:bg-white/20 dark:text-gray-300 dark:hover:bg-white/10'
-                                    }`}
-                            >
-                                {t('maintenance.tab_personal', 'My Statement')}
-                            </button>
+                        <div>
+                            <div className="p-1 rounded-full flex items-center backdrop-blur-md bg-white/30 border border-white/40 shadow-sm dark:bg-neutral-800/40 dark:border-white/10 w-fit">
+                                <button
+                                    onClick={() => setActiveTab('community')}
+                                    className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === 'community'
+                                        ? 'bg-white text-blue-600 shadow-md dark:bg-neutral-700 dark:text-blue-400'
+                                        : 'text-gray-600 hover:bg-white/20 dark:text-gray-300 dark:hover:bg-white/10'
+                                        }`}
+                                >
+                                    {t('maintenance.tab_community', 'Community Management')}
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('personal')}
+                                    className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === 'personal'
+                                        ? 'bg-white text-blue-600 shadow-md dark:bg-neutral-700 dark:text-blue-400'
+                                        : 'text-gray-600 hover:bg-white/20 dark:text-gray-300 dark:hover:bg-white/10'
+                                        }`}
+                                >
+                                    {t('maintenance.tab_personal', 'My Statement')}
+                                </button>
+                            </div>
                         </div>
                     )}
                 </div>
-
-                {/* Admin Generator Section */}
-                {isAdmin && activeTab === 'community' && (
-                    <div className="glass-card p-6">
-                        <h2 className="text-lg font-bold mb-4 text-gray-800 dark:text-white">{t('maintenance.generate_title', 'Generate Monthly Fees')}</h2>
-                        <form onSubmit={handleGenerate} className="space-y-4">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('maintenance.period', 'Billing Period')}</label>
-                                    <div className="flex gap-2">
-                                        <select
-                                            className="glass-input flex-1"
-                                            value={genPeriod.split('-')[1] || '01'}
-                                            onChange={(e) => setGenPeriod(`${genPeriod.split('-')[0]}-${e.target.value}`)}
-                                            required
-                                        >
-                                            {Array.from({ length: 12 }, (_, i) => {
-                                                const monthNum = String(i + 1).padStart(2, '0');
-                                                const monthName = new Date(2024, i, 1).toLocaleDateString(i18n.language, { month: 'long' });
-                                                return (
-                                                    <option key={monthNum} value={monthNum} className="capitalize">
-                                                        {monthName.charAt(0).toUpperCase() + monthName.slice(1)}
-                                                    </option>
-                                                );
-                                            })}
-                                        </select>
-                                        <select
-                                            className="glass-input w-24"
-                                            value={genPeriod.split('-')[0] || new Date().getFullYear()}
-                                            onChange={(e) => setGenPeriod(`${e.target.value}-${genPeriod.split('-')[1] || '01'}`)}
-                                            required
-                                        >
-                                            {Array.from({ length: 5 }, (_, i) => {
-                                                const year = new Date().getFullYear() - 1 + i;
-                                                return <option key={year} value={year}>{year}</option>;
-                                            })}
-                                        </select>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('maintenance.amount', 'Amount')}</label>
-                                    <input
-                                        type="number"
-                                        className="glass-input w-full"
-                                        value={genAmount}
-                                        onChange={(e) => setGenAmount(e.target.value)}
-                                        required
-                                    />
-                                </div>
-                            </div>
-                            <button
-                                type="submit"
-                                disabled={generating}
-                                className="glass-button w-full sm:w-auto bg-indigo-600 text-white hover:bg-indigo-700"
-                            >
-                                {generating ? t('common.processing', 'Generating...') : t('maintenance.generate_btn', 'Generate Bills')}
-                            </button>
-                        </form>
-                    </div>
-                )}
 
                 {/* Filters & Fee List */}
                 <div className="glass-card p-6">
@@ -1023,6 +1003,161 @@ const Maintenance = () => {
                     }}
                 />
             </div>
+
+            {/* Generate Fees Modal */}
+            {isGeneratorOpen && (
+                <ModalPortal>
+                    <div className="fixed inset-0 z-50 overflow-y-auto">
+                        <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setIsGeneratorOpen(false)}></div>
+                            <span className="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+                            <div className="inline-block align-bottom glass-card p-0 text-left shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full overflow-hidden">
+                                <div className="px-6 py-6 border-b border-white/20 dark:border-white/10 flex justify-between items-center">
+                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                                        {t('maintenance.generate_title', 'Generate Monthly Fees')}
+                                    </h3>
+                                    <button onClick={() => { setIsGeneratorOpen(false); setMissingCoeffError(null); }} className="text-gray-400 hover:text-gray-500 text-2xl">&times;</button>
+                                </div>
+                                <div className="bg-white/50 dark:bg-black/40 backdrop-blur-md px-6 py-6">
+                                    <form onSubmit={handleGenerate} className="space-y-6">
+                                        <div>
+                                            <label className="block text-sm font-medium mb-1 dark:text-gray-300">
+                                                {t('maintenance.calculation_method', 'Method')}
+                                            </label>
+                                            <div className="flex gap-4 mt-2">
+                                                <label className="flex items-center gap-2 cursor-pointer">
+                                                    <input
+                                                        type="radio"
+                                                        name="method"
+                                                        value="fixed"
+                                                        checked={genMethod === 'fixed'}
+                                                        onChange={() => setGenMethod('fixed')}
+                                                        className="text-indigo-600 focus:ring-indigo-500"
+                                                    />
+                                                    <span className="text-sm dark:text-gray-300">{t('maintenance.method_fixed', 'Fixed Amount')}</span>
+                                                </label>
+                                                <label className="flex items-center gap-2 cursor-pointer">
+                                                    <input
+                                                        type="radio"
+                                                        name="method"
+                                                        value="coefficient"
+                                                        checked={genMethod === 'coefficient'}
+                                                        onChange={() => setGenMethod('coefficient')}
+                                                        className="text-indigo-600 focus:ring-indigo-500"
+                                                    />
+                                                    <span className="text-sm dark:text-gray-300">{t('maintenance.method_coefficient', 'By Coefficient')}</span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        {missingCoeffError && (
+                                            <div className="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 p-4 rounded-md">
+                                                <div className="flex">
+                                                    <div className="flex-shrink-0">
+                                                        <svg className="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                                                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                                        </svg>
+                                                    </div>
+                                                    <div className="ml-3">
+                                                        <h3 className="text-sm leading-5 font-medium text-amber-800 dark:text-amber-200">
+                                                            {t('maintenance.error_missing_coefficient', 'Missing Coefficients')}
+                                                        </h3>
+                                                        <div className="mt-2 text-sm text-amber-700 dark:text-amber-300">
+                                                            <p className="mb-2">{t('maintenance.units_without_coefficient', 'The following units have no coefficient assigned:')}</p>
+                                                            <ul className="list-disc pl-5 space-y-1 max-h-32 overflow-y-auto">
+                                                                {missingCoeffError.map((u, idx) => (
+                                                                    <li key={idx}>
+                                                                        <span className="font-semibold">{u.block_name}</span> - {u.unit_number}
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <div>
+                                            <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('maintenance.period', 'Billing Period')}</label>
+                                            <div className="flex gap-2">
+                                                <select
+                                                    className="glass-input flex-1"
+                                                    value={genPeriod.split('-')[1] || '01'}
+                                                    onChange={(e) => setGenPeriod(`${genPeriod.split('-')[0]}-${e.target.value}`)}
+                                                    required
+                                                >
+                                                    {Array.from({ length: 12 }, (_, i) => {
+                                                        const monthNum = String(i + 1).padStart(2, '0');
+                                                        const monthName = new Date(2024, i, 1).toLocaleDateString(i18n.language, { month: 'long' });
+                                                        return (
+                                                            <option key={monthNum} value={monthNum} className="capitalize">
+                                                                {monthName.charAt(0).toUpperCase() + monthName.slice(1)}
+                                                            </option>
+                                                        );
+                                                    })}
+                                                </select>
+                                                <select
+                                                    className="glass-input w-24"
+                                                    value={genPeriod.split('-')[0] || new Date().getFullYear()}
+                                                    onChange={(e) => setGenPeriod(`${e.target.value}-${genPeriod.split('-')[1] || '01'}`)}
+                                                    required
+                                                >
+                                                    {Array.from({ length: 5 }, (_, i) => {
+                                                        const year = new Date().getFullYear() - 1 + i;
+                                                        return <option key={year} value={year}>{year}</option>;
+                                                    })}
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            {genMethod === 'fixed' ? (
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('maintenance.amount_per_unit', 'Amount per Unit')}</label>
+                                                    <input
+                                                        type="number"
+                                                        className="glass-input w-full"
+                                                        value={genAmount}
+                                                        onChange={(e) => setGenAmount(e.target.value)}
+                                                        required
+                                                        min="0"
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('maintenance.total_budget', 'Total Budget to Distribute')}</label>
+                                                    <input
+                                                        type="number"
+                                                        className="glass-input w-full"
+                                                        value={genTotalAmount}
+                                                        onChange={(e) => setGenTotalAmount(e.target.value)}
+                                                        required
+                                                        min="0"
+                                                    />
+                                                    <p className="text-xs text-gray-500 mt-1">{t('maintenance.coefficient_hint', 'This amount will be distributed among units based on their coefficient.')}</p>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="flex justify-end gap-3 pt-4">
+                                            <button type="button" onClick={() => setIsGeneratorOpen(false)} className="glass-button-secondary">
+                                                {t('common.cancel', 'Cancel')}
+                                            </button>
+                                            <button
+                                                type="submit"
+                                                disabled={generating}
+                                                className="glass-button bg-indigo-600 text-white hover:bg-indigo-700"
+                                            >
+                                                {generating ? t('common.processing', 'Generating...') : t('maintenance.generate_btn', 'Generate Bills')}
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </ModalPortal>
+            )}
         </DashboardLayout>
     );
 };

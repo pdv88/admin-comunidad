@@ -3,14 +3,19 @@ import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 
 import translationEN from './locales/en/translation.json';
-import translationES from './locales/es/translation.json';
+import translationESMX from './locales/es-MX/translation.json';
+import translationESES from './locales/es-ES/translation.json';
 
 const resources = {
     en: {
         translation: translationEN,
     },
-    es: {
-        translation: translationES,
+
+    'es-MX': {
+        translation: translationESMX,
+    },
+    'es-ES': {
+        translation: translationESES,
     },
 };
 
@@ -19,7 +24,7 @@ i18n
     .use(initReactI18next)
     .init({
         resources,
-        fallbackLng: 'en',
+        fallbackLng: 'es-ES',
         interpolation: {
             escapeValue: false, // react already safes from xss
         },

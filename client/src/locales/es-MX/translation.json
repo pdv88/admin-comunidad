@@ -20,7 +20,7 @@
         "maintenance": "Mantenimiento"
     },
     "header": {
-        "brand": "VIDEAPP",
+        "brand": "Habiio",
         "home": "Inicio",
         "features": "Características",
         "pricing": "Precios",
@@ -318,9 +318,13 @@
         "unit_type": {
             "apartment": "Apartamento",
             "house": "Casa",
+            "commercial": "Local Comercial",
             "parking": "Estacionamiento",
             "storage": "Trastero"
         },
+        "parking_slots": "Cajones de Estacionamiento",
+        "has_storage": "Tiene Bodega",
+        "coefficient": "Coeficiente",
         "current_structure": "Estructura Actual",
         "representative": "Vocal de Bloque",
         "none": "Ninguno",
@@ -362,7 +366,7 @@
         "owner": "Propietario",
         "block_created": "Bloque creado exitosamente",
         "unit_created": "Unidad creada exitosamente",
-        "update_success": "Información del inquilino actualizada",
+        "update_success": "Información de unidad actualizada",
         "delete_success": "Eliminado exitosamente",
         "unit_exists_error": "Este número de unidad ya existe en este bloque."
     },
@@ -908,6 +912,7 @@
         "no_alerts": "Todos los sistemas operativos. No se encontraron alertas."
     },
     "maintenance": {
+        "title": "Cuotas de Mantenimiento",
         "admin_title": "Gestión de Cuotas de Mantenimiento",
         "resident_title": "Mis Cuotas de Mantenimiento",
         "tab_community": "Gestión Comunidad",
@@ -915,7 +920,14 @@
         "generate_title": "Generar Cuotas Mensuales",
         "period": "Periodo de Facturación",
         "amount": "Monto",
+        "calculation_method": "Método de Cálculo",
+        "method_fixed": "Monto Fijo",
+        "method_coefficient": "Por Coeficiente",
+        "amount_per_unit": "Monto por Unidad",
+        "total_budget": "Presupuesto Total a Distribuir",
+        "coefficient_hint": "Este monto será distribuido entre las unidades basado en su coeficiente.",
         "generate_btn": "Generar Cobros",
+        "generate_btn_short": "Generar Cobros",
         "community_status": "Estado de la Comunidad",
         "history": "Historial de Pagos",
         "block": "Bloque",
@@ -932,7 +944,11 @@
         "no_records": "No se encontraron registros.",
         "success_gen": "Cuotas generadas exitosamente.",
         "error_gen": "Error al generar cuotas.",
+        "error_missing_coefficient": "Coeficientes Faltantes",
+        "error_zero_budget": "El presupuesto total debe ser mayor a 0.",
+        "units_without_coefficient": "Las siguientes unidades no tienen coeficiente asignado, lo cual es necesario para este cálculo:",
         "error_no_users": "No hay usuarios para generar cuotas.",
+        "warning_gen_zero": "Las cuotas para este periodo ya han sido generadas.",
         "no_records_export": "No hay registros para exportar.",
         "pay": "Pagar",
         "review": "Revisar Pago",
