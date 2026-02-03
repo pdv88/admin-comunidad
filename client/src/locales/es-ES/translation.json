@@ -304,6 +304,17 @@
         "delete_success": "¡Aviso eliminado exitosamente!"
     },
     "properties": {
+        "hierarchy": {
+            "root": "Inicio"
+        },
+        "hierarchy_path": "Ruta",
+        "structure_name": "Nombre (ej. Escalera A)",
+        "unit_number": "Número de Unidad (ej. 101)",
+        "select_block": "Seleccionar Bloque",
+        "select_unit": "Seleccionar Unidad",
+        "add_sub_block": "Añadir Bloque",
+        "unit_type_label": "Tipo",
+        "format_decimal": "Dec",
         "title": "Estructura",
         "units_structure": "Bloques y Unidades",
         "amenities": "Áreas Comunes / Amenidades",
@@ -516,6 +527,7 @@
             "fullname": "Nombre Completo",
             "role": "Rol",
             "assign_unit": "Asignar Unidad (Opcional)",
+            "no_unit_selected": "Ninguna unidad seleccionada",
             "send": "Enviar Invitación"
         },
         "table": {
@@ -646,6 +658,9 @@
         "delete_confirmation": "Confirmar Eliminación",
         "delete_warning": "¿Estás seguro de que deseas eliminar este elemento? Esta acción no se puede deshacer.",
         "cancel": "Cancelar",
+        "create": "Crear",
+        "saving": "Guardando...",
+        "no_items": "No hay elementos",
         "close": "Cerrar",
         "type_to_confirm": "Por favor escribe \"{{word}}\" para confirmar:",
         "confirm": "Confirmar",
