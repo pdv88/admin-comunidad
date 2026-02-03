@@ -286,6 +286,7 @@ exports.getCommunityStatus = async (req, res) => {
             units${useInnerJoin ? '!inner' : ''} (
                 id,
                 unit_number,
+                block_id,
                 blocks${useInnerJoin ? '!inner' : ''} (name, community_id),
                 unit_owners${useInnerJoin ? '!inner' : ''} (
                     profile:profile_id (full_name, email)
@@ -380,6 +381,7 @@ exports.getCommunityStatus = async (req, res) => {
                 status: fee.status,
                 payment_id: fee.payment_id,
                 unit_number: fee.units?.unit_number,
+                block_id: fee.units?.block_id,
                 block_name: fee.units?.blocks?.name,
                 owner_name: owner.full_name,
                 owner_email: owner.email,
@@ -435,7 +437,7 @@ exports.getMyStatement = async (req, res) => {
             .from('monthly_fees')
             .select(`
                 *,
-                units (unit_number, blocks(name))
+                units (unit_number, block_id, blocks(name))
             `)
             .in('unit_id', unitIds)
             .order('period', { ascending: false });

@@ -109,8 +109,20 @@ exports.getAll = async (req, res) => {
             }
 
         } else {
-            // Resident: See ONLY own reports
-            query = query.eq('user_id', user.id);
+            // Resident: See own reports OR reports for their units OR reports for their blocks
+            const myUnitIds = member.profile?.unit_owners?.map(uo => uo.unit_id).filter(Boolean) || [];
+            const myBlockIds = member.profile?.unit_owners?.map(uo => uo.units?.block_id).filter(Boolean) || [];
+
+            let orConditions = [`user_id.eq.${user.id}`];
+
+            if (myUnitIds.length > 0) {
+                orConditions.push(`unit_id.in.(${myUnitIds.join(',')})`);
+            }
+            if (myBlockIds.length > 0) {
+                orConditions.push(`block_id.in.(${myBlockIds.join(',')})`);
+            }
+
+            query = query.or(orConditions.join(','));
         }
 
         // Apply Filters
@@ -162,8 +174,13 @@ exports.create = async (req, res) => {
         if (!member) return res.status(403).json({ error: 'Not a member of this community' });
 
         const roles = await getMemberRoles(member.id);
-        const isAdmin = roles.includes('super_admin') || roles.includes('admin') || roles.includes('president') || roles.includes('secretary');
+        const isAdmin = roles.includes('super_admin') || roles.includes('admin') || roles.includes('president') || roles.includes('secretary') || roles.includes('maintenance');
         const isVocal = roles.includes('vocal');
+
+        // Residents (no roles or only simple 'resident' if that logic existed) are NOT allowed to create reports
+        if (!isAdmin && !isVocal) {
+            return res.status(403).json({ error: 'Only representatives and admins can create reports.' });
+        }
 
         // If unit_id provided, fetch block_id
         // If NO unit_id, check if block_id was sent explicitly (Block Scope)

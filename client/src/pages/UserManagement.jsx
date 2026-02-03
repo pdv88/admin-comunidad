@@ -246,6 +246,34 @@ const UserManagement = () => {
         setSortConfig({ key, direction });
     };
 
+    // Helper to resolve full block path recursively
+    const getBlockPath = (blockId) => {
+        if (!blockId || !Array.isArray(blocks)) return '-';
+
+        const block = blocks.find(b => b.id === blockId);
+        if (!block) return '-';
+
+        let path = block.name;
+        let currentParentId = block.parent_id;
+
+        // Safety counter to prevent infinite loops
+        let depth = 0;
+        const maxDepth = 10;
+
+        while (currentParentId && depth < maxDepth) {
+            const parent = blocks.find(b => b.id === currentParentId);
+            if (parent) {
+                path = `${parent.name} > ${path}`;
+                currentParentId = parent.parent_id;
+            } else {
+                break;
+            }
+            depth++;
+        }
+
+        return path;
+    };
+
     const sortedUsers = React.useMemo(() => {
         // Client-side filtering removed as it is now handled by server
         let sortableItems = [...users];
@@ -262,8 +290,11 @@ const UserManagement = () => {
                     aValue = aRoles;
                     bValue = bRoles;
                 } else if (sortConfig.key === 'block') {
-                    aValue = a.unit_owners?.map(uo => uo.units?.blocks?.name).join(', ') || '';
-                    bValue = b.unit_owners?.map(uo => uo.units?.blocks?.name).join(', ') || '';
+                    // Sort by the first unit's block path for simplicity
+                    const aBlockId = a.unit_owners?.[0]?.units?.block_id;
+                    const bBlockId = b.unit_owners?.[0]?.units?.block_id;
+                    aValue = getBlockPath(aBlockId);
+                    bValue = getBlockPath(bBlockId);
                 } else if (sortConfig.key === 'unit') {
                     aValue = a.unit_owners?.map(uo => uo.units?.unit_number).join(', ') || '';
                     bValue = b.unit_owners?.map(uo => uo.units?.unit_number).join(', ') || '';
@@ -282,7 +313,7 @@ const UserManagement = () => {
             });
         }
         return sortableItems;
-    }, [users, sortConfig, t]);
+    }, [users, sortConfig, t, blocks]); // Added blocks dependency
 
     const getClassNamesFor = (name) => {
         if (!sortConfig.key) return;
@@ -506,9 +537,11 @@ const UserManagement = () => {
                                             </div>
                                         </td>
                                         <td>
-                                            {user.unit_owners && user.unit_owners.length > 0
-                                                ? [...new Set(user.unit_owners.map(uo => uo.units?.blocks?.name).filter(Boolean))].join(', ')
-                                                : '-'}
+                                            <div className="max-w-[200px] md:max-w-[350px] whitespace-normal break-words text-sm leading-tight">
+                                                {user.unit_owners && user.unit_owners.length > 0
+                                                    ? [...new Set(user.unit_owners.map(uo => getBlockPath(uo.units?.block_id)).filter(Boolean))].join(', ')
+                                                    : '-'}
+                                            </div>
                                         </td>
                                         <td>
                                             {user.unit_owners && user.unit_owners.length > 0

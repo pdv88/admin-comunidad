@@ -493,6 +493,34 @@ const Maintenance = () => {
 
     const hasUnits = activeCommunity?.unit_owners?.length > 0;
 
+    // Helper to resolve full block path recursively (Shared logic)
+    const getBlockPath = (blockId) => {
+        if (!blockId || !Array.isArray(blocks)) return '-';
+
+        const block = blocks.find(b => b.id === blockId);
+        if (!block) return '-';
+
+        let path = block.name;
+        let currentParentId = block.parent_id;
+
+        // Safety counter to prevent infinite loops
+        let depth = 0;
+        const maxDepth = 10;
+
+        while (currentParentId && depth < maxDepth) {
+            const parent = blocks.find(b => b.id === currentParentId);
+            if (parent) {
+                path = `${parent.name} > ${path}`;
+                currentParentId = parent.parent_id;
+            } else {
+                break;
+            }
+            depth++;
+        }
+
+        return path;
+    };
+
     return (
         <DashboardLayout>
             <Toast
@@ -705,7 +733,7 @@ const Maintenance = () => {
                                     <tr>
                                         {/* Checkbox Column for Admin Community View */}
                                         {isAdmin && activeTab === 'community' && (
-                                            <th className="w-8 px-2 py-1">
+                                            <th className="w-[100px] px-2 py-1">
                                                 <input
                                                     type="checkbox"
                                                     checked={fees.filter(f => f.status !== 'paid' && !f.payment_id).length > 0 && selectedFees.size === fees.filter(f => f.status !== 'paid' && !f.payment_id).length}
@@ -792,8 +820,12 @@ const Maintenance = () => {
                                                     return `${month.charAt(0).toUpperCase() + month.slice(1)} ${year}`;
                                                 })()}
                                             </td>
-                                            <td className="text-gray-500 dark:text-neutral-400">
-                                                {fee.block_name || fee.units?.blocks?.name || '-'}
+                                            <td>
+                                                <div className="max-w-[200px] md:max-w-[350px] whitespace-normal break-words text-sm leading-tight text-gray-500 dark:text-neutral-400">
+                                                    {(fee.block_id || fee.units?.block_id)
+                                                        ? getBlockPath(fee.block_id || fee.units?.block_id)
+                                                        : (fee.block_name || fee.units?.blocks?.name || '-')}
+                                                </div>
                                             </td>
                                             <td className="text-gray-900 font-medium dark:text-white">
                                                 {fee.unit_number || fee.units?.unit_number}
