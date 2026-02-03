@@ -310,7 +310,6 @@
         "hierarchy_path": "Ruta",
         "structure_name": "Nombre (ej. Escalera A)",
         "unit_number": "Número de Unidad (ej. 101)",
-        "select_block": "Seleccionar Bloque",
         "select_unit": "Seleccionar Unidad",
         "add_sub_block": "Agregar Bloque",
         "unit_type_label": "Tipo",

@@ -58,14 +58,11 @@ const DashboardLayout = ({ children }) => {
             )}
 
             {/* Sidebar */}
-            <div className={`fixed inset-y-4 left-0 z-50 w-64 bg-gradient-to-b from-white/50 to-white/20 backdrop-blur-2xl border border-white/40 dark:from-neutral-900/80 dark:to-neutral-900/40 dark:border-neutral-700/50 shadow-2xl transform transition-transform duration-300 ease-in-out md:ml-4 md:translate-x-0 md:static md:h-[calc(100vh-2rem)] md:my-4 md:rounded-3xl md:inset-auto ${isSidebarOpen ? 'translate-x-0 rounded-r-3xl' : '-translate-x-full'} flex flex-col`}>
-                <div className="p-2 flex justify-between md:justify-center items-center h-20 shrink-0">
+            <div className={`fixed inset-y-4 right-0 z-50 w-64 bg-gradient-to-b from-white/70 to-white/50 backdrop-blur-2xl border border-white/40 dark:from-neutral-900/95 dark:to-neutral-900/80 dark:border-neutral-700/50 shadow-2xl transform transition-transform duration-300 ease-in-out md:left-0 md:ml-4 md:translate-x-0 md:static md:h-[calc(100vh-2rem)] md:my-4 md:rounded-3xl md:inset-auto ${isSidebarOpen ? 'translate-x-0 rounded-l-3xl' : 'translate-x-full'} flex flex-col`}>
+                <div className="p-2 flex justify-center items-center h-20 shrink-0">
                     <Link to="/" className="flex items-center gap-2 text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-violet-600 dark:from-blue-400 dark:to-violet-400">
                         <img src={logo} alt="Logo" className="h-16 w-auto drop-shadow-[0_0_1px_rgba(255,255,255,0.8)_0_0_10px_rgba(0,0,0,0.2)]" />
                     </Link>
-                    <button onClick={closeSidebar} className="md:hidden text-gray-500 hover:text-gray-700 dark:text-neutral-400" aria-label={t('header.close_sidebar', 'Close Sidebar')}>
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                    </button>
                 </div>
 
                 {/* Community Switcher */}
@@ -124,8 +121,8 @@ const DashboardLayout = ({ children }) => {
                     {hasAnyRole(['super_admin', 'admin', 'president']) && (
                         <>
                             <div className="pt-2 pb-1">
-                                <div className="h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-neutral-600 to-transparent mb-2 opacity-50"></div>
-                                <span className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider italic">{t('dashboard_layout.nav.administration', 'Administration')}</span>
+                                <div className="h-px bg-gradient-to-r from-transparent via-white/80 dark:via-neutral-500 to-transparent mb-2"></div>
+                                <span className="px-4 text-xs font-bold text-gray-600 dark:text-neutral-400 uppercase tracking-widest">{t('dashboard_layout.nav.administration', 'Administration')}</span>
                             </div>
                             <Link to="/app/properties" onClick={closeSidebar} className={`block py-1.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/properties')}`}>
                                 {t('dashboard_layout.nav.properties')}
@@ -146,7 +143,7 @@ const DashboardLayout = ({ children }) => {
                 </nav>
 
                 {/* Sidebar Footer with Profile & Logout */}
-                <div className="p-4 border-t border-white/20 dark:border-neutral-700/50 bg-white/10 dark:bg-black/10 shrink-0 backdrop-blur-sm rounded-b-3xl">
+                <div className="p-4 border-t border-white/20 dark:border-neutral-700/50 bg-white/10 dark:bg-black/10 shrink-0 backdrop-blur-sm md:rounded-b-3xl rounded-bl-3xl">
                     <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-3 overflow-hidden">
                             <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-violet-500 flex items-center justify-center text-white font-bold text-sm shrink-0">
