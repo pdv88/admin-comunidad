@@ -166,7 +166,9 @@ exports.generateMonthlyFees = async (req, res) => {
                     unit_id: unit.id,
                     period: period,
                     amount: feeAmount,
-                    status: 'pending'
+                    status: 'pending',
+                    total_budget: total_amount,
+                    coefficient: coeff
                 };
             });
 
@@ -280,7 +282,7 @@ exports.getCommunityStatus = async (req, res) => {
         const useInnerJoin = !!search || !!block;
 
         let selectString = `
-            id, period, amount, status, payment_id, updated_at,
+            id, period, amount, status, payment_id, updated_at, total_budget, coefficient,
             units${useInnerJoin ? '!inner' : ''} (
                 id,
                 unit_number,

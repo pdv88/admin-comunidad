@@ -124,6 +124,27 @@ const FeeDetailsModal = ({ isOpen, onClose, fee, onUpdate }) => {
                                     {fee.unit_number || fee.units?.unit_number}
                                 </span>
                             </div>
+                            {/* Calculation Details - Show only if available */}
+                            {fee.total_budget && (
+                                <div>
+                                    <span className="block text-sm text-gray-500 dark:text-gray-400">
+                                        {t('maintenance.budget_used', 'Budget Used')}
+                                    </span>
+                                    <span className="font-medium text-gray-900 dark:text-white">
+                                        {activeCommunity?.currency} {fee.total_budget}
+                                    </span>
+                                </div>
+                            )}
+                            {fee.coefficient && (
+                                <div>
+                                    <span className="block text-sm text-gray-500 dark:text-gray-400">
+                                        {t('maintenance.coefficient_applied', 'Coefficient Applied')}
+                                    </span>
+                                    <span className="font-medium text-gray-900 dark:text-white">
+                                        {fee.coefficient}%
+                                    </span>
+                                </div>
+                            )}
                             <div className="col-span-2">
                                 <span className="block text-sm text-gray-500 dark:text-gray-400">
                                     {t('maintenance.owner', 'Owner')}

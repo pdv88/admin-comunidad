@@ -94,6 +94,17 @@ exports.createBlock = async (req, res) => {
 
         const blockData = { ...req.body, community_id: communityId };
 
+        // Validation for hierarchical fields
+        const validTypes = ['block', 'portal', 'staircase', 'tower', 'level'];
+        if (blockData.structure_type && !validTypes.includes(blockData.structure_type)) {
+            return res.status(400).json({ error: `Invalid structure type. Must be one of: ${validTypes.join(', ')}` });
+        }
+
+        // Prevent circular reference if parent_id is self (though impossible on create, good practice)
+        if (blockData.parent_id && blockData.id === blockData.parent_id) {
+            return res.status(400).json({ error: 'Block cannot be its own parent' });
+        }
+
         // Check for duplicate block name
         const { data: existingBlock } = await supabaseAdmin
             .from('blocks')

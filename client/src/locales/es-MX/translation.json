@@ -368,7 +368,28 @@
         "unit_created": "Unidad creada exitosamente",
         "update_success": "Información de unidad actualizada",
         "delete_success": "Eliminado exitosamente",
-        "unit_exists_error": "Este número de unidad ya existe en este bloque."
+        "unit_exists_error": "Este número de unidad ya existe en este bloque.",
+        "sub_structures": "Subestructuras",
+        "add_sub_structure": "Añadir Subestructura",
+        "structure_type": "Tipo de Estructura",
+        "add_structure": "Añadir Sub-bloque",
+        "add_structure_btn": "Sub-Bloque",
+        "types": {
+            "block": "Bloque",
+            "portal": "Portal",
+            "staircase": "Escalera",
+            "tower": "Torre",
+            "level": "Nivel"
+        },
+        "unit_type": {
+            "apartment": "Departamento",
+            "house": "Casa",
+            "commercial": "Local Comercial",
+            "warehouse": "Bodega",
+            "garage": "Cajón Estacionamiento",
+            "office": "Oficina"
+        },
+        "empty_block": "No hay unidades ni subestructuras aún."
     },
     "reports": {
         "title": "Incidencias y Mantenimiento",
@@ -533,7 +554,6 @@
             "resend_invite": "Reenviar Invitación",
             "resend_success": "Invitación reenviada exitosamente!",
             "resend_error": "Error al reenviar invitación",
-            "resend_error": "Error al reenviar invitación",
             "error_prefix": "Error: ",
             "community_missing": "Falta el ID de la comunidad",
             "insufficient_permissions": "Permisos insuficientes para invitar usuarios",
@@ -623,6 +643,8 @@
         "view": "Ver",
         "loading": "Cargando...",
         "delete": "Eliminar",
+        "delete_confirmation": "Confirmar Eliminación",
+        "delete_warning": "¿Estás seguro de que deseas eliminar este elemento? Esta acción no se puede deshacer.",
         "cancel": "Cancelar",
         "close": "Cerrar",
         "type_to_confirm": "Por favor escribe \"{{word}}\" para confirmar:",
@@ -988,7 +1010,9 @@
         "can_revert": "Puedes revertir esta cuota a pendiente si fue marcada por error.",
         "revert_to_pending": "Revertir a Pendiente",
         "mark_pending": "Marcar Pendiente",
-        "reverted_success": "Cuota revertida a pendiente"
+        "reverted_success": "Cuota revertida a pendiente",
+        "budget_used": "Presupuesto Utilizado",
+        "coefficient_applied": "Coeficiente Aplicado"
     },
     "terms": {
         "title": "Términos y Condiciones",

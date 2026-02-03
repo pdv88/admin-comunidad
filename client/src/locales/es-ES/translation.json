@@ -367,7 +367,28 @@
         "unit_created": "Unidad creada exitosamente",
         "update_success": "Información de unidad actualizada",
         "delete_success": "Eliminado exitosamente",
-        "unit_exists_error": "Este número de unidad ya existe en este bloque."
+        "unit_exists_error": "Este número de unidad ya existe en este bloque.",
+        "sub_structures": "Subestructuras",
+        "add_sub_structure": "Añadir Subestructura",
+        "structure_type": "Tipo de Estructura",
+        "add_structure": "Añadir Sub-bloque",
+        "add_structure_btn": "Sub-Bloque",
+        "types": {
+            "block": "Bloque",
+            "portal": "Portal",
+            "staircase": "Escalera",
+            "tower": "Torre",
+            "level": "Nivel"
+        },
+        "unit_type": {
+            "apartment": "Piso",
+            "house": "Casa",
+            "commercial": "Local Comercial",
+            "warehouse": "Trastero",
+            "garage": "Garaje",
+            "office": "Oficina"
+        },
+        "empty_block": "No hay unidades ni subestructuras aún."
     },
     "reports": {
         "title": "Incidencias y Mantenimiento",
@@ -622,6 +643,8 @@
         "view": "Ver",
         "loading": "Cargando...",
         "delete": "Eliminar",
+        "delete_confirmation": "Confirmar Eliminación",
+        "delete_warning": "¿Estás seguro de que deseas eliminar este elemento? Esta acción no se puede deshacer.",
         "cancel": "Cancelar",
         "close": "Cerrar",
         "type_to_confirm": "Por favor escribe \"{{word}}\" para confirmar:",
@@ -950,7 +973,6 @@
         "error_zero_budget": "El presupuesto total debe ser mayor a 0.",
         "units_without_coefficient": "Las siguientes unidades no tienen coeficiente asignado:",
         "error_no_users": "No hay usuarios para generar cuotas.",
-        "warning_gen_zero": "Las cuotas para este periodo ya han sido generadas.",
         "no_records_export": "No hay registros para exportar.",
         "pay": "Pagar",
         "review": "Revisar Pago",
@@ -987,7 +1009,9 @@
         "can_revert": "Puedes revertir esta cuota a pendiente si fue marcada por error.",
         "revert_to_pending": "Revertir a Pendiente",
         "mark_pending": "Marcar Pendiente",
-        "reverted_success": "Cuota revertida a pendiente"
+        "reverted_success": "Cuota revertida a pendiente",
+        "budget_used": "Presupuesto Utilizado",
+        "coefficient_applied": "Coeficiente Aplicado"
     },
     "terms": {
         "title": "Términos y Condiciones",
