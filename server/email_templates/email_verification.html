@@ -1,10 +1,14 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" style="background-color: #f9fafb !important;">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="light only">
   <meta name="supported-color-schemes" content="light only">
+  <!--[if !mso]><!-->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <!--<![endif]-->
   <title>Verificación de correo</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap');
@@ -14,84 +18,122 @@
       .content {
         padding: 20px !important;
       }
+
       .responsive-table td {
         padding: 20px 10px !important;
       }
     }
 
-    /* Force Light Mode */
+    /* Force Light Mode for all clients */
     :root {
       color-scheme: light only;
       supported-color-schemes: light only;
     }
 
+    /* Gmail Android specific - target their dark mode wrapper classes */
+    u+.body,
+    /* Gmail */
+    #MessageViewBody,
+    /* Outlook.com */
+    .body-class {
+      /* Fallback */
+      background-color: #f9fafb !important;
+    }
+
+    /* Override dark mode color inversions */
+    [data-ogsc],
+    [data-ogsb] {
+      background-color: #f9fafb !important;
+      color: #1f2937 !important;
+    }
+
     @media (prefers-color-scheme: dark) {
-      body, .body-table, .main-bg {
+
+      body,
+      .body-table,
+      .main-bg,
+      html {
         background-color: #f9fafb !important;
       }
+
       .content-box {
-        background-color: rgba(255, 255, 255, 0.7) !important;
-        background: rgba(255, 255, 255, 0.7) !important;
+        background-color: #ffffff !important;
+        background: #ffffff !important;
         color: #1f2937 !important;
       }
-      h2 { color: #1f2937 !important; }
-      p { color: #4b5563 !important; }
-      .footer-text { color: #9ca3af !important; }
-      .link-backup { background: rgba(255, 255, 255, 0.5) !important; color: #4f46e5 !important; }
+
+      h2 {
+        color: #1f2937 !important;
+      }
+
+      p {
+        color: #4b5563 !important;
+      }
+
+      .footer-text {
+        color: #9ca3af !important;
+      }
+
+      .link-backup {
+        background: #f3f4f6 !important;
+        color: #4f46e5 !important;
+      }
     }
   </style>
 </head>
-<body style="margin: 0; padding: 0; font-family: 'Outfit', sans-serif; background: #f9fafb; color: #1f2937;">
-  
-  <!-- Main Container: Light Background (gray-50) with subtle gradient blob effect -->
-  <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="width: 100%; min-height: 100vh; background-color: #f9fafb;" class="responsive-table">
+
+<body class="body"
+  style="margin: 0; padding: 0; font-family: 'Outfit', sans-serif; background-color: #f9fafb; color: #1f2937;">
+
+  <!-- Main Container: Light Background -->
+  <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0"
+    style="width: 100%; min-height: 100vh; background-color: #f9fafb;" class="responsive-table body-table">
     <tr>
       <td align="center" valign="middle" style="
         padding: 40px 20px; 
         background-color: #f9fafb;
-        background-image: radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.1) 0%, transparent 40%), radial-gradient(circle at 90% 80%, rgba(79, 70, 229, 0.1) 0%, transparent 40%);
       ">
-    
-    <!-- Glass Card: Light Mode (.glass-card: bg-white/70, border-white/40, shadow-xl shadow-gray-200/20) -->
-    <div class="content content-box" style="
+
+        <!-- Glass Card: Using solid white background for Gmail compatibility -->
+        <div class="content content-box" style="
       max-width: 600px;
       margin: 0 auto;
       box-sizing: border-box;
-      background: rgba(255, 255, 255, 0.7);
-      border: 1px solid rgba(255, 255, 255, 0.4);
+      background-color: #ffffff;
+      border: 1px solid #e5e7eb;
       border-radius: 16px; 
       padding: 40px;
       text-align: center;
-      box-shadow: 0 20px 25px -5px rgba(229, 231, 235, 0.6), 0 8px 10px -6px rgba(229, 231, 235, 0.6); /* shadow-gray-200/60 approx */
-      backdrop-filter: blur(24px); /* backdrop-blur-xl */
-      -webkit-backdrop-filter: blur(24px);
+      box-shadow: 0 20px 25px -5px rgba(229, 231, 235, 0.6), 0 8px 10px -6px rgba(229, 231, 235, 0.6);
     ">
-      
-      <!-- Brand -->
-      <div style="margin-bottom: 2rem;">
-        <img src="https://habiio.com/assets/habiio_logo_header_nobg-KEmvXxNA.webp" alt="Habiio" style="max-width: 180px; height: auto; display: block; margin: 0 auto;">
-      </div>
+
+          <!-- Brand -->
+          <div style="margin-bottom: 2rem;">
+            <img src="https://habiio.com/assets/habiio_logo_header_nobg-KEmvXxNA.webp" alt="Habiio"
+              style="max-width: 180px; height: auto; display: block; margin: 0 auto;">
+          </div>
 
 
 
-      <h2 style="
+          <h2 style="
         font-size: 1.5rem;
         font-weight: 600;
         margin-bottom: 1rem;
         color: #1f2937; /* gray-800 */
       ">Verifica tu correo</h2>
-      
-      <p style="
+
+          <p style="
         font-size: 1rem;
         line-height: 1.6;
         color: #4b5563; /* gray-600 */
         margin-bottom: 2.5rem;
       ">
-        Gracias por registrarte. Para completar la configuración de tu cuenta y acceder a la plataforma, por favor confirma tu correo electrónico.
-      </p>
+            Gracias por registrarte. Para completar la configuración de tu cuenta y acceder a la plataforma, por favor
+            confirma tu correo electrónico.
+          </p>
 
-      <!-- Glass Button: Matches .glass-button (gradient blue-indigo-blue primary) -->
-      <a href="{{link}}" style="
+          <!-- Glass Button: Matches .glass-button (gradient blue-indigo-blue primary) -->
+          <a href="{{link}}" style="
         display: inline-block;
         padding: 0.875rem 2.5rem;
         font-size: 0.95rem;
@@ -103,10 +145,11 @@
         box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.4); /* shadow-blue-500/30 */
       ">Confirmar Correo</a>
 
-      <!-- Link Backup -->
-      <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid rgba(0,0,0,0.05);">
-        <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 0.5rem;" class="footer-text">o copia este enlace en tu navegador:</p>
-        <div style="
+          <!-- Link Backup -->
+          <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid rgba(0,0,0,0.05);">
+            <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 0.5rem;" class="footer-text">o copia este
+              enlace en tu navegador:</p>
+            <div style="
           background: rgba(255, 255, 255, 0.5);
           padding: 0.75rem;
           border-radius: 8px;
@@ -116,16 +159,17 @@
           font-family: monospace;
           border: 1px solid rgba(0,0,0,0.05);
         " class="link-backup">{{link}}</div>
-      </div>
-      
-      <div style="margin-top: 2rem; font-size: 0.75rem; color: #9ca3af;" class="footer-text">
-        &copy; Admin Comunidad. Todos los derechos reservados.
-      </div>
+          </div>
 
-    </div>
-    
+          <div style="margin-top: 2rem; font-size: 0.75rem; color: #9ca3af;" class="footer-text">
+            &copy; Admin Comunidad. Todos los derechos reservados.
+          </div>
+
+        </div>
+
       </td>
     </tr>
   </table>
 </body>
+
 </html>

@@ -1,11 +1,14 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" style="background-color: #f9fafb !important;">
 
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="light only">
   <meta name="supported-color-schemes" content="light only">
+  <!--[if !mso]><!-->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <!--<![endif]-->
   <title>Nuevo Recibo de Mantenimiento</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap');
@@ -27,22 +30,37 @@
       supported-color-schemes: light only;
     }
 
+    /* Gmail Android specific */
+    u+.body,
+    #MessageViewBody,
+    .body-class {
+      background-color: #f9fafb !important;
+    }
+
+    /* Override dark mode color inversions */
+    [data-ogsc],
+    [data-ogsb] {
+      background-color: #f9fafb !important;
+      color: #1f2937 !important;
+    }
+
     @media (prefers-color-scheme: dark) {
 
       body,
       .body-table,
-      .main-bg {
+      .main-bg,
+      html {
         background-color: #f9fafb !important;
       }
 
       .content-box {
-        background-color: rgba(255, 255, 255, 0.7) !important;
-        background: rgba(255, 255, 255, 0.7) !important;
+        background-color: #ffffff !important;
+        background: #ffffff !important;
         color: #1f2937 !important;
       }
 
       .inner-box {
-        background: rgba(255, 255, 255, 0.6) !important;
+        background: #f9fafb !important;
         color: #1f2937 !important;
       }
 
@@ -65,29 +83,27 @@
   </style>
 </head>
 
-<body style="margin: 0; padding: 0; font-family: 'Outfit', sans-serif; background: #f9fafb; color: #1f2937;">
+<body class="body"
+  style="margin: 0; padding: 0; font-family: 'Outfit', sans-serif; background-color: #f9fafb; color: #1f2937;">
 
   <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0"
-    style="width: 100%; min-height: 100vh; background-color: #f9fafb;" class="responsive-table">
+    style="width: 100%; min-height: 100vh; background-color: #f9fafb;" class="responsive-table body-table">
     <tr>
       <td align="center" valign="middle" style="
         padding: 40px 20px; 
         background-color: #f9fafb;
-        background-image: radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.1) 0%, transparent 40%), radial-gradient(circle at 90% 80%, rgba(79, 70, 229, 0.1) 0%, transparent 40%);
       ">
 
         <div class="content content-box" style="
       max-width: 600px;
       margin: 0 auto;
       box-sizing: border-box;
-      background: rgba(255, 255, 255, 0.7);
-      border: 1px solid rgba(255, 255, 255, 0.4);
+      background-color: #ffffff;
+      border: 1px solid #e5e7eb;
       border-radius: 16px; 
       padding: 40px;
       text-align: center;
       box-shadow: 0 20px 25px -5px rgba(229, 231, 235, 0.6), 0 8px 10px -6px rgba(229, 231, 235, 0.6);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
     ">
 
 
@@ -122,9 +138,9 @@
           <div style="
         margin: 2rem 0;
         padding: 1.5rem;
-        background: rgba(255, 255, 255, 0.6);
+        background-color: #f9fafb;
         border-radius: 12px;
-        border: 1px solid rgba(0,0,0,0.05);
+        border: 1px solid #e5e7eb;
       " class="inner-box">
             <p style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: #6b7280;">Monto a pagar</p>
             <p style="
@@ -138,15 +154,20 @@
             </p>
 
             {{#if is_coefficient}}
-            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px dashed rgba(0,0,0,0.1); text-align: left;">
-              <p style="margin: 0 0 0.5rem 0; font-size: 0.85rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Detalle de Cálculo</p>
+            <div
+              style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px dashed rgba(0,0,0,0.1); text-align: left;">
+              <p
+                style="margin: 0 0 0.5rem 0; font-size: 0.85rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">
+                Detalle de Cálculo</p>
               <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
                 <span style="font-size: 0.9rem; color: #4b5563;">Presupuesto Total:</span>
-                <span style="font-size: 0.9rem; font-weight: 500; color: #1f2937;">{{currency_symbol}}{{total_budget}}</span>
+                <span
+                  style="font-size: 0.9rem; font-weight: 500; color: #1f2937;">{{currency_symbol}}{{total_budget}}</span>
               </div>
               <div style="display: flex; justify-content: space-between;">
                 <span style="font-size: 0.9rem; color: #4b5563;">Coeficiente Unidad:</span>
-                <span style="font-size: 0.9rem; font-weight: 500; color: #1f2937;">{{unit_coefficient}}{{#if is_percentage}}%{{/if}}</span>
+                <span style="font-size: 0.9rem; font-weight: 500; color: #1f2937;">{{unit_coefficient}}{{#if
+                  is_percentage}}%{{/if}}</span>
               </div>
             </div>
             {{/if}}
