@@ -6,6 +6,7 @@ import { API_URL } from '../config';
 import ModalPortal from '../components/ModalPortal';
 import ConfirmationModal from '../components/ConfirmationModal';
 import GlassLoader from '../components/GlassLoader';
+import HierarchicalBlockSelector from '../components/HierarchicalBlockSelector';
 
 const Voting = () => {
     const { user, activeCommunity, hasAnyRole, getPrimaryRole } = useAuth();
@@ -41,6 +42,23 @@ const Voting = () => {
         ?.filter(r => r.name === 'vocal' && r.block_id)
         .map(r => r.block_id) || [];
 
+    // Filter blocks for vocals vs admins
+    const availableBlocks = React.useMemo(() => {
+        if (isAdmin) return blocks;
+        if (isVocal) return blocks.filter(b => vocalBlocks.includes(b.id));
+        return [];
+    }, [blocks, isAdmin, isVocal, vocalBlocks]);
+
+    // Toggle block selection
+    const handleToggleBlock = (blockId) => {
+        setPollForm(prev => ({
+            ...prev,
+            targetBlocks: prev.targetBlocks.includes(blockId)
+                ? prev.targetBlocks.filter(id => id !== blockId)
+                : [...prev.targetBlocks, blockId]
+        }));
+    };
+
     const fetchPolls = async () => {
         try {
             const token = localStorage.getItem('token');
@@ -70,7 +88,7 @@ const Voting = () => {
         setPollForm({
             title: '',
             description: '',
-            options: ['', ''],
+            options: [t('common.yes', 'Yes'), t('common.no', 'No')],
             deadline: '',
             targetType: isRestrictedVocal ? 'blocks' : 'all',
             targetBlocks: isRestrictedVocal ? vocalBlocks : []
@@ -457,28 +475,53 @@ const Voting = () => {
                                         </label>
                                     </div>
                                     {pollForm.targetType === 'blocks' && (
-                                        <div className="max-h-32 overflow-y-auto border rounded p-2 dark:border-neutral-700">
-                                            {blocks
-                                                .filter(b => (!isVocal || isAdmin) || vocalBlocks.includes(b.id))
-                                                .map(b => (
-                                                    <label key={b.id} className="flex items-center gap-2 mb-1 dark:text-neutral-300">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={pollForm.targetBlocks.includes(b.id)}
-                                                            onChange={e => {
-                                                                const id = b.id;
-                                                                setPollForm(prev => ({
-                                                                    ...prev,
-                                                                    targetBlocks: e.target.checked
-                                                                        ? [...prev.targetBlocks, id]
-                                                                        : prev.targetBlocks.filter(bid => bid !== id)
-                                                                }));
-                                                            }}
-                                                        />
-                                                        {b.name}
-                                                    </label>
-                                                ))}
-                                        </div>
+                                        <>
+                                            <HierarchicalBlockSelector
+                                                blocks={availableBlocks}
+                                                selectedBlocks={pollForm.targetBlocks}
+                                                onToggleBlock={handleToggleBlock}
+                                            />
+                                            {pollForm.targetBlocks.length > 0 && (
+                                                <div className="mt-3 p-3 bg-indigo-50/30 dark:bg-indigo-900/10 rounded-xl border border-indigo-100/30 dark:border-indigo-900/20 backdrop-blur-sm">
+                                                    <div className="flex justify-between items-center mb-2">
+                                                        <h4 className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">
+                                                            {t('campaigns.selection_summary', 'Selection Summary')}
+                                                        </h4>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setPollForm(prev => ({ ...prev, targetBlocks: [] }))}
+                                                            className="text-[10px] text-gray-500 hover:text-red-500 transition-colors"
+                                                        >
+                                                            {t('common.clear_selection', 'Clear All')}
+                                                        </button>
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-1.5 max-h-[80px] overflow-y-auto">
+                                                        {blocks
+                                                            .filter(b => pollForm.targetBlocks.includes(b.id))
+                                                            .filter(b => !b.parent_id || !pollForm.targetBlocks.includes(b.parent_id))
+                                                            .map(block => (
+                                                                <span
+                                                                    key={block.id}
+                                                                    className="px-2 py-0.5 bg-white/60 dark:bg-neutral-800/60 text-[10px] rounded-full border border-indigo-100/50 dark:border-indigo-900/50 flex items-center gap-1 group whitespace-nowrap"
+                                                                >
+                                                                    {block.name}
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => handleToggleBlock(block.id)}
+                                                                        className="hover:text-red-500 font-bold"
+                                                                    >
+                                                                        ×
+                                                                    </button>
+                                                                </span>
+                                                            ))
+                                                        }
+                                                    </div>
+                                                    <div className="mt-2 text-[10px] text-gray-500 italic">
+                                                        {pollForm.targetBlocks.length} {t('campaigns.total_entities', 'total entities targeted')}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </>
                                     )}
                                 </div>
 

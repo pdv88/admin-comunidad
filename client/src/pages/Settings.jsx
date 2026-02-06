@@ -75,17 +75,25 @@ const Settings = () => {
 
                     <div className="mt-5">
                         <div className="space-y-4">
+                            {/* Personal Information Section */}
+                            <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4">{t('settings.personal_info.title', 'Personal Information')}</h2>
                             <div>
                                 <label htmlFor="fullName" className="block text-sm font-medium mb-2 dark:text-gray-300">{t('settings.fullname', 'Full Name')}</label>
-                                <div className="flex gap-4">
-                                    <input
-                                        type="text"
-                                        id="fullName"
-                                        className="glass-input"
-                                        value={fullName}
-                                        onChange={(e) => setFullName(e.target.value)}
-                                    />
-                                </div>
+                                {hasAnyRole(['super_admin', 'admin', 'president']) ? (
+                                    <div className="flex gap-4">
+                                        <input
+                                            type="text"
+                                            id="fullName"
+                                            className="glass-input"
+                                            value={fullName}
+                                            onChange={(e) => setFullName(e.target.value)}
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="py-2.5 px-4 block w-full bg-gray-50/50 dark:bg-neutral-900/50 border border-gray-200 dark:border-neutral-700/50 rounded-full text-sm dark:text-neutral-400">
+                                        {fullName || 'N/A'}
+                                    </div>
+                                )}
                                 <div>
                                     <label htmlFor="phone" className="block text-sm font-medium mb-2 mt-4 dark:text-gray-300">{t('settings.profile.phone', 'Phone Number')}</label>
                                     <input
@@ -95,20 +103,6 @@ const Settings = () => {
                                         value={phone}
                                         onChange={(e) => setPhone(e.target.value)}
                                     />
-                                </div>
-                                <div className="flex gap-4 mt-4">
-                                    <button
-                                        onClick={handleUpdateProfile}
-                                        disabled={loading}
-                                        className="glass-button whitespace-nowrap min-w-[100px] flex justify-center items-center"
-                                    >
-                                        {loading ? (
-                                            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                            </svg>
-                                        ) : t('settings.save', 'Save')}
-                                    </button>
                                 </div>
                             </div>
 
@@ -140,6 +134,20 @@ const Settings = () => {
                                         <option value="es-MX">Español (México) 🇲🇽</option>
                                         <option value="es-ES">Español (España) 🇪🇸</option>
                                     </select>
+                                </div>
+                                <div className="flex gap-4 mt-6">
+                                    <button
+                                        onClick={handleUpdateProfile}
+                                        disabled={loading}
+                                        className="glass-button whitespace-nowrap min-w-[100px] flex justify-center items-center"
+                                    >
+                                        {loading ? (
+                                            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                        ) : t('settings.save', 'Save Changes')}
+                                    </button>
                                 </div>
                             </div>
 

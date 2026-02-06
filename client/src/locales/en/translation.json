@@ -277,9 +277,12 @@
       "administration": "Administration",
       "community_settings": "Community Settings",
       "community_info": "Community Info",
-      "reservations": "Reservations"
+      "reservations": "Reservations",
+      "my_balance": "My Balance"
     },
-    "sign_out": "Sign out"
+    "sign_out": "Sign out",
+    "maintenance_fee": "Maintenance Fee",
+    "extraordinary_fee": "Extraordinary Fee"
   },
   "notices": {
     "title": "Community Notices",
@@ -320,12 +323,6 @@
     "select_block": "Select Block",
     "select_blocks": "Select Blocks",
     "unit_placeholder": "Unit Number (e.g. 101)",
-    "unit_type": {
-      "apartment": "Apartment",
-      "house": "House",
-      "parking": "Parking",
-      "storage": "Storage"
-    },
     "current_structure": "Current Structure",
     "representative": "Block Vocal",
     "none": "None",
@@ -385,6 +382,8 @@
     "unit_type": {
       "apartment": "Apartment",
       "house": "House",
+      "parking": "Parking",
+      "storage": "Storage",
       "commercial": "Commercial",
       "warehouse": "Warehouse",
       "garage": "Garage",
@@ -653,6 +652,8 @@
     "next": "Next",
     "show_filters": "Filter Data",
     "hide_filters": "Hide Filters",
+    "filters": "Filters",
+    "clear_filters": "Clear",
     "export": "Export",
     "export_excel": "Export to Excel",
     "optional": "optional",
@@ -660,7 +661,13 @@
     "copied": "Copied",
     "days": "days",
     "hours": "hrs",
+    "description": "Description",
+    "error_fetching_data": "Error fetching data",
+    "network_error": "Network error",
     "no_description": "No description."
+  },
+  "payment": {
+    "success": "Payment uploaded successfully"
   },
   "payments": {
     "title": "Payments & Contributions",
@@ -919,8 +926,13 @@
     "resident_title": "My Maintenance Fees",
     "tab_community": "Community Management",
     "tab_personal": "My Statement",
+    "tab_monthly": "Monthly Fees",
+    "tab_extraordinary": "Extraordinary Fees",
+    "monthly_fee": "Maintenance Fee",
     "generate_title": "Generate Monthly Fees",
     "period": "Billing Period",
+    "due_date": "Due Date",
+    "paid_date": "Paid Date",
     "amount": "Amount",
     "calculation_method": "Calculation Method",
     "method_fixed": "Fixed Amount",

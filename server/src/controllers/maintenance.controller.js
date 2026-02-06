@@ -62,6 +62,9 @@ exports.generateMonthlyFees = async (req, res) => {
             return res.status(400).json({ error: 'Period is required' });
         }
 
+        // Force period to YYYY-MM-01 standard
+        const normalizedPeriod = period.length === 7 ? `${period}-01` : period.slice(0, 7) + '-01';
+
         // Fetch Community Info (Country)
         const { data: communityData } = await supabaseAdmin
             .from('communities')
@@ -108,7 +111,7 @@ exports.generateMonthlyFees = async (req, res) => {
             .from('monthly_fees')
             .select('unit_id')
             .eq('community_id', communityId)
-            .eq('period', period);
+            .eq('period', normalizedPeriod);
 
         if (existingError) throw existingError;
 
@@ -164,7 +167,7 @@ exports.generateMonthlyFees = async (req, res) => {
                 return {
                     community_id: communityId,
                     unit_id: unit.id,
-                    period: period,
+                    period: normalizedPeriod,
                     amount: feeAmount,
                     status: 'pending',
                     total_budget: total_amount,
@@ -177,9 +180,10 @@ exports.generateMonthlyFees = async (req, res) => {
             feeRecords = unitsToBill.map(unit => ({
                 community_id: communityId,
                 unit_id: unit.id,
-                period: period,
+                period: normalizedPeriod,
                 amount: amount,
-                status: 'pending'
+                status: 'pending',
+                type: 'maintenance'
             }));
         }
 
@@ -280,24 +284,47 @@ exports.getCommunityStatus = async (req, res) => {
 
         // Base Query
         const useInnerJoin = !!search || !!block;
+        const isCampaign = !!req.query.campaign_id;
 
-        let selectString = `
-            id, period, amount, status, payment_id, updated_at, total_budget, coefficient,
-            units${useInnerJoin ? '!inner' : ''} (
-                id,
-                unit_number,
-                block_id,
-                blocks${useInnerJoin ? '!inner' : ''} (name, community_id),
-                unit_owners${useInnerJoin ? '!inner' : ''} (
-                    profile:profile_id (full_name, email)
+        let selectString = isCampaign
+            ? `
+                id, amount, status, payment_id, updated_at, campaign_id,
+                campaigns (name),
+                units${useInnerJoin ? '!inner' : ''} (
+                    id,
+                    unit_number,
+                    block_id,
+                    blocks${useInnerJoin ? '!inner' : ''} (name, community_id),
+                    unit_owners${useInnerJoin ? '!inner' : ''} (
+                        profile:profile_id (full_name, email)
+                    )
                 )
-            )
-        `;
+            `
+            : `
+                id, period, amount, status, payment_id, updated_at, total_budget, coefficient,
+                units${useInnerJoin ? '!inner' : ''} (
+                    id,
+                    unit_number,
+                    block_id,
+                    blocks${useInnerJoin ? '!inner' : ''} (name, community_id),
+                    unit_owners${useInnerJoin ? '!inner' : ''} (
+                        profile:profile_id (full_name, email)
+                    )
+                )
+            `;
 
         let query = supabaseAdmin
-            .from('monthly_fees')
+            .from(isCampaign ? 'extraordinary_fees' : 'monthly_fees')
             .select(selectString, { count: 'exact' })
             .eq('community_id', communityId);
+
+        // Filter: Campaign Fees or Maintenance Fees
+        if (isCampaign) {
+            query = query.eq('campaign_id', req.query.campaign_id);
+        } else {
+            // Default: Only show regular maintenance fees
+            query = query.eq('type', 'maintenance');
+        }
 
         // Filters
         if (period) {
@@ -353,7 +380,11 @@ exports.getCommunityStatus = async (req, res) => {
             // Note: This syntax works in recent JS client versions for One-to-One or Many-to-One
             query = query.order('unit_number', { foreignTable: 'units', ascending: sortOrder === 'asc' });
         } else if (sortBy === 'period') {
-            query = query.order('period', { ascending: sortOrder === 'asc' });
+            if (isCampaign) {
+                query = query.order('created_at', { ascending: sortOrder === 'asc' });
+            } else {
+                query = query.order('period', { ascending: sortOrder === 'asc' });
+            }
             // Secondary sort by Unit Number (as a proxy for logical ordering by owner/unit)
             query = query.order('unit_number', { foreignTable: 'units', ascending: true });
         } else if (sortBy === 'status') {
@@ -376,7 +407,7 @@ exports.getCommunityStatus = async (req, res) => {
             const owner = fee.units?.unit_owners?.[0]?.profile || { full_name: 'No Owner' };
             return {
                 id: fee.id,
-                period: fee.period,
+                period: fee.period || fee.campaigns?.name || 'Extraordinary', // Fallback for extraordinary_fees
                 amount: fee.amount,
                 status: fee.status,
                 payment_id: fee.payment_id,
@@ -400,13 +431,95 @@ exports.getCommunityStatus = async (req, res) => {
         res.status(400).json({ error: error.message });
     }
 };
+/**
+ * Get Total Balance (Pending + Overdue) for Dashboard Widget
+ * GET /api/maintenance/balance
+ */
+exports.getBalance = async (req, res) => {
+    try {
+        const { user, communityId } = await getUserAndMember(req);
+
+        // 1. Find units owned by this user in this community
+        const { data: myUnits, error: unitError } = await supabaseAdmin
+            .from('unit_owners')
+            .select(`
+                unit_id,
+                units!inner (
+                    id,
+                    blocks!inner (
+                        community_id
+                    )
+                )
+            `)
+            .eq('profile_id', user.id)
+            .eq('units.blocks.community_id', communityId);
+
+        if (unitError) throw unitError;
+
+        const unitIds = myUnits.map(u => u.unit_id);
+
+        if (unitIds.length === 0) {
+            return res.json({
+                total_pending: 0,
+                maintenance_pending: 0,
+                extraordinary_pending: 0
+            });
+        }
+
+        // 2. Sum Maintenance Fees (Pending + Overdue)
+        // Note: Using maybeSingle for sum workaround or just fetching valid rows
+        const { data: maintenanceFees, error: maintenanceError } = await supabaseAdmin
+            .from('monthly_fees')
+            .select('amount, status')
+            .in('unit_id', unitIds)
+            .in('status', ['pending', 'overdue']);
+
+        if (maintenanceError) throw maintenanceError;
+
+        const maintenancePending = maintenanceFees.reduce((sum, fee) => sum + parseFloat(fee.amount || 0), 0);
+
+        // 3. Sum Extraordinary Fees (Pending + Overdue)
+        const { data: extraordinaryFees, error: extraordinaryError } = await supabaseAdmin
+            .from('extraordinary_fees')
+            .select('amount, status')
+            .in('unit_id', unitIds)
+            .in('status', ['pending', 'overdue']);
+
+        if (extraordinaryError) throw extraordinaryError;
+
+        const extraordinaryPending = extraordinaryFees.reduce((sum, fee) => sum + parseFloat(fee.amount || 0), 0);
+
+        res.json({
+            total_pending: maintenancePending + extraordinaryPending,
+            maintenance_pending: maintenancePending,
+            extraordinary_pending: extraordinaryPending
+        });
+
+    } catch (error) {
+        console.error('Error fetching balance:', error);
+        res.status(400).json({ error: error.message });
+    }
+};
+
 
 exports.getMyStatement = async (req, res) => {
     try {
         const { user, communityId } = await getUserAndMember(req);
 
+        // Query parameters
+        const {
+            type = 'maintenance', // 'maintenance' or 'extraordinary'
+            status = '',
+            period = '',
+            page = 1,
+            limit = 10
+        } = req.query;
+
+        const pageNum = parseInt(page) || 1;
+        const limitNum = parseInt(limit) || 10;
+        const offset = (pageNum - 1) * limitNum;
+
         // 1. Find units owned by this user in this community
-        // Complex because unit_owners -> units -> blocks -> community_id
         const { data: myUnits, error: unitError } = await supabaseAdmin
             .from('unit_owners')
             .select(`
@@ -429,22 +542,113 @@ exports.getMyStatement = async (req, res) => {
         const unitIds = myUnits.map(u => u.unit_id);
 
         if (unitIds.length === 0) {
-            return res.json([]); // No units, no fees
+            return res.json({ data: [], page: pageNum, totalPages: 0, totalCount: 0 });
         }
 
-        // 2. Fetch fees for these units
-        const { data, error } = await supabaseAdmin
-            .from('monthly_fees')
-            .select(`
-                *,
-                units (unit_number, block_id, blocks(name))
-            `)
-            .in('unit_id', unitIds)
-            .order('period', { ascending: false });
+        let data = [];
+        let totalCount = 0;
 
-        if (error) throw error;
+        if (type === 'maintenance') {
+            // Build query for monthly fees
+            let query = supabaseAdmin
+                .from('monthly_fees')
+                .select(`
+                    *,
+                    units (unit_number, block_id, blocks(name)),
+                    payments (payment_date)
+                `, { count: 'exact' })
+                .in('unit_id', unitIds);
 
-        res.json(data);
+            // Apply filters
+            if (status) {
+                query = query.eq('status', status);
+            }
+            if (period) {
+                // Period is YYYY-MM format, match against the period column
+                query = query.eq('period', period + '-01');
+            }
+
+            // Get total count first
+            const { count, error: countError } = await query;
+            if (countError) throw countError;
+            totalCount = count || 0;
+
+            // Apply pagination and ordering
+            const { data: maintenanceFees, error: maintenanceError } = await supabaseAdmin
+                .from('monthly_fees')
+                .select(`
+                    *,
+                    units (unit_number, block_id, blocks(name)),
+                    payments (payment_date)
+                `)
+                .in('unit_id', unitIds)
+                .match(status ? { status } : {})
+                .order('period', { ascending: false })
+                .range(offset, offset + limitNum - 1);
+
+            if (maintenanceError) throw maintenanceError;
+
+            // Re-apply period filter manually if needed (Supabase doesn't support partial match easily)
+            let filteredFees = maintenanceFees;
+            if (period) {
+                filteredFees = maintenanceFees.filter(f => f.period && f.period.startsWith(period));
+            }
+
+            data = filteredFees.map(f => ({ ...f, type: 'maintenance' }));
+
+        } else if (type === 'extraordinary') {
+            // Build query for extraordinary fees
+            let query = supabaseAdmin
+                .from('extraordinary_fees')
+                .select(`
+                    *,
+                    units (unit_number, block_id, blocks(name)),
+                    campaigns (name, deadline),
+                    payments (payment_date)
+                `, { count: 'exact' })
+                .in('unit_id', unitIds);
+
+            // Apply status filter
+            if (status) {
+                query = query.eq('status', status);
+            }
+
+            // Get total count
+            const { count, error: countError } = await query;
+            if (countError) throw countError;
+            totalCount = count || 0;
+
+            // Apply pagination and ordering
+            const { data: extraordinaryFees, error: extraordinaryError } = await supabaseAdmin
+                .from('extraordinary_fees')
+                .select(`
+                    *,
+                    units (unit_number, block_id, blocks(name)),
+                    campaigns (name, deadline),
+                    payments (payment_date)
+                `)
+                .in('unit_id', unitIds)
+                .match(status ? { status } : {})
+                .order('created_at', { ascending: false })
+                .range(offset, offset + limitNum - 1);
+
+            if (extraordinaryError) throw extraordinaryError;
+
+            data = (extraordinaryFees || []).map(f => ({
+                ...f,
+                type: 'extraordinary',
+                period: f.created_at ? f.created_at.slice(0, 7) + '-01' : null // Use created_at for period display
+            }));
+        }
+
+        const totalPages = Math.ceil(totalCount / limitNum);
+
+        res.json({
+            data,
+            page: pageNum,
+            totalPages,
+            totalCount
+        });
 
     } catch (error) {
         res.status(400).json({ error: error.message });
@@ -453,28 +657,19 @@ exports.getMyStatement = async (req, res) => {
 
 exports.markAsPaid = async (req, res) => {
     try {
-        const { member, communityId } = await getUserAndMember(req);
+        const { user, member, communityId } = await getUserAndMember(req);
         const role = member.roles?.name;
-
-        if (role !== 'super_admin' && role !== 'admin' && role !== 'president' && role !== 'treasurer') {
-            return res.status(403).json({ error: 'Unauthorized' });
-        }
+        const isAdmin = ['super_admin', 'admin', 'president', 'treasurer'].includes(role);
 
         const { feeId } = req.params;
-        const { paymentId } = req.body; // Optional: Link to an actual payment transaction
+        const { notes, base64Image, fileName, payment_date } = req.body;
 
-        const updateData = {
-            status: 'paid',
-            updated_at: new Date().toISOString()
-        };
-        if (paymentId) updateData.payment_id = paymentId;
+        // 1. Find the fee first (before any updates)
+        let fee = null;
+        let isExtraordinary = false;
 
-        // 1. Update Fee Status
-        const { data, error } = await supabaseAdmin
+        const { data: monthlyFee, error: monthlyError } = await supabaseAdmin
             .from('monthly_fees')
-            .update(updateData)
-            .eq('id', feeId)
-            .eq('community_id', communityId)
             .select(`
                 *,
                 units (
@@ -487,66 +682,229 @@ exports.markAsPaid = async (req, res) => {
                     )
                 )
             `)
-            .single();
+            .eq('id', feeId)
+            .eq('community_id', communityId)
+            .maybeSingle();
 
-        if (error) throw error;
+        if (monthlyError) throw monthlyError;
 
-        // 2. Prepare Receipt Email (Async)
-        (async () => {
-            try {
-                // Determine owner email
-                const unitOwnerLink = data.units?.unit_owners?.[0];
-                const ownerProfile = unitOwnerLink?.profile;
-                let ownerEmail = ownerProfile?.email;
+        if (monthlyFee) {
+            fee = monthlyFee;
+        } else {
+            // Try extraordinary_fees
+            const { data: extFee, error: extError } = await supabaseAdmin
+                .from('extraordinary_fees')
+                .select(`
+                    *,
+                    units (
+                        id,
+                        unit_number,
+                        blocks (name),
+                        unit_owners (
+                            profile_id,
+                            profile:profile_id (email, full_name)
+                        )
+                    )
+                `)
+                .eq('id', feeId)
+                .eq('community_id', communityId)
+                .maybeSingle();
 
-                // Fallback fetch if missing email
-                if (!ownerEmail && unitOwnerLink?.profile_id) {
-                    const { data: { user } } = await supabaseAdmin.auth.admin.getUserById(unitOwnerLink.profile_id);
-                    if (user) ownerEmail = user.email;
-                }
-
-                if (ownerEmail) {
-                    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
-
-                    // Fetch Community Info
-                    const { data: communityData } = await supabaseAdmin
-                        .from('communities')
-                        .select('name, logo_url, currency')
-                        .eq('id', communityId)
-                        .single();
-
-                    const communityCurrency = communityData?.currency || 'EUR';
-
-                    await sendEmail({
-                        email: ownerEmail,
-                        from: `${communityData?.name} <info@habiio.com>`,
-                        subject: `Comprobante de Pago - ${communityData?.name}`,
-                        templateName: 'payment_receipt.html',
-                        context: {
-                            user_name: ownerProfile?.full_name || 'Vecino',
-                            amount_formatted: formatCurrency(data.amount, communityCurrency),
-                            period_name: data.period, // Could format date better
-                            unit_details: `${data.units?.blocks?.name} - ${data.units?.unit_number}`,
-                            community_name: communityData?.name,
-                            community_logo: communityData?.logo_url,
-                            payment_date: new Date().toLocaleDateString('es-ES'),
-                            payment_id: paymentId || data.id.slice(0, 8),
-                            link: `${clientUrl}/app/maintenance`,
-                            community_id: communityId // For logging
-                        }
-                    });
-                    // console.log(`Receipt sent to ${ownerEmail}`);
-                }
-            } catch (emailErr) {
-                console.error("Failed to send receipt email:", emailErr);
+            if (extError) throw extError;
+            if (extFee) {
+                fee = extFee;
+                isExtraordinary = true;
             }
-        })();
+        }
 
-        res.json(data);
+        if (!fee) {
+            return res.status(404).json({ error: 'Fee not found' });
+        }
+
+        // 2. For neighbors, verify they own this unit
+        if (!isAdmin) {
+            const unitOwners = fee.units?.unit_owners || [];
+            const userOwnsUnit = unitOwners.some(owner => owner.profile_id === user.id);
+
+            if (!userOwnsUnit) {
+                return res.status(403).json({ error: 'You do not own this unit' });
+            }
+
+            // Check if fee already has a payment or is paid
+            if (fee.status === 'paid') {
+                return res.status(400).json({ error: 'This fee is already paid' });
+            }
+            if (fee.payment_id) {
+                return res.status(400).json({ error: 'This fee already has a pending payment' });
+            }
+        }
+
+        // 3. Handle image upload if provided
+        let proof_url = null;
+        if (base64Image && fileName) {
+            const buffer = Buffer.from(base64Image.split(',')[1], 'base64');
+            const filePath = `${communityId}/${user.id}/${Date.now()}_${fileName}`;
+
+            const { error: uploadError } = await supabaseAdmin
+                .storage
+                .from('payment-proofs')
+                .upload(filePath, buffer, {
+                    contentType: 'image/jpeg',
+                    upsert: false
+                });
+
+            if (uploadError) throw uploadError;
+
+            const { data: publicUrlData } = supabaseAdmin
+                .storage
+                .from('payment-proofs')
+                .getPublicUrl(filePath);
+
+            proof_url = publicUrlData.publicUrl;
+        }
+
+        const feeTable = isExtraordinary ? 'extraordinary_fees' : 'monthly_fees';
+        let data;
+
+        if (isAdmin) {
+            // ADMIN FLOW: Mark as paid directly
+            const updateData = {
+                status: 'paid',
+                updated_at: new Date().toISOString(),
+                payment_date: payment_date || new Date().toISOString(),
+                paid_by: user.id
+            };
+            if (notes) updateData.notes = notes;
+            if (proof_url) updateData.proof_url = proof_url;
+
+            const { data: updatedFee, error: updateError } = await supabaseAdmin
+                .from(feeTable)
+                .update(updateData)
+                .eq('id', feeId)
+                .select(`
+                    *,
+                    units (
+                        id,
+                        unit_number,
+                        blocks (name),
+                        unit_owners (
+                            profile_id,
+                            profile:profile_id (email, full_name)
+                        )
+                    )
+                `)
+                .single();
+
+            if (updateError) throw updateError;
+            data = updatedFee;
+
+            // Update Campaign Amount if extraordinary fee
+            if (data.campaign_id) {
+                const { data: paidFees, error: sumError } = await supabaseAdmin
+                    .from('extraordinary_fees')
+                    .select('amount')
+                    .eq('campaign_id', data.campaign_id)
+                    .eq('status', 'paid');
+
+                if (!sumError && paidFees) {
+                    const totalRaised = paidFees.reduce((sum, f) => sum + parseFloat(f.amount || 0), 0);
+                    await supabaseAdmin
+                        .from('campaigns')
+                        .update({ current_amount: totalRaised })
+                        .eq('id', data.campaign_id);
+                }
+            }
+
+            // Send Receipt Email (Async)
+            (async () => {
+                try {
+                    const unitOwnerLink = data.units?.unit_owners?.[0];
+                    const ownerProfile = unitOwnerLink?.profile;
+                    let ownerEmail = ownerProfile?.email;
+
+                    if (!ownerEmail && unitOwnerLink?.profile_id) {
+                        const { data: { user: ownerUser } } = await supabaseAdmin.auth.admin.getUserById(unitOwnerLink.profile_id);
+                        if (ownerUser) ownerEmail = ownerUser.email;
+                    }
+
+                    if (ownerEmail) {
+                        const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+                        const { data: communityData } = await supabaseAdmin
+                            .from('communities')
+                            .select('name, logo_url, currency')
+                            .eq('id', communityId)
+                            .single();
+
+                        const communityCurrency = communityData?.currency || 'EUR';
+
+                        await sendEmail({
+                            email: ownerEmail,
+                            from: `${communityData?.name} <info@habiio.com>`,
+                            subject: `Comprobante de Pago - ${communityData?.name}`,
+                            templateName: 'payment_receipt.html',
+                            context: {
+                                user_name: ownerProfile?.full_name || 'Vecino',
+                                amount_formatted: formatCurrency(data.amount, communityCurrency),
+                                period_name: data.period,
+                                unit_details: `${data.units?.blocks?.name} - ${data.units?.unit_number}`,
+                                community_name: communityData?.name,
+                                community_logo: communityData?.logo_url,
+                                payment_date: new Date().toLocaleDateString('es-ES'),
+                                payment_id: data.id.slice(0, 8),
+                                link: `${clientUrl}/app/maintenance`,
+                                community_id: communityId
+                            }
+                        });
+                    }
+                } catch (emailErr) {
+                    console.error("Failed to send receipt email:", emailErr);
+                }
+            })();
+
+            res.json(data);
+
+        } else {
+            // NEIGHBOR FLOW: Create pending payment for admin review
+            const { data: payment, error: paymentError } = await supabaseAdmin
+                .from('payments')
+                .insert({
+                    user_id: user.id,
+                    community_id: communityId,
+                    amount: fee.amount,
+                    notes,
+                    proof_url,
+                    unit_id: fee.unit_id,
+                    payment_date: payment_date || new Date().toISOString(),
+                    status: 'pending'
+                })
+                .select()
+                .single();
+
+            if (paymentError) throw paymentError;
+
+            // Link payment to fee
+            const { error: updateError } = await supabaseAdmin
+                .from(feeTable)
+                .update({
+                    payment_id: payment.id,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', feeId);
+
+            if (updateError) throw updateError;
+
+            res.json({
+                message: 'Payment proof uploaded successfully. Pending admin review.',
+                payment_id: payment.id
+            });
+        }
+
     } catch (error) {
+        console.error('markAsPaid error:', error);
         res.status(400).json({ error: error.message });
     }
 };
+
 
 exports.deleteFee = async (req, res) => {
     try {
@@ -601,17 +959,17 @@ exports.resendFeeEmail = async (req, res) => {
         const { data: fee, error: feeError } = await supabaseAdmin
             .from('monthly_fees')
             .select(`
-                *,
-                units (
+            *,
+                units(
                     id,
                     unit_number,
-                    blocks (name),
-                    unit_owners (
+                    blocks(name),
+                    unit_owners(
                         profile_id,
-                        profile:profile_id (email, full_name)
+                        profile: profile_id(email, full_name)
                     )
                 )
-            `)
+                    `)
             .eq('id', feeId)
             .eq('community_id', communityId)
             .single();
@@ -643,7 +1001,7 @@ exports.resendFeeEmail = async (req, res) => {
 
         // 3. Send Email
         const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
-        const link = `${clientUrl}/app/maintenance`;
+        const link = `${clientUrl} / app / maintenance`;
 
         // Fetch Community Name, Logo and Currency
         const { data: communityData } = await supabaseAdmin
@@ -689,7 +1047,7 @@ exports.resendFeeEmail = async (req, res) => {
 
         await sendEmail({
             email: ownerEmail,
-            from: `${communityName} <info@habiio.com>`,
+            from: `${communityName} < info@habiio.com > `,
             subject: emailConfig.subject,
             templateName: emailConfig.template,
             context: {
@@ -698,7 +1056,7 @@ exports.resendFeeEmail = async (req, res) => {
             }
         });
 
-        res.json({ message: `Email (${isPaid ? 'Receipt' : 'Bill'}) resent to ${ownerEmail}` });
+        res.json({ message: `Email(${isPaid ? 'Receipt' : 'Bill'}) resent to ${ownerEmail}` });
 
     } catch (error) {
         console.error("Resend email error:", error);
@@ -868,14 +1226,14 @@ exports.bulkMarkAsPaid = async (req, res) => {
                 .from('monthly_fees')
                 .select(`
                     id, amount, period, payment_id, updated_at,
-                    units (
-                        unit_number,
-                        blocks (name),
-                        unit_owners (
-                            profile:profile_id (email, full_name)
-                        )
+                units(
+                    unit_number,
+                    blocks(name),
+                    unit_owners(
+                        profile: profile_id(email, full_name)
                     )
-                `)
+                )
+                    `)
                 .in('id', feeIds);
 
             if (!fullFees) return;
@@ -900,7 +1258,7 @@ exports.bulkMarkAsPaid = async (req, res) => {
                     if (ownerEmail) {
                         await sendEmail({
                             email: ownerEmail,
-                            from: `${communityName} <info@habiio.com>`,
+                            from: `${communityName} < info@habiio.com > `,
                             subject: `Comprobante de Pago - ${communityName}`,
                             templateName: 'payment_receipt.html',
                             context: {
@@ -912,13 +1270,13 @@ exports.bulkMarkAsPaid = async (req, res) => {
                                 community_logo: communityLogo,
                                 payment_date: new Date(fee.updated_at || new Date()).toLocaleDateString('es-ES'),
                                 payment_id: fee.payment_id || fee.id.slice(0, 8),
-                                link: `${clientUrl}/app/maintenance`,
+                                link: `${clientUrl} / app / maintenance`,
                                 community_id: communityId // For logging
                             }
                         });
                     }
                 } catch (emailErr) {
-                    console.error(`Failed to send bulk receipt for fee ${fee.id}:`, emailErr);
+                    console.error(`Failed to send bulk receipt for fee ${fee.id}: `, emailErr);
                 }
             }
         })();

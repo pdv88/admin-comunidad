@@ -14,7 +14,7 @@ const WelcomeWidget = ({ role }) => {
 
     const hasUnits = activeCommunity?.unit_owners?.length > 0;
     const displayRole = role || getPrimaryRole();
-    const isResident = displayRole === 'resident' || displayRole === 'neighbor' || hasUnits;
+    const isResident = displayRole === 'neighbor' || hasUnits;
 
     useEffect(() => {
         if (!isResident) return;
@@ -24,18 +24,17 @@ const WelcomeWidget = ({ role }) => {
         const fetchPaymentStatus = async () => {
             try {
                 const token = localStorage.getItem('token');
-                // Fetch 'my statement' which includes all monthly fees (pending and paid)
-                const res = await fetch(`${API_URL}/api/maintenance/my-statement`, {
+                // Fetch 'balance' which returns total pending debt
+                const res = await fetch(`${API_URL}/api/maintenance/balance`, {
                     headers: { 'Authorization': `Bearer ${token}`, 'x-community-id': activeCommunity?.community_id },
                     signal: abortController.signal
                 });
 
                 if (res.ok) {
-                    const fees = await res.json();
+                    const data = await res.json();
 
-                    // Calculate total UNPAID fees
-                    const pendingFees = fees.filter(f => f.status === 'pending');
-                    const totalUnpaid = pendingFees.reduce((sum, f) => sum + Number(f.amount), 0);
+                    // data = { total_pending, maintenance_pending, extraordinary_pending }
+                    const totalUnpaid = data.total_pending || 0;
 
                     setFeeAmount(totalUnpaid);
 
@@ -92,7 +91,7 @@ const WelcomeWidget = ({ role }) => {
                 <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center">
                     {/* Monthly Fee Status Pill - Clickable */}
                     {feeStatus !== 'loading' ? (
-                        <Link to="/app/maintenance" className="flex items-center gap-3 px-4 py-3 rounded-xl border border-white/20 dark:border-white/10 backdrop-blur-md transition-all shadow-md hover:shadow-lg bg-white/40 dark:bg-white/5">
+                        <Link to="/app/my-balance" className="flex items-center gap-3 px-4 py-3 rounded-xl border border-white/20 dark:border-white/10 backdrop-blur-md transition-all shadow-md hover:shadow-lg bg-white/40 dark:bg-white/5">
                             <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg backdrop-blur-sm shadow-inner ${feeStatus === 'paid' ? 'bg-green-500/10 text-green-600' : 'bg-orange-500/10 text-orange-600'
                                 }`}>
                                 {feeStatus === 'paid' ? '✓' : '!'}

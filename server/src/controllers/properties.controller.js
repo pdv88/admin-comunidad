@@ -60,18 +60,26 @@ exports.getAllBlocks = async (req, res) => {
         const { data: { user } } = await supabase.auth.getUser(token);
         if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
-        // Fetch blocks for THIS community
-        const { data, error } = await supabase
-            .from('blocks')
-            .select(`
-        *,
-        units(
-            *,
-            unit_owners(
-                profiles(*)
-            )
-        )
-            `)
+        // Check if simple fetch is requested (for dropdowns/hierarchy resolution)
+        const isSimple = req.query.simple === 'true';
+
+        let query = supabase.from('blocks');
+
+        if (isSimple) {
+            query = query.select('id, name, parent_id');
+        } else {
+            query = query.select(`
+                *,
+                units(
+                    *,
+                    unit_owners(
+                        profiles(*)
+                    )
+                )
+            `);
+        }
+
+        const { data, error } = await query
             .eq('community_id', communityId)
             .order('name');
 

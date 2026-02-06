@@ -461,6 +461,34 @@ exports.inviteUser = async (req, res) => {
                 .insert(unitInserts);
 
             if (ownersError) throw ownersError;
+
+            // Auto-add 'neighbor' role when units are assigned
+            if (memberData) {
+                const { data: neighborRole } = await supabaseAdmin
+                    .from('roles')
+                    .select('id')
+                    .eq('name', 'neighbor')
+                    .single();
+
+                if (neighborRole) {
+                    // Check if neighbor role already exists for this member
+                    const { data: existingNeighbor } = await supabaseAdmin
+                        .from('member_roles')
+                        .select('id')
+                        .eq('member_id', memberData.id)
+                        .eq('role_id', neighborRole.id)
+                        .maybeSingle();
+
+                    if (!existingNeighbor) {
+                        await supabaseAdmin
+                            .from('member_roles')
+                            .insert({
+                                member_id: memberData.id,
+                                role_id: neighborRole.id
+                            });
+                    }
+                }
+            }
         }
 
         res.status(201).json({ message: `Invitation sent to ${email}`, userId: userId });
@@ -599,6 +627,15 @@ exports.updateUser = async (req, res) => {
 
                 const communityUnitIds = communityUnits.map(u => u.id);
 
+                // Check if user currently has units (before update)
+                const { data: currentOwnerships } = await supabaseAdmin
+                    .from('unit_owners')
+                    .select('id')
+                    .eq('profile_id', id)
+                    .in('unit_id', communityUnitIds);
+
+                const hadUnitsBefore = currentOwnerships && currentOwnerships.length > 0;
+
                 // Delete existing for this user AND this community's units
                 await supabaseAdmin
                     .from('unit_owners')
@@ -613,6 +650,53 @@ exports.updateUser = async (req, res) => {
                         is_primary: false // default
                     }));
                     await supabaseAdmin.from('unit_owners').insert(inserts);
+                }
+
+                const hasUnitsAfter = unitIds.length > 0;
+
+                // Get the member_id for this user in this community
+                const { data: memberData } = await supabaseAdmin
+                    .from('community_members')
+                    .select('id')
+                    .eq('profile_id', id)
+                    .eq('community_id', communityId)
+                    .single();
+
+                if (memberData) {
+                    // Get neighbor role ID
+                    const { data: neighborRole } = await supabaseAdmin
+                        .from('roles')
+                        .select('id')
+                        .eq('name', 'neighbor')
+                        .single();
+
+                    if (neighborRole) {
+                        if (!hadUnitsBefore && hasUnitsAfter) {
+                            // User gained units: add neighbor role
+                            const { data: existingNeighbor } = await supabaseAdmin
+                                .from('member_roles')
+                                .select('id')
+                                .eq('member_id', memberData.id)
+                                .eq('role_id', neighborRole.id)
+                                .maybeSingle();
+
+                            if (!existingNeighbor) {
+                                await supabaseAdmin
+                                    .from('member_roles')
+                                    .insert({
+                                        member_id: memberData.id,
+                                        role_id: neighborRole.id
+                                    });
+                            }
+                        } else if (hadUnitsBefore && !hasUnitsAfter) {
+                            // User lost all units: remove neighbor role
+                            await supabaseAdmin
+                                .from('member_roles')
+                                .delete()
+                                .eq('member_id', memberData.id)
+                                .eq('role_id', neighborRole.id);
+                        }
+                    }
                 }
             }
         }

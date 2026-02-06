@@ -7,6 +7,8 @@ import DashboardLayout from '../components/DashboardLayout';
 import GlassLoader from '../components/GlassLoader';
 import PaymentList from '../components/payments/PaymentList';
 import CampaignProgress from '../components/payments/CampaignProgress';
+import PaymentUpload from '../components/payments/PaymentUpload';
+import ModalPortal from '../components/ModalPortal';
 import { getCurrencySymbol } from '../utils/currencyUtils';
 
 const CampaignDetails = () => {
@@ -18,7 +20,12 @@ const CampaignDetails = () => {
 
     const [campaign, setCampaign] = useState(null);
     const [payments, setPayments] = useState([]);
+    const [linkedFees, setLinkedFees] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    // Payment Modal State
+    const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+    const [selectedFeeForPayment, setSelectedFeeForPayment] = useState(null);
 
 
     useEffect(() => {
@@ -53,11 +60,25 @@ const CampaignDetails = () => {
                 setPayments(payData);
             }
 
+            // Fetch Linked Fees if Mandatory
+            if (campData.is_mandatory) {
+                const feeRes = await fetch(`${API_URL}/api/maintenance/status?campaign_id=${id}`, { headers });
+                if (feeRes.ok) {
+                    const feeData = await feeRes.json();
+                    setLinkedFees(feeData.data || []);
+                }
+            }
+
         } catch (error) {
             console.error(error);
         } finally {
             setLoading(false);
         }
+    };
+
+    const handlePayClick = (fee) => {
+        setSelectedFeeForPayment(fee);
+        setPaymentModalOpen(true);
     };
 
     if (loading) {
@@ -72,7 +93,7 @@ const CampaignDetails = () => {
         return (
             <DashboardLayout>
                 <div className="p-8 text-center text-gray-500">
-                    {t('campaigns.not_found', 'Campaign not found.')}
+                    {t('campaigns.not_found', 'Extraordinary fee not found.')}
                     <button onClick={() => navigate('/app/campaigns')} className="block mt-4 text-blue-500 hover:underline mx-auto">
                         {t('common.back', 'Go Back')}
                     </button>
@@ -87,11 +108,17 @@ const CampaignDetails = () => {
 
                 {/* Header / Back */}
                 <button
-                    onClick={() => navigate('/app/campaigns')}
+                    onClick={() => {
+                        if (isAdmin) {
+                            navigate('/app/maintenance?tab=extraordinary');
+                        } else {
+                            navigate('/app/my-balance?tab=extraordinary');
+                        }
+                    }}
                     className="flex items-center text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
                 >
                     <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
-                    {t('campaigns.back_to_list', 'Back to Campaigns')}
+                    {t('campaigns.back_to_list', 'Back to Extraordinary Fees')}
                 </button>
 
                 {/* Campaign Info Card */}
@@ -127,22 +154,119 @@ const CampaignDetails = () => {
                     </div>
                 </div>
 
-                {/* Contributions List */}
-                <div className="space-y-4">
-                    <h2 className="text-xl font-semibold text-gray-800 dark:text-white px-1">
-                        {t('campaigns.contributions_title', 'Contributions History')}
-                    </h2>
+                {/* Contributions List - Only for Voluntary Campaigns (Non-Mandatory) */}
+                {!campaign.is_mandatory && (
+                    <div className="space-y-4">
+                        <h2 className="text-xl font-semibold text-gray-800 dark:text-white px-1">
+                            {t('campaigns.contributions_title', 'Contributions History')}
+                        </h2>
 
-                    <PaymentList
-                        payments={payments}
-                        isAdmin={isAdmin}
-                        onRefresh={fetchData}
-                        showResidentInfo={isAdmin}
-                        currencyCode={activeCommunity?.communities?.currency}
-                    />
-                </div>
+                        <PaymentList
+                            payments={payments}
+                            isAdmin={isAdmin}
+                            onRefresh={fetchData}
+                            showResidentInfo={isAdmin}
+                            currencyCode={activeCommunity?.communities?.currency}
+                        />
+                    </div>
+                )}
+
+                {/* Linked Fees for Mandatory Campaigns */}
+                {campaign.is_mandatory && isAdmin && (
+                    <div className="space-y-4 pt-4 border-t border-gray-100 dark:border-white/5">
+                        <div className="flex justify-between items-center px-1">
+                            <h2 className="text-xl font-semibold text-gray-800 dark:text-white">
+                                {t('campaigns.fees_status_title', 'Extraordinary Fees Status')}
+                            </h2>
+                            <div className="flex items-center gap-2 text-xs text-gray-500">
+                                <span className="w-3 h-3 rounded-full bg-green-500"></span>
+                                {t('common.paid', 'Paid')}: {linkedFees.filter(f => f.status === 'paid').length}
+                                <span className="w-3 h-3 rounded-full bg-blue-500 ml-2"></span>
+                                {t('common.pending', 'Pending')}: {linkedFees.filter(f => f.status === 'pending').length}
+                            </div>
+                        </div>
+
+                        <div className="glass-card overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="glass-table">
+                                    <thead>
+                                        <tr>
+                                            <th>{t('user_management.table.block', 'Block')}</th>
+                                            <th>{t('user_management.table.unit', 'Unit')}</th>
+                                            <th>{t('user_management.table.name', 'Owner')}</th>
+                                            <th>{t('payments.table.amount', 'Amount')}</th>
+                                            <th>{t('payments.table.status', 'Status')}</th>
+                                            <th className="text-end">{t('common.actions', 'Actions')}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {linkedFees.length === 0 ? (
+                                            <tr>
+                                                <td colSpan="6" className="text-center py-8 text-gray-500">
+                                                    {t('campaigns.no_fees_generated', 'No fees generated for this extraordinary fee.')}
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            linkedFees.map((fee) => (
+                                                <tr key={fee.id}>
+                                                    <td className="text-gray-800 dark:text-neutral-200">{fee.block_name}</td>
+                                                    <td className="text-gray-800 dark:text-neutral-200">{fee.unit_number}</td>
+                                                    <td className="text-gray-800 dark:text-neutral-200">{fee.owner_name}</td>
+                                                    <td className="text-gray-800 dark:text-neutral-200">
+                                                        {getCurrencySymbol(activeCommunity?.communities?.currency)}{fee.amount}
+                                                    </td>
+                                                    <td>
+                                                        <span className={`inline-flex items-center gap-x-1.5 py-1 px-2.5 rounded-full text-xs font-medium ${fee.status === 'paid' ? 'bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-500' : 'bg-blue-100 text-blue-800 dark:bg-blue-800/30 dark:text-blue-500'}`}>
+                                                            {fee.status === 'paid' ? t('payments.status.confirmed', 'Paid') : t('payments.status.pending', 'Pending')}
+                                                        </span>
+                                                    </td>
+                                                    <td className="text-end">
+                                                        {fee.status === 'pending' && !fee.payment_id && (
+                                                            <button
+                                                                onClick={() => handlePayClick(fee)}
+                                                                className="mr-2 inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-full shadow-sm backdrop-blur-md border border-emerald-200 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-200 dark:border-emerald-500/30 dark:hover:bg-emerald-500/30 transition-colors"
+                                                                title={t('maintenance.record_payment', 'Record Payment')}
+                                                            >
+                                                                <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                                {t('maintenance.register', 'Register')}
+                                                            </button>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
             </div>
+
+            {/* Payment Upload Modal */}
+            {paymentModalOpen && (
+                <ModalPortal>
+                    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+                        <div className="w-full max-w-lg">
+                            <PaymentUpload
+                                onSuccess={() => {
+                                    setPaymentModalOpen(false);
+                                    fetchData();
+                                }}
+                                onCancel={() => setPaymentModalOpen(false)}
+                                initialType="campaign"
+                                initialFeeId={selectedFeeForPayment?.id}
+                                initialAmount={selectedFeeForPayment?.amount}
+                                initialUnitId={selectedFeeForPayment?.unit_id}
+                                initialCampaignId={campaign?.id}
+                                isAdmin={isAdmin}
+                            />
+                        </div>
+                    </div>
+                </ModalPortal>
+            )}
+
         </DashboardLayout>
     );
 };

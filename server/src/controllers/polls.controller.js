@@ -20,6 +20,35 @@ const getMemberRoles = async (memberId) => {
     return data?.map(r => r.roles?.name).filter(Boolean) || [];
 };
 
+// Helper to get full block hierarchy (including parent blocks)
+const getBlockHierarchy = async (blockIds) => {
+    const allBlockIds = new Set(blockIds);
+
+    for (const blockId of blockIds) {
+        let currentBlockId = blockId;
+        let depth = 0;
+        const maxDepth = 10;
+
+        while (currentBlockId && depth < maxDepth) {
+            const { data: block } = await supabaseAdmin
+                .from('blocks')
+                .select('parent_id')
+                .eq('id', currentBlockId)
+                .single();
+
+            if (block?.parent_id) {
+                allBlockIds.add(block.parent_id);
+                currentBlockId = block.parent_id;
+            } else {
+                break;
+            }
+            depth++;
+        }
+    }
+
+    return [...allBlockIds];
+};
+
 exports.getAll = async (req, res) => {
     const token = req.headers.authorization?.split(' ')[1];
     const communityId = req.headers['x-community-id'];
@@ -49,8 +78,11 @@ exports.getAll = async (req, res) => {
         const roles = await getMemberRoles(member.id);
         const isAdmin = roles.some(r => ['super_admin', 'admin', 'president', 'secretary'].includes(r));
 
-        // Get user's block IDs
-        const userBlockIds = member.profile?.unit_owners?.map(uo => uo.units?.block_id).filter(Boolean) || [];
+        // Get user's block IDs (direct from units)
+        const directBlockIds = member.profile?.unit_owners?.map(uo => uo.units?.block_id).filter(Boolean) || [];
+
+        // Get full hierarchy including parent blocks
+        const userBlockIds = await getBlockHierarchy(directBlockIds);
 
         // 1. Fetch Polls for this Community
         let query = supabaseAdmin

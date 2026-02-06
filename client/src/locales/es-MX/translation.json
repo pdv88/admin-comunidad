@@ -68,7 +68,7 @@
         },
         "payments": {
             "title": "Finanzas Transparentes",
-            "desc": "Controla las cuotas mensuales, contribuciones a campañas y gastos de la comunidad."
+            "desc": "Controla las cuotas mensuales, contribuciones a cuotas extraordinarias y gastos de la comunidad."
         },
         "notices": {
             "title": "Avisos Instantáneos",
@@ -268,14 +268,18 @@
             "properties": "Estructura",
             "payments": "Pagos",
             "maintenance": "Cuotas de Comunidad",
-            "campaigns": "Campañas",
+            "campaigns": "Cuotas Extraordinarias",
             "users": "Usuarios",
             "administration": "Administración",
             "community_settings": "Configuración de Comunidad",
             "community_info": "Info de Comunidad",
-            "reservations": "Reservaciones"
+            "reservations": "Reservaciones",
+            "my_balance": "Mi Saldo",
+            "community_fees": "Cuotas de Comunidad"
         },
-        "sign_out": "Cerrar sesión"
+        "sign_out": "Cerrar sesión",
+        "maintenance_fee": "Cuota de Comunidad",
+        "extraordinary_fee": "Cuota Extraordinaria"
     },
     "notices": {
         "title": "Avisos de la Comunidad",
@@ -326,9 +330,12 @@
         "select_block": "Seleccionar Bloque",
         "unit_placeholder": "Número (ej. 101)",
         "unit_type": {
-            "apartment": "Apartamento",
+            "apartment": "Departamento",
             "house": "Casa",
             "commercial": "Local Comercial",
+            "warehouse": "Bodega",
+            "garage": "Cajón Estacionamiento",
+            "office": "Oficina",
             "parking": "Estacionamiento",
             "storage": "Trastero"
         },
@@ -390,14 +397,6 @@
             "staircase": "Escalera",
             "tower": "Torre",
             "level": "Nivel"
-        },
-        "unit_type": {
-            "apartment": "Departamento",
-            "house": "Casa",
-            "commercial": "Local Comercial",
-            "warehouse": "Bodega",
-            "garage": "Cajón Estacionamiento",
-            "office": "Oficina"
         },
         "empty_block": "No hay unidades ni subestructuras aún."
     },
@@ -689,12 +688,24 @@
         "processing": "Procesando...",
         "add_photo": "Añadir Foto",
         "export_excel": "Exportar a Excel",
-        "optional": "opcional",
         "copy": "Copiar",
         "copied": "Copiado",
         "days": "días",
         "hours": "hrs",
-        "no_description": "Sin descripción."
+        "no_description": "Sin descripción.",
+        "description": "Descripción",
+        "error_fetching_data": "Error al obtener datos",
+        "network_error": "Error de red",
+        "filters": "Filtros",
+        "clear_filters": "Limpiar",
+        "optional": "opcional",
+        "clear_selection": "Limpiar Selección",
+        "view_details": "Ver Detalles",
+        "yes": "Sí",
+        "no": "No"
+    },
+    "payment": {
+        "success": "Pago subido exitosamente"
     },
     "payments": {
         "title": "Pagos y Aportaciones",
@@ -706,13 +717,16 @@
         "upload_title": "Registrar Nuevo Pago",
         "tabs": {
             "maintenance": "Cuotas Mensuales",
-            "campaigns": "Campañas"
+            "campaigns": "Extraordinarias"
         },
         "campaign": {
             "funded": "Financiado"
         },
         "upload": {
             "title": "Registrar Pago",
+            "category": "Categoría de Pago",
+            "type_maintenance": "Cuota de Mantenimiento",
+            "type_campaign": "Cuota Extraordinaria",
             "date": "Fecha del Pago",
             "amount": "Monto",
             "notes": "Notas (Opcional)",
@@ -745,57 +759,61 @@
             "pending": "Pendiente",
             "confirmed": "Confirmado",
             "rejected": "Rechazado"
-        },
-        "campaigns": {
-            "title": "Campañas de Fondos",
-            "active_campaigns": "Campañas",
-            "create_title": "Crear Nueva Campaña",
-            "name": "Nombre de la Campaña",
-            "goal": "Meta",
-            "description": "Descripción",
-            "deadline": "Fecha Límite",
-            "create_btn": "Crear Campaña",
-            "success": "¡Campaña creada con éxito!",
-            "error": "Error al crear la campaña",
-            "no_desc": "Sin descripción",
-            "collected": "Recaudado",
-            "empty": "No hay campañas activas.",
-            "no_active_campaigns": "No hay campañas activas",
-            "check_later": "Nuevas campañas aparecerán aquí"
         }
     },
     "campaigns": {
-        "title": "Campañas de Fondos",
-        "create_btn": "Crear Campaña",
-        "create_title": "Crear Nueva Campaña",
-        "success": "¡Campaña creada con éxito!",
-        "error": "Error al crear la campaña",
-        "update_success": "¡Campaña actualizada con éxito!",
-        "update_error": "Error al actualizar la campaña",
-        "name": "Nombre de la Campaña",
+        "title": "Cuotas Extraordinarias",
+        "create_btn": "Crear Cuota Extraordinaria",
+        "create_title": "Crear Nueva Cuota Extraordinaria",
+        "success": "¡Cuota creada con éxito!",
+        "error": "Error al crear la cuota",
+        "update_success": "¡Cuota actualizada con éxito!",
+        "update_error": "Error al actualizar la cuota",
+        "name": "Concepto de la Cuota",
         "goal": "Meta",
         "description": "Descripción",
         "deadline": "Fecha Límite",
         "deadline_label": "Fecha Límite",
-        "target_audience": "Audiencia",
-        "target_all": "Toda la Comunidad",
-        "target_blocks": "Bloques Específicos",
-        "select_blocks": "Seleccionar Bloques",
         "active": "Activa",
         "closed": "Cerrada",
+        "tab_active": "Activas",
+        "tab_closed": "Cerradas",
+        "filter_all": "Todas las Cuotas",
+        "filter_active": "Solo Activas",
+        "filter_closed": "Solo Cerradas",
         "no_desc": "Sin descripción",
         "collected": "Recaudado",
-        "edit_title": "Editar Campaña",
+        "edit_title": "Editar Cuota",
         "ongoing_hint": "Dejar vacío para indefinida",
-        "is_active": "Campaña Activa",
-        "contribute": "Contribuir",
-        "back_to_list": "Volver a Campañas",
-        "contributions_title": "Historial de Contribuciones",
-        "not_found": "Campaña no encontrada.",
+        "is_active": "Cuota Activa",
+        "contribute": "Pagar/Contribuir",
+        "back_to_list": "Volver a Cuotas",
+        "contributions_title": "Historial de Pagos",
+        "not_found": "Cuota no encontrada.",
         "stats": {
             "goal": "Meta",
             "raised": "Recaudado"
-        }
+        },
+        "is_mandatory_label": "Cuota Mandatoria (Genera cobros automáticos)",
+        "amount_per_unit": "Monto por Unidad",
+        "mandatory_warning": "Se generarán y habitilitarán cobros automáticamente para todas las unidades seleccionadas.",
+        "mandatory": "Mandatoria",
+        "fees_status_title": "Estado de Cuotas Extraordinarias",
+        "no_fees_generated": "No se han generado cuotas para esta campaña.",
+        "blocks_selected": "unidades/bloques seleccionados",
+        "selection_summary": "Resumen de Selección",
+        "total_entities": "entidades totales seleccionadas",
+        "target_audience": "Audiencia Destino",
+        "target_all": "Toda la Comunidad",
+        "target_blocks": "Bloques Específicos",
+        "select_blocks": "Seleccionar Bloques",
+        "preview_title": "Vista Previa del Cálculo",
+        "total_units": "Unidades Seleccionadas",
+        "fee_per_unit": "Cuota Estimada por Unidad",
+        "blocks_selected_count": "Bloques Seleccionados",
+        "unit_breakdown": "Ver Desglose por Unidad",
+        "unit_col": "Unidad",
+        "amount_col": "Monto"
     },
     "cookies": {
         "message": "Utilizamos cookies para asegurar que tengas la mejor experiencia en nuestro sitio web.",
@@ -956,8 +974,13 @@
         "resident_title": "Mis Cuotas de Mantenimiento",
         "tab_community": "Gestión Comunidad",
         "tab_personal": "Mi Estado de Cuenta",
+        "tab_monthly": "Cuotas Mensuales",
+        "tab_extraordinary": "Cuotas Extraordinarias",
+        "monthly_fee": "Cuota de Mantenimiento",
         "generate_title": "Generar Cuotas Mensuales",
         "period": "Periodo de Facturación",
+        "due_date": "Fecha Vencimiento",
+        "paid_date": "Fecha Pago",
         "amount": "Monto",
         "calculation_method": "Método de Cálculo",
         "method_fixed": "Monto Fijo",
@@ -987,7 +1010,6 @@
         "error_zero_budget": "El presupuesto total debe ser mayor a 0.",
         "units_without_coefficient": "Las siguientes unidades no tienen coeficiente asignado, lo cual es necesario para este cálculo:",
         "error_no_users": "No hay usuarios para generar cuotas.",
-        "warning_gen_zero": "Las cuotas para este periodo ya han sido generadas.",
         "no_records_export": "No hay registros para exportar.",
         "pay": "Pagar",
         "review": "Revisar Pago",

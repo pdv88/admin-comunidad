@@ -21,6 +21,7 @@ router.put('/:feeId/revert', maintenanceController.revertToPending);
 router.delete('/:feeId', maintenanceController.deleteFee);
 
 // Resident Routes
+router.get('/balance', maintenanceController.getBalance);
 router.get('/my-statement', maintenanceController.getMyStatement);
 
 router.post('/:feeId/email', maintenanceController.resendFeeEmail);

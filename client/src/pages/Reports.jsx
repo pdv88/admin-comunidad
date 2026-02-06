@@ -52,7 +52,8 @@ const Reports = () => {
         scope: 'community', // community, block, unit
         block_id: '',
         unit_id: '',
-        image_url: ''
+        image_url: '',
+        visibility: 'public' // public or private
     });
 
     // Filters & Pagination
@@ -152,6 +153,7 @@ const Reports = () => {
                 description: newReport.description,
                 category: newReport.category,
                 image_url: newReport.image_url,
+                visibility: newReport.visibility,
                 // Scope logic
                 // If specific: pass block_id. If unit_id is specific (not empty), pass unit_id to backend
                 unit_id: newReport.scope === 'specific' ? (newReport.unit_id || null) : null,
@@ -177,7 +179,8 @@ const Reports = () => {
                     scope: 'community',
                     block_id: userUnits.length === 1 ? userUnits[0].block_id : '',
                     unit_id: userUnits.length === 1 ? userUnits[0].id : '',
-                    image_url: ''
+                    image_url: '',
+                    visibility: 'public'
                 });
                 fetchReports();
                 setToast({ message: t('reports.create_success', 'Report created successfully'), type: 'success' });
@@ -415,6 +418,12 @@ const Reports = () => {
                                                     <span className="text-xs text-gray-400 capitalize bg-gray-100 dark:bg-neutral-700 px-2 py-0.5 rounded-full">
                                                         {t(`reports.categories.${report.category}`, report.category)}
                                                     </span>
+                                                    {report.visibility === 'private' && (
+                                                        <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 flex items-center gap-1">
+                                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                                                            {t('reports.private', 'Private')}
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 <h2 className="font-bold text-gray-800 dark:text-white text-lg mb-1">{report.title}</h2>
                                                 <p className="text-gray-600 dark:text-neutral-300 text-sm line-clamp-2 md:line-clamp-none">{report.description}</p>
@@ -568,6 +577,32 @@ const Reports = () => {
                                             ]}
                                         />
                                     </div>
+
+                                    {/* Visibility Toggle - Only for Admins */}
+                                    {isAdminOrPres && (
+                                        <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-neutral-800/50 rounded-2xl">
+                                            <div className="flex items-center gap-2">
+                                                <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                                </svg>
+                                                <div>
+                                                    <span className="text-sm font-medium text-gray-700 dark:text-neutral-300">
+                                                        {t('reports.form.private_report', 'Private Report')}
+                                                    </span>
+                                                    <p className="text-xs text-gray-500 dark:text-neutral-500">
+                                                        {t('reports.form.private_hint', 'Only visible to admins')}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setNewReport({ ...newReport, visibility: newReport.visibility === 'private' ? 'public' : 'private' })}
+                                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${newReport.visibility === 'private' ? 'bg-purple-600' : 'bg-gray-200 dark:bg-neutral-700'}`}
+                                            >
+                                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${newReport.visibility === 'private' ? 'translate-x-6' : 'translate-x-1'}`} />
+                                            </button>
+                                        </div>
+                                    )}
 
                                     {/* Conditional Block Selection (For Block Scope OR Unit Scope for Admins) */}
                                     {/* Specific Area Selection */}

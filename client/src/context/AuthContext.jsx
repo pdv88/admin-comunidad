@@ -301,13 +301,13 @@ export const AuthProvider = ({ children }) => {
   // Get the primary/highest role for display purposes
   const getPrimaryRole = () => {
     const roles = activeCommunity?.roles || [];
-    const hierarchy = ['super_admin', 'admin', 'president', 'treasurer', 'secretary', 'vocal', 'security', 'maintenance', 'resident'];
+    const hierarchy = ['super_admin', 'admin', 'president', 'treasurer', 'secretary', 'vocal', 'security', 'maintenance', 'neighbor'];
     for (const role of hierarchy) {
       if (roles.some(r => r.name === role)) {
         return role;
       }
     }
-    return 'resident';
+    return 'neighbor';
   };
 
   const value = {

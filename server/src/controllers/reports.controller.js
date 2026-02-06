@@ -74,52 +74,51 @@ exports.getAll = async (req, res) => {
             `, { count: 'exact' }) // Request total count
             .eq('community_id', communityId);
 
-        // RBAC Filtering (Base Scope)
-        if (roles.includes('super_admin') || roles.includes('admin') || roles.includes('president') || roles.includes('maintenance') || roles.includes('secretary')) {
-            // See ALL reports in community
-        } else if (roles.includes('vocal')) {
-            // Vocal Logic: Can see BLOCK reports or OWN reports
-            // If we want "My Reports" tab specifically, user might send ?scope=my
-            // But for general 'getAll', we usually return everything they have access to.
-            // If frontend sends specific scope (e.g. 'my' or 'block'), we can respect that too,
-            // but let's stick to the secure base logic + filters.
+        // Check if user is an admin (can see private reports)
+        const isAdmin = roles.includes('super_admin') || roles.includes('admin') || roles.includes('president') || roles.includes('maintenance') || roles.includes('secretary');
 
+        // RBAC Filtering (Base Scope)
+        if (isAdmin) {
+            // Admins see ALL reports (public + private)
+        } else if (roles.includes('vocal')) {
+            // Vocals: Can see public reports in their blocks OR their own reports
+            // Filter out private reports (except their own)
             const mode = req.query.mode || 'all'; // 'my', 'block', 'all'
 
             if (mode === 'my') {
                 query = query.eq('user_id', user.id);
             } else if (mode === 'block') {
-                // Use getVocalBlocks instead of unit_owners
                 const vocalBlockIds = await getVocalBlocks(member.id);
                 if (vocalBlockIds.length > 0) {
-                    query = query.in('block_id', vocalBlockIds);
+                    // Only public reports in their blocks
+                    query = query.in('block_id', vocalBlockIds).eq('visibility', 'public');
                 } else {
                     query = query.eq('1', '0'); // No blocks, no results
                 }
             } else {
-                // Default Vocal View: Own + Block? Or just enforce what they CAN see?
-                // Usually vocal sees everything in their block AND their own stuff.
-                // If no mode specified, we return the Union.
+                // Default: Own reports + public block reports
                 const vocalBlockIds = await getVocalBlocks(member.id);
                 if (vocalBlockIds.length > 0) {
-                    query = query.or(`block_id.in.(${vocalBlockIds.join(',')}),user_id.eq.${user.id}`);
+                    // Own reports (any visibility) OR public block reports
+                    query = query.or(`user_id.eq.${user.id},and(block_id.in.(${vocalBlockIds.join(',')}),visibility.eq.public)`);
                 } else {
                     query = query.eq('user_id', user.id);
                 }
             }
 
         } else {
-            // Resident: See own reports OR reports for their units OR reports for their blocks
+            // Resident: See own reports OR public reports for their units/blocks
             const myUnitIds = member.profile?.unit_owners?.map(uo => uo.unit_id).filter(Boolean) || [];
             const myBlockIds = member.profile?.unit_owners?.map(uo => uo.units?.block_id).filter(Boolean) || [];
 
+            // Build conditions: own reports (any visibility) + public reports in their scope
             let orConditions = [`user_id.eq.${user.id}`];
 
             if (myUnitIds.length > 0) {
-                orConditions.push(`unit_id.in.(${myUnitIds.join(',')})`);
+                orConditions.push(`and(unit_id.in.(${myUnitIds.join(',')}),visibility.eq.public)`);
             }
             if (myBlockIds.length > 0) {
-                orConditions.push(`block_id.in.(${myBlockIds.join(',')})`);
+                orConditions.push(`and(block_id.in.(${myBlockIds.join(',')}),visibility.eq.public)`);
             }
 
             query = query.or(orConditions.join(','));
@@ -154,7 +153,7 @@ exports.getAll = async (req, res) => {
 };
 
 exports.create = async (req, res) => {
-    const { title, description, category, image_url, unit_id } = req.body;
+    const { title, description, category, image_url, unit_id, visibility } = req.body;
     const token = req.headers.authorization?.split(' ')[1];
     const communityId = req.headers['x-community-id'];
 
@@ -213,6 +212,9 @@ exports.create = async (req, res) => {
             }
         }
 
+        // Only admins can create private reports
+        const reportVisibility = (isAdmin && visibility === 'private') ? 'private' : 'public';
+
         const { data: report, error } = await supabaseAdmin
             .from('reports')
             .insert([{
@@ -224,7 +226,8 @@ exports.create = async (req, res) => {
                 image_url,
                 unit_id,
                 block_id,
-                status: 'pending'
+                status: 'pending',
+                visibility: reportVisibility
             }])
             .select()
             .single();

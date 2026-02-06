@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light only">
+    <meta name="supported-color-schemes" content="light only">
+    <title>Nueva Campaña Comunitaria</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap');
+
+        @media only screen and (max-width: 600px) {
+            .content {
+                padding: 20px !important;
+            }
+        }
+
+        :root {
+            color-scheme: light only;
+            supported-color-schemes: light only;
+        }
+
+        @media (prefers-color-scheme: dark) {
+
+            body,
+            .body-table,
+            .main-bg {
+                background-color: #f9fafb !important;
+            }
+
+            .content-box {
+                background-color: rgba(255, 255, 255, 0.7) !important;
+                color: #1f2937 !important;
+            }
+
+            h2 {
+                color: #1f2937 !important;
+            }
+
+            p {
+                color: #4b5563 !important;
+            }
+        }
+    </style>
+</head>
+
+<body style="margin: 0; padding: 0; font-family: 'Outfit', sans-serif; background: #f9fafb; color: #1f2937;">
+    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0"
+        style="width: 100%; min-height: 100vh; background-color: #f9fafb;">
+        <tr>
+            <td align="center" valign="middle" style="padding: 40px 20px; background-color: #f9fafb;">
+                <div class="content content-box"
+                    style="max-width: 600px; margin: 0 auto; background: rgba(255, 255, 255, 0.7); border: 1px solid rgba(255, 255, 255, 0.4); border-radius: 16px; padding: 40px; text-align: center; box-shadow: 0 20px 25px -5px rgba(229, 231, 235, 0.6); backdrop-filter: blur(24px);">
+
+                    <div style="text-align: center; margin-bottom: 2rem;">
+                        {{#if community_logo}}
+                        <img src="{{community_logo}}" alt="{{community_name}}"
+                            style="max-height: 80px; margin-bottom: 0.5rem;">
+                        {{/if}}
+                        <h2 style="margin: 0; color: #1e40af; font-size: 1.5rem; font-weight: bold;">{{community_name}}
+                        </h2>
+                    </div>
+
+                    <h1 style="font-size: 1.75rem; font-weight: 700; color: #111827; margin-bottom: 1.5rem;">
+                        {{campaign_name}}</h1>
+
+                    <p style="font-size: 1rem; line-height: 1.6; color: #4b5563; margin-bottom: 2rem;">
+                        Hola <strong>{{user_name}}</strong>,<br><br>
+                        Nuestra comunidad ha iniciado una nueva campaña voluntaria: <strong>{{campaign_name}}</strong>.
+                    </p>
+
+                    <div
+                        style="background: rgba(255, 255, 255, 0.6); border-radius: 12px; padding: 1.5rem; border: 1px solid rgba(0,0,0,0.05); text-align: left; margin-bottom: 2rem;">
+                        <p style="margin: 0; color: #4b5563; line-height: 1.5;">{{campaign_description}}</p>
+                    </div>
+
+                    <p style="font-size: 1rem; line-height: 1.6; color: #4b5563; margin-bottom: 2.5rem;">
+                        Tu participación es totalmente opcional, pero agradeceríamos enormemente tu valiosa cooperación
+                        para lograr esta meta juntos y mejorar nuestro entorno.
+                    </p>
+
+                    <a href="{{link}}"
+                        style="display: inline-block; padding: 0.875rem 2.5rem; font-size: 0.95rem; font-weight: 600; text-decoration: none; color: #ffffff; background-color: #2563eb; border-radius: 9999px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.4);">Ver
+                        Detalles y Participar</a>
+
+                    <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid rgba(0,0,0,0.05);">
+                        <p style="font-size: 0.75rem; color: #6b7280;">Habiio - Gestión Inteligente de Comunidades</p>
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>

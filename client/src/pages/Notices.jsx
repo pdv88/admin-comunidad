@@ -32,6 +32,8 @@ const Notices = () => {
     const [noticeToDelete, setNoticeToDelete] = useState(null);
     const [isCreating, setIsCreating] = useState(false);
 
+    // Neighbors can VIEW notices but not create them
+    const canView = hasAnyRole(['super_admin', 'admin', 'president', 'secretary', 'vocal', 'neighbor']);
     const canCreate = hasAnyRole(['super_admin', 'admin', 'president', 'secretary', 'vocal']);
     const isAdminOrPres = hasAnyRole(['super_admin', 'admin', 'president', 'secretary']);
     const isVocal = hasAnyRole(['vocal']);
@@ -42,7 +44,7 @@ const Notices = () => {
         .map(r => r.block_id) || [];
 
     useEffect(() => {
-        if (!canCreate) return; // Redirect logic usually handled by router or layout, but good to check
+        if (!canView) return; // Redirect logic usually handled by router or layout, but good to check
         fetchNotices();
         if (isAdminOrPres || isVocal) fetchBlocks();
 
@@ -50,7 +52,7 @@ const Notices = () => {
         if (isVocal && vocalBlockIds.length > 0) {
             setNewNotice(prev => ({ ...prev, block_id: vocalBlockIds[0] }));
         }
-    }, [canCreate, isVocal, isAdminOrPres]);
+    }, [canView, isVocal, isAdminOrPres]);
 
     const fetchNotices = async () => {
         try {
@@ -165,7 +167,7 @@ const Notices = () => {
         );
     }
 
-    if (!canCreate) {
+    if (!canView) {
         return (
             <DashboardLayout>
                 <div className="p-6 text-center text-gray-500">
@@ -188,13 +190,15 @@ const Notices = () => {
                         <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t('notices.title')}</h1>
                         <p className="text-gray-500 text-sm dark:text-neutral-400">{t('notices.subtitle', 'Manage community announcements')}</p>
                     </div>
-                    <button
-                        onClick={() => setShowModal(true)}
-                        className="glass-button"
-                    >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
-                        {t('notices.post_notice')}
-                    </button>
+                    {canCreate && (
+                        <button
+                            onClick={() => setShowModal(true)}
+                            className="glass-button"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
+                            {t('notices.post_notice')}
+                        </button>
+                    )}
                 </div>
 
                 {/* List */}

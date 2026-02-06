@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { API_URL } from '../config';
@@ -11,8 +11,9 @@ import GlassLoader from '../components/GlassLoader';
 import Toast from '../components/Toast';
 import ConfirmationModal from '../components/ConfirmationModal';
 import { getCurrencySymbol } from '../utils/currencyUtils';
+import HierarchicalBlockSelector from '../components/HierarchicalBlockSelector';
 
-const Campaigns = () => {
+const CampaignsContent = () => {
     const { t } = useTranslation();
     const { user, activeCommunity, hasAnyRole } = useAuth();
     const isAdmin = hasAnyRole(['super_admin', 'admin', 'president', 'treasurer']);
@@ -25,7 +26,7 @@ const Campaigns = () => {
 
     const [campaigns, setCampaigns] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('active'); // 'active' | 'closed'
+    const [filterStatus, setFilterStatus] = useState('active'); // 'all' | 'active' | 'closed'
 
     // Form State
     const [name, setName] = useState('');
@@ -42,9 +43,62 @@ const Campaigns = () => {
     const [availableBlocks, setAvailableBlocks] = useState([]);
     const [targetType, setTargetType] = useState('all'); // 'all' or 'blocks'
     const [selectedBlocks, setSelectedBlocks] = useState([]); // Array of block IDs
+    const [isMandatory, setIsMandatory] = useState(false);
+    const [amountPerUnit, setAmountPerUnit] = useState('');
 
     // Delete State
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+
+    // Fee Calculation State
+    const [showBreakdown, setShowBreakdown] = useState(false);
+
+    // Memoized calculation of affected units to prevent performance issues
+    const affectedUnits = useMemo(() => {
+        if (!availableBlocks.length) return [];
+
+        // Helper to resolve full block path
+        const getBlockPath = (blockId) => {
+            let path = [];
+            let current = availableBlocks.find(b => b.id === blockId);
+
+            while (current) {
+                path.unshift(current.name);
+                current = availableBlocks.find(b => b.id === current.parent_id);
+            }
+            return path.join(' / ');
+        };
+
+        const extractUnits = (blocks) => {
+            let units = [];
+            blocks.forEach(block => {
+                if (block.units && block.units.length > 0) {
+                    const fullPath = getBlockPath(block.id);
+                    units = [...units, ...block.units.map(u => ({
+                        ...u,
+                        block_name: fullPath
+                    }))];
+                }
+            });
+            return units;
+        };
+
+        if (targetType === 'all') {
+            return extractUnits(availableBlocks);
+        } else {
+            // Filter availableBlocks to only those selected
+            // Note: selectedBlocks contains IDs. We need to find the full block objects.
+            const selectedBlockObjects = availableBlocks.filter(b => selectedBlocks.includes(b.id));
+            return extractUnits(selectedBlockObjects);
+        }
+    }, [availableBlocks, targetType, selectedBlocks]);
+
+    const totalUnits = affectedUnits.length;
+    // const totalBlocks = targetType === 'all' ? availableBlocks.length : selectedBlocks.length;
+
+    const calculatedFee = (isMandatory && goal && totalUnits > 0)
+        ? (parseFloat(goal) / totalUnits)
+        : 0;
+
     const [campaignToDelete, setCampaignToDelete] = useState(null);
     const [deleting, setDeleting] = useState(false);
 
@@ -101,6 +155,8 @@ const Campaigns = () => {
         setCreateError('');
         setTargetType(isRestrictedVocal ? 'blocks' : 'all');
         setSelectedBlocks(isRestrictedVocal ? vocalBlocks : []);
+        setIsMandatory(false);
+        setAmountPerUnit('');
         setShowCreateForm(true);
     };
 
@@ -169,7 +225,11 @@ const Campaigns = () => {
                     description: desc,
                     deadline: deadline || null,
                     target_type: targetType,
-                    target_blocks: targetType === 'blocks' ? selectedBlocks : []
+                    target_blocks: targetType === 'blocks' ? selectedBlocks : [],
+                    is_mandatory: isMandatory,
+                    target_blocks: targetType === 'blocks' ? selectedBlocks : [],
+                    is_mandatory: isMandatory,
+                    amount_per_unit: isMandatory ? Number(calculatedFee.toFixed(2)) : 0
                 })
             });
 
@@ -179,7 +239,7 @@ const Campaigns = () => {
                 throw new Error(data.error || 'Failed to create campaign');
             }
 
-            setToast({ message: t('campaigns.success', 'Campaign created successfully!'), type: 'success' });
+            setToast({ message: t('campaigns.success', 'Extraordinary fee created successfully!'), type: 'success' });
             setName('');
             setGoal('');
             setDesc('');
@@ -187,6 +247,8 @@ const Campaigns = () => {
             setDeadline('');
             setTargetType('all');
             setSelectedBlocks([]);
+            setIsMandatory(false);
+            setAmountPerUnit('');
             setShowCreateForm(false);
             fetchCampaigns(); // Refresh list
 
@@ -196,6 +258,29 @@ const Campaigns = () => {
             // Optionally keep toast for generic network errors, but user asked for modal warning.
         } finally {
             setCreating(false);
+        }
+    };
+
+    const handleToggleBlock = (blockId) => {
+        const getAllDescendants = (pId, allBlocks) => {
+            let descendants = [];
+            const children = allBlocks.filter(b => b.parent_id === pId);
+            children.forEach(child => {
+                descendants.push(child.id);
+                descendants = [...descendants, ...getAllDescendants(child.id, allBlocks)];
+            });
+            return descendants;
+        };
+
+        const idsToToggle = [blockId, ...getAllDescendants(blockId, availableBlocks)];
+        const isCurrentlySelected = selectedBlocks.includes(blockId);
+
+        if (isCurrentlySelected) {
+            // Deselect block and all descendants
+            setSelectedBlocks(selectedBlocks.filter(id => !idsToToggle.includes(id)));
+        } else {
+            // Select block and all descendants
+            setSelectedBlocks([...new Set([...selectedBlocks, ...idsToToggle])]);
         }
     };
 
@@ -247,28 +332,26 @@ const Campaigns = () => {
 
     if (loading) {
         return (
-            <DashboardLayout>
-                <GlassLoader />
-            </DashboardLayout>
+            <GlassLoader />
         );
     }
 
     return (
-        <DashboardLayout>
+        <>
             <Toast
                 message={toast.message}
                 type={toast.type}
                 onClose={() => setToast({ ...toast, message: '' })}
             />
             <div className="max-w-7xl mx-auto space-y-4 md:space-y-8">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-0 mb-6">
-                    <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{t('campaigns.title', 'Funding Campaigns')}</h1>
+                <div className="flex flex-col md:flex-row justify-end items-start md:items-center gap-4 md:gap-0 mb-6">
+                    {/* Title removed as requested */}
                     {canCreate && (
                         <button
                             onClick={openCreateForm}
                             className="glass-button"
                         >
-                            {t('campaigns.create_btn', 'Create Campaign')}
+                            {t('campaigns.create_btn', 'Create Extraordinary Fee')}
                         </button>
                     )}
                 </div>
@@ -282,7 +365,7 @@ const Campaigns = () => {
                                 <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
                                 <div className="inline-block align-bottom glass-card text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full p-6">
                                     <h3 className="text-lg leading-6 font-bold text-gray-800 dark:text-white mb-4" id="modal-title">
-                                        {t('campaigns.create_title', 'Create New Campaign')}
+                                        {t('campaigns.create_title', 'Create New Extraordinary Fee')}
                                     </h3>
                                     {createError && (
                                         <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-3 rounded-md">
@@ -294,7 +377,7 @@ const Campaigns = () => {
                                     <form onSubmit={handleCreate} className="space-y-4">
                                         <div className="grid sm:grid-cols-2 gap-4">
                                             <div>
-                                                <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.name', 'Campaign Name')}</label>
+                                                <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.name', 'Fee Concept')}</label>
                                                 <input
                                                     type="text"
                                                     required
@@ -334,6 +417,83 @@ const Campaigns = () => {
                                             />
                                         </div>
 
+                                        <div className="pt-2 border-t border-gray-100 dark:border-white/5 pt-4">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <label className="text-sm font-semibold dark:text-gray-300">
+                                                    {t('campaigns.is_mandatory_label', 'Mandatory (Generates automatic charges)')}
+                                                </label>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setIsMandatory(!isMandatory)}
+                                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${isMandatory ? 'bg-indigo-600' : 'bg-gray-200 dark:bg-neutral-700'}`}
+                                                >
+                                                    <span
+                                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isMandatory ? 'translate-x-6' : 'translate-x-1'}`}
+                                                    />
+                                                </button>
+                                            </div>
+                                            {isMandatory && (
+                                                <div className="animate-fade-in mt-3 bg-indigo-50 dark:bg-indigo-900/10 p-4 rounded-xl border border-indigo-100 dark:border-indigo-500/20">
+                                                    <h4 className="text-xs font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                                                        {t('campaigns.preview_title', 'Calculation Preview')}
+                                                    </h4>
+
+                                                    <div className="grid grid-cols-2 gap-4 mb-3">
+                                                        <div className="bg-white dark:bg-neutral-800 p-2 rounded-lg border border-gray-100 dark:border-white/5">
+                                                            <div className="text-xs text-gray-500 dark:text-gray-400">{t('campaigns.total_units', 'Selected Units')}</div>
+                                                            <div className="font-bold text-gray-800 dark:text-white text-lg">{totalUnits}</div>
+                                                        </div>
+                                                        <div className="bg-white dark:bg-neutral-800 p-2 rounded-lg border border-gray-100 dark:border-white/5">
+                                                            <div className="text-xs text-gray-500 dark:text-gray-400">{t('campaigns.fee_per_unit', 'Fee/Unit')}</div>
+                                                            <div className="font-bold text-indigo-600 dark:text-indigo-400 text-lg">
+                                                                {getCurrencySymbol(activeCommunity?.communities?.currency)}{calculatedFee.toFixed(2)}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowBreakdown(!showBreakdown)}
+                                                        className="text-xs text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 font-medium flex items-center gap-1 mb-2"
+                                                    >
+                                                        {showBreakdown ? '▼' : '▶'} {t('campaigns.unit_breakdown', 'View Unit Breakdown')}
+                                                    </button>
+
+                                                    {showBreakdown && (
+                                                        <div className="bg-white dark:bg-neutral-800 rounded-lg border border-gray-200 dark:border-neutral-700 max-h-40 overflow-y-auto custom-scrollbar">
+                                                            <table className="w-full text-xs text-left">
+                                                                <thead className="bg-gray-50 dark:bg-neutral-700 sticky top-0">
+                                                                    <tr>
+                                                                        <th className="p-2 font-medium text-gray-600 dark:text-gray-300">{t('campaigns.unit_col', 'Unit')}</th>
+                                                                        <th className="p-2 font-medium text-gray-600 dark:text-gray-300 text-right">{t('campaigns.amount_col', 'Amount')}</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    {affectedUnits.length > 0 ? affectedUnits.map((u, idx) => (
+                                                                        <tr key={`u-${idx}`} className="border-b border-gray-100 dark:border-neutral-700 last:border-0 hover:bg-gray-50 dark:hover:bg-neutral-700/50">
+                                                                            <td className="p-2 text-gray-800 dark:text-gray-200">
+                                                                                <span className="text-gray-400">{u.block_name} / </span> {u.unit_number || u.name}
+                                                                            </td>
+                                                                            <td className="p-2 text-right font-mono text-gray-800 dark:text-gray-200">
+                                                                                {getCurrencySymbol(activeCommunity?.communities?.currency)}{calculatedFee.toFixed(2)}
+                                                                            </td>
+                                                                        </tr>
+                                                                    )) : (
+                                                                        <tr><td colSpan="2" className="p-3 text-center text-gray-400 italic">{t('common.no_items')}</td></tr>
+                                                                    )}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    )}
+
+                                                    <p className="mt-2 text-[10px] text-amber-600 dark:text-amber-400 border-t border-indigo-100 dark:border-indigo-500/20 pt-2">
+                                                        {t('campaigns.mandatory_warning', 'Extraordinary fees will be billed automatically to all targeted units.')}
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+
                                         {/* Targeting Options */}
                                         <div className="pt-2">
                                             <label className="block text-sm font-medium mb-2 dark:text-gray-300">{t('campaigns.target_audience', 'Target Audience')}</label>
@@ -364,30 +524,56 @@ const Campaigns = () => {
                                             </div>
 
                                             {targetType === 'blocks' && (
-                                                <div className="mt-2 p-3 bg-gray-50/50 dark:bg-neutral-900/50 rounded-lg border border-gray-200 dark:border-neutral-700 max-h-40 overflow-y-auto backdrop-blur-sm">
-                                                    <label className="block text-xs font-semibold text-gray-500 uppercase mb-2">{t('campaigns.select_blocks', 'Select Blocks')}</label>
-                                                    <div className="grid grid-cols-2 gap-2">
-                                                        {availableBlocks
-                                                            .filter(block => (!isVocal || isAdmin) || vocalBlocks.includes(block.id))
-                                                            .map(block => (
-                                                                <label key={block.id} className="flex items-center gap-2 cursor-pointer p-2 hover:bg-white/50 dark:hover:bg-neutral-800/50 rounded transition-colors">
-                                                                    <input
-                                                                        type="checkbox"
-                                                                        value={block.id}
-                                                                        checked={selectedBlocks.includes(block.id)}
-                                                                        onChange={(e) => {
-                                                                            if (e.target.checked) {
-                                                                                setSelectedBlocks([...selectedBlocks, block.id]);
-                                                                            } else {
-                                                                                setSelectedBlocks(selectedBlocks.filter(id => id !== block.id));
-                                                                            }
-                                                                        }}
-                                                                        className="rounded text-indigo-600 focus:ring-indigo-500"
-                                                                    />
-                                                                    <span className="text-sm text-gray-700 dark:text-gray-300">{block.name}</span>
-                                                                </label>
-                                                            ))}
-                                                    </div>
+                                                <div className="mt-2">
+                                                    <label className="block text-xs font-semibold text-gray-500 uppercase mb-2">
+                                                        {t('campaigns.select_blocks', 'Select Blocks')}
+                                                    </label>
+                                                    <HierarchicalBlockSelector
+                                                        blocks={availableBlocks.filter(block => (!isVocal || isAdmin) || vocalBlocks.includes(block.id))}
+                                                        selectedBlocks={selectedBlocks}
+                                                        onToggleBlock={handleToggleBlock}
+                                                    />
+
+                                                    {selectedBlocks.length > 0 && (
+                                                        <div className="mt-3 p-3 bg-indigo-50/30 dark:bg-indigo-900/10 rounded-xl border border-indigo-100/30 dark:border-indigo-900/20 backdrop-blur-sm">
+                                                            <div className="flex justify-between items-center mb-2">
+                                                                <h4 className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">
+                                                                    {t('campaigns.selection_summary', 'Selection Summary')}
+                                                                </h4>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setSelectedBlocks([])}
+                                                                    className="text-[10px] text-gray-500 hover:text-red-500 transition-colors"
+                                                                >
+                                                                    {t('common.clear_selection', 'Clear All')}
+                                                                </button>
+                                                            </div>
+                                                            <div className="flex flex-wrap gap-1.5 max-h-[80px] overflow-y-auto">
+                                                                {availableBlocks
+                                                                    .filter(b => selectedBlocks.includes(b.id))
+                                                                    .filter(b => !b.parent_id || !selectedBlocks.includes(b.parent_id))
+                                                                    .map(block => (
+                                                                        <span
+                                                                            key={block.id}
+                                                                            className="px-2 py-0.5 bg-white/60 dark:bg-neutral-800/60 text-[10px] rounded-full border border-indigo-100/50 dark:border-indigo-900/50 flex items-center gap-1 group whitespace-nowrap"
+                                                                        >
+                                                                            {block.name}
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => handleToggleBlock(block.id)}
+                                                                                className="hover:text-red-500 font-bold"
+                                                                            >
+                                                                                ×
+                                                                            </button>
+                                                                        </span>
+                                                                    ))
+                                                                }
+                                                            </div>
+                                                            <div className="mt-2 text-[10px] text-gray-500 italic">
+                                                                {selectedBlocks.length} {t('campaigns.total_entities', 'total entities targeted')}
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
@@ -416,30 +602,30 @@ const Campaigns = () => {
                     </ModalPortal>
                 )}
 
-                {/* Tabs */}
-                <div className="flex p-1 rounded-full items-center backdrop-blur-md bg-white/30 border border-white/40 shadow-sm dark:bg-neutral-800/40 dark:border-white/10 mb-6 w-fit">
-                    <button
-                        className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === 'active'
-                            ? 'bg-white text-blue-600 shadow-md dark:bg-neutral-700 dark:text-blue-400'
-                            : 'text-gray-600 hover:bg-white/20 dark:text-gray-300 dark:hover:bg-white/10'}`}
-                        onClick={() => setActiveTab('active')}
-                    >
-                        {t('campaigns.tab_active', 'Active')}
-                    </button>
-                    <button
-                        className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === 'closed'
-                            ? 'bg-white text-blue-600 shadow-md dark:bg-neutral-700 dark:text-blue-400'
-                            : 'text-gray-600 hover:bg-white/20 dark:text-gray-300 dark:hover:bg-white/10'}`}
-                        onClick={() => setActiveTab('closed')}
-                    >
-                        {t('campaigns.tab_closed', 'Closed')}
-                    </button>
+                {/* Filter Dropdown */}
+                <div className="flex items-center gap-2 mb-6">
+                    <div className="relative">
+                        <select
+                            value={filterStatus}
+                            onChange={(e) => setFilterStatus(e.target.value)}
+                            className="glass-input !py-2 !px-4 !rounded-full !w-auto cursor-pointer"
+                        >
+                            <option value="all">{t('campaigns.filter_all', 'All Campaigns')}</option>
+                            <option value="active">{t('campaigns.filter_active', 'Active Only')}</option>
+                            <option value="closed">{t('campaigns.filter_closed', 'Closed Only')}</option>
+                        </select>
+                    </div>
                 </div>
 
                 {/* List of campaigns */}
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {campaigns
-                        .filter(c => activeTab === 'active' ? c.is_active : !c.is_active)
+                        .filter(c => {
+                            if (filterStatus === 'all') return true;
+                            if (filterStatus === 'active') return c.is_active;
+                            if (filterStatus === 'closed') return !c.is_active;
+                            return true;
+                        })
                         .map(campaign => (
                             <div key={campaign.id} className="glass-card p-5 flex flex-col justify-between">
                                 <div>
@@ -447,9 +633,16 @@ const Campaigns = () => {
                                         <Link to={`/app/campaigns/${campaign.id}`} className="hover:underline">
                                             <h2 className="font-bold text-lg text-gray-800 dark:text-white">{campaign.name}</h2>
                                         </Link>
-                                        <span className={`inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-xs font-medium ${campaign.is_active ? 'bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-500' : 'bg-gray-100 text-gray-800 dark:bg-gray-800/30 dark:text-gray-500'}`}>
-                                            {campaign.is_active ? t('campaigns.active', 'Active') : t('campaigns.closed', 'Closed')}
-                                        </span>
+                                        <div className="flex flex-col items-end gap-1">
+                                            <span className={`inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-xs font-medium ${campaign.is_active ? 'bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-500' : 'bg-gray-100 text-gray-800 dark:bg-gray-800/30 dark:text-gray-500'}`}>
+                                                {campaign.is_active ? t('campaigns.active', 'Active') : t('campaigns.closed', 'Closed')}
+                                            </span>
+                                            {campaign.is_mandatory && (
+                                                <span className="inline-flex items-center py-0.5 px-2 rounded-md text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-500 uppercase tracking-wider">
+                                                    {t('campaigns.mandatory', 'Mandatory')}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
                                     <p className="text-sm text-gray-600 dark:text-neutral-400 mb-4 h-12 overflow-hidden text-ellipsis">
                                         {campaign.description || t('campaigns.no_desc', 'No description provided.')}
@@ -474,10 +667,10 @@ const Campaigns = () => {
                                         {campaign.is_active ? (
                                             <button
                                                 onClick={() => handleContributeClick(campaign)}
-                                                className="glass-button flex-1 flex items-center justify-center gap-2"
+                                                className={`glass-button flex-1 flex items-center justify-center gap-2 ${campaign.is_mandatory ? 'bg-indigo-600 text-white hover:bg-indigo-700 border-none' : ''}`}
                                             >
                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
-                                                {t('campaigns.contribute', 'Contribute')}
+                                                {campaign.is_mandatory ? t('campaigns.pay_fee', 'Pay Fee') : t('campaigns.contribute', 'Contribute')}
                                             </button>
                                         ) : (
                                             <div className="flex-1"></div>
@@ -617,8 +810,9 @@ const Campaigns = () => {
                                         setToast({ message: t('campaigns.payment_success', 'Contribution registered!'), type: 'success' });
                                     }}
                                     onCancel={() => setPaymentModalOpen(false)}
-                                    initialType="campaign"
+                                    initialType={selectedCampaignForPayment?.is_mandatory ? 'maintenance' : 'campaign'}
                                     initialCampaignId={selectedCampaignForPayment?.id}
+                                    initialAmount={selectedCampaignForPayment?.amount_per_unit}
                                     isAdmin={isAdmin}
                                 />
                             </div>
@@ -638,8 +832,17 @@ const Campaigns = () => {
                     isLoading={deleting}
                 />
             </div>
-        </DashboardLayout >
+        </>
     );
 };
 
+const Campaigns = () => {
+    return (
+        <DashboardLayout>
+            <CampaignsContent />
+        </DashboardLayout>
+    );
+};
+
+export { CampaignsContent };
 export default Campaigns;

@@ -413,20 +413,43 @@ exports.forgotPassword = async (req, res) => {
 exports.updateProfile = async (req, res) => {
     const { full_name, phone } = req.body;
     const token = req.headers.authorization?.split(' ')[1];
+    const communityId = req.headers['x-community-id'];
 
     if (!token) return res.status(401).json({ error: 'No token provided' });
 
     try {
+        const supabaseAdmin = require('../config/supabaseAdmin');
         const { data: { user }, error } = await supabase.auth.getUser(token);
         if (error || !user) throw new Error('Invalid token');
 
-        // 1. Update Auth Metadata
+        // Check if user can update their name (only admins can)
+        let canUpdateName = false;
+        if (communityId && full_name) {
+            const { data: member } = await supabaseAdmin
+                .from('community_members')
+                .select('id')
+                .eq('profile_id', user.id)
+                .eq('community_id', communityId)
+                .single();
+
+            if (member) {
+                const { data: memberRoles } = await supabaseAdmin
+                    .from('member_roles')
+                    .select('roles(name)')
+                    .eq('member_id', member.id);
+
+                const roles = memberRoles?.map(mr => mr.roles?.name).filter(Boolean) || [];
+                canUpdateName = roles.some(r => ['super_admin', 'admin', 'president'].includes(r));
+            }
+        }
+
+        // 1. Update Auth Metadata (only if admin or no name change requested)
         const updates = {};
-        if (full_name) updates.full_name = full_name;
+        if (full_name && canUpdateName) updates.full_name = full_name;
         // Phone is usually not stored in metadata duplicatedly unless needed, but let's keep it clean.
 
         if (Object.keys(updates).length > 0) {
-            const { error: authError } = await require('../config/supabaseAdmin').auth.admin.updateUserById(
+            const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(
                 user.id,
                 { user_metadata: updates }
             );
@@ -435,15 +458,17 @@ exports.updateProfile = async (req, res) => {
 
         // 2. Update Public Profile
         const profileUpdates = {};
-        if (full_name) profileUpdates.full_name = full_name;
+        if (full_name && canUpdateName) profileUpdates.full_name = full_name;
         if (phone !== undefined) profileUpdates.phone = phone;
 
-        const { error: profileError } = await require('../config/supabaseAdmin')
-            .from('profiles')
-            .update(profileUpdates)
-            .eq('id', user.id);
+        if (Object.keys(profileUpdates).length > 0) {
+            const { error: profileError } = await supabaseAdmin
+                .from('profiles')
+                .update(profileUpdates)
+                .eq('id', user.id);
 
-        if (profileError) throw profileError;
+            if (profileError) throw profileError;
+        }
 
         res.json({ message: 'Profile updated successfully', user: { ...user, user_metadata: { ...user.user_metadata, ...updates }, phone: phone } });
     } catch (err) {

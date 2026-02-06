@@ -173,8 +173,8 @@ const PaymentUpload = ({ onSuccess, onCancel, isAdmin, initialType, initialFeeId
         setLoading(true);
         setMessage('');
 
-        // Validation: If user has units, they MUST select one
-        if (userUnits.length > 0 && !selectedUnitId) {
+        // Validation: If user has units, they MUST select one (only for voluntary contributions)
+        if (!selectedFeeId && userUnits.length > 0 && !selectedUnitId) {
             setMessage(t('payments.upload.error_unit_required', 'Please select a specific unit for this payment.'));
             setLoading(false);
             return;
@@ -194,32 +194,55 @@ const PaymentUpload = ({ onSuccess, onCancel, isAdmin, initialType, initialFeeId
                 });
             }
 
-            const payload = {
-                amount,
-                notes,
-                base64Image,
-                fileName: file ? file.name : null,
-                campaign_id: paymentType === 'campaign' ? selectedCampaignId : null,
-                monthly_fee_id: paymentType === 'maintenance' ? selectedFeeId : null,
-                unit_id: selectedUnitId || null,
-                payment_date: paymentDate
-            };
+            let res;
 
-            // If admin and filtered user, send userId
-            if (isAdmin && selectedUserId) {
-                payload.targetUserId = selectedUserId;
+            if (selectedFeeId) {
+                // FEE REGISTRATION MODE: Call maintenance API
+                // Backend handles logic: admins mark as paid, neighbors create pending payment
+                res = await fetch(`${API_URL}/api/maintenance/${selectedFeeId}/pay`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        notes,
+                        base64Image,
+                        fileName: file ? file.name : null,
+                        payment_date: paymentDate
+                    })
+                });
+            } else {
+                // VOLUNTARY CONTRIBUTION MODE: Call payments API
+                const payload = {
+                    amount,
+                    notes,
+                    base64Image,
+                    fileName: file ? file.name : null,
+                    campaign_id: selectedCampaignId || null,
+                    unit_id: selectedUnitId || null,
+                    payment_date: paymentDate
+                };
+
+                // If admin and filtered user, send userId
+                if (isAdmin && selectedUserId) {
+                    payload.targetUserId = selectedUserId;
+                }
+
+                res = await fetch(`${API_URL}/api/payments`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(payload)
+                });
             }
 
-            const res = await fetch(`${API_URL}/api/payments`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(payload)
-            });
-
-            if (!res.ok) throw new Error('Upload failed');
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.error || 'Upload failed');
+            }
 
             setAmount('');
             setNotes('');
@@ -231,7 +254,7 @@ const PaymentUpload = ({ onSuccess, onCancel, isAdmin, initialType, initialFeeId
             if (onSuccess) onSuccess();
 
         } catch (error) {
-            setMessage(t('payments.error', 'Error registering payment'));
+            setMessage(error.message || t('payments.error', 'Error registering payment'));
             console.error(error);
         } finally {
             setLoading(false);
@@ -243,7 +266,7 @@ const PaymentUpload = ({ onSuccess, onCancel, isAdmin, initialType, initialFeeId
             <h3 className="font-bold text-lg mb-4 text-gray-800 dark:text-white">{t('payments.upload.title', 'Register Payment')}</h3>
             <form onSubmit={handleSubmit} className="space-y-4">
 
-                {isAdmin && (
+                {isAdmin && !initialFeeId && !initialUnitId && (
                     <div className="mb-4">
                         <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('payments.upload.select_user', 'Register for User')}</label>
                         <GlassSelect
@@ -320,10 +343,16 @@ const PaymentUpload = ({ onSuccess, onCancel, isAdmin, initialType, initialFeeId
                                 }}
                                 options={[
                                     { value: '', label: t('common.select_or_general', 'General Payment / Balance') },
-                                    ...filteredFees.map(fee => ({
-                                        value: fee.id,
-                                        label: `${new Date(fee.period).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })} - ${getCurrencySymbol(activeCommunity?.communities?.currency)}${fee.amount}`
-                                    }))
+                                    ...filteredFees.map(fee => {
+                                        const dateLabel = /^\d{4}-\d{2}/.test(fee.period)
+                                            ? new Date(fee.period + (fee.period.length === 7 ? '-01' : '') + 'T12:00:00').toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
+                                            : fee.period;
+
+                                        return {
+                                            value: fee.id,
+                                            label: `${dateLabel} - ${getCurrencySymbol(activeCommunity?.communities?.currency)}${fee.amount}`
+                                        };
+                                    })
                                 ]}
                                 placeholder={t('common.select', 'Select Fee')}
                             />

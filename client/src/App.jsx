@@ -23,6 +23,7 @@ import CommunitySettings from "./pages/CommunitySettings";
 import Campaigns from "./pages/Campaigns";
 import CampaignDetails from "./pages/CampaignDetails";
 import Maintenance from "./pages/Maintenance";
+import MyBalance from "./pages/MyBalance";
 import Reservations from "./pages/Reservations";
 import PrivacyNotice from "./components/PrivacyNotice";
 import Privacy from './pages/Privacy';
@@ -64,33 +65,34 @@ function App() {
             <Route path="/update-password" element={<UpdatePassword />} />
 
             {/* Reservations Access - EXCLUDES Treasurer */}
-            <Route element={<ProtectedRoute allowedRoles={['super_admin', 'admin', 'president', 'secretary', 'vocal', 'resident', 'security', 'maintenance']} />}>
+            <Route element={<ProtectedRoute allowedRoles={['super_admin', 'admin', 'president', 'secretary', 'vocal', 'neighbor', 'security', 'maintenance']} />}>
               <Route path="/app/reservations" element={<Reservations />} />
             </Route>
 
             {/* Security Access (Security, Residents, Admins) - EXCLUDES Maintenance */}
             {/* Security Access (Security, Residents, Admins) - EXCLUDES Maintenance & Treasurer */}
-            <Route element={<ProtectedRoute allowedRoles={['super_admin', 'admin', 'president', 'secretary', 'vocal', 'resident', 'security']} />}>
+            <Route element={<ProtectedRoute allowedRoles={['super_admin', 'admin', 'president', 'secretary', 'vocal', 'neighbor', 'security']} />}>
               <Route path="/app/visitors" element={<Visitors />} />
             </Route>
 
             {/* Reports Access (Maintenance, Residents, Admins) - EXCLUDES Security */}
             {/* Reports Access (Maintenance, Residents, Admins) - EXCLUDES Security & Treasurer */}
-            <Route element={<ProtectedRoute allowedRoles={['super_admin', 'admin', 'president', 'secretary', 'vocal', 'resident', 'maintenance']} />}>
+            <Route element={<ProtectedRoute allowedRoles={['super_admin', 'admin', 'president', 'secretary', 'vocal', 'neighbor', 'maintenance']} />}>
               <Route path="/app/reports" element={<Reports />} />
             </Route>
 
             {/* Resident/Admin Features - EXCLUDES Security & Maintenance */}
             {/* General Features - EXCLUDES Treasurer (Notices, Voting) */}
-            <Route element={<ProtectedRoute allowedRoles={['super_admin', 'admin', 'president', 'secretary', 'vocal', 'resident']} />}>
+            <Route element={<ProtectedRoute allowedRoles={['super_admin', 'admin', 'president', 'secretary', 'vocal', 'neighbor']} />}>
               <Route path="/app/notices" element={<Notices />} />
               <Route path="/app/voting" element={<Voting />} />
             </Route>
 
             {/* Financial Features - INCLUDES Treasurer */}
-            <Route element={<ProtectedRoute allowedRoles={['super_admin', 'admin', 'president', 'secretary', 'treasurer', 'vocal', 'resident']} />}>
+            <Route element={<ProtectedRoute allowedRoles={['super_admin', 'admin', 'president', 'secretary', 'treasurer', 'vocal', 'neighbor']} />}>
               <Route path="/app/maintenance" element={<Maintenance />} />
-              <Route path="/app/campaigns" element={<Campaigns />} />
+              <Route path="/app/my-balance" element={<MyBalance />} />
+              <Route path="/app/campaigns" element={<Navigate to="/app/maintenance?tab=extraordinary" replace />} />
               <Route path="/app/campaigns/:id" element={<CampaignDetails />} />
               {/* Redirect /app/payments to /app/maintenance */}
               <Route path="/app/payments" element={<Navigate to="/app/maintenance" replace />} />
