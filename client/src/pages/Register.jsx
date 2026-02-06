@@ -34,6 +34,7 @@ const Register = () => {
     setLoading(true);
 
     if (formData.password !== formData.confirmPassword) {
+      setLoading(false);
       return setError(t('auth.password_mismatch'));
     }
 
@@ -62,9 +63,9 @@ const Register = () => {
       setTimeout(() => navigate('/login'), 3000);
     } catch (err) {
       setError(err.message);
-    } finally {
       setLoading(false);
     }
+    // Note: setLoading(false) in finally block would be cleaner but logic above has early return/asyncs
   };
 
   return (
@@ -89,33 +90,33 @@ const Register = () => {
               <div className="grid gap-y-4">
 
                 <div>
-                  <label className="block text-sm mb-2 dark:text-white">{t('auth.fullname')}</label>
-                  <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} className="py-3 px-4 block w-full border-gray-200 rounded-full bg-white/30 shadow-2xl text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" required />
+                  <label htmlFor="fullName" className="block text-sm mb-2 dark:text-white">{t('auth.fullname')}</label>
+                  <input type="text" id="fullName" name="fullName" value={formData.fullName} onChange={handleChange} className="py-3 px-4 block w-full border-gray-200 rounded-full bg-white/30 shadow-2xl text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" required />
                 </div>
 
                 <div>
-                  <label className="block text-sm mb-2 dark:text-white">{t('auth.community_name', 'Community Name')}</label>
-                  <input type="text" name="communityName" value={formData.communityName} onChange={handleChange} className="py-3 px-4 block w-full border-gray-200 rounded-full bg-white/30 shadow-2xl text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" required placeholder={t('auth.community_name_placeholder', 'e.g. Residencial Las Torres')} />
+                  <label htmlFor="communityName" className="block text-sm mb-2 dark:text-white">{t('auth.community_name', 'Community Name')}</label>
+                  <input type="text" id="communityName" name="communityName" value={formData.communityName} onChange={handleChange} className="py-3 px-4 block w-full border-gray-200 rounded-full bg-white/30 shadow-2xl text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" required placeholder={t('auth.community_name_placeholder', 'e.g. Residencial Las Torres')} />
                 </div>
 
                 <div>
-                  <label className="block text-sm mb-2 dark:text-white">{t('auth.community_address', 'Address')}</label>
-                  <input type="text" name="communityAddress" value={formData.communityAddress} onChange={handleChange} className="py-3 px-4 block w-full border-gray-200 rounded-full bg-white/30 shadow-2xl text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" required placeholder={t('auth.community_address_placeholder', 'e.g. Av. Principal 123')} />
+                  <label htmlFor="communityAddress" className="block text-sm mb-2 dark:text-white">{t('auth.community_address', 'Address')}</label>
+                  <input type="text" id="communityAddress" name="communityAddress" value={formData.communityAddress} onChange={handleChange} className="py-3 px-4 block w-full border-gray-200 rounded-full bg-white/30 shadow-2xl text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" required placeholder={t('auth.community_address_placeholder', 'e.g. Av. Principal 123')} />
                 </div>
 
                 <div>
-                  <label className="block text-sm mb-2 dark:text-white">{t('auth.email')}</label>
-                  <input type="email" name="email" value={formData.email} onChange={handleChange} className="py-3 px-4 block w-full border-gray-200 rounded-full bg-white/30 shadow-2xl text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" required />
+                  <label htmlFor="email" className="block text-sm mb-2 dark:text-white">{t('auth.email')}</label>
+                  <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} className="py-3 px-4 block w-full border-gray-200 rounded-full bg-white/30 shadow-2xl text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" required />
                 </div>
 
                 <div>
-                  <label className="block text-sm mb-2 dark:text-white">{t('auth.password')}</label>
-                  <input type="password" name="password" value={formData.password} onChange={handleChange} className="py-3 px-4 block w-full border-gray-200 rounded-full bg-white/30 shadow-2xl text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" required />
+                  <label htmlFor="password" className="block text-sm mb-2 dark:text-white">{t('auth.password')}</label>
+                  <input type="password" id="password" name="password" value={formData.password} onChange={handleChange} className="py-3 px-4 block w-full border-gray-200 rounded-full bg-white/30 shadow-2xl text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" required />
                 </div>
 
                 <div>
-                  <label className="block text-sm mb-2 dark:text-white">{t('auth.confirm_password')}</label>
-                  <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} className="py-3 px-4 block w-full border-gray-200 rounded-full bg-white/30 shadow-2xl text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" required />
+                  <label htmlFor="confirmPassword" className="block text-sm mb-2 dark:text-white">{t('auth.confirm_password')}</label>
+                  <input type="password" id="confirmPassword" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} className="py-3 px-4 block w-full border-gray-200 rounded-full bg-white/30 shadow-2xl text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600" required />
                 </div>
 
                 {error && <p className="text-xs text-red-600 mt-2">{error}</p>}

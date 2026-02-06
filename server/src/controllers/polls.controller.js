@@ -12,6 +12,7 @@ const getVocalBlocks = async (memberId) => {
 };
 
 // Helper to get user's roles from member_roles table
+// Helper to get user's roles from member_roles table
 const getMemberRoles = async (memberId) => {
     const { data } = await supabaseAdmin
         .from('member_roles')

@@ -405,19 +405,27 @@ const Voting = () => {
                                 {editingPoll ? t('voting.edit_poll', 'Edit Poll') : t('voting.create_poll')}
                             </h2>
                             <form onSubmit={handleSavePoll}>
-                                <input
-                                    className="glass-input mb-3"
-                                    placeholder={t('voting.poll_title', 'Poll Title')}
-                                    value={pollForm.title}
-                                    onChange={e => setPollForm({ ...pollForm, title: e.target.value })}
-                                    required
-                                />
-                                <textarea
-                                    className="glass-input mb-3 min-h-[100px] rounded-2xl"
-                                    placeholder={t('voting.poll_desc', 'Description')}
-                                    value={pollForm.description}
-                                    onChange={e => setPollForm({ ...pollForm, description: e.target.value })}
-                                />
+                                <div className="mb-3">
+                                    <label htmlFor="poll-title-input" className="sr-only">{t('voting.poll_title', 'Poll Title')}</label>
+                                    <input
+                                        id="poll-title-input"
+                                        className="glass-input mb-3"
+                                        placeholder={t('voting.poll_title', 'Poll Title')}
+                                        value={pollForm.title}
+                                        onChange={e => setPollForm({ ...pollForm, title: e.target.value })}
+                                        required
+                                    />
+                                </div>
+                                <div className="mb-3">
+                                    <label htmlFor="poll-desc-input" className="sr-only">{t('voting.poll_desc', 'Description')}</label>
+                                    <textarea
+                                        id="poll-desc-input"
+                                        className="glass-input mb-3 min-h-[100px] rounded-2xl"
+                                        placeholder={t('voting.poll_desc', 'Description')}
+                                        value={pollForm.description}
+                                        onChange={e => setPollForm({ ...pollForm, description: e.target.value })}
+                                    />
+                                </div>
 
                                 {!editingPoll && (
                                     <div className="mb-3">
@@ -425,6 +433,8 @@ const Voting = () => {
                                         {pollForm.options.map((opt, idx) => (
                                             <input
                                                 key={idx}
+                                                id={`poll-option-${idx}`}
+                                                aria-label={`${t('voting.option', 'Option')} ${idx + 1}`}
                                                 className="glass-input mb-2"
                                                 placeholder={`Option ${idx + 1}`}
                                                 value={opt}
@@ -439,8 +449,9 @@ const Voting = () => {
                                 {editingPoll && <p className="text-xs text-yellow-600 dark:text-yellow-400 mb-3">{t('voting.edit_warning', 'Options cannot be edited to preserve vote integrity.')}</p>}
 
                                 <div className="mb-3">
-                                    <label className="block text-sm font-medium mb-1 dark:text-neutral-300">{t('voting.deadline', 'Deadline')}</label>
+                                    <label htmlFor="poll-deadline-input" className="block text-sm font-medium mb-1 dark:text-neutral-300">{t('voting.deadline', 'Deadline')}</label>
                                     <input
+                                        id="poll-deadline-input"
                                         type="date"
                                         className="glass-input"
                                         value={pollForm.deadline}
