@@ -227,8 +227,7 @@ const CampaignsContent = () => {
                     target_type: targetType,
                     target_blocks: targetType === 'blocks' ? selectedBlocks : [],
                     is_mandatory: isMandatory,
-                    target_blocks: targetType === 'blocks' ? selectedBlocks : [],
-                    is_mandatory: isMandatory,
+
                     amount_per_unit: isMandatory ? Number(calculatedFee.toFixed(2)) : 0
                 })
             });
@@ -390,6 +389,7 @@ const CampaignsContent = () => {
                                                 <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.goal', 'Goal Amount')}</label>
                                                 <input
                                                     type="number"
+                                                    min="0.01"
                                                     step="0.01"
                                                     required
                                                     className="glass-input"
