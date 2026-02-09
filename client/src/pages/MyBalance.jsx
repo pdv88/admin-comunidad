@@ -212,7 +212,7 @@ const MyBalance = () => {
                                 {/* First column: Period for Maintenance, Description for Extraordinary */}
                                 <td className="text-gray-900 dark:text-white font-medium capitalize">
                                     {isExtraordinary
-                                        ? (fee.campaigns?.name || t('dashboard_layout.extraordinary_fee', 'Extraordinary Fee'))
+                                        ? (fee.campaigns?.name || fee.period || t('dashboard_layout.extraordinary_fee', 'Extraordinary Fee'))
                                         : (() => {
                                             if (!fee.period) return '-';
                                             const date = new Date(fee.period + 'T12:00:00');

@@ -28,7 +28,14 @@ const Login = () => {
       if (err.message.includes('Email not confirmed')) {
         setError(t('auth.email_not_confirmed', 'Email not confirmed. Please check your inbox.'));
         setIsUnverified(true);
-      } else if (err.message.includes('JSON') || err.message.includes('fetch') || err.message.includes('Failed to execute')) {
+      } else if (
+        err.message.includes('JSON') ||
+        err.message.includes('fetch') ||
+        err.message.includes('Failed to execute') ||
+        err.message.includes('expected pattern') ||
+        err.message.includes('NetworkError') ||
+        err.message.includes('Connection refused')
+      ) {
         setError(t('auth.login_error_generic', 'Login failed. Please check your connection or try again later.'));
       } else {
         setError(err.message);

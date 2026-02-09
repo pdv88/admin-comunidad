@@ -1,32 +1,22 @@
-require('dotenv').config();
-const supabaseAdmin = require('./src/config/supabaseAdmin');
 
-async function check() {
-    try {
-        const { data: notices, error: nError } = await supabaseAdmin.from('notices').select('*').limit(1);
-        if (nError) console.error('Notices Error:', nError.message);
-        else if (notices && notices.length > 0) console.log('Notices keys:', Object.keys(notices[0]));
-        else console.log('Notices table found but empty or no access.');
+const supabase = require('./src/config/supabaseAdmin');
 
-        // Reports check removed for brevity
+async function checkTables() {
+    // Try to select from extraordinary_fees
+    const { data, error } = await supabase.from('extraordinary_fees').select('count', { count: 'exact', head: true });
+    if (error) {
+        console.log("Error querying extraordinary_fees:", error.message);
+    } else {
+        console.log("extraordinary_fees exists. Count:", data);
+    }
 
-
-        const { data: payments, error: pError } = await supabaseAdmin.from('payments').select('*').limit(1);
-        if (pError) console.error('Payments Error:', pError.message);
-        else if (payments && payments.length > 0) {
-            console.log('Payments keys:', Object.keys(payments[0]));
-            // Test Join
-            const { data: joinTest, error: jError } = await supabaseAdmin
-                .from('payments')
-                .select('*, profile:profiles(full_name)')
-                .limit(1);
-            if (jError) console.error('Join Test Error:', jError);
-            else console.log('Join Test Success:', !!joinTest);
-        }
-        else console.log('Payments table found but empty.');
-
-    } catch (e) {
-        console.error(e);
+    // Try monthly_fees
+    const { data: mData, error: mError } = await supabase.from('monthly_fees').select('count', { count: 'exact', head: true });
+    if (mError) {
+        console.log("Error querying monthly_fees:", mError.message);
+    } else {
+        console.log("monthly_fees exists. Count:", mData);
     }
 }
-check();
+
+checkTables();

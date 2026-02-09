@@ -597,29 +597,8 @@ exports.getMyStatement = async (req, res) => {
             data = filteredFees.map(f => ({ ...f, type: 'maintenance' }));
 
         } else if (type === 'extraordinary') {
-            // Build query for extraordinary fees
-            let query = supabaseAdmin
-                .from('extraordinary_fees')
-                .select(`
-                    *,
-                    units (unit_number, block_id, blocks(name)),
-                    campaigns (name, deadline),
-                    payments (payment_date)
-                `, { count: 'exact' })
-                .in('unit_id', unitIds);
-
-            // Apply status filter
-            if (status) {
-                query = query.eq('status', status);
-            }
-
-            // Get total count
-            const { count, error: countError } = await query;
-            if (countError) throw countError;
-            totalCount = count || 0;
-
-            // Apply pagination and ordering
-            const { data: extraordinaryFees, error: extraordinaryError } = await supabaseAdmin
+            // 1. Fetch Extraordinary Fees (Bills)
+            const { data: feesData, error: feesError } = await supabaseAdmin
                 .from('extraordinary_fees')
                 .select(`
                     *,
@@ -629,16 +608,70 @@ exports.getMyStatement = async (req, res) => {
                 `)
                 .in('unit_id', unitIds)
                 .match(status ? { status } : {})
-                .order('created_at', { ascending: false })
-                .range(offset, offset + limitNum - 1);
+                .order('created_at', { ascending: false });
 
-            if (extraordinaryError) throw extraordinaryError;
+            if (feesError) throw feesError;
 
-            data = (extraordinaryFees || []).map(f => ({
+            // 2. Fetch Voluntary Payments (Direct Contributions to Campaigns)
+            // We want payments that are:
+            // - From this user
+            // - To a campaign
+            // - matched with the requested status (if any)
+            const { data: paymentsData, error: paymentsError } = await supabaseAdmin
+                .from('payments')
+                .select(`
+                    *,
+                    campaigns (name, deadline)
+                `)
+                .eq('community_id', communityId)
+                .eq('user_id', user.id)
+                .not('campaign_id', 'is', null) // Only campaign payments
+                .match(status ? { status: status === 'paid' ? 'confirmed' : status } : {});
+            // Note: Payments use 'confirmed', Fees use 'paid'. We map 'paid' filter to 'confirmed'.
+
+            if (paymentsError) throw paymentsError;
+
+            // 3. Merge and De-duplicate
+            // We need to exclude payments that are linked to the fetched fees to avoid duplicates.
+            // (i.e. if I paid a bill, I see the bill as PAID. I don't want to see the payment separately).
+            const linkedPaymentIds = new Set(feesData.map(f => f.payment_id).filter(id => id));
+
+            const voluntaryPayments = paymentsData
+                .filter(p => !linkedPaymentIds.has(p.id))
+                .map(p => ({
+                    id: p.id,
+                    created_at: p.created_at,
+                    period: p.campaigns?.name || 'Voluntary Contribution', // Display Name
+                    amount: p.amount,
+                    status: p.status === 'confirmed' ? 'paid' : p.status, // Normalize status
+                    type: 'extraordinary',
+                    is_voluntary: true,
+                    campaign_id: p.campaign_id,
+                    payment_date: p.payment_date,
+                    // Mock unit info or leave empty if not applicable
+                    units: {
+                        unit_number: p.unit_id ? 'Unit' : '-',
+                        blocks: { name: '-' }
+                    }
+                }));
+
+            // Map fees to common shape
+            const mappedFees = feesData.map(f => ({
                 ...f,
                 type: 'extraordinary',
-                period: f.created_at ? f.created_at.slice(0, 7) + '-01' : null // Use created_at for period display
+                period: f.campaigns?.name || 'Extraordinary Fee',
+                is_voluntary: false
             }));
+
+            // Combine
+            const allItems = [...mappedFees, ...voluntaryPayments];
+
+            // Sort by date (created_at) descending
+            allItems.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+            // Pagination (In-Memory)
+            totalCount = allItems.length;
+            data = allItems.slice(offset, offset + limitNum);
         }
 
         const totalPages = Math.ceil(totalCount / limitNum);

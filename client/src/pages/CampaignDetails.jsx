@@ -142,6 +142,22 @@ const CampaignDetails = () => {
 
                     <CampaignProgress campaign={campaign} />
 
+                    {/* Voluntary Contribution Button */}
+                    {campaign.is_active && !campaign.is_mandatory && (
+                        <div className="mt-8 flex justify-center">
+                            <button
+                                onClick={() => {
+                                    setSelectedFeeForPayment(null);
+                                    setPaymentModalOpen(true);
+                                }}
+                                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-full shadow-sm text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transform hover:scale-105 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                            >
+                                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                {t('campaigns.contribute', 'Make a Contribution')}
+                            </button>
+                        </div>
+                    )}
+
                     <div className="mt-4 grid grid-cols-2 gap-4 text-center">
                         <div className="p-4 rounded-xl bg-gray-50 dark:bg-white/5">
                             <p className="text-xs text-gray-500 uppercase">{t('campaigns.stats.goal', 'Goal')}</p>
