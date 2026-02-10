@@ -284,9 +284,23 @@ exports.getPublicInfo = async (req, res) => {
             throw commError;
         }
 
-        // 2. Fetch Leaders (Admin, President, Secretary, Vocal, Treasurer)
-        // Use member_roles as the junction table
-        const { data: rolesData, error: rolesError } = await supabaseAdmin
+        // 2. Fetch Leaders (Admin, President, Secretary, Vocal, Treasurer, Security, Maintenance)
+        // We need to fetch users who have these roles EITHER in `roles` (legacy) OR `member_roles` (multi)
+
+        // Step 2a: Fetch members with legacy roles
+        const { data: legacyMembers, error: legacyError } = await supabaseAdmin
+            .from('community_members')
+            .select(`
+                profile:profile_id(full_name, email, phone),
+                roles!inner(name)
+            `)
+            .eq('community_id', communityId)
+            .in('roles.name', ['admin', 'president', 'secretary', 'treasurer', 'vocal', 'security', 'maintenance']);
+
+        if (legacyError) throw legacyError;
+
+        // Step 2b: Fetch members with multi-roles via member_roles
+        const { data: multiRoleMembers, error: multiError } = await supabaseAdmin
             .from('member_roles')
             .select(`
                 roles!inner(name),
@@ -298,17 +312,37 @@ exports.getPublicInfo = async (req, res) => {
                 )
             `)
             .eq('community_members.community_id', communityId)
-            .in('roles.name', ['admin', 'president', 'secretary', 'treasurer', 'vocal']);
+            .in('roles.name', ['admin', 'president', 'secretary', 'treasurer', 'vocal', 'security', 'maintenance']);
 
-        if (rolesError) {
-            console.error(`[PublicInfo] Leaders Fetch Error:`, rolesError);
-            throw rolesError;
-        }
+        if (multiError) throw multiError;
 
         // Format Leaders List - Group by person (email) to avoid duplicates
         const leadersMap = new Map();
 
-        rolesData.forEach(r => {
+        // Process Legacy Members
+        (legacyMembers || []).forEach(m => {
+            const email = m.profile.email;
+            const roleName = m.roles?.name;
+
+            if (!leadersMap.has(email)) {
+                leadersMap.set(email, {
+                    name: m.profile.full_name,
+                    email: email,
+                    phone: m.profile.phone,
+                    roles: []
+                });
+            }
+
+            if (roleName) {
+                const leader = leadersMap.get(email);
+                if (!leader.roles.some(r => r.role === roleName)) {
+                    leader.roles.push({ role: roleName });
+                }
+            }
+        });
+
+        // Process Multi-Role Members
+        (multiRoleMembers || []).forEach(r => {
             const email = r.community_members.profile.email;
             const roleName = r.roles.name;
             const blockName = r.blocks?.name;
@@ -357,8 +391,6 @@ exports.getPublicInfo = async (req, res) => {
         }
 
         const leaders = Array.from(leadersMap.values());
-
-
 
         res.json({
             community,
