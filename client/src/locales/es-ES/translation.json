@@ -262,6 +262,7 @@
         "brand": "Habiio",
         "nav": {
             "dashboard": "Panel",
+            "community_info": "Info Comunidad",
             "notices": "Avisos",
             "reports": "Incidencias",
             "voting": "Votaciones",

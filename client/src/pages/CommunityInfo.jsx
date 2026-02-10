@@ -132,7 +132,7 @@ const CommunityInfo = () => {
                                 <img
                                     src={community.logo_url}
                                     alt="Logo"
-                                    className="w-20 h-20 md:w-24 md:h-24 object-contain rounded-xl bg-white/10 p-2 shadow-lg"
+                                    className="w-20 h-20 md:w-24 md:h-24 object-contain rounded-xl bg-white/80 p-2 shadow-lg"
                                 />
                             ) : (
                                 <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-blue-500 to-violet-600 rounded-xl flex items-center justify-center text-white text-3xl md:text-4xl font-bold shadow-lg">
