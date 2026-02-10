@@ -591,7 +591,17 @@ exports.createCampaign = async (req, res) => {
             return res.status(403).json({ error: 'Unauthorized' });
         }
 
-        const { name, goal_amount, description, deadline, target_type, target_blocks, is_mandatory, amount_per_unit } = req.body;
+        const {
+            name,
+            goal_amount,
+            description,
+            deadline,
+            target_type,
+            target_blocks,
+            is_mandatory,
+            amount_per_unit,
+            calculation_method // 'fixed' or 'coefficient'
+        } = req.body;
 
         let finalTargetType = target_type || 'all';
         let finalTargetBlocks = target_blocks || [];
@@ -618,13 +628,34 @@ exports.createCampaign = async (req, res) => {
             finalTargetType = 'blocks';
         }
 
+        // 1. Fetch targeted users/units FIRST to calculate total if needed
+        let unitQuery = supabaseAdmin
+            .from('units')
+            .select('id, unit_number, coefficient, block_id, blocks!inner(name), unit_owners!inner(profile:profile_id(id, email, full_name))')
+            .eq('blocks.community_id', communityId);
+
+        if (finalTargetType === 'blocks' && finalTargetBlocks.length > 0) {
+            const resolvedBlocks = await getDescendantBlockIds(finalTargetBlocks, communityId);
+            unitQuery = unitQuery.in('block_id', resolvedBlocks);
+        }
+
+        const { data: units } = await unitQuery;
+
+        let finalTargetAmount = goal_amount;
+
+        // Auto-calculate Target Amount for Fixed Method
+        if (is_mandatory && calculation_method !== 'coefficient' && amount_per_unit > 0) {
+            // Fixed Method: Goal = Amount Per Unit * Number of Units
+            finalTargetAmount = Number(amount_per_unit) * (units ? units.length : 0);
+        }
+
         const { data: campaign, error } = await supabaseAdmin
             .from('campaigns')
             .insert({
                 community_id: communityId,
                 created_by: user.id,
                 name,
-                target_amount: goal_amount,
+                target_amount: finalTargetAmount,
                 current_amount: 0,
                 description,
                 deadline,
@@ -632,7 +663,7 @@ exports.createCampaign = async (req, res) => {
                 target_blocks: finalTargetBlocks,
                 is_active: true,
                 is_mandatory: !!is_mandatory,
-                amount_per_unit: is_mandatory ? (amount_per_unit || 0) : 0
+                amount_per_unit: is_mandatory && calculation_method !== 'coefficient' ? (amount_per_unit || 0) : 0
             })
             .select()
             .single();
@@ -642,18 +673,6 @@ exports.createCampaign = async (req, res) => {
         // --- ASYNC LOGIC: Billing or Announcement ---
         (async () => {
             try {
-                // 1. Fetch targeted users/units
-                let unitQuery = supabaseAdmin
-                    .from('units')
-                    .select('id, unit_number, block_id, blocks!inner(name), unit_owners!inner(profile:profile_id(id, email, full_name))')
-                    .eq('blocks.community_id', communityId);
-
-                if (finalTargetType === 'blocks' && finalTargetBlocks.length > 0) {
-                    const resolvedBlocks = await getDescendantBlockIds(finalTargetBlocks, communityId);
-                    unitQuery = unitQuery.in('block_id', resolvedBlocks);
-                }
-
-                const { data: units } = await unitQuery;
                 if (!units || units.length === 0) return;
 
                 // 2. Fetch community info for branding
@@ -665,47 +684,78 @@ exports.createCampaign = async (req, res) => {
 
                 const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
 
-                if (is_mandatory && amount_per_unit > 0) {
-                    // GENERATE EXTRAORDINARY FEES (IN MONTHLY_FEES TABLE)
-                    // We use the "monthly_fees" table as a unified "Pending Bills" table.
-                    // type = 'extraordinary' helps distinguish them.
+                if (is_mandatory) {
+                    // GENERATE EXTRAORDINARY FEES (IN EXTRAORDINARY_FEES TABLE)
 
-                    const feeRecords = units.map(unit => ({
-                        community_id: communityId,
-                        unit_id: unit.id,
-                        amount: amount_per_unit,
-                        status: 'pending',
-                        campaign_id: campaign.id
-                    }));
+                    let feeRecords = [];
 
-                    const { data: fees } = await supabaseAdmin.from('extraordinary_fees').insert(feeRecords).select();
+                    if (calculation_method === 'coefficient') {
+                        // Re-normalization Logic
+                        // 1. Sum coefficients of TARGETED units
+                        const totalCoeff = units.reduce((sum, u) => sum + Number(u.coefficient || 0), 0);
 
-                    // Send Bill Emails
-                    if (fees) {
-                        for (const fee of fees) {
-                            const unit = units.find(u => u.id === fee.unit_id);
-                            // Get primary owner
-                            const owner = unit.unit_owners?.find(uo => uo.is_primary)?.profile
-                                || unit.unit_owners?.[0]?.profile;
+                        if (totalCoeff > 0) {
+                            feeRecords = units.map(unit => {
+                                const unitCoeff = Number(unit.coefficient || 0);
+                                // Formula: (Unit Coeff / Total Group Coeff) * Goal Amount
+                                const share = unitCoeff / totalCoeff;
+                                let feeAmount = share * Number(goal_amount);
 
-                            if (owner?.email) {
-                                await sendEmail({
-                                    email: owner.email,
-                                    from: `${community?.name} <info@habiio.com>`,
-                                    subject: `Cuota Extraordinaria: ${name} - ${community?.name}`,
-                                    templateName: 'monthly_fee_bill.html',
-                                    context: {
-                                        user_name: owner.full_name || 'Vecino',
-                                        period: name, // Branding the period as the campaign name
-                                        amount: fee.amount,
-                                        currency_symbol: formatCurrency(0, community?.currency || 'USD').replace(/[0-9.,\s]*/g, ''),
-                                        unit_details: `${unit.blocks?.name} - ${unit.unit_number}`,
-                                        community_name: community?.name,
-                                        community_logo: community?.logo_url,
-                                        link: `${clientUrl}/app/campaigns/${campaign.id}`,
-                                        community_id: communityId
-                                    }
-                                });
+                                // Round to 2 decimals
+                                feeAmount = Math.round(feeAmount * 100) / 100;
+
+                                return {
+                                    community_id: communityId,
+                                    unit_id: unit.id,
+                                    amount: feeAmount,
+                                    status: 'pending',
+                                    campaign_id: campaign.id
+                                };
+                            });
+                        }
+                    } else {
+                        // Fixed Amount Logic
+                        if (amount_per_unit > 0) {
+                            feeRecords = units.map(unit => ({
+                                community_id: communityId,
+                                unit_id: unit.id,
+                                amount: amount_per_unit,
+                                status: 'pending',
+                                campaign_id: campaign.id
+                            }));
+                        }
+                    }
+
+                    if (feeRecords.length > 0) {
+                        const { data: fees } = await supabaseAdmin.from('extraordinary_fees').insert(feeRecords).select();
+
+                        // Send Bill Emails
+                        if (fees) {
+                            for (const fee of fees) {
+                                const unit = units.find(u => u.id === fee.unit_id);
+                                // Get primary owner
+                                const owner = unit.unit_owners?.find(uo => uo.is_primary)?.profile
+                                    || unit.unit_owners?.[0]?.profile;
+
+                                if (owner?.email) {
+                                    await sendEmail({
+                                        email: owner.email,
+                                        from: `${community?.name} <info@habiio.com>`,
+                                        subject: `Cuota Extraordinaria: ${name} - ${community?.name}`,
+                                        templateName: 'monthly_fee_bill.html',
+                                        context: {
+                                            user_name: owner.full_name || 'Vecino',
+                                            period: name,
+                                            amount: fee.amount,
+                                            currency_symbol: formatCurrency(0, community?.currency || 'USD').replace(/[0-9.,\s]*/g, ''),
+                                            unit_details: `${unit.blocks?.name} - ${unit.unit_number}`,
+                                            community_name: community?.name,
+                                            community_logo: community?.logo_url,
+                                            link: `${clientUrl}/app/campaigns/${campaign.id}`,
+                                            community_id: communityId
+                                        }
+                                    });
+                                }
                             }
                         }
                     }
