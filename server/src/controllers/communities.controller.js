@@ -392,6 +392,37 @@ exports.getPublicInfo = async (req, res) => {
 
         const leaders = Array.from(leadersMap.values());
 
+        // Sort Leaders by Priority
+        const rolePriority = {
+            'president': 1,
+            'admin': 2,
+            'treasurer': 3,
+            'secretary': 4, // Default placement
+            'vocal': 5,     // Default placement
+            'maintenance': 6,
+            'security': 7
+        };
+
+        // Wait, user asked for: President -> Admin -> Treasurer -> Maintenance -> Security
+        // So let's adjust:
+        const priorityMap = {
+            'president': 1,
+            'admin': 2,
+            'treasurer': 3,
+            'maintenance': 4,
+            'security': 5,
+            'secretary': 6,
+            'vocal': 7
+        };
+
+        leaders.sort((a, b) => {
+            const getPriority = (leader) => {
+                const priorities = leader.roles.map(r => priorityMap[r.role] || 99);
+                return Math.min(...priorities);
+            };
+            return getPriority(a) - getPriority(b);
+        });
+
         res.json({
             community,
             leaders,

@@ -63,31 +63,76 @@ describe('Communities Controller - Get Public Info', () => {
         jest.clearAllMocks();
     });
 
-    it('should NOT return neighbors (non-admins)', async () => {
-        // Mock Auth
+    it('should return legacy admins and security/maintenance roles', async () => {
         mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null });
 
-        // Mock DB Returns
+        mockSupabaseAdmin.from.mockImplementation((table) => {
+            const chain = createChain();
+
+            if (table === 'community_members') {
+                chain.single.mockResolvedValue({ data: { id: 1 }, error: null });
+                chain.in.mockResolvedValue({
+                    data: [{ profile: { email: 'admin@test.com', full_name: 'Admin' }, roles: { name: 'admin' } }],
+                    error: null
+                });
+            } else if (table === 'communities') {
+                chain.single.mockResolvedValue({ data: { name: 'Test Comm' }, error: null });
+            } else if (table === 'member_roles') {
+                chain.in.mockResolvedValue({
+                    data: [{
+                        community_members: { profile: { email: 'sec@test.com', full_name: 'Security' } },
+                        roles: { name: 'security' },
+                        blocks: { name: 'Main Gate' }
+                    }],
+                    error: null
+                });
+            } else if (table === 'amenities') {
+                chain.order.mockResolvedValue({ data: [], error: null });
+            } else if (table === 'community_documents') {
+                chain.order.mockResolvedValue({ data: [], error: null });
+            }
+
+            chains.push({ table, chain });
+            return chain;
+        });
+
+        await communitiesController.getPublicInfo(req, res);
+
+        const multiRoleChain = chains.find(c => c.table === 'member_roles').chain;
+        expect(multiRoleChain.in).toHaveBeenCalled();
+        const multiRoleArgs = multiRoleChain.in.mock.calls[0][1];
+
+        expect(multiRoleArgs).toContain('security');
+        expect(multiRoleArgs).toContain('maintenance');
+
+        const legacyChain = chains.filter(c => c.table === 'community_members').find(c => c.chain.in.mock.calls.length > 0).chain;
+        expect(legacyChain.in).toHaveBeenCalled();
+        const legacyArgs = legacyChain.in.mock.calls[0][1];
+
+        expect(legacyArgs).toContain('security');
+        expect(legacyArgs).toContain('maintenance');
+
+        expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+            leaders: expect.arrayContaining([
+                expect.objectContaining({ email: 'admin@test.com' }),
+                expect.objectContaining({ email: 'sec@test.com' })
+            ])
+        }));
+    });
+
+    it('should NOT return neighbors (non-admins)', async () => {
+        mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null });
+
         mockSupabaseAdmin.from.mockImplementation((table) => {
             const chain = createChain();
 
             if (table === 'community_members') {
                 chain.single.mockResolvedValue({ data: { id: 1 }, error: null });
 
-                // LEGACY QUERY RESPONSE
-                // This simulates the BUG: The query returns a member who has a role 'neighbor', 
-                // because the filter `in('roles.name', ...)` might not filter the row if it's a left join 
-                // and the backend logic in the controller doesn't filter it out manually.
-                // Or, if Supabase/PostgREST actually *does* filter it, then my hypothesis is wrong.
-                // BUT, assume for the test that the DB returns a user with 'neighbor' because of the loose join.
-                // Wait, if I mock the DB to return 'neighbor', I am forcing the bug behavior in the DB response.
-                // The BUG is in the QUERY CONSTRUCTION (missing !inner).
-                // So the test should assert that the query was constructed with `!inner`.
-
                 chain.in.mockResolvedValue({
                     data: [{
                         profile: { email: 'neighbor@test.com', full_name: 'Neighbor' },
-                        roles: { name: 'neighbor' } // The DB returns this if filtering failed or wasn't strict
+                        roles: { name: 'neighbor' }
                     }],
                     error: null
                 });
@@ -107,29 +152,64 @@ describe('Communities Controller - Get Public Info', () => {
 
         await communitiesController.getPublicInfo(req, res);
 
-        // Verify the Legacy Query used `!inner`
-        // We find the chain for 'community_members' that called `in`
         const legacyChain = chains.filter(c => c.table === 'community_members').find(c => c.chain.in.mock.calls.length > 0).chain;
 
-        // Assert the select() was called with `roles!inner(name)` NOT `roles(name)`
         const selectCall = legacyChain.select.mock.calls[0];
         const selectArg = selectCall[0];
 
-        // With current code, this should be `roles(name)`, so we expect expectation to FAIL if we check properly.
-        // Or we can check if the output contains the neighbor.
-        // If the DB returns the neighbor (simulating the bug), the controller logic:
-        /*
-            if (roleName) {
-                const leader = leadersMap.get(email);
-                if (!leader.roles.some(r => r.role === roleName)) {
-                    leader.roles.push({ role: roleName });
-                }
-            }
-        */
-        // It blindly adds whatever the DB returns.
-        // So if the DB returns 'neighbor', it gets added.
-
-        // So the robust test here is to check the QUERY STRUCTURE to ensure we are asking the DB strictly.
         expect(selectArg).toContain('roles!inner(name)');
+    });
+
+    it('should sort leaders by priority: President > Admin > Treasurer > Maintenance > Security', async () => {
+        mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null });
+
+        mockSupabaseAdmin.from.mockImplementation((table) => {
+            const chain = createChain();
+
+            if (table === 'community_members') {
+                chain.single.mockResolvedValue({ data: { id: 1 }, error: null });
+                // Return President (Legacy)
+                chain.in.mockResolvedValue({
+                    data: [{
+                        profile: { email: 'pres@test.com', full_name: 'President' },
+                        roles: { name: 'president' }
+                    }],
+                    error: null
+                });
+            } else if (table === 'communities') {
+                chain.single.mockResolvedValue({ data: { name: 'Test Comm' }, error: null });
+            } else if (table === 'member_roles') {
+                // Return Security, Admin, Maintenance, Treasurer (Mixed order)
+                chain.in.mockResolvedValue({
+                    data: [
+                        { community_members: { profile: { email: 'sec@test.com', full_name: 'Security' } }, roles: { name: 'security' } },
+                        { community_members: { profile: { email: 'admin@test.com', full_name: 'Admin' } }, roles: { name: 'admin' } },
+                        { community_members: { profile: { email: 'maint@test.com', full_name: 'Maintenance' } }, roles: { name: 'maintenance' } },
+                        { community_members: { profile: { email: 'treas@test.com', full_name: 'Treasurer' } }, roles: { name: 'treasurer' } }
+                    ],
+                    error: null
+                });
+            } else if (table === 'amenities') {
+                chain.order.mockResolvedValue({ data: [], error: null });
+            } else if (table === 'community_documents') {
+                chain.order.mockResolvedValue({ data: [], error: null });
+            }
+
+            chains.push({ table, chain });
+            return chain;
+        });
+
+        await communitiesController.getPublicInfo(req, res);
+
+        // Check the JSON response for sorted leaders
+        const responseData = res.json.mock.calls[0][0];
+        const leaders = responseData.leaders;
+
+        // Expected Order: President, Admin, Treasurer, Maintenance, Security
+        expect(leaders[0].roles[0].role).toBe('president');
+        expect(leaders[1].roles[0].role).toBe('admin');
+        expect(leaders[2].roles[0].role).toBe('treasurer');
+        expect(leaders[3].roles[0].role).toBe('maintenance');
+        expect(leaders[4].roles[0].role).toBe('security');
     });
 });
