@@ -631,7 +631,7 @@ exports.createCampaign = async (req, res) => {
         // 1. Fetch targeted users/units FIRST to calculate total if needed
         let unitQuery = supabaseAdmin
             .from('units')
-            .select('id, unit_number, coefficient, block_id, blocks!inner(name), unit_owners!inner(profile:profile_id(id, email, full_name))')
+            .select('id, unit_number, coefficient, block_id, blocks!inner(name), unit_owners(profile:profile_id(id, email, full_name))')
             .eq('blocks.community_id', communityId);
 
         if (finalTargetType === 'blocks' && finalTargetBlocks.length > 0) {
@@ -760,7 +760,7 @@ exports.createCampaign = async (req, res) => {
                         }
                     }
                 } else {  // SEND OPTIONAL ANNOUNCEMENT
-                    const uniqueOwners = Array.from(new Set(units.flatMap(u => u.unit_owners.map(uo => uo.profile)))).filter(p => p.email);
+                    const uniqueOwners = Array.from(new Set(units.flatMap(u => u.unit_owners ? u.unit_owners.map(uo => uo.profile) : []))).filter(p => p && p.email);
 
                     for (const owner of uniqueOwners) {
                         await sendEmail({

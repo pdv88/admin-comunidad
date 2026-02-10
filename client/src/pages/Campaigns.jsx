@@ -44,6 +44,7 @@ const CampaignsContent = () => {
     const [targetType, setTargetType] = useState('all'); // 'all' or 'blocks'
     const [selectedBlocks, setSelectedBlocks] = useState([]); // Array of block IDs
     const [isMandatory, setIsMandatory] = useState(false);
+    const [calculationMethod, setCalculationMethod] = useState('fixed'); // 'fixed' | 'coefficient'
     const [amountPerUnit, setAmountPerUnit] = useState('');
 
     // Delete State
@@ -73,10 +74,10 @@ const CampaignsContent = () => {
             blocks.forEach(block => {
                 if (block.units && block.units.length > 0) {
                     const fullPath = getBlockPath(block.id);
-                    // Only include units that have at least one owner
-                    const occupiedUnits = block.units.filter(u => u.unit_owners && u.unit_owners.length > 0);
+                    // Include all units regardless of ownership for correct coefficient calculation
+                    const allUnits = block.units;
 
-                    units = [...units, ...occupiedUnits.map(u => ({
+                    units = [...units, ...allUnits.map(u => ({
                         ...u,
                         block_name: fullPath
                     }))];
@@ -98,9 +99,51 @@ const CampaignsContent = () => {
     const totalUnits = affectedUnits.length;
     // const totalBlocks = targetType === 'all' ? availableBlocks.length : selectedBlocks.length;
 
-    const calculatedFee = (isMandatory && goal && totalUnits > 0)
-        ? (parseFloat(goal) / totalUnits)
-        : 0;
+    const calculatedFee = useMemo(() => {
+        if (!isMandatory) return 0;
+
+        if (calculationMethod === 'fixed') {
+            return amountPerUnit ? parseFloat(amountPerUnit) : 0;
+        } else {
+            // Coefficient based
+            // This is an estimation for preview since real calculation involves individual coefficients.
+            // We just show average here or maybe handling later.
+            // For now, let's keep the logic simple: Total / Units for basic preview, 
+            // but the breakdown table needs to be smarter if we want to show exact amounts.
+            return (goal && totalUnits > 0) ? (parseFloat(goal) / totalUnits) : 0;
+        }
+    }, [isMandatory, calculationMethod, amountPerUnit, goal, totalUnits]);
+
+    // Calculate individual fee distribution for coefficient method
+    const feeDistribution = useMemo(() => {
+        if (!isMandatory || calculationMethod !== 'coefficient' || !goal || totalUnits === 0) {
+            return {};
+        }
+
+        const targetAmount = parseFloat(goal);
+
+        // 1. Sum total coefficient of affected units
+        const unitsWithCoeff = affectedUnits.map(u => ({ ...u, coeff: parseFloat(u.coefficient) || 0 }));
+        const totalCoeff = unitsWithCoeff.reduce((sum, u) => sum + u.coeff, 0);
+
+        const distribution = {};
+
+        if (totalCoeff === 0) {
+            // Fallback: Equal split
+            const equalShare = targetAmount / totalUnits;
+            affectedUnits.forEach(u => {
+                distribution[u.id] = equalShare;
+            });
+        } else {
+            // Proportional split
+            unitsWithCoeff.forEach(u => {
+                const share = (u.coeff / totalCoeff) * targetAmount;
+                distribution[u.id] = share;
+            });
+        }
+
+        return distribution;
+    }, [isMandatory, calculationMethod, goal, affectedUnits, totalUnits]);
 
     const [campaignToDelete, setCampaignToDelete] = useState(null);
     const [deleting, setDeleting] = useState(false);
@@ -158,7 +201,9 @@ const CampaignsContent = () => {
         setCreateError('');
         setTargetType(isRestrictedVocal ? 'blocks' : 'all');
         setSelectedBlocks(isRestrictedVocal ? vocalBlocks : []);
+        setSelectedBlocks(isRestrictedVocal ? vocalBlocks : []);
         setIsMandatory(false);
+        setCalculationMethod('fixed');
         setAmountPerUnit('');
         setShowCreateForm(true);
     };
@@ -230,8 +275,9 @@ const CampaignsContent = () => {
                     target_type: targetType,
                     target_blocks: targetType === 'blocks' ? selectedBlocks : [],
                     is_mandatory: isMandatory,
-
-                    amount_per_unit: isMandatory ? Number(calculatedFee.toFixed(2)) : 0
+                    calculation_method: isMandatory ? calculationMethod : null,
+                    amount_per_unit: isMandatory && calculationMethod === 'fixed' ? Number(amountPerUnit) : 0,
+                    goal_amount: isMandatory && calculationMethod === 'fixed' ? (Number(amountPerUnit) * totalUnits).toString() : goal,
                 })
             });
 
@@ -249,7 +295,9 @@ const CampaignsContent = () => {
             setDeadline('');
             setTargetType('all');
             setSelectedBlocks([]);
+            setSelectedBlocks([]);
             setIsMandatory(false);
+            setCalculationMethod('fixed');
             setAmountPerUnit('');
             setShowCreateForm(false);
             fetchCampaigns(); // Refresh list
@@ -389,16 +437,36 @@ const CampaignsContent = () => {
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.goal', 'Goal Amount')}</label>
-                                                <input
-                                                    type="number"
-                                                    min="0.01"
-                                                    step="0.01"
-                                                    required
-                                                    className="glass-input"
-                                                    value={goal}
-                                                    onChange={(e) => setGoal(e.target.value)}
-                                                />
+                                                {(!isMandatory || calculationMethod === 'coefficient') ? (
+                                                    <>
+                                                        <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.goal', 'Goal Amount')}</label>
+                                                        <input
+                                                            type="number"
+                                                            min="0.01"
+                                                            step="0.01"
+                                                            required
+                                                            className="glass-input"
+                                                            value={goal}
+                                                            onChange={(e) => setGoal(e.target.value)}
+                                                        />
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('campaigns.amount_per_unit_label', 'Amount Per Unit')}</label>
+                                                        <input
+                                                            type="number"
+                                                            min="0.01"
+                                                            step="0.01"
+                                                            required
+                                                            className="glass-input"
+                                                            value={amountPerUnit}
+                                                            onChange={(e) => setAmountPerUnit(e.target.value)}
+                                                        />
+                                                        <div className="mt-1 text-xs text-gray-500">
+                                                            {t('campaigns.goal', 'Goal')}: {getCurrencySymbol(activeCommunity?.communities?.currency)}{(Number(amountPerUnit || 0) * totalUnits).toFixed(2)}
+                                                        </div>
+                                                    </>
+                                                )}
                                             </div>
                                         </div>
                                         <div>
@@ -450,7 +518,11 @@ const CampaignsContent = () => {
                                                         <div className="bg-white dark:bg-neutral-800 p-2 rounded-lg border border-gray-100 dark:border-white/5">
                                                             <div className="text-xs text-gray-500 dark:text-gray-400">{t('campaigns.fee_per_unit', 'Fee/Unit')}</div>
                                                             <div className="font-bold text-indigo-600 dark:text-indigo-400 text-lg">
-                                                                {getCurrencySymbol(activeCommunity?.communities?.currency)}{calculatedFee.toFixed(2)}
+                                                                {calculationMethod === 'coefficient' ? (
+                                                                    <span className="text-sm">{t('campaigns.variable_fees', 'Variable')}</span>
+                                                                ) : (
+                                                                    <>{getCurrencySymbol(activeCommunity?.communities?.currency)}{calculatedFee.toFixed(2)}</>
+                                                                )}
                                                             </div>
                                                         </div>
                                                     </div>
@@ -479,7 +551,15 @@ const CampaignsContent = () => {
                                                                                 <span className="text-gray-400">{u.block_name} / </span> {u.unit_number || u.name}
                                                                             </td>
                                                                             <td className="p-2 text-right font-mono text-gray-800 dark:text-gray-200">
-                                                                                {getCurrencySymbol(activeCommunity?.communities?.currency)}{calculatedFee.toFixed(2)}
+                                                                                {/* For preview, we show the calculated fee. 
+                                                                                    If coefficient, this is approximate average. 
+                                                                                    If fixed, it is exact. */}
+                                                                                {getCurrencySymbol(activeCommunity?.communities?.currency)}
+                                                                                {calculationMethod === 'coefficient'
+                                                                                    ? (feeDistribution[u.id] || 0).toFixed(2)
+                                                                                    : calculatedFee.toFixed(2)
+                                                                                }
+                                                                                {calculationMethod === 'coefficient' && <span className="text-[10px] text-gray-400 block">({(u.coefficient * 100).toFixed(2)}%)</span>}
                                                                             </td>
                                                                         </tr>
                                                                     )) : (
@@ -493,6 +573,74 @@ const CampaignsContent = () => {
                                                     <p className="mt-2 text-[10px] text-amber-600 dark:text-amber-400 border-t border-indigo-100 dark:border-indigo-500/20 pt-2">
                                                         {t('campaigns.mandatory_warning', 'Extraordinary fees will be billed automatically to all targeted units.')}
                                                     </p>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Targeting Options */}
+                                        <div className="pt-2">
+                                            {isMandatory && (
+                                                <div className="mb-4 animate-fade-in">
+                                                    <label className="block text-sm font-medium mb-2 dark:text-gray-300">
+                                                        {t('campaigns.calculation_method', 'Calculation Method')}
+                                                    </label>
+                                                    <div className="flex flex-col gap-3">
+                                                        {/* Fixed Amount Option */}
+                                                        <div className="flex items-start">
+                                                            <div className="flex items-center h-5">
+                                                                <input
+                                                                    id="method_fixed"
+                                                                    name="calculationMethod"
+                                                                    type="radio"
+                                                                    checked={calculationMethod === 'fixed'}
+                                                                    onChange={() => setCalculationMethod('fixed')}
+                                                                    className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300"
+                                                                />
+                                                            </div>
+                                                            <div className="ml-3 text-sm">
+                                                                <label htmlFor="method_fixed" className="font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                                                                    {t('campaigns.method_fixed', 'Fixed Amount per Unit')}
+                                                                    <div className="group relative flex items-center">
+                                                                        <svg className="w-4 h-4 text-gray-400 hover:text-gray-500 cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                        </svg>
+                                                                        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:block w-64 p-2 bg-gray-900 text-white text-xs rounded shadow-lg z-50 pointer-events-none">
+                                                                            {t('campaigns.info_fixed', 'Fixed Amount: You set the price per unit. The total goal is calculated automatically.')}
+                                                                            <div className="absolute left-1/2 -translate-x-1/2 top-full w-2 h-2 bg-gray-900 rotate-45"></div>
+                                                                        </div>
+                                                                    </div>
+                                                                </label>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Coefficient Option */}
+                                                        <div className="flex items-start">
+                                                            <div className="flex items-center h-5">
+                                                                <input
+                                                                    id="method_coefficient"
+                                                                    name="calculationMethod"
+                                                                    type="radio"
+                                                                    checked={calculationMethod === 'coefficient'}
+                                                                    onChange={() => setCalculationMethod('coefficient')}
+                                                                    className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300"
+                                                                />
+                                                            </div>
+                                                            <div className="ml-3 text-sm">
+                                                                <label htmlFor="method_coefficient" className="font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                                                                    {t('campaigns.method_coefficient', 'Total Goal (Coefficient)')}
+                                                                    <div className="group relative flex items-center">
+                                                                        <svg className="w-4 h-4 text-gray-400 hover:text-gray-500 cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                        </svg>
+                                                                        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:block w-64 p-2 bg-gray-900 text-white text-xs rounded shadow-lg z-50 pointer-events-none">
+                                                                            {t('campaigns.info_coefficient', 'Coefficient: You set the total goal. Each unit pays based on their coefficient.')}
+                                                                            <div className="absolute left-1/2 -translate-x-1/2 top-full w-2 h-2 bg-gray-900 rotate-45"></div>
+                                                                        </div>
+                                                                    </div>
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>

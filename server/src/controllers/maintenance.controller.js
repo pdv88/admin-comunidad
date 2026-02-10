@@ -1187,7 +1187,8 @@ exports.bulkDeleteFees = async (req, res) => {
             return res.status(403).json({ error: 'Unauthorized' });
         }
 
-        const { feeIds } = req.body;
+        const { feeIds, type = 'maintenance' } = req.body;
+        const feeTable = type === 'extraordinary' ? 'extraordinary_fees' : 'monthly_fees';
 
         if (!feeIds || !Array.isArray(feeIds) || feeIds.length === 0) {
             return res.status(400).json({ error: 'feeIds array is required' });
@@ -1195,7 +1196,7 @@ exports.bulkDeleteFees = async (req, res) => {
 
         // Find fees without payment_id and not paid (deletable)
         const { data: deletableFees, error: fetchError } = await supabaseAdmin
-            .from('monthly_fees')
+            .from(feeTable)
             .select('id')
             .eq('community_id', communityId)
             .in('id', feeIds)
@@ -1212,7 +1213,7 @@ exports.bulkDeleteFees = async (req, res) => {
 
         // Delete the fees
         const { error: deleteError } = await supabaseAdmin
-            .from('monthly_fees')
+            .from(feeTable)
             .delete()
             .eq('community_id', communityId)
             .in('id', deletableIds);
@@ -1233,14 +1234,15 @@ exports.bulkDeleteFees = async (req, res) => {
 // Bulk mark fees as paid
 exports.bulkMarkAsPaid = async (req, res) => {
     try {
-        const { member, communityId } = await getUserAndMember(req);
+        const { user, member, communityId } = await getUserAndMember(req);
         const role = member.roles?.name;
 
         if (role !== 'super_admin' && role !== 'admin' && role !== 'president' && role !== 'treasurer') {
             return res.status(403).json({ error: 'Unauthorized' });
         }
 
-        const { feeIds } = req.body;
+        const { feeIds, type = 'maintenance' } = req.body;
+        const feeTable = type === 'extraordinary' ? 'extraordinary_fees' : 'monthly_fees';
 
         if (!feeIds || !Array.isArray(feeIds) || feeIds.length === 0) {
             return res.status(400).json({ error: 'feeIds array is required' });
@@ -1248,32 +1250,68 @@ exports.bulkMarkAsPaid = async (req, res) => {
 
         // Update all fees to paid status
         const { data, error } = await supabaseAdmin
-            .from('monthly_fees')
+            .from(feeTable)
             .update({
                 status: 'paid',
-                updated_at: new Date().toISOString()
+                updated_at: new Date().toISOString(),
+                payment_date: new Date().toISOString(),
+                paid_by: user.id
             })
             .eq('community_id', communityId)
             .in('id', feeIds)
-            .select('id');
+            .select('id, campaign_id'); // campaign_id needed for total updates
 
         if (error) throw error;
+
+        // 1.5 Update Campaign Totals if extraordinary fees
+        if (type === 'extraordinary' && data.length > 0) {
+            const campaignIds = [...new Set(data.map(f => f.campaign_id).filter(id => id))];
+            for (const campaignId of campaignIds) {
+                const { data: paidFees, error: sumError } = await supabaseAdmin
+                    .from('extraordinary_fees')
+                    .select('amount')
+                    .eq('campaign_id', campaignId)
+                    .eq('status', 'paid');
+
+                if (!sumError && paidFees) {
+                    const totalRaised = paidFees.reduce((sum, f) => sum + parseFloat(f.amount || 0), 0);
+                    await supabaseAdmin
+                        .from('campaigns')
+                        .update({ current_amount: totalRaised })
+                        .eq('id', campaignId);
+                }
+            }
+        }
 
         // 2. Send emails for all marked fees (Async)
         (async () => {
             // Fetch full details for these fees to get owner emails
-            const { data: fullFees } = await supabaseAdmin
-                .from('monthly_fees')
-                .select(`
-                    id, amount, period, payment_id, updated_at,
-                units(
-                    unit_number,
-                    blocks(name),
-                    unit_owners(
-                        profile: profile_id(email, full_name)
+            let selectString = type === 'extraordinary'
+                ? `
+                    id, amount, status, updated_at, campaign_id,
+                    campaigns (name),
+                    units (
+                        unit_number,
+                        blocks (name),
+                        unit_owners (
+                            profile: profile_id(email, full_name)
+                        )
                     )
-                )
-                    `)
+                `
+                : `
+                    id, amount, period, payment_id, updated_at,
+                    units (
+                        unit_number,
+                        blocks (name),
+                        unit_owners (
+                            profile: profile_id(email, full_name)
+                        )
+                    )
+                `;
+
+            const { data: fullFees } = await supabaseAdmin
+                .from(feeTable)
+                .select(selectString)
                 .in('id', feeIds);
 
             if (!fullFees) return;
@@ -1298,13 +1336,13 @@ exports.bulkMarkAsPaid = async (req, res) => {
                     if (ownerEmail) {
                         await sendEmail({
                             email: ownerEmail,
-                            from: `${communityName} < info@habiio.com > `,
+                            from: `${communityName} <info@habiio.com>`,
                             subject: `Comprobante de Pago - ${communityName}`,
                             templateName: 'payment_receipt.html',
                             context: {
                                 user_name: ownerProfile?.full_name || 'Vecino',
                                 amount_formatted: formatCurrency(fee.amount, communityCurrency),
-                                period_name: fee.period,
+                                period_name: type === 'extraordinary' ? fee.campaigns?.name : fee.period,
                                 unit_details: `${fee.units?.blocks?.name} - ${fee.units?.unit_number}`,
                                 community_name: communityName,
                                 community_logo: communityLogo,
