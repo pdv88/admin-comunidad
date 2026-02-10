@@ -175,7 +175,7 @@ const HierarchicalUnitSelector = ({ blocks: initialBlocks, activeCommunity, onSe
                             </span>
                             <div className="flex flex-col">
                                 <span className="font-medium text-gray-900 dark:text-gray-100">
-                                    {item.itemType === 'block' ? item.name : `${t('user_management.table.unit')} ${item.unit_number}`}
+                                    {item.itemType === 'block' ? item.name : `${t(`properties.unit_type.${item.type || 'apartment'}`, t('user_management.table.unit'))} ${item.unit_number}`}
                                 </span>
                                 {item.itemType === 'block' && (
                                     <span className="text-xs text-gray-500 dark:text-gray-400 capitalize">

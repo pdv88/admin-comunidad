@@ -477,7 +477,7 @@ const UserManagement = () => {
                                                 className="glass-button-secondary text-sm w-full flex items-center justify-center gap-2"
                                             >
                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
-                                                {t('properties.add_unit', 'Add Unit')}
+                                                {t('properties.assign_unit', 'Assign Unit')}
                                             </button>
                                         ) : (
                                             <div className="glass-card p-0 overflow-hidden border border-indigo-200 dark:border-indigo-900 shadow-lg mt-2 relative z-10">
@@ -768,7 +768,7 @@ const UserManagement = () => {
                                                                 className="glass-button-secondary text-sm w-full flex items-center justify-center gap-2"
                                                             >
                                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
-                                                                {t('properties.add_unit', 'Add Unit')}
+                                                                {t('properties.assign_unit', 'Assign Unit')}
                                                             </button>
                                                         ) : (
                                                             <div className="glass-card p-0 overflow-hidden border border-indigo-200 dark:border-indigo-900 shadow-lg mt-2 relative z-10 w-full mb-4">

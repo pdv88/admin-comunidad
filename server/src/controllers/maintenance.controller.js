@@ -156,19 +156,17 @@ exports.generateMonthlyFees = async (req, res) => {
             // Actually simplest is: Fee = total_amount * unit.coefficient (if fraction) or total_amount * (unit.coefficient / 100).
 
             // For now, let's treat it as a Percentage (0-100) which seems common in systems, or fraction. 
-            // Let's check the max value.
-            const maxCoeff = Math.max(...unitsToBill.map(u => Number(u.coefficient || 0)));
-            isPercentage = maxCoeff > 1;
-
             feeRecords = unitsToBill.map(unit => {
-                const coeff = Number(unit.coefficient || 0);
-                let feeAmount = 0;
+                let coeff = Number(unit.coefficient || 0);
 
-                if (isPercentage) {
-                    feeAmount = (Number(total_amount) * coeff) / 100;
-                } else {
-                    feeAmount = Number(total_amount) * coeff;
+                // Normalization: If coeff > 1, assume it's a percentage (e.g. 5.0 = 5%) and convert to decimal (0.05).
+                // If coeff <= 1, assume it's already decimal (e.g. 0.05 = 5%).
+                // This handles mixed data safely.
+                if (coeff > 1) {
+                    coeff = coeff / 100;
                 }
+
+                let feeAmount = Number(total_amount) * coeff;
 
                 // Round to 2 decimals
                 feeAmount = Math.round(feeAmount * 100) / 100;
@@ -180,7 +178,7 @@ exports.generateMonthlyFees = async (req, res) => {
                     amount: feeAmount,
                     status: 'pending',
                     total_budget: total_amount,
-                    coefficient: coeff
+                    coefficient: coeff // Store the normalized decimal coefficient
                 };
             });
 

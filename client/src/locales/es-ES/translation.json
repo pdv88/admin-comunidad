@@ -327,6 +327,7 @@
         "add_block_btn": "Añadir",
         "block_placeholder": "Nombre (ej. Torre A)",
         "add_unit": "Añadir Casa / Departamento",
+        "assign_unit": "Asignar Casa / Departamento",
         "add_unit_btn": "Añadir",
         "unit_type": {
             "apartment": "Apartamento",

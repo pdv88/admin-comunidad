@@ -145,7 +145,7 @@ describe('UserManagement Page', () => {
         fireEvent.change(screen.getByPlaceholderText('user_management.invite.email'), { target: { value: 'new@example.com' } });
 
         // Select unit via mocked selector
-        fireEvent.click(screen.getByText('properties.add_unit'));
+        fireEvent.click(screen.getByText('properties.assign_unit'));
         fireEvent.click(screen.getByText('Select Unit 101'));
 
         const submitBtn = document.querySelector('button[type="submit"]');

@@ -148,6 +148,12 @@ const Properties = () => {
         e.preventDefault();
         setIsCreatingUnit(true);
         try {
+            if (newUnit.coefficientFormat === 'decimal' && parseFloat(newUnit.coefficient) > 1) {
+                setToast({ message: t('properties.coefficient_decimal_warning', 'Decimal coefficient should be less than 1. Did you mean Percentage?'), type: 'error' });
+                setIsCreatingUnit(false);
+                return;
+            }
+
             const finalCoefficient = newUnit.coefficientFormat === 'percentage'
                 ? (parseFloat(newUnit.coefficient) / 100)
                 : parseFloat(newUnit.coefficient);
@@ -298,11 +304,13 @@ const Properties = () => {
 
     const handleEditUnit = (unit) => {
         // Default to percentage for display if it helps user
-        // If existing coeff is 0.05, we show 5 in percentage mode.
-        // We'll default to percentage for consistency.
         const coeffVal = parseFloat(unit.coefficient || 0);
         const format = 'percentage';
-        const displayVal = format === 'percentage' ? (coeffVal * 100) : coeffVal;
+
+        // Smart Display: If coeff > 1, it's likely stored as 3.0 (3%) not 300%. 
+        // So don't multiply by 100 in that case.
+        // If coeff <= 1 (e.g. 0.03), multiply by 100 -> 3%.
+        const displayVal = (format === 'percentage' && coeffVal <= 1) ? (coeffVal * 100) : coeffVal;
 
         setEditUnitModal({
             isOpen: true,
@@ -319,6 +327,13 @@ const Properties = () => {
         setIsUpdatingUnit(true);
         try {
             const { id, tenant_name, tenant_email, tenant_phone, type } = editUnitModal.unit;
+
+            if (editUnitModal.unit.coefficientFormat === 'decimal' && parseFloat(editUnitModal.unit.coefficient) > 1) {
+                setToast({ message: t('properties.coefficient_decimal_warning', 'Decimal coefficient should be less than 1. Did you mean Percentage?'), type: 'error' });
+                setIsUpdatingUnit(false);
+                return;
+            }
+
             const finalCoefficient = editUnitModal.unit.coefficientFormat === 'percentage'
                 ? (parseFloat(editUnitModal.unit.coefficient) / 100)
                 : parseFloat(editUnitModal.unit.coefficient);

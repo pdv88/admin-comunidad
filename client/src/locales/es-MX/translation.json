@@ -326,6 +326,7 @@
         "add_block_btn": "Añadir Bloque",
         "block_placeholder": "Nombre (ej. Torre A)",
         "add_unit": "Añadir Unidad",
+        "assign_unit": "Asignar Unidad",
         "add_unit_btn": "Añadir Unidad",
         "select_block": "Seleccionar Bloque",
         "unit_placeholder": "Número (ej. 101)",
