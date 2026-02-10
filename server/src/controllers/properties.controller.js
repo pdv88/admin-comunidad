@@ -412,7 +412,7 @@ exports.deleteUnit = async (req, res) => {
 
 exports.updateUnit = async (req, res) => {
     const { id } = req.params;
-    const { tenant_name, tenant_email, tenant_phone } = req.body;
+    const { tenant_name, tenant_email, tenant_phone, type } = req.body;
 
     try {
         const { member, communityId } = await getUserAndMember(req);
@@ -435,6 +435,7 @@ exports.updateUnit = async (req, res) => {
                 tenant_name,
                 tenant_email,
                 tenant_phone,
+                type,
                 parking_slots: req.body.parking_slots,
                 has_storage: req.body.has_storage,
                 coefficient: req.body.coefficient

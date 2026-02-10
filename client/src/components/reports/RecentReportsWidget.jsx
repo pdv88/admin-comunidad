@@ -14,7 +14,7 @@ const RecentReportsWidget = (props) => {
 
     useEffect(() => {
         const abortController = new AbortController();
-        
+
         const fetchReports = async () => {
             try {
                 const token = localStorage.getItem('token');
@@ -38,14 +38,14 @@ const RecentReportsWidget = (props) => {
                 }
             }
         };
-        
+
         fetchReports();
-        
+
         return () => abortController.abort();
     }, []);
 
     const getStatusStyle = (status) => {
-        switch(status) {
+        switch (status) {
             case 'pending': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
             case 'in_progress': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
             case 'resolved': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
@@ -55,7 +55,7 @@ const RecentReportsWidget = (props) => {
     };
 
     const getStatusLabel = (status) => {
-        switch(status) {
+        switch (status) {
             case 'pending': return t('common.pending', 'Pending');
             case 'in_progress': return t('common.in_progress', 'In Progress');
             case 'resolved': return t('common.resolved', 'Resolved');
@@ -70,16 +70,16 @@ const RecentReportsWidget = (props) => {
                 <div className="h-6 w-32 bg-gray-200 dark:bg-neutral-800 rounded animate-pulse"></div>
                 <div className="h-4 w-16 bg-gray-200 dark:bg-neutral-800 rounded animate-pulse"></div>
             </div>
-            
+
             <div className="space-y-4">
                 {[1, 2, 3].map(i => (
                     <div key={i} className="flex items-start justify-between p-4 glass-card border border-white/20 dark:border-white/5">
                         <div className="flex items-center gap-3 overflow-hidden w-full">
-                                <div className="flex-shrink-0 w-8 h-8 bg-gray-200 dark:bg-neutral-800 rounded-full animate-pulse"></div>
-                                <div className="min-w-0 flex-1 space-y-2">
+                            <div className="flex-shrink-0 w-8 h-8 bg-gray-200 dark:bg-neutral-800 rounded-full animate-pulse"></div>
+                            <div className="min-w-0 flex-1 space-y-2">
                                 <div className="h-4 w-3/4 bg-gray-200 dark:bg-neutral-800 rounded animate-pulse"></div>
                                 <div className="h-3 w-1/2 bg-gray-200 dark:bg-neutral-800 rounded animate-pulse"></div>
-                                </div>
+                            </div>
                         </div>
                     </div>
                 ))}
@@ -98,7 +98,7 @@ const RecentReportsWidget = (props) => {
                     {t('common.view_all', 'View All')}
                 </Link>
             </div>
-            
+
             <div className="overflow-y-auto flex-1 pr-2 custom-scrollbar">
                 {reports.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full text-center text-gray-400 dark:text-neutral-500 py-4">
@@ -108,27 +108,29 @@ const RecentReportsWidget = (props) => {
                 ) : (
                     <div className="space-y-4">
                         {reports.map(report => (
-                            <div key={report.id} className="flex items-start justify-between p-4 rounded-xl border border-white/20 dark:border-white/10 bg-white/40 dark:bg-white/5 transition-all hover:shadow-lg group">
-                                <div className="flex items-center gap-3 overflow-hidden">
-                                     <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-white dark:bg-neutral-600 rounded-full text-lg shadow-sm">
-                                        {report.category === 'maintenance' ? '🔧' : 
-                                         report.category === 'security' ? '🛡️' :
-                                         report.category === 'cleaning' ? '🧹' : 
-                                         report.category === 'noise' ? '🔊' : '📝'}
-                                     </div>
-                                     <div className="min-w-0">
-                                        <h3 className="font-semibold text-gray-900 dark:text-white truncate group-hover:text-blue-600 transition-colors">
-                                            {report.title}
-                                        </h3>
-                                        <p className="text-xs text-gray-600 dark:text-neutral-400">
-                                            {new Date(report.created_at).toLocaleDateString()}
-                                        </p>
-                                     </div>
+                            <Link to={`/app/reports?reportId=${report.id}`} key={report.id} className="block">
+                                <div className="flex items-start justify-between p-4 rounded-xl border border-white/20 dark:border-white/10 bg-white/40 dark:bg-white/5 transition-all hover:bg-white/60 dark:hover:bg-white/10 hover:shadow-lg group cursor-pointer">
+                                    <div className="flex items-center gap-3 overflow-hidden">
+                                        <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-white dark:bg-neutral-600 rounded-full text-lg shadow-sm">
+                                            {report.category === 'maintenance' ? '🔧' :
+                                                report.category === 'security' ? '🛡️' :
+                                                    report.category === 'cleaning' ? '🧹' :
+                                                        report.category === 'noise' ? '🔊' : '📝'}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <h3 className="font-semibold text-gray-900 dark:text-white truncate group-hover:text-blue-600 transition-colors">
+                                                {report.title}
+                                            </h3>
+                                            <p className="text-xs text-gray-600 dark:text-neutral-400">
+                                                {new Date(report.created_at).toLocaleDateString()}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <span className={`text-xs px-2.5 py-1 rounded-full font-medium whitespace-nowrap ${getStatusStyle(report.status)}`}>
+                                        {getStatusLabel(report.status)}
+                                    </span>
                                 </div>
-                                <span className={`text-xs px-2.5 py-1 rounded-full font-medium whitespace-nowrap ${getStatusStyle(report.status)}`}>
-                                    {getStatusLabel(report.status)}
-                                </span>
-                            </div>
+                            </Link>
                         ))}
                     </div>
                 )}

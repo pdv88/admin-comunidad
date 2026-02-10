@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
@@ -12,6 +13,8 @@ import Toast from '../components/Toast';
 import ReportDetailsPanel from '../components/ReportDetailsPanel';
 import ImageUploader from '../components/ImageUploader';
 import { exportReportToPDF } from '../utils/pdfExport';
+import HierarchicalBlockSelector from '../components/HierarchicalBlockSelector';
+import DrillDownUnitSelector from '../components/DrillDownUnitSelector';
 
 const Reports = () => {
     const { user, activeCommunity, hasAnyRole } = useAuth();
@@ -20,6 +23,7 @@ const Reports = () => {
     const [blocks, setBlocks] = useState([]); // Blocks for scope selection
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
+    const [selectedReport, setSelectedReport] = useState(null);
 
     // Accordion State
     const [expandedReportId, setExpandedReportId] = useState(null);
@@ -50,6 +54,8 @@ const Reports = () => {
         description: '',
         category: 'maintenance',
         scope: 'community', // community, block, unit
+        target_type: 'all', // all, blocks (New)
+        target_blocks: [], // Array of block IDs (New)
         block_id: '',
         unit_id: '',
         image_url: '',
@@ -94,6 +100,44 @@ const Reports = () => {
         }
         fetchBlocks();
     }, []);
+
+    const [searchParams, setSearchParams] = useSearchParams();
+    const reportIdParam = searchParams.get('reportId');
+
+    useEffect(() => {
+        if (reportIdParam) {
+            // Check if report is already in the list
+            const localReport = reports.find(r => r.id === reportIdParam);
+            if (localReport) {
+                // If in list, just expand it (Accordion style)
+                setExpandedReportId(reportIdParam);
+                setSelectedReport(null); // Ensure modal is closed if we found it locally
+
+                // Optional: Scroll to it?
+                // For now, just expanding is enough as per user request "it is just an acordeon"
+            } else {
+                // Fetch single report and show in Modal (fallback for deep links not in current page)
+                const fetchSingle = async () => {
+                    try {
+                        const token = localStorage.getItem('token');
+                        const res = await fetch(`${API_URL}/api/reports/${reportIdParam}`, {
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'X-Community-ID': activeCommunity.community_id
+                            }
+                        });
+                        if (res.ok) {
+                            const data = await res.json();
+                            setSelectedReport(data);
+                        }
+                    } catch (err) {
+                        console.error('Error fetching report', err);
+                    }
+                };
+                fetchSingle();
+            }
+        }
+    }, [reportIdParam, reports]);
 
     // Fetch reports when dependencies change
     useEffect(() => {
@@ -141,6 +185,23 @@ const Reports = () => {
         }
     };
 
+    // Helper to get block name (copied from Notices or similar)
+    const getBlockName = (id) => {
+        const block = blocks.find(b => b.id === id);
+        return block ? block.name : 'Unknown Block';
+    };
+
+    const handleToggleBlock = (blockId) => {
+        setNewReport(prev => {
+            const currentSelected = prev.target_blocks || [];
+            if (currentSelected.includes(blockId)) {
+                return { ...prev, target_blocks: currentSelected.filter(id => id !== blockId) };
+            } else {
+                return { ...prev, target_blocks: [...currentSelected, blockId] };
+            }
+        });
+    };
+
     const handleCreateReport = async (e) => {
         e.preventDefault();
         setIsCreating(true);
@@ -155,9 +216,43 @@ const Reports = () => {
                 image_url: newReport.image_url,
                 visibility: newReport.visibility,
                 // Scope logic
-                // If specific: pass block_id. If unit_id is specific (not empty), pass unit_id to backend
-                unit_id: newReport.scope === 'specific' ? (newReport.unit_id || null) : null,
-                block_id: newReport.scope === 'specific' ? newReport.block_id : null
+                // If 'specific' scope is chosen (legacy logic preserved for unit reports), pass unit/block
+                // BUT we are enhancing the 'Block Selector' part.
+                // If user selects 'Specific Area (Block / Unit)' -> traditional logic.
+                // If user selects 'Target Audience' -> new logic?
+                // Wait, user wants "Reports form too" to have "hierarchical block selector".
+                // This implies the scope selection changes from "Community vs Specific" to "Audience: All vs Specific Blocks" like Notices?
+                // Notices is about "Who sees this". Reports is about "Where is the issue".
+                // If I report a broken light in "Building A", it's a specific scope.
+                // The "Target Audience" in Notices determines visibility.
+                // In Reports, `target_blocks` likely means "This report is relevant for these blocks".
+                // The current form has "Scope": Community vs Specific Area.
+                // If I keep "Specific Area", I should probably allow multi-block selection there?
+                // OR replace the whole "Scope" dropdown with the "Target Audience" style radio buttons?
+                // Let's replace "Scope" dropdown with "Target Scope" radios: "Community / Common Area" vs "Specific Blocks/Units".
+                // Actually, let's look at the request: "add the hierarchical block selector... same layout".
+                // So we probably want:
+                // 1. Title/Desc/Category
+                // 2. Target Scope (Radios: 'Community', 'Specific Blocks')
+                // 3. If Specific Blocks -> Hierarchical Selector.
+                // BUT what about Unit ID? "Specific Area (Block/Unit)" was useful for "Unit 101".
+                // Maybe we keep Unit selection for "My Unit"?
+                // Let's assume for now we mix it:
+                // "Target": [x] Community [ ] Specific Areas
+                // If Specific -> Show Block Selector AND maybe Unit Selector?
+                // Complex. Let's stick to the styling requested matching Notices.
+                // Notices has "Target Audience: All vs Blocks".
+                // For Reports, let's map: 
+                // type='all' -> Scope Community
+                // type='blocks' -> Scope Specific Blocks (Hierarchical)
+                // limit unit selection? If I need to report for my unit, I probably use "My Unit".
+                // Let's send both legacy block_id (if single) and target_blocks.
+
+                target_type: newReport.target_type,
+                target_blocks: newReport.target_blocks,
+                // Ensure backward compat if backend expects block_id for single selection? 
+                // Backend update handles target_blocks.
+                unit_id: newReport.unit_id || null
             };
 
             const res = await fetch(`${API_URL}/api/reports`, {
@@ -177,6 +272,8 @@ const Reports = () => {
                     description: '',
                     category: 'maintenance',
                     scope: 'community',
+                    target_type: 'all',
+                    target_blocks: [],
                     block_id: userUnits.length === 1 ? userUnits[0].block_id : '',
                     unit_id: userUnits.length === 1 ? userUnits[0].id : '',
                     image_url: '',
@@ -439,15 +536,31 @@ const Reports = () => {
                                                     </div>
                                                     {/* Scope Badge */}
                                                     <span className="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 px-2 py-0.5 rounded flex items-center gap-1">
-                                                        {!report.block_id && !report.unit_id && <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
-                                                        {report.block_id && !report.unit_id && <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>}
-                                                        {report.unit_id && <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>}
+                                                        {/* Icon Logic */}
+                                                        {report.unit_id ? (
+                                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+                                                        ) : (report.target_type === 'blocks' || report.block_id || (report.target_blocks && report.target_blocks.length > 0)) ? (
+                                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                                                        ) : (
+                                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                                                        )}
 
+                                                        {/* Text Logic */}
                                                         {report.unit_id
                                                             ? `${report.units?.blocks?.name || report.blocks?.name || ''} - ${report.units?.unit_number || ''}`
-                                                            : report.block_id
-                                                                ? `${report.blocks?.name || ''}`
-                                                                : t('reports.scope.community')}
+                                                            : (report.target_blocks && report.target_blocks.length > 0)
+                                                                ? (() => {
+                                                                    // Map IDs to Names
+                                                                    const count = report.target_blocks.length;
+                                                                    if (count === 1) {
+                                                                        return getBlockName(report.target_blocks[0]);
+                                                                    } else {
+                                                                        return `${count} ${t('reports.scope.blocks', 'Blocks')}`;
+                                                                    }
+                                                                })()
+                                                                : report.block_id
+                                                                    ? `${report.blocks?.name || ''}`
+                                                                    : t('reports.scope.community')}
                                                     </span>
                                                 </div>
 
@@ -557,100 +670,9 @@ const Reports = () => {
                                 <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">{t('reports.form.create_title', 'Create Report')}</h2>
                                 <form onSubmit={handleCreateReport} className="space-y-4">
 
-                                    {/* Scope Selector */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">{t('reports.form.scope', 'Scope')}</label>
-                                        <GlassSelect
-                                            value={newReport.scope}
-                                            onChange={(e) => {
-                                                const newScope = e.target.value;
-                                                setNewReport(prev => ({
-                                                    ...prev,
-                                                    scope: newScope,
-                                                    block_id: newScope === 'specific' ? (userUnits.length === 1 ? userUnits[0].block_id : (blocks.length === 1 && isAdminOrPres ? blocks[0].id : '')) : '',
-                                                    unit_id: ''
-                                                }));
-                                            }}
-                                            options={[
-                                                { value: 'community', label: t('reports.scope.community', 'Community (General)') },
-                                                { value: 'specific', label: t('reports.scope.specific', 'Specific Area (Block / Unit)') }
-                                            ]}
-                                        />
-                                    </div>
+                                    {/* Updated Form Layout matching Notices */}
 
-                                    {/* Visibility Toggle - Only for Admins */}
-                                    {isAdminOrPres && (
-                                        <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-neutral-800/50 rounded-2xl">
-                                            <div className="flex items-center gap-2">
-                                                <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                                </svg>
-                                                <div>
-                                                    <span className="text-sm font-medium text-gray-700 dark:text-neutral-300">
-                                                        {t('reports.form.private_report', 'Private Report')}
-                                                    </span>
-                                                    <p className="text-xs text-gray-500 dark:text-neutral-500">
-                                                        {t('reports.form.private_hint', 'Only visible to admins')}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => setNewReport({ ...newReport, visibility: newReport.visibility === 'private' ? 'public' : 'private' })}
-                                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${newReport.visibility === 'private' ? 'bg-purple-600' : 'bg-gray-200 dark:bg-neutral-700'}`}
-                                            >
-                                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${newReport.visibility === 'private' ? 'translate-x-6' : 'translate-x-1'}`} />
-                                            </button>
-                                        </div>
-                                    )}
-
-                                    {/* Conditional Block Selection (For Block Scope OR Unit Scope for Admins) */}
-                                    {/* Specific Area Selection */}
-                                    {newReport.scope === 'specific' && (
-                                        <>
-                                            {/* Block Selection */}
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">{t('reports.form.select_block', 'Select Block')}</label>
-                                                <GlassSelect
-                                                    value={newReport.block_id}
-                                                    onChange={(e) => setNewReport({ ...newReport, block_id: e.target.value, unit_id: '' })}
-                                                    options={[
-                                                        { value: '', label: t('common.select', 'Select...') },
-                                                        ...(isAdminOrPres || isVocal ? blocks : blocks.filter(b => userUnits.some(u => u.block_id === b.id)))
-                                                            .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
-                                                            .map(b => ({ value: b.id, label: b.name }))
-                                                    ]}
-                                                    required
-                                                />
-                                            </div>
-
-                                            {/* Unit Selection (Dependent on Block) */}
-                                            {newReport.block_id && (
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">{t('reports.form.unit', 'Unit')}</label>
-                                                    <GlassSelect
-                                                        value={newReport.unit_id}
-                                                        onChange={(e) => setNewReport({ ...newReport, unit_id: e.target.value })}
-                                                        options={[
-                                                            { value: '', label: t('reports.scope.whole_block', 'Entire Block / Common Area') },
-                                                            ...(blocks.find(b => b.id === newReport.block_id)?.units
-                                                                ?.filter(u => isAdminOrPres || isVocal ? true : userUnits.some(myU => myU.id === u.id))
-                                                                ?.sort((a, b) => a.unit_number.localeCompare(b.unit_number, undefined, { numeric: true }))
-                                                                ?.map(u => ({
-                                                                    value: u.id,
-                                                                    label: u.unit_number
-                                                                })) || [])
-                                                        ]}
-                                                        placeholder={t('reports.form.select_unit', 'Select Unit')}
-                                                    />
-                                                </div>
-                                            )}
-                                        </>
-                                    )}
-
-
-
-
+                                    {/* 1. Title */}
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">{t('reports.form.issue_title', 'Issue Title')}</label>
                                         <input
@@ -663,6 +685,8 @@ const Reports = () => {
                                         />
                                     </div>
 
+                                    {/* 2. Category & Visibility */}
+                                    {/* We can put them in a grid or stack. Notices stacks Priority. Let's stack Category. */}
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">{t('reports.form.category', 'Category')}</label>
                                         <GlassSelect
@@ -678,6 +702,28 @@ const Reports = () => {
                                         />
                                     </div>
 
+                                    {/* Visibility Toggle (Admin Only) - Keep separate or integrate? */}
+                                    {isAdminOrPres && (
+                                        <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-neutral-800/50 rounded-2xl mb-2">
+                                            <div className="flex items-center gap-2">
+                                                <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                                </svg>
+                                                <span className="text-sm font-medium text-gray-700 dark:text-neutral-300">
+                                                    {t('reports.form.private_report', 'Private Report')}
+                                                </span>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setNewReport({ ...newReport, visibility: newReport.visibility === 'private' ? 'public' : 'private' })}
+                                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${newReport.visibility === 'private' ? 'bg-purple-600' : 'bg-gray-200 dark:bg-neutral-700'}`}
+                                            >
+                                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${newReport.visibility === 'private' ? 'translate-x-6' : 'translate-x-1'}`} />
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {/* 3. Description (Content) */}
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">{t('reports.form.desc', 'Description')}</label>
                                         <textarea
@@ -689,6 +735,146 @@ const Reports = () => {
                                         ></textarea>
                                     </div>
 
+                                    {/* 4. Target Scope (Replaces old Scope Dropdown) */}
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">{t('reports.form.scope', 'Scope / Location')}</label>
+
+                                        <div className="flex gap-4 mb-3">
+                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                <input
+                                                    type="radio"
+                                                    name="targetType"
+                                                    value="all"
+                                                    checked={newReport.target_type === 'all'}
+                                                    onChange={() => setNewReport({ ...newReport, target_type: 'all' })}
+                                                    className="text-indigo-600 focus:ring-indigo-500"
+                                                />
+                                                <span className="text-sm dark:text-gray-300">{t('reports.scope.community', 'Community / General')}</span>
+                                            </label>
+                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                <input
+                                                    type="radio"
+                                                    name="targetType"
+                                                    value="blocks"
+                                                    checked={newReport.target_type === 'blocks'}
+                                                    onChange={() => setNewReport({ ...newReport, target_type: 'blocks', unit_id: '', block_id: '', target_blocks: [] })}
+                                                    className="text-indigo-600 focus:ring-indigo-500"
+                                                />
+                                                <span className="text-sm dark:text-gray-300">{t('reports.scope.specific_blocks', 'Blocks / Common Areas')}</span>
+                                            </label>
+                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                <input
+                                                    type="radio"
+                                                    name="targetType"
+                                                    value="unit"
+                                                    checked={newReport.target_type === 'unit'}
+                                                    onChange={() => setNewReport({ ...newReport, target_type: 'unit', target_blocks: [], block_id: '' })}
+                                                    className="text-indigo-600 focus:ring-indigo-500"
+                                                />
+                                                <span className="text-sm dark:text-gray-300">{t('reports.scope.specific_unit', 'Specific Unit')}</span>
+                                            </label>
+                                        </div>
+
+                                        {newReport.target_type === 'blocks' && (
+                                            <div className="space-y-3">
+                                                <HierarchicalBlockSelector
+                                                    blocks={blocks.filter(block => (isAdminOrPres || (isVocal && vocalBlockIds?.includes(block.id)) || true))}
+                                                    selectedBlocks={newReport.target_blocks || []}
+                                                    onToggleBlock={handleToggleBlock}
+                                                />
+
+                                                {newReport.target_blocks?.length > 0 && (
+                                                    <div className="mt-3 p-3 bg-indigo-50/30 dark:bg-indigo-900/10 rounded-xl border border-indigo-100/30 dark:border-indigo-900/20 backdrop-blur-sm">
+                                                        <div className="flex justify-between items-center mb-2">
+                                                            <h4 className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">
+                                                                {t('campaigns.selection_summary', 'Selection Summary')}
+                                                            </h4>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setNewReport({ ...newReport, target_blocks: [] })}
+                                                                className="text-[10px] text-gray-500 hover:text-red-500 transition-colors"
+                                                            >
+                                                                {t('common.clear_selection', 'Clear All')}
+                                                            </button>
+                                                        </div>
+                                                        <div className="flex flex-wrap gap-1.5 max-h-[80px] overflow-y-auto">
+                                                            {newReport.target_blocks
+                                                                .filter(id => {
+                                                                    const block = blocks.find(b => b.id === id);
+                                                                    if (!block) return true;
+                                                                    return !block.parent_id || !newReport.target_blocks.includes(block.parent_id);
+                                                                })
+                                                                .map(id => (
+                                                                    <span key={id} className="px-2 py-0.5 bg-white/60 dark:bg-neutral-800/60 text-[10px] rounded-full border border-indigo-100/50 dark:border-indigo-900/50 flex items-center gap-1 group whitespace-nowrap">
+                                                                        {getBlockName(id)}
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => handleToggleBlock(id)}
+                                                                            className="hover:text-red-500 font-bold ml-1"
+                                                                        >
+                                                                            ×
+                                                                        </button>
+                                                                    </span>
+                                                                ))}
+                                                        </div>
+                                                        <div className="mt-2 text-[10px] text-gray-500 italic">
+                                                            {newReport.target_blocks.length} {t('campaigns.total_entities', 'total entities selected')}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {newReport.target_type === 'unit' && (
+                                            <div className="space-y-3 bg-gray-50 dark:bg-neutral-800/30 p-3 rounded-xl border border-gray-100 dark:border-neutral-700/50">
+                                                {/* If Admin/Pres/Vocal -> Select Block then Unit */}
+                                                {(isAdminOrPres || isVocal) ? (
+                                                    <DrillDownUnitSelector
+                                                        blocks={blocks}
+                                                        selectedUnitId={newReport.unit_id}
+                                                        onSelectUnit={(unitId) => {
+                                                            // Find block for unit
+                                                            let foundBlockId = '';
+                                                            for (const block of blocks) {
+                                                                if (block.units?.some(u => u.id === unitId)) {
+                                                                    foundBlockId = block.id;
+                                                                    break;
+                                                                }
+                                                                // If nested logic needed? units are only on current block in my simpler logic.
+                                                            }
+                                                            // Actually, since flattened blocks array has units attached to each block object:
+                                                            if (!foundBlockId) {
+                                                                const ownerBlock = blocks.find(b => b.units?.some(u => u.id === unitId));
+                                                                if (ownerBlock) foundBlockId = ownerBlock.id;
+                                                            }
+
+                                                            setNewReport({ ...newReport, unit_id: unitId, block_id: foundBlockId });
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    /* Resident: Select from their own units */
+                                                    <div>
+                                                        <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">{t('reports.form.my_unit', 'My Unit')}</label>
+                                                        <GlassSelect
+                                                            value={newReport.unit_id}
+                                                            onChange={(e) => setNewReport({ ...newReport, unit_id: e.target.value, block_id: userUnits.find(u => u.id === e.target.value)?.block_id || '' })}
+                                                            options={[
+                                                                { value: '', label: t('common.select', 'Select Unit...') },
+                                                                ...userUnits.map(u => ({
+                                                                    value: u.id,
+                                                                    label: `${u.blocks?.name || ''} - ${u.unit_number}`
+                                                                }))
+                                                            ]}
+                                                            required={newReport.target_type === 'unit'}
+                                                        />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                    </div>
+
+                                    {/* Optional Image */}
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">{t('common.optional', 'Optional')}</label>
                                         <div className="flex items-center gap-4">
@@ -716,38 +902,66 @@ const Reports = () => {
                                         </div>
                                     </div>
 
-                                    <div className="flex gap-3 pt-2">
+                                    <div className="flex justify-end gap-3 pt-4">
                                         <button
                                             type="button"
                                             onClick={() => setShowModal(false)}
-                                            className="flex-1 glass-button-secondary"
+                                            className="glass-button-secondary"
                                         >
                                             {t('common.cancel', 'Cancel')}
                                         </button>
                                         <button
                                             type="submit"
                                             disabled={isCreating}
-                                            className="flex-1 glass-button flex items-center justify-center relative"
+                                            className="glass-button relative flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed"
                                         >
-                                            {isCreating ? (
+                                            <span className={isCreating ? 'invisible' : ''}>{t('reports.form.submit', 'Submit Report')}</span>
+                                            {isCreating && (
                                                 <div className="absolute inset-0 flex items-center justify-center">
                                                     <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                                     </svg>
                                                 </div>
-                                            ) : null}
-                                            <span className={isCreating ? 'invisible' : ''}>
-                                                {t('reports.form.submit', 'Submit Report')}
-                                            </span>
+                                            )}
                                         </button>
                                     </div>
+
                                 </form>
                             </div>
                         </div>
                     </ModalPortal>
                 )
                 }
+
+                {/* Delete Confirmation Modal */}
+                {/* Details Modal for Deep Linking / Selection */}
+                {selectedReport && (
+                    <ModalPortal>
+                        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in" onClick={() => {
+                            setSelectedReport(null);
+                            setSearchParams({});
+                        }}>
+                            <div className="w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-3xl shadow-2xl relative" onClick={e => e.stopPropagation()}>
+                                <button
+                                    onClick={() => {
+                                        setSelectedReport(null);
+                                        setSearchParams({});
+                                    }}
+                                    className="absolute top-4 right-4 z-10 p-2 bg-black/20 hover:bg-black/40 text-white rounded-full backdrop-blur-md transition-colors"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                                <ReportDetailsPanel
+                                    report={selectedReport}
+                                    onUpdate={fetchReports}
+                                    blocks={blocks}
+                                    userUnits={userUnits}
+                                />
+                            </div>
+                        </div>
+                    </ModalPortal>
+                )}
 
                 {/* Delete Confirmation Modal */}
                 <ConfirmationModal
@@ -758,8 +972,8 @@ const Reports = () => {
                     message={t('reports.delete_confirm', 'Are you sure you want to delete this report? This cannot be undone.')}
                     isDangerous
                     isLoading={isDeleting}
-                    confirmText={t('common.delete', 'Delete')}
                     cancelText={t('common.cancel', 'Cancel')}
+                    confirmText={t('common.delete', 'Delete')}
                 />
             </div >
         </DashboardLayout >

@@ -73,7 +73,10 @@ const CampaignsContent = () => {
             blocks.forEach(block => {
                 if (block.units && block.units.length > 0) {
                     const fullPath = getBlockPath(block.id);
-                    units = [...units, ...block.units.map(u => ({
+                    // Only include units that have at least one owner
+                    const occupiedUnits = block.units.filter(u => u.unit_owners && u.unit_owners.length > 0);
+
+                    units = [...units, ...occupiedUnits.map(u => ({
                         ...u,
                         block_name: fullPath
                     }))];

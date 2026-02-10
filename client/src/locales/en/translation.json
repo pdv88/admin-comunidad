@@ -252,7 +252,7 @@
     "pay": "Pay",
     "visit": "Visit",
     "report_btn": "Report",
-    "recent_reports": "Recent Reports",
+    "recent_reports": "Reports",
     "my_reports": "My Reports",
     "graphs": {
       "financial_overview": "Financial Overview",
@@ -428,7 +428,10 @@
       "desc": "Description",
       "placeholder_title": "e.g. Broken Light",
       "placeholder_desc": "Describe the issue...",
-      "submit": "Submit Report"
+      "submit": "Submit Report",
+      "select_block": "Select Block",
+      "select_unit": "Select Unit",
+      "my_unit": "My Unit"
     },
     "create_success": "Report created successfully",
     "delete_success": "Report deleted successfully",
@@ -457,7 +460,11 @@
     "scope": {
       "community": "Community",
       "specific": "Specific Area (Block / Unit)",
-      "whole_block": "Entire Block / Common Area"
+      "specific": "Specific Area (Block / Unit)",
+      "whole_block": "Entire Block / Common Area",
+      "specific_blocks": "Blocks / Common Areas",
+      "specific_unit": "Specific Unit",
+      "blocks": "Blocks"
     },
     "status_label": "Status",
     "category_label": "Category",
@@ -721,7 +728,7 @@
     },
     "campaigns": {
       "title": "Funding Campaigns",
-      "active_campaigns": "Campaigns",
+      "active_campaigns": "Extraordinary Fees",
       "create_title": "Create New Campaign",
       "name": "Campaign Name",
       "goal": "Goal Amount",

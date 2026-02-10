@@ -118,14 +118,23 @@ exports.generateMonthlyFees = async (req, res) => {
         const existingUnitIds = new Set(existingFees.map(f => f.unit_id));
 
         // 3. Filter units to bill
-        const unitsToBill = units.filter(unit =>
-            !existingUnitIds.has(unit.id) &&
-            unit.unit_owners &&
-            unit.unit_owners.length > 0
-        );
+        const totalFound = units.length;
+        const unitsWithOwners = units.filter(unit => unit.unit_owners && unit.unit_owners.length > 0);
+        const vacantUnitsCount = totalFound - unitsWithOwners.length;
+
+        console.log(`[DEBUG] Fee Generation: Total Units: ${totalFound}, Occupied: ${unitsWithOwners.length}, Vacant: ${vacantUnitsCount}`);
+
+        const unitsToBill = unitsWithOwners.filter(unit => !existingUnitIds.has(unit.id));
+
+        console.log(`[DEBUG] Fee Generation: Already Billed: ${existingUnitIds.size}, Units to Bill: ${unitsToBill.length}`);
 
         if (unitsToBill.length === 0) {
-            return res.status(200).json({ message: 'All occupied units already have fees for this period.', count: 0 });
+            return res.status(200).json({
+                message: vacantUnitsCount > 0
+                    ? `No bills generated. ${existingUnitIds.size} units already billed, and ${vacantUnitsCount} vacant units skipped.`
+                    : 'All occupied units already have fees for this period.',
+                count: 0
+            });
         }
 
         // 4. Prepare inserts

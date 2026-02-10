@@ -2,20 +2,12 @@
 const supabase = require('./src/config/supabaseAdmin');
 
 async function checkTables() {
-    // Try to select from extraordinary_fees
-    const { data, error } = await supabase.from('extraordinary_fees').select('count', { count: 'exact', head: true });
-    if (error) {
-        console.log("Error querying extraordinary_fees:", error.message);
+    // Check campaigns structure
+    const { data: cData, error: cError } = await supabase.from('campaigns').select('*').limit(1);
+    if (cError) {
+        console.log("Error querying campaigns:", cError.message);
     } else {
-        console.log("extraordinary_fees exists. Count:", data);
-    }
-
-    // Try monthly_fees
-    const { data: mData, error: mError } = await supabase.from('monthly_fees').select('count', { count: 'exact', head: true });
-    if (mError) {
-        console.log("Error querying monthly_fees:", mError.message);
-    } else {
-        console.log("monthly_fees exists. Count:", mData);
+        console.log("campaigns table columns:", cData.length > 0 ? Object.keys(cData[0]) : "Table empty, cannot infer columns");
     }
 }
 

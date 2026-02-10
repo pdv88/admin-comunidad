@@ -248,7 +248,7 @@
         "pay": "Pagar",
         "visit": "Visita",
         "report_btn": "Reportar",
-        "recent_reports": "Reportes Recientes",
+        "recent_reports": "Reportes",
         "my_reports": "Mis Reportes",
         "graphs": {
             "financial_overview": "Resumen Financiero",
@@ -313,7 +313,7 @@
         },
         "hierarchy_path": "Ruta",
         "structure_name": "Nombre (ej. Escalera A)",
-        "unit_number": "Número de Unidad (ej. 101)",
+        "unit_number": "Número de Unidad",
         "select_unit": "Seleccionar Unidad",
         "add_sub_block": "Agregar Bloque",
         "unit_type_label": "Tipo",
@@ -419,7 +419,10 @@
         "scope": {
             "community": "Comunidad",
             "specific": "Área Específica (Bloque / Unidad)",
-            "whole_block": "Todo el Bloque / Área Común"
+            "whole_block": "Todo el Bloque / Área Común",
+            "specific_blocks": "Bloques / Áreas Comunes",
+            "specific_unit": "Unidad Específica",
+            "blocks": "Bloques"
         },
         "status": {
             "pending": "Pendiente",
@@ -446,7 +449,10 @@
             "desc": "Descripción",
             "placeholder_title": "ej. Luz rota",
             "placeholder_desc": "Describe el problema...",
-            "submit": "Enviar Reporte"
+            "submit": "Enviar Reporte",
+            "select_block": "Seleccionar Bloque",
+            "select_unit": "Seleccionar Unidad",
+            "my_unit": "Mi Unidad"
         },
         "create_success": "Reporte creado exitosamente",
         "delete_success": "Reporte eliminado exitosamente",
@@ -759,6 +765,12 @@
             "pending": "Pendiente",
             "confirmed": "Confirmado",
             "rejected": "Rechazado"
+        },
+        "campaigns": {
+            "title": "Cuotas Extraordinarias",
+            "active_campaigns": "Cuotas Extraordinarias",
+            "no_active_campaigns": "No hay cuotas extraordinarias activas",
+            "check_later": "Nuevas cuotas aparecerán aquí"
         }
     },
     "campaigns": {

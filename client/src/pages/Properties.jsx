@@ -318,7 +318,7 @@ const Properties = () => {
         e.preventDefault();
         setIsUpdatingUnit(true);
         try {
-            const { id, tenant_name, tenant_email, tenant_phone } = editUnitModal.unit;
+            const { id, tenant_name, tenant_email, tenant_phone, type } = editUnitModal.unit;
             const finalCoefficient = editUnitModal.unit.coefficientFormat === 'percentage'
                 ? (parseFloat(editUnitModal.unit.coefficient) / 100)
                 : parseFloat(editUnitModal.unit.coefficient);
@@ -330,6 +330,7 @@ const Properties = () => {
                     tenant_name,
                     tenant_email,
                     tenant_phone,
+                    type,
                     parking_slots: editUnitModal.unit.parking_slots,
                     has_storage: editUnitModal.unit.has_storage,
                     coefficient: finalCoefficient
@@ -1061,6 +1062,23 @@ const Properties = () => {
                                             <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-2">
                                                 <h4 className="text-sm font-semibold text-gray-800 dark:text-white mb-3">Unit Details</h4>
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                    <div className="sm:col-span-2">
+                                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                            {t('properties.unit_type_label', 'Type')}
+                                                        </label>
+                                                        <select
+                                                            className="glass-input w-full"
+                                                            value={editUnitModal.unit.type}
+                                                            onChange={(e) => setEditUnitModal({
+                                                                ...editUnitModal,
+                                                                unit: { ...editUnitModal.unit, type: e.target.value }
+                                                            })}
+                                                        >
+                                                            <option value="apartment">{t('properties.unit_type.apartment', 'Apartment')}</option>
+                                                            <option value="house">{t('properties.unit_type.house', 'House')}</option>
+                                                            <option value="commercial">{t('properties.unit_type.commercial', 'Commercial')}</option>
+                                                        </select>
+                                                    </div>
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                                             {t('properties.coefficient', 'Coefficient')}

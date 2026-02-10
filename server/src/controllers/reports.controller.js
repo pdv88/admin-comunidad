@@ -20,6 +20,29 @@ const getMemberRoles = async (memberId) => {
     return data?.map(r => r.roles?.name).filter(Boolean) || [];
 };
 
+// Helper: Get descendant block IDs (copied from notices logic)
+const getDescendantBlockIds = async (parentIds, communityId) => {
+    const { data: allBlocks } = await supabaseAdmin
+        .from('blocks')
+        .select('id, parent_id')
+        .eq('community_id', communityId);
+
+    if (!allBlocks) return parentIds;
+
+    let totalIds = [...parentIds];
+    let toProcess = [...parentIds];
+
+    while (toProcess.length > 0) {
+        const currentId = toProcess.shift();
+        const children = allBlocks.filter(b => b.parent_id === currentId).map(b => b.id);
+        const newIds = children.filter(id => !totalIds.includes(id));
+        totalIds = [...totalIds, ...newIds];
+        toProcess = [...toProcess, ...newIds];
+    }
+
+    return totalIds;
+};
+
 exports.getAll = async (req, res) => {
     const token = req.headers.authorization?.split(' ')[1];
     const communityId = req.headers['x-community-id'];
@@ -105,21 +128,45 @@ exports.getAll = async (req, res) => {
                     query = query.eq('user_id', user.id);
                 }
             }
-
         } else {
-            // Resident: See own reports OR public reports for their units/blocks
+            // Resident: See own reports OR public reports for their units/blocks (or target_blocks overlap)
             const myUnitIds = member.profile?.unit_owners?.map(uo => uo.unit_id).filter(Boolean) || [];
+            // Get all blocks the user is part of (including parents up to root)
+            // For simplicity, let's just check direct blocks and rely on the fact that if a report targets a parent, it effectively targets children?
+            // Actually no, the report stores ALL expanded IDs. So we just check if my block ID is in target_blocks.
             const myBlockIds = member.profile?.unit_owners?.map(uo => uo.units?.block_id).filter(Boolean) || [];
 
-            // Build conditions: own reports (any visibility) + public reports in their scope
             let orConditions = [`user_id.eq.${user.id}`];
 
             if (myUnitIds.length > 0) {
                 orConditions.push(`and(unit_id.in.(${myUnitIds.join(',')}),visibility.eq.public)`);
             }
+
+            // Block Reports (Legacy block_id OR New target_blocks)
+            // CRITICAL FIX: Only allow seeing block reports IF unit_id IS NULL.
+            // If unit_id is set, it is a private/specific unit report and neighbors should not see it 
+            // (unless they are the owner, covered above, or it's a global warning).
+
             if (myBlockIds.length > 0) {
-                orConditions.push(`and(block_id.in.(${myBlockIds.join(',')}),visibility.eq.public)`);
+                // Legacy check: block_id IN myBlocks AND unit_id IS NULL
+                const legacyBlockCheck = `and(block_id.in.(${myBlockIds.join(',')}),unit_id.is.null)`;
+
+                // New check: target_blocks overlaps with myBlockIds AND unit_id IS NULL
+                // Note: 'target_blocks' usually implies specific blocks. If a unit report also targets blocks? 
+                // Usually a unit report targets the unit. If I target Blocks + Unit, it's ambiguous.
+                // Let's assume for now Block Targeting implies "Common Area / Whole Block" scope.
+                const newBlockCheck = `and(target_blocks.ov.{${myBlockIds.join(',')}},unit_id.is.null)`;
+
+                orConditions.push(`and(or(${legacyBlockCheck},${newBlockCheck}),visibility.eq.public)`);
             }
+
+            // Community Reports (target_type = 'all' or 'community')
+            // If it's a community report, everyone sees it.
+            // Even if it has a unit_id? 
+            // If I set "Community" scope but specify "Unit 101"?
+            // The frontend clears unit_id if scope is community.
+            // But let's be safe. If target_type is community, it's public.
+            orConditions.push(`and(target_type.in.(all,community),visibility.eq.public)`);
 
             query = query.or(orConditions.join(','));
         }
@@ -152,8 +199,100 @@ exports.getAll = async (req, res) => {
     }
 };
 
+exports.getById = async (req, res) => {
+    const { id } = req.params;
+    const token = req.headers.authorization?.split(' ')[1];
+    const communityId = req.headers['x-community-id'];
+
+    if (!token) return res.status(401).json({ error: 'No token' });
+    if (!communityId) return res.status(400).json({ error: 'Community ID header missing' });
+
+    try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+        if (authError || !user) throw new Error('Unauthorized');
+
+        const { data: member } = await supabaseAdmin
+            .from('community_members')
+            .select(`
+                roles(name),
+                profile:profile_id (
+                     unit_owners(
+                        unit_id,
+                        units(
+                            id,
+                            unit_number,
+                            block_id,
+                            blocks(name)
+                        )
+                    )
+                )
+            `)
+            .eq('profile_id', user.id)
+            .eq('community_id', communityId)
+            .single();
+
+        if (!member) return res.status(403).json({ error: 'Not a member' });
+
+        const roles = await getMemberRoles(member.id);
+        const isAdmin = roles.some(r => ['super_admin', 'admin', 'president', 'maintenance', 'secretary'].includes(r));
+        const isVocal = roles.includes('vocal');
+
+        // Fetch Report
+        const { data: report, error } = await supabaseAdmin
+            .from('reports')
+            .select(`
+                *,
+                profiles:user_id (full_name, email),
+                units:unit_id (unit_number, blocks(name)),
+                blocks:block_id (name)
+            `)
+            .eq('id', id)
+            .eq('community_id', communityId)
+            .single();
+
+        if (error || !report) return res.status(404).json({ error: 'Report not found' });
+
+        // Permission Check
+        let canView = false;
+        if (isAdmin) canView = true;
+        else if (report.user_id === user.id) canView = true;
+        else {
+            // Check visibility
+            if (report.visibility !== 'public') return res.status(403).json({ error: 'Unauthorized (Private)' });
+
+            // Check Scope
+            // 1. Community Scope
+            if (report.target_type === 'community' || report.target_type === 'all') canView = true;
+
+            // 2. Block/Unit Scope
+            const myBlockIds = member.profile?.unit_owners?.map(uo => uo.units?.block_id).filter(Boolean) || [];
+
+            // Legacy block_id check
+            if (report.block_id && myBlockIds.includes(report.block_id)) canView = true;
+
+            // Target Blocks check
+            if (report.target_blocks && report.target_blocks.some(tb => myBlockIds.includes(tb))) canView = true;
+
+            // Vocal Check (extra: they see reports in their managed blocks)
+            if (isVocal && !canView) {
+                const vocalBlocks = await getVocalBlocks(member.id);
+                if (report.block_id && vocalBlocks.includes(report.block_id)) canView = true;
+                if (report.target_blocks && report.target_blocks.some(tb => vocalBlocks.includes(tb))) canView = true;
+            }
+        }
+
+        if (!canView) return res.status(403).json({ error: 'Unauthorized' });
+
+        res.json(report);
+
+    } catch (err) {
+        console.error('Get Report One Error:', err);
+        res.status(400).json({ error: err.message });
+    }
+};
+
 exports.create = async (req, res) => {
-    const { title, description, category, image_url, unit_id, visibility } = req.body;
+    const { title, description, category, image_url, unit_id, visibility, target_blocks, target_type } = req.body;
     const token = req.headers.authorization?.split(' ')[1];
     const communityId = req.headers['x-community-id'];
 
@@ -210,6 +349,21 @@ exports.create = async (req, res) => {
                     return res.status(403).json({ error: 'You can only file reports for blocks you represent or your own unit.' });
                 }
             }
+            // Check target_blocks for Vocals too
+            if (!isOwnUnit && target_blocks && target_blocks.length > 0) {
+                const hasUnauthorizedBlock = target_blocks.some(id => !vocalBlockIds.includes(id));
+                if (hasUnauthorizedBlock) {
+                    return res.status(403).json({ error: 'You can only target blocks you represent.' });
+                }
+            }
+        }
+
+        // Expand target_blocks if provided
+        let finalTargetBlocks = target_blocks || [];
+        if (target_type === 'blocks' && finalTargetBlocks.length > 0) {
+            finalTargetBlocks = await getDescendantBlockIds(finalTargetBlocks, communityId);
+        } else if (target_type !== 'blocks') {
+            finalTargetBlocks = null; // Clean up if not specific blocks
         }
 
         // Only admins can create private reports
@@ -225,7 +379,9 @@ exports.create = async (req, res) => {
                 category,
                 image_url,
                 unit_id,
-                block_id,
+                block_id, // Legacy support
+                target_blocks: finalTargetBlocks,
+                target_type: target_type || 'community',
                 status: 'pending',
                 visibility: reportVisibility
             }])
