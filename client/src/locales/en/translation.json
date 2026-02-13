@@ -394,7 +394,23 @@
     "no_blocks": "No Blocks Found",
     "no_blocks_desc": "Start by adding a new block to your structure.",
     "no_amenities": "No Amenities Found",
-    "no_amenities_desc": "Add common areas or amenities to your community."
+    "no_amenities_desc": "Add common areas or amenities to your community.",
+    "amenity_name_placeholder": "e.g. Swimming Pool, BBQ Area",
+    "description_placeholder": "Brief description...",
+    "availability_schedule": "Availability & Schedule",
+    "schedule_start": "Opens At",
+    "schedule_end": "Closes At",
+    "enabled_days": "Enabled Days",
+    "reservation_rules": "Reservation Rules",
+    "is_reservable": "Reservable",
+    "reservation_type": "Unit Type",
+    "type_hour": "By Hour",
+    "type_day": "By Day",
+    "max_hours": "Max Hours/Month",
+    "max_days": "Max Days/Month",
+    "amenity_created": "Amenity created successfully",
+    "amenity_updated": "Amenity updated successfully",
+    "amenity_save_error": "Error saving amenity"
   },
   "reports": {
     "title": "Issues & Maintenance",
@@ -645,6 +661,7 @@
     "cancel": "Cancel",
     "delete": "Delete",
     "save": "Save",
+    "save_changes": "Save Changes",
     "edit": "Edit",
     "upload_success": "Image uploaded successfully",
     "upload_error": "Error uploading image",
@@ -682,7 +699,8 @@
     "network_error": "Network error",
     "no_description": "No description.",
     "no_items": "No Items Found",
-    "no_items_desc": "There are no items to display at this time."
+    "no_items_desc": "There are no items to display at this time.",
+    "notes": "Notes"
   },
   "payment": {
     "success": "Payment uploaded successfully"
@@ -876,6 +894,7 @@
     "max_hours_badge": "Limit: {{count}}h",
     "max_days_monthly_badge": "Limit: {{count}} days/mo",
     "limit_hours_daily": "Reservations limited to {{count}} hours a day",
+    "limit_hours_monthly": "Reservations limited to {{count}} hours a month",
     "limit_days_monthly": "Reservations limited to {{count}} days a month",
     "documents": "Community Guidelines & Documents"
   },
@@ -898,6 +917,7 @@
     "holiday_closed": "Closed for Holiday/Maintenance",
     "no_slots": "No slots available",
     "request": "Request",
+    "reserve_button": "Reserve",
     "reserved_by": "Reserved by",
     "no_upcoming": "No upcoming reservations.",
     "myself": "Myself",

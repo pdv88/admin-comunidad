@@ -13,6 +13,16 @@ const Modal = ({
     className = '',
     showCloseButton = true
 }) => {
+    // Prevent body scroll when modal is open
+    React.useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [isOpen]);
+
     if (!isOpen) return null;
 
     return (

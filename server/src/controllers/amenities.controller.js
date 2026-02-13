@@ -222,7 +222,7 @@ exports.getReservations = async (req, res) => {
             .select(`
                 *,
                 amenities(name),
-                units!inner(unit_number, block_id, blocks(id, name))
+                units(unit_number, block_id, blocks(id, name))
             `, { count: 'exact' })
             .eq('community_id', communityId);
 

@@ -399,7 +399,7 @@ const CommunityInfo = () => {
                                                     {/* Badges */}
                                                     {!isDaily && limits.max_hours_per_day > 0 && (
                                                         <span className="text-[10px] bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 px-2 py-0.5 rounded-full whitespace-nowrap">
-                                                            {t('community_info.limit_hours_daily', { count: limits.max_hours_per_day })}
+                                                            {t('community_info.limit_hours_monthly', { count: limits.max_hours_per_day })}
                                                         </span>
                                                     )}
                                                     {isDaily && limits.max_days_per_month > 0 && (

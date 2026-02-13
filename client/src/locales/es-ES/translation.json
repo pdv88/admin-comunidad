@@ -403,7 +403,23 @@
         "no_blocks": "No se encontraron bloques",
         "no_blocks_desc": "Comienza añadiendo un nuevo bloque a tu estructura.",
         "no_amenities": "No se encontraron amenidades",
-        "no_amenities_desc": "Añade áreas comunes o amenidades a tu comunidad."
+        "no_amenities_desc": "Añade áreas comunes o amenidades a tu comunidad.",
+        "amenity_name_placeholder": "ej. Piscina, Asador",
+        "description_placeholder": "Breve descripción...",
+        "availability_schedule": "Disponibilidad y Horario",
+        "schedule_start": "Apertura",
+        "schedule_end": "Cierre",
+        "enabled_days": "Días Habilitados",
+        "reservation_rules": "Reglas de Reserva",
+        "is_reservable": "Reservable",
+        "reservation_type": "Tipo de Reserva",
+        "type_hour": "Por Hora",
+        "type_day": "Por Día",
+        "max_hours": "Max Horas/Mes",
+        "max_days": "Max Días/Mes",
+        "amenity_created": "Amenidad creada exitosamente",
+        "amenity_updated": "Amenidad actualizada exitosamente",
+        "amenity_save_error": "Error al guardar la amenidad"
     },
     "reports": {
         "title": "Incidencias y Mantenimiento",
@@ -672,6 +688,7 @@
         "cancel": "Cancelar",
         "delete": "Eliminar",
         "save": "Guardar",
+        "save_changes": "Guardar Cambios",
         "edit": "Editar",
         "upload_success": "Imagen subida exitosamente",
         "upload_error": "Error al subir imagen",
@@ -715,7 +732,8 @@
         "clear_selection": "Limpiar Selección",
         "view_details": "Ver Detalles",
         "yes": "Sí",
-        "no": "No"
+        "no": "No",
+        "notes": "Notas"
     },
     "payment": {
         "success": "Pago subido exitosamente"
@@ -908,6 +926,7 @@
         "max_hours_badge": "Límite: {{count}}h",
         "max_days_monthly_badge": "Límite: {{count}} días/mes",
         "limit_hours_daily": "Reservas limitadas a {{count}} horas al día",
+        "limit_hours_monthly": "Reservas limitadas a {{count}} horas al mes",
         "limit_days_monthly": "Reservas limitadas a {{count}} días al mes",
         "documents": "Reglamentos y Documentos"
     },
@@ -930,6 +949,7 @@
         "holiday_closed": "Cerrado por Festivo/Mantenimiento",
         "no_slots": "No hay horarios disponibles",
         "request": "Solicitar",
+        "reserve_button": "Reservar",
         "reserved_by": "Reservado por",
         "no_upcoming": "No hay reservas próximas.",
         "myself": "Yo mismo",

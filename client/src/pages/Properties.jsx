@@ -235,13 +235,13 @@ const Properties = () => {
                 setEditingAmenityId(null);
                 setAmenityModalOpen(false);
                 fetchData();
-                setToast({ message: editingAmenityId ? 'Amenity updated successfully' : 'Amenity created successfully', type: 'success' });
+                setToast({ message: editingAmenityId ? t('properties.amenity_updated', 'Amenity updated successfully') : t('properties.amenity_created', 'Amenity created successfully'), type: 'success' });
             } else {
-                setToast({ message: 'Error saving amenity', type: 'error' });
+                setToast({ message: t('properties.amenity_save_error', 'Error saving amenity'), type: 'error' });
             }
         } catch (error) {
             console.error(error);
-            setToast({ message: 'Error saving amenity', type: 'error' });
+            setToast({ message: t('properties.amenity_save_error', 'Error saving amenity'), type: 'error' });
         } finally {
             setIsSavingAmenity(false);
         }
@@ -260,6 +260,8 @@ const Properties = () => {
             description: amenity.description,
             is_reservable: amenity.is_reservable,
             max_hours: amenity.reservation_limits?.max_hours_per_day || 0,
+            max_days: amenity.reservation_limits?.max_days_per_month || 0,
+            type: (amenity.reservation_limits?.type || 'hour').toLowerCase(),
             disabled_days: disabled,
             schedule_start: amenity.reservation_limits?.schedule_start || '06:00',
             schedule_end: amenity.reservation_limits?.schedule_end || '23:00',
@@ -770,7 +772,7 @@ const Properties = () => {
                             <ModalPortal>
                                 <div className="fixed inset-0 z-50 overflow-y-auto" role="dialog">
                                     <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                                        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={cancelEditAmenity}></div>
+                                        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 backdrop-blur-sm transition-opacity" onClick={cancelEditAmenity}></div>
                                         <span className="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
                                         <div className="inline-block align-bottom glass-card p-0 text-left shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full overflow-hidden">
                                             <div className="px-6 py-6 border-b border-white/20 dark:border-white/10 flex justify-between items-center">
@@ -790,7 +792,7 @@ const Properties = () => {
                                                             </label>
                                                             <input
                                                                 type="text"
-                                                                placeholder="e.g. Swimming Pool, BBQ Area"
+                                                                placeholder={t('properties.amenity_name_placeholder', 'e.g. Swimming Pool, BBQ Area')}
                                                                 className="glass-input w-full"
                                                                 value={newAmenity.name}
                                                                 onChange={(e) => setNewAmenity({ ...newAmenity, name: e.target.value })}
@@ -803,7 +805,7 @@ const Properties = () => {
                                                             </label>
                                                             <input
                                                                 type="text"
-                                                                placeholder="Brief description..."
+                                                                placeholder={t('properties.description_placeholder', 'Brief description...')}
                                                                 className="glass-input w-full"
                                                                 value={newAmenity.description}
                                                                 onChange={(e) => setNewAmenity({ ...newAmenity, description: e.target.value })}
@@ -823,7 +825,7 @@ const Properties = () => {
                                                                 </label>
                                                                 <input
                                                                     type="time"
-                                                                    className="glass-input w-full"
+                                                                    className="glass-input w-full max-w-full box-border appearance-none min-h-[3rem]"
                                                                     value={newAmenity.schedule_start}
                                                                     onChange={(e) => setNewAmenity({ ...newAmenity, schedule_start: e.target.value })}
                                                                 />
@@ -834,7 +836,7 @@ const Properties = () => {
                                                                 </label>
                                                                 <input
                                                                     type="time"
-                                                                    className="glass-input w-full"
+                                                                    className="glass-input w-full max-w-full box-border appearance-none min-h-[3rem]"
                                                                     value={newAmenity.schedule_end}
                                                                     onChange={(e) => setNewAmenity({ ...newAmenity, schedule_end: e.target.value })}
                                                                 />
@@ -908,16 +910,16 @@ const Properties = () => {
                                                                 </div>
                                                                 <div className="space-y-1">
                                                                     <label className="text-xs font-medium text-gray-500 dark:text-gray-400 ml-1">
-                                                                        {newAmenity.type === 'hour' ? t('properties.max_hours', 'Max Hours/Res') : t('properties.max_days', 'Max Days/Month')}
+                                                                        {newAmenity.type === 'day' ? t('properties.max_days', 'Max Days/Month') : t('properties.max_hours', 'Max Hours/Month')}
                                                                     </label>
                                                                     <input
                                                                         type="number"
                                                                         className="glass-input w-full"
-                                                                        value={newAmenity.type === 'hour' ? newAmenity.max_hours : newAmenity.max_days}
+                                                                        value={newAmenity.type === 'day' ? newAmenity.max_days : newAmenity.max_hours}
                                                                         onChange={(e) => {
                                                                             const val = e.target.value;
-                                                                            if (newAmenity.type === 'hour') setNewAmenity({ ...newAmenity, max_hours: val });
-                                                                            else setNewAmenity({ ...newAmenity, max_days: val });
+                                                                            if (newAmenity.type === 'day') setNewAmenity({ ...newAmenity, max_days: val });
+                                                                            else setNewAmenity({ ...newAmenity, max_hours: val });
                                                                         }}
                                                                     />
                                                                 </div>
@@ -961,44 +963,48 @@ const Properties = () => {
                                         )}
                                     </div>
                                     <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">
-                                        {amenity.description || <span className="italic text-gray-400">{t('properties.no_description')}</span>}
+                                        {amenity.description || <span className="italic text-gray-400">{t('common.no_description')}</span>}
                                     </p>
 
-                                    <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700/50 pt-4">
-                                        <div className="flex items-center gap-1">
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                            <span>
-                                                {amenity.reservation_limits?.schedule_start} - {amenity.reservation_limits?.schedule_end}
-                                            </span>
-                                        </div>
-                                        {amenity.is_reservable && (
+                                    <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700/50 pt-4 mt-auto">
+                                        <div className="flex gap-4">
                                             <div className="flex items-center gap-1">
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                                 <span>
-                                                    {amenity.reservation_limits?.type === 'hour'
-                                                        ? `${amenity.reservation_limits?.max_hours_per_day}h max`
-                                                        : `${amenity.reservation_limits?.max_days_per_month}d/mo max`}
+                                                    {amenity.reservation_limits?.schedule_start} - {amenity.reservation_limits?.schedule_end}
                                                 </span>
                                             </div>
-                                        )}
-                                    </div>
-
-                                    {/* Action Buttons */}
-                                    <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button
-                                            onClick={() => handleEditAmenity(amenity)}
-                                            className="w-8 h-8 rounded-full bg-white/80 dark:bg-black/80 flex items-center justify-center text-blue-500 hover:text-blue-600 shadow-sm"
-                                            title={t('common.edit')}
-                                        >
-                                            <span className="text-sm">&#9998;</span>
-                                        </button>
-                                        <button
-                                            onClick={() => confirmDelete('amenity', amenity.id)}
-                                            className="w-8 h-8 rounded-full bg-white/80 dark:bg-black/80 flex items-center justify-center text-red-500 hover:text-red-600 shadow-sm"
-                                            title={t('common.delete')}
-                                        >
-                                            <span className="text-xl leading-none">&times;</span>
-                                        </button>
+                                            {amenity.is_reservable && (
+                                                <div className="flex items-center gap-1">
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                                                    <span>
+                                                        {amenity.reservation_limits?.type === 'hour'
+                                                            ? `${amenity.reservation_limits?.max_hours_per_day}h max`
+                                                            : `${amenity.reservation_limits?.max_days_per_month}d/mo max`}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex gap-1">
+                                            <button
+                                                onClick={() => handleEditAmenity(amenity)}
+                                                className="p-1 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                                                title={t('common.edit')}
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                </svg>
+                                            </button>
+                                            <button
+                                                onClick={() => confirmDelete('amenity', amenity.id)}
+                                                className="p-1 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                                title={t('common.delete')}
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
@@ -1007,30 +1013,7 @@ const Properties = () => {
                                     <GlassEmptyState
                                         title={t('properties.no_amenities', 'No Amenities Found')}
                                         description={t('properties.no_amenities_desc', 'Add common areas or amenities to your community.')}
-                                    >
-                                        <button
-                                            onClick={() => {
-                                                setNewAmenity({
-                                                    name: '',
-                                                    description: '',
-                                                    is_reservable: false,
-                                                    max_hours: 0,
-                                                    max_days: 0,
-                                                    type: 'hour',
-                                                    disabled_days: [],
-                                                    schedule_start: '06:00',
-                                                    schedule_end: '23:00',
-                                                    exception_days: []
-                                                });
-                                                setEditingAmenityId(null);
-                                                setAmenityModalOpen(true);
-                                            }}
-                                            className="mt-4 glass-button bg-blue-600 text-white flex items-center gap-2"
-                                        >
-                                            <span>+</span>
-                                            {t('properties.add_amenity', 'Add Amenity')}
-                                        </button>
-                                    </GlassEmptyState>
+                                    />
                                 </div>
                             )}
                         </div>

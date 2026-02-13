@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { API_URL } from '../config';
 import ConfirmationModal from '../components/ConfirmationModal';
+import FormModal from '../components/FormModal';
 import ModalPortal from '../components/ModalPortal';
 import GlassSelect from '../components/GlassSelect';
 import GlassLoader from '../components/GlassLoader';
@@ -340,158 +341,133 @@ const Notices = () => {
                 </div>
 
                 {/* Create Modal */}
-                {showModal && (
-                    <ModalPortal>
-                        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-                            <div className="glass-card w-full max-w-lg p-6 animate-fade-in">
-                                <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">{t('notices.post_notice')}</h2>
-                                <form onSubmit={handleCreateNotice} className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">{t('notices.form.title', 'Title')}</label>
-                                        <input
-                                            type="text"
-                                            value={newNotice.title}
-                                            onChange={(e) => setNewNotice({ ...newNotice, title: e.target.value })}
-                                            className="glass-input"
-                                            required
-                                        />
-                                    </div>
+                <FormModal
+                    isOpen={showModal}
+                    onClose={() => setShowModal(false)}
+                    onSubmit={handleCreateNotice}
+                    title={t('notices.post_notice')}
+                    submitText={t('notices.post_notice')}
+                    isLoading={isCreating}
+                >
+                    <div className="flex flex-col gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">{t('notices.form.title', 'Title')}</label>
+                            <input
+                                type="text"
+                                value={newNotice.title}
+                                onChange={(e) => setNewNotice({ ...newNotice, title: e.target.value })}
+                                className="glass-input w-full"
+                                required
+                            />
+                        </div>
 
-                                    <div className="mb-4">
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">{t('notices.form.priority', 'Priority')}</label>
-                                        <GlassSelect
-                                            value={newNotice.priority}
-                                            onChange={(e) => setNewNotice({ ...newNotice, priority: e.target.value })}
-                                            options={[
-                                                { value: 'normal', label: t('notices.priority.normal', 'Normal') },
-                                                { value: 'high', label: t('notices.priority.high', 'High') },
-                                                { value: 'urgent', label: t('notices.priority.urgent', 'Urgent') }
-                                            ]}
-                                            placeholder={t('notices.form.select_priority', 'Select Priority')}
-                                        />
-                                    </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">{t('notices.form.priority', 'Priority')}</label>
+                            <GlassSelect
+                                value={newNotice.priority}
+                                onChange={(e) => setNewNotice({ ...newNotice, priority: e.target.value })}
+                                options={[
+                                    { value: 'normal', label: t('notices.priority.normal', 'Normal') },
+                                    { value: 'high', label: t('notices.priority.high', 'High') },
+                                    { value: 'urgent', label: t('notices.priority.urgent', 'Urgent') }
+                                ]}
+                                placeholder={t('notices.form.select_priority', 'Select Priority')}
+                            />
+                        </div>
 
-                                    <div className="mb-4">
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">{t('notices.form.content', 'Content')}</label>
-                                        <textarea
-                                            value={newNotice.content}
-                                            onChange={(e) => setNewNotice({ ...newNotice, content: e.target.value })}
-                                            className="glass-input rounded-2xl"
-                                            rows="4"
-                                            required
-                                        ></textarea>
-                                    </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">{t('notices.form.content', 'Content')}</label>
+                            <textarea
+                                value={newNotice.content}
+                                onChange={(e) => setNewNotice({ ...newNotice, content: e.target.value })}
+                                className="glass-input w-full rounded-xl"
+                                rows="4"
+                                required
+                            ></textarea>
+                        </div>
 
-                                    <div className="mb-4">
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">{t('notices.form.target', 'Target Audience')}</label>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">{t('notices.form.target', 'Target Audience')}</label>
 
-                                        <div className="flex gap-4 mb-3">
-                                            <label className={`flex items-center gap-2 cursor-pointer ${(isVocal && !isAdminOrPres) ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                                                <input
-                                                    type="radio"
-                                                    name="targetType"
-                                                    value="all"
-                                                    checked={newNotice.target_type === 'all'}
-                                                    onChange={() => setNewNotice({ ...newNotice, target_type: 'all' })}
-                                                    className="text-indigo-600 focus:ring-indigo-500"
-                                                    disabled={isVocal && !isAdminOrPres}
-                                                />
-                                                <span className="text-sm dark:text-gray-300">{t('notices.target.global', 'All Community')}</span>
-                                            </label>
-                                            <label className="flex items-center gap-2 cursor-pointer">
-                                                <input
-                                                    type="radio"
-                                                    name="targetType"
-                                                    value="blocks"
-                                                    checked={newNotice.target_type === 'blocks'}
-                                                    onChange={() => setNewNotice({ ...newNotice, target_type: 'blocks' })}
-                                                    className="text-indigo-600 focus:ring-indigo-500"
-                                                />
-                                                <span className="text-sm dark:text-gray-300">{t('notices.target.specific_blocks', 'Specific Blocks')}</span>
-                                            </label>
-                                        </div>
+                            <div className="flex gap-4 mb-3">
+                                <label className={`flex items-center gap-2 cursor-pointer ${(isVocal && !isAdminOrPres) ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                                    <input
+                                        type="radio"
+                                        name="targetType"
+                                        value="all"
+                                        checked={newNotice.target_type === 'all'}
+                                        onChange={() => setNewNotice({ ...newNotice, target_type: 'all' })}
+                                        className="text-indigo-600 focus:ring-indigo-500"
+                                        disabled={isVocal && !isAdminOrPres}
+                                    />
+                                    <span className="text-sm dark:text-gray-300">{t('notices.target.global', 'All Community')}</span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name="targetType"
+                                        value="blocks"
+                                        checked={newNotice.target_type === 'blocks'}
+                                        onChange={() => setNewNotice({ ...newNotice, target_type: 'blocks' })}
+                                        className="text-indigo-600 focus:ring-indigo-500"
+                                    />
+                                    <span className="text-sm dark:text-gray-300">{t('notices.target.specific_blocks', 'Specific Blocks')}</span>
+                                </label>
+                            </div>
 
-                                        {newNotice.target_type === 'blocks' && (
-                                            <div className="space-y-3">
-                                                <HierarchicalBlockSelector
-                                                    blocks={blocks.filter(block => (isAdminOrPres || vocalBlockIds.includes(block.id)))}
-                                                    selectedBlocks={newNotice.target_blocks || []}
-                                                    onToggleBlock={handleToggleBlock}
-                                                />
+                            {newNotice.target_type === 'blocks' && (
+                                <div className="space-y-3">
+                                    <HierarchicalBlockSelector
+                                        blocks={blocks.filter(block => (isAdminOrPres || vocalBlockIds.includes(block.id)))}
+                                        selectedBlocks={newNotice.target_blocks || []}
+                                        onToggleBlock={handleToggleBlock}
+                                    />
 
-                                                {newNotice.target_blocks?.length > 0 && (
-                                                    <div className="mt-3 p-3 bg-indigo-50/30 dark:bg-indigo-900/10 rounded-xl border border-indigo-100/30 dark:border-indigo-900/20 backdrop-blur-sm">
-                                                        <div className="flex justify-between items-center mb-2">
-                                                            <h4 className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">
-                                                                {t('campaigns.selection_summary', 'Selection Summary')}
-                                                            </h4>
+                                    {newNotice.target_blocks?.length > 0 && (
+                                        <div className="mt-3 p-3 bg-indigo-50/30 dark:bg-indigo-900/10 rounded-xl border border-indigo-100/30 dark:border-indigo-900/20 backdrop-blur-sm">
+                                            <div className="flex justify-between items-center mb-2">
+                                                <h4 className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">
+                                                    {t('campaigns.selection_summary', 'Selection Summary')}
+                                                </h4>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setNewNotice({ ...newNotice, target_blocks: [] })}
+                                                    className="text-[10px] text-gray-500 hover:text-red-500 transition-colors"
+                                                >
+                                                    {t('common.clear_selection', 'Clear All')}
+                                                </button>
+                                            </div>
+                                            <div className="flex flex-wrap gap-1.5 max-h-[80px] overflow-y-auto">
+                                                {newNotice.target_blocks
+                                                    .filter(id => {
+                                                        // Filter out children if parent is selected to keep it clean
+                                                        const block = blocks.find(b => b.id === id);
+                                                        if (!block) return true;
+                                                        return !block.parent_id || !newNotice.target_blocks.includes(block.parent_id);
+                                                    })
+                                                    .map(id => (
+                                                        <span key={id} className="px-2 py-0.5 bg-white/60 dark:bg-neutral-800/60 text-[10px] rounded-full border border-indigo-100/50 dark:border-indigo-900/50 flex items-center gap-1 group whitespace-nowrap">
+                                                            {getBlockName(id)}
                                                             <button
                                                                 type="button"
-                                                                onClick={() => setNewNotice({ ...newNotice, target_blocks: [] })}
-                                                                className="text-[10px] text-gray-500 hover:text-red-500 transition-colors"
+                                                                onClick={() => handleToggleBlock(id)}
+                                                                className="hover:text-red-500 font-bold ml-1"
                                                             >
-                                                                {t('common.clear_selection', 'Clear All')}
+                                                                ×
                                                             </button>
-                                                        </div>
-                                                        <div className="flex flex-wrap gap-1.5 max-h-[80px] overflow-y-auto">
-                                                            {newNotice.target_blocks
-                                                                .filter(id => {
-                                                                    // Filter out children if parent is selected to keep it clean
-                                                                    const block = blocks.find(b => b.id === id);
-                                                                    if (!block) return true;
-                                                                    return !block.parent_id || !newNotice.target_blocks.includes(block.parent_id);
-                                                                })
-                                                                .map(id => (
-                                                                    <span key={id} className="px-2 py-0.5 bg-white/60 dark:bg-neutral-800/60 text-[10px] rounded-full border border-indigo-100/50 dark:border-indigo-900/50 flex items-center gap-1 group whitespace-nowrap">
-                                                                        {getBlockName(id)}
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => handleToggleBlock(id)}
-                                                                            className="hover:text-red-500 font-bold ml-1"
-                                                                        >
-                                                                            ×
-                                                                        </button>
-                                                                    </span>
-                                                                ))}
-                                                        </div>
-                                                        <div className="mt-2 text-[10px] text-gray-500 italic">
-                                                            {newNotice.target_blocks.length} {t('campaigns.total_entities', 'total entities targeted')}
-                                                        </div>
-                                                    </div>
-                                                )}
+                                                        </span>
+                                                    ))}
                                             </div>
-                                        )}
-                                    </div>
-
-                                    <div className="flex justify-end gap-3 pt-4">
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowModal(false)}
-                                            className="glass-button-secondary"
-                                        >
-                                            {t('common.cancel')}
-                                        </button>
-                                        <button
-                                            type="submit"
-                                            disabled={isCreating}
-                                            className="glass-button relative flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed"
-                                        >
-                                            <span className={isCreating ? 'invisible' : ''}>{t('notices.post_notice')}</span>
-                                            {isCreating && (
-                                                <div className="absolute inset-0 flex items-center justify-center">
-                                                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                    </svg>
-                                                </div>
-                                            )}
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
+                                            <div className="mt-2 text-[10px] text-gray-500 italic">
+                                                {newNotice.target_blocks.length} {t('campaigns.total_entities', 'total entities targeted')}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
-                    </ModalPortal>
-                )}
+                    </div>
+                </FormModal>
 
                 <ConfirmationModal
                     isOpen={showDeleteModal}

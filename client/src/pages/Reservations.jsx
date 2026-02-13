@@ -780,7 +780,7 @@ const Reservations = () => {
                                             })()}
 
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes (Optional)</label>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('common.notes')} ({t('common.optional')})</label>
                                                 <textarea
                                                     className="glass-input w-full rounded-2xl"
                                                     value={newBooking.notes}
@@ -805,7 +805,7 @@ const Reservations = () => {
                                                         {t('common.processing', 'Processing...')}
                                                     </>
                                                 ) : (
-                                                    t('reservations.request', 'Request')
+                                                    t('reservations.reserve_button', 'Reserve')
                                                 )}
                                             </button>
                                             <button

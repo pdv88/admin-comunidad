@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import DashboardLayout from '../components/DashboardLayout';
 import { useTranslation } from 'react-i18next';
 import { API_URL } from '../config';
-import ModalPortal from '../components/ModalPortal';
+import FormModal from '../components/FormModal';
 import ConfirmationModal from '../components/ConfirmationModal';
 import GlassLoader from '../components/GlassLoader';
 import HierarchicalBlockSelector from '../components/HierarchicalBlockSelector';
@@ -402,166 +402,150 @@ const Voting = () => {
                 </div>
             </div>
 
-            {showPollModal && (
-                <ModalPortal>
-                    <div className="fixed inset-0 z-[60] overflow-y-auto bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-                        <div className="glass-card max-w-lg w-full p-6">
-                            <h2 className="text-xl font-bold mb-4 dark:text-white">
-                                {editingPoll ? t('voting.edit_poll', 'Edit Poll') : t('voting.create_poll')}
-                            </h2>
-                            <form onSubmit={handleSavePoll}>
-                                <div className="mb-3">
-                                    <label htmlFor="poll-title-input" className="sr-only">{t('voting.poll_title', 'Poll Title')}</label>
-                                    <input
-                                        id="poll-title-input"
-                                        className="glass-input mb-3"
-                                        placeholder={t('voting.poll_title', 'Poll Title')}
-                                        value={pollForm.title}
-                                        onChange={e => setPollForm({ ...pollForm, title: e.target.value })}
-                                        required
-                                    />
-                                </div>
-                                <div className="mb-3">
-                                    <label htmlFor="poll-desc-input" className="sr-only">{t('voting.poll_desc', 'Description')}</label>
-                                    <textarea
-                                        id="poll-desc-input"
-                                        className="glass-input mb-3 min-h-[100px] rounded-2xl"
-                                        placeholder={t('voting.poll_desc', 'Description')}
-                                        value={pollForm.description}
-                                        onChange={e => setPollForm({ ...pollForm, description: e.target.value })}
-                                    />
-                                </div>
+            <FormModal
+                isOpen={showPollModal}
+                onClose={() => setShowPollModal(false)}
+                onSubmit={handleSavePoll}
+                title={editingPoll ? t('voting.edit_poll', 'Edit Poll') : t('voting.create_poll')}
+                submitText={editingPoll ? t('common.save') : t('voting.create_poll')}
+                cancelText={t('common.cancel')}
+                isLoading={isSaving}
+                isSubmitDisabled={isSaving}
+            >
+                <div className="mb-3">
+                    <label htmlFor="poll-title-input" className="sr-only">{t('voting.poll_title', 'Poll Title')}</label>
+                    <input
+                        id="poll-title-input"
+                        className="glass-input mb-3"
+                        placeholder={t('voting.poll_title', 'Poll Title')}
+                        value={pollForm.title}
+                        onChange={e => setPollForm({ ...pollForm, title: e.target.value })}
+                        required
+                    />
+                </div>
+                <div className="mb-3">
+                    <label htmlFor="poll-desc-input" className="sr-only">{t('voting.poll_desc', 'Description')}</label>
+                    <textarea
+                        id="poll-desc-input"
+                        className="glass-input mb-3 min-h-[100px] rounded-2xl"
+                        placeholder={t('voting.poll_desc', 'Description')}
+                        value={pollForm.description}
+                        onChange={e => setPollForm({ ...pollForm, description: e.target.value })}
+                    />
+                </div>
 
-                                {!editingPoll && (
-                                    <div className="mb-3">
-                                        <label className="block text-sm font-medium mb-1 dark:text-neutral-300">{t('voting.options', 'Options')}</label>
-                                        {pollForm.options.map((opt, idx) => (
-                                            <input
-                                                key={idx}
-                                                id={`poll-option-${idx}`}
-                                                aria-label={`${t('voting.option', 'Option')} ${idx + 1}`}
-                                                className="glass-input mb-2"
-                                                placeholder={`Option ${idx + 1}`}
-                                                value={opt}
-                                                onChange={e => handleOptionChange(idx, e.target.value)}
-                                                required
-                                            />
-                                        ))}
-                                        <button type="button" onClick={addOption} className="text-sm text-blue-600 hover:text-blue-500">+ {t('voting.add_option', 'Add Option')}</button>
-                                    </div>
-                                )}
-
-                                {editingPoll && <p className="text-xs text-yellow-600 dark:text-yellow-400 mb-3">{t('voting.edit_warning', 'Options cannot be edited to preserve vote integrity.')}</p>}
-
-                                <div className="mb-3">
-                                    <label htmlFor="poll-deadline-input" className="block text-sm font-medium mb-1 dark:text-neutral-300">{t('voting.deadline', 'Deadline')}</label>
-                                    <input
-                                        id="poll-deadline-input"
-                                        type="date"
-                                        className="glass-input"
-                                        value={pollForm.deadline}
-                                        onChange={e => setPollForm({ ...pollForm, deadline: e.target.value })}
-                                        required
-                                    />
-                                </div>
-
-                                <div className="mb-4">
-                                    <label className="block text-sm font-medium mb-1 dark:text-neutral-300">{t('voting.target_audience', 'Target Audience')}</label>
-                                    <div className="flex gap-4 mb-2">
-                                        <label className={`flex items-center gap-2 dark:text-white ${(isVocal && !isAdmin) ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                                            <input
-                                                type="radio"
-                                                name="targetType"
-                                                value="all"
-                                                checked={pollForm.targetType === 'all'}
-                                                onChange={e => setPollForm({ ...pollForm, targetType: e.target.value })}
-                                                disabled={isVocal && !isAdmin}
-                                            />
-                                            {t('payments.target_all', 'All Community')}
-                                        </label>
-                                        <label className="flex items-center gap-2 dark:text-white">
-                                            <input
-                                                type="radio"
-                                                name="targetType"
-                                                value="blocks"
-                                                checked={pollForm.targetType === 'blocks'}
-                                                onChange={e => setPollForm({ ...pollForm, targetType: e.target.value })}
-                                            />
-                                            {t('payments.target_blocks', 'Specific Blocks')}
-                                        </label>
-                                    </div>
-                                    {pollForm.targetType === 'blocks' && (
-                                        <>
-                                            <HierarchicalBlockSelector
-                                                blocks={availableBlocks}
-                                                selectedBlocks={pollForm.targetBlocks}
-                                                onToggleBlock={handleToggleBlock}
-                                            />
-                                            {pollForm.targetBlocks.length > 0 && (
-                                                <div className="mt-3 p-3 bg-indigo-50/30 dark:bg-indigo-900/10 rounded-xl border border-indigo-100/30 dark:border-indigo-900/20 backdrop-blur-sm">
-                                                    <div className="flex justify-between items-center mb-2">
-                                                        <h4 className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">
-                                                            {t('campaigns.selection_summary', 'Selection Summary')}
-                                                        </h4>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => setPollForm(prev => ({ ...prev, targetBlocks: [] }))}
-                                                            className="text-[10px] text-gray-500 hover:text-red-500 transition-colors"
-                                                        >
-                                                            {t('common.clear_selection', 'Clear All')}
-                                                        </button>
-                                                    </div>
-                                                    <div className="flex flex-wrap gap-1.5 max-h-[80px] overflow-y-auto">
-                                                        {blocks
-                                                            .filter(b => pollForm.targetBlocks.includes(b.id))
-                                                            .filter(b => !b.parent_id || !pollForm.targetBlocks.includes(b.parent_id))
-                                                            .map(block => (
-                                                                <span
-                                                                    key={block.id}
-                                                                    className="px-2 py-0.5 bg-white/60 dark:bg-neutral-800/60 text-[10px] rounded-full border border-indigo-100/50 dark:border-indigo-900/50 flex items-center gap-1 group whitespace-nowrap"
-                                                                >
-                                                                    {block.name}
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => handleToggleBlock(block.id)}
-                                                                        className="hover:text-red-500 font-bold"
-                                                                    >
-                                                                        ×
-                                                                    </button>
-                                                                </span>
-                                                            ))
-                                                        }
-                                                    </div>
-                                                    <div className="mt-2 text-[10px] text-gray-500 italic">
-                                                        {pollForm.targetBlocks.length} {t('campaigns.total_entities', 'total entities targeted')}
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </>
-                                    )}
-                                </div>
-
-                                <div className="flex justify-end gap-3 mt-6">
-                                    <button type="button" onClick={() => setShowPollModal(false)} className="glass-button-secondary" disabled={isSaving}>{t('common.cancel')}</button>
-                                    <button type="submit" className="glass-button" disabled={isSaving}>
-                                        {isSaving ? (
-                                            <span className="flex items-center gap-2">
-                                                <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                </svg>
-                                                {t('common.processing', 'Processing...')}
-                                            </span>
-                                        ) : (
-                                            editingPoll ? t('common.save') : t('voting.create_poll')
-                                        )}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
+                {!editingPoll && (
+                    <div className="mb-3">
+                        <label className="block text-sm font-medium mb-1 dark:text-neutral-300">{t('voting.options', 'Options')}</label>
+                        {pollForm.options.map((opt, idx) => (
+                            <input
+                                key={idx}
+                                id={`poll-option-${idx}`}
+                                aria-label={`${t('voting.option', 'Option')} ${idx + 1}`}
+                                className="glass-input mb-2"
+                                placeholder={`Option ${idx + 1}`}
+                                value={opt}
+                                onChange={e => handleOptionChange(idx, e.target.value)}
+                                required
+                            />
+                        ))}
+                        <button type="button" onClick={addOption} className="text-sm text-blue-600 hover:text-blue-500">+ {t('voting.add_option', 'Add Option')}</button>
                     </div>
-                </ModalPortal>
-            )}
+                )}
+
+                {editingPoll && <p className="text-xs text-yellow-600 dark:text-yellow-400 mb-3">{t('voting.edit_warning', 'Options cannot be edited to preserve vote integrity.')}</p>}
+
+                <div className="mb-3">
+                    <label htmlFor="poll-deadline-input" className="block text-sm font-medium mb-1 dark:text-neutral-300">{t('voting.deadline', 'Deadline')}</label>
+                    <div className="relative w-full">
+                        <input
+                            id="poll-deadline-input"
+                            type="date"
+                            className="glass-input w-full min-w-0 appearance-none min-h-[3rem]"
+                            style={{ maxWidth: '100%', boxSizing: 'border-box' }}
+                            value={pollForm.deadline}
+                            onChange={e => setPollForm({ ...pollForm, deadline: e.target.value })}
+                            required
+                        />
+                    </div>
+                </div>
+
+                <div className="mb-4">
+                    <label className="block text-sm font-medium mb-1 dark:text-neutral-300">{t('voting.target_audience', 'Target Audience')}</label>
+                    <div className="flex gap-4 mb-2">
+                        <label className={`flex items-center gap-2 dark:text-white ${(isVocal && !isAdmin) ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                            <input
+                                type="radio"
+                                name="targetType"
+                                value="all"
+                                checked={pollForm.targetType === 'all'}
+                                onChange={e => setPollForm({ ...pollForm, targetType: e.target.value })}
+                                disabled={isVocal && !isAdmin}
+                            />
+                            {t('payments.target_all', 'All Community')}
+                        </label>
+                        <label className="flex items-center gap-2 dark:text-white">
+                            <input
+                                type="radio"
+                                name="targetType"
+                                value="blocks"
+                                checked={pollForm.targetType === 'blocks'}
+                                onChange={e => setPollForm({ ...pollForm, targetType: e.target.value })}
+                            />
+                            {t('payments.target_blocks', 'Specific Blocks')}
+                        </label>
+                    </div>
+                    {pollForm.targetType === 'blocks' && (
+                        <>
+                            <HierarchicalBlockSelector
+                                blocks={availableBlocks}
+                                selectedBlocks={pollForm.targetBlocks}
+                                onToggleBlock={handleToggleBlock}
+                            />
+                            {pollForm.targetBlocks.length > 0 && (
+                                <div className="mt-3 p-3 bg-indigo-50/30 dark:bg-indigo-900/10 rounded-xl border border-indigo-100/30 dark:border-indigo-900/20 backdrop-blur-sm">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <h4 className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">
+                                            {t('campaigns.selection_summary', 'Selection Summary')}
+                                        </h4>
+                                        <button
+                                            type="button"
+                                            onClick={() => setPollForm(prev => ({ ...prev, targetBlocks: [] }))}
+                                            className="text-[10px] text-gray-500 hover:text-red-500 transition-colors"
+                                        >
+                                            {t('common.clear_selection', 'Clear All')}
+                                        </button>
+                                    </div>
+                                    <div className="flex flex-wrap gap-1.5 max-h-[80px] overflow-y-auto">
+                                        {blocks
+                                            .filter(b => pollForm.targetBlocks.includes(b.id))
+                                            .filter(b => !b.parent_id || !pollForm.targetBlocks.includes(b.parent_id))
+                                            .map(block => (
+                                                <span
+                                                    key={block.id}
+                                                    className="px-2 py-0.5 bg-white/60 dark:bg-neutral-800/60 text-[10px] rounded-full border border-indigo-100/50 dark:border-indigo-900/50 flex items-center gap-1 group whitespace-nowrap"
+                                                >
+                                                    {block.name}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleToggleBlock(block.id)}
+                                                        className="hover:text-red-500 font-bold"
+                                                    >
+                                                        ×
+                                                    </button>
+                                                </span>
+                                            ))
+                                        }
+                                    </div>
+                                    <div className="mt-2 text-[10px] text-gray-500 italic">
+                                        {pollForm.targetBlocks.length} {t('campaigns.total_entities', 'total entities targeted')}
+                                    </div>
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
+            </FormModal>
 
             {deleteId && (
                 <ConfirmationModal
