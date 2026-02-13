@@ -800,6 +800,9 @@
     },
     "campaigns": {
         "title": "Cuotas Extraordinarias",
+        "filter_all": "Todas las Cuotas",
+        "filter_active": "Solo Activas",
+        "filter_closed": "Solo Cerradas",
         "create_btn": "Crear Cuota Extraordinaria",
         "create_title": "Crear Nueva Cuota Extraordinaria",
         "success": "¡Cuota creada con éxito!",

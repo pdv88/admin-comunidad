@@ -775,6 +775,9 @@
   },
   "campaigns": {
     "title": "Funding Campaigns",
+    "filter_all": "All Campaigns",
+    "filter_active": "Active Only",
+    "filter_closed": "Closed Only",
     "create_btn": "Create Campaign",
     "create_title": "Create New Campaign",
     "success": "Campaign created successfully!",
