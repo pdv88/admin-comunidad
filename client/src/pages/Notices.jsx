@@ -29,9 +29,25 @@ const Notices = () => {
     });
 
     // Helper to resolve full paths for preview
-    const getBlockName = (blockId) => {
-        const block = blocks.find(b => b.id === blockId);
-        return block ? block.name : 'Unknown Block';
+    const getBlockName = (id) => {
+        const block = blocks.find(b => b.id === id);
+        return block ? block.name : id;
+    };
+
+    const getBlockPath = (id) => {
+        const path = [];
+        let currentId = id;
+        const visited = new Set(); // Prevent circularity just in case
+
+        while (currentId && !visited.has(currentId)) {
+            visited.add(currentId);
+            const block = blocks.find(b => b.id === currentId);
+            if (!block) break;
+            path.unshift(block.name);
+            currentId = block.parent_id;
+        }
+
+        return path.length > 0 ? path.join(' / ') : id;
     };
 
     const handleToggleBlock = (blockId) => {
@@ -50,6 +66,7 @@ const Notices = () => {
 
     const [noticeToDelete, setNoticeToDelete] = useState(null);
     const [isCreating, setIsCreating] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // Neighbors can VIEW notices but not create them
     const canView = hasAnyRole(['super_admin', 'admin', 'president', 'secretary', 'vocal', 'neighbor']);
@@ -65,17 +82,19 @@ const Notices = () => {
     useEffect(() => {
         if (!canView) return; // Redirect logic usually handled by router or layout, but good to check
         fetchNotices();
-        if (isAdminOrPres || isVocal) fetchBlocks();
+        fetchBlocks();
+    }, [canView]);
 
-        // Init form for Vocal
-        if (isVocal && vocalBlockIds.length > 0) {
+    // Init form for Vocal once blocks are loaded
+    useEffect(() => {
+        if (isVocal && vocalBlockIds.length > 0 && newNotice.target_blocks.length === 0) {
             setNewNotice(prev => ({
                 ...prev,
                 target_type: 'blocks',
                 target_blocks: [vocalBlockIds[0]]
             }));
         }
-    }, [canView, isVocal, isAdminOrPres]);
+    }, [isVocal, vocalBlockIds.length, blocks.length]);
 
     const fetchNotices = async () => {
         try {
@@ -163,6 +182,7 @@ const Notices = () => {
 
     const confirmDelete = async () => {
         if (!noticeToDelete) return;
+        setIsDeleting(true);
         try {
             const token = localStorage.getItem('token');
             const res = await fetch(`${API_URL}/api/notices/${noticeToDelete}`, {
@@ -180,6 +200,8 @@ const Notices = () => {
         } catch (error) {
             console.error('Error deleting notice:', error);
             setToast({ message: t('common.error', 'Error deleting notice'), type: 'error' });
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -189,6 +211,45 @@ const Notices = () => {
             case 'high': return 'bg-orange-500/10 border-orange-500/20 text-orange-800 dark:text-orange-200';
             default: return 'glass-card border-white/40 dark:border-neutral-700/50';
         }
+    };
+
+    const renderNoticeTargets = (notice) => {
+        if (notice.target_type === 'all' || (!notice.target_type && !notice.block_id)) {
+            return (
+                <span className="text-xs font-semibold bg-purple-100 text-purple-700 px-2 py-0.5 rounded dark:bg-purple-900/30 dark:text-purple-300">
+                    {t('notices.global_notice', 'Global')}
+                </span>
+            );
+        }
+
+        const targetIds = notice.target_blocks || (notice.block_id ? [notice.block_id] : []);
+        if (targetIds.length === 0) return null;
+
+        // Filter: only show blocks whose parents are NOT in the target list
+        // This avoids clutter when a whole building is selected
+        const rootTargets = targetIds.filter(id => {
+            const block = blocks.find(b => b.id === id);
+            return !block || !block.parent_id || !targetIds.includes(block.parent_id);
+        });
+
+        const maxToShow = 2;
+        const displayed = rootTargets.slice(0, maxToShow);
+        const extra = rootTargets.length - maxToShow;
+
+        return (
+            <div className="flex flex-wrap gap-1">
+                {displayed.map(id => (
+                    <span key={id} className="text-[10px] font-semibold bg-gray-200 text-gray-700 px-2 py-0.5 rounded dark:bg-neutral-700 dark:text-neutral-300">
+                        {getBlockPath(id)}
+                    </span>
+                ))}
+                {extra > 0 && (
+                    <span className="text-[10px] font-semibold bg-gray-100/50 text-gray-500 px-2 py-0.5 rounded dark:bg-black/20 dark:text-neutral-400">
+                        +{extra}
+                    </span>
+                )}
+            </div>
+        );
     };
 
     if (loading) {
@@ -252,15 +313,7 @@ const Notices = () => {
                                             <span className={`text-xs uppercase font-bold px-2 py-0.5 rounded-full bg-white/60 dark:bg-black/20`}>
                                                 {notice.priority}
                                             </span>
-                                            {notice.target_type === 'blocks' || (notice.block_id && !notice.target_type) ? (
-                                                <span className="text-xs font-semibold bg-gray-200 text-gray-700 px-2 py-0.5 rounded dark:bg-neutral-700 dark:text-neutral-300">
-                                                    {t('notices.block_notice', 'Block Notice')}
-                                                </span>
-                                            ) : (
-                                                <span className="text-xs font-semibold bg-purple-100 text-purple-700 px-2 py-0.5 rounded dark:bg-purple-900/30 dark:text-purple-300">
-                                                    {t('notices.global_notice', 'Global')}
-                                                </span>
-                                            )}
+                                            {renderNoticeTargets(notice)}
                                             <span className="text-xs text-gray-500 dark:text-neutral-400">
                                                 {new Date(notice.created_at).toLocaleDateString()}
                                             </span>
@@ -449,6 +502,7 @@ const Notices = () => {
                     confirmText={t('common.delete')}
                     cancelText={t('common.cancel')}
                     isDangerous={true}
+                    isLoading={isDeleting}
                 />
             </div>
         </DashboardLayout>

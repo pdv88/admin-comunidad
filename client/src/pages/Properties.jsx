@@ -7,6 +7,7 @@ import ModalPortal from '../components/ModalPortal';
 import GlassLoader from '../components/GlassLoader';
 import Toast from '../components/Toast';
 import BlockCard from '../components/properties/BlockCard';
+import GlassEmptyState from '../components/GlassEmptyState';
 
 const Properties = () => {
     const [blocks, setBlocks] = useState([]);
@@ -746,9 +747,17 @@ const Properties = () => {
                                     />
                                 ))}
                                 {blocks.length === 0 && (
-                                    <div className="text-center py-10 text-gray-500 dark:text-gray-400">
-                                        <p>{t('properties.no_blocks', 'No blocks found. Start by adding one.')}</p>
-                                    </div>
+                                    <GlassEmptyState
+                                        title={t('properties.no_blocks', 'No Blocks Found')}
+                                        description={t('properties.no_blocks_desc', 'Start by adding a new block to your structure.')}
+                                    >
+                                        <button
+                                            onClick={handleOpenCreateBlock}
+                                            className="mt-4 glass-button bg-blue-600 text-white flex items-center gap-2"
+                                        >
+                                            <span>+</span> {t('properties.add_block')}
+                                        </button>
+                                    </GlassEmptyState>
                                 )}
                             </div>
                         </div>
@@ -994,8 +1003,34 @@ const Properties = () => {
                                 </div>
                             ))}
                             {amenities.length === 0 && (
-                                <div className="col-span-full text-center py-10 text-gray-500 dark:text-gray-400">
-                                    <p>{t('properties.no_amenities', 'No amenities found.')}</p>
+                                <div className="col-span-full">
+                                    <GlassEmptyState
+                                        title={t('properties.no_amenities', 'No Amenities Found')}
+                                        description={t('properties.no_amenities_desc', 'Add common areas or amenities to your community.')}
+                                    >
+                                        <button
+                                            onClick={() => {
+                                                setNewAmenity({
+                                                    name: '',
+                                                    description: '',
+                                                    is_reservable: false,
+                                                    max_hours: 0,
+                                                    max_days: 0,
+                                                    type: 'hour',
+                                                    disabled_days: [],
+                                                    schedule_start: '06:00',
+                                                    schedule_end: '23:00',
+                                                    exception_days: []
+                                                });
+                                                setEditingAmenityId(null);
+                                                setAmenityModalOpen(true);
+                                            }}
+                                            className="mt-4 glass-button bg-blue-600 text-white flex items-center gap-2"
+                                        >
+                                            <span>+</span>
+                                            {t('properties.add_amenity', 'Add Amenity')}
+                                        </button>
+                                    </GlassEmptyState>
                                 </div>
                             )}
                         </div>

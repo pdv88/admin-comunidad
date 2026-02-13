@@ -33,7 +33,7 @@ const HierarchicalBlockSelector = ({
                         <button
                             type="button"
                             onClick={() => handleBreadcrumbClick(idx)}
-                            className={`whitespace-nowrap hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors ${idx === breadcrumbs.length - 1 ? 'font-bold text-indigo-600 dark:text-indigo-400' : 'text-gray-600 dark:text-gray-300'}`}
+                            className={`whitespace-nowrap hover:text-gray-800 dark:hover:text-white transition-colors ${idx === breadcrumbs.length - 1 ? 'font-bold text-gray-800 dark:text-white' : 'text-gray-600 dark:text-gray-300'}`}
                         >
                             {crumb.name}
                         </button>
@@ -71,7 +71,7 @@ const HierarchicalBlockSelector = ({
                             <button
                                 type="button"
                                 onClick={() => handleNavigate(block)}
-                                className="p-2 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 opacity-0 group-hover:opacity-100 transition-all"
+                                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 opacity-0 group-hover:opacity-100 transition-all"
                                 title={t('common.view_details', 'Drill down')}
                             >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

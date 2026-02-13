@@ -302,7 +302,8 @@
             "urgent": "Urgente"
         },
         "target": {
-            "global": "Toda la Comunidad"
+            "global": "Toda la Comunidad",
+            "specific_blocks": "Bloques Específicos"
         },
         "create_success": "¡Aviso publicado exitosamente!",
         "delete_success": "¡Aviso eliminado exitosamente!"
@@ -398,7 +399,11 @@
             "tower": "Torre",
             "level": "Nivel"
         },
-        "empty_block": "No hay unidades ni subestructuras aún."
+        "empty_block": "No hay unidades ni subestructuras aún.",
+        "no_blocks": "No se encontraron bloques",
+        "no_blocks_desc": "Comienza añadiendo un nuevo bloque a tu estructura.",
+        "no_amenities": "No se encontraron amenidades",
+        "no_amenities_desc": "Añade áreas comunes o amenidades a tu comunidad."
     },
     "reports": {
         "title": "Incidencias y Mantenimiento",
@@ -433,9 +438,12 @@
         "actions": {
             "start": "Iniciar",
             "resolve": "Resolver",
-            "reject": "Rechazar"
+            "reject": "Rechazar",
+            "start_progress": "Iniciar Progreso",
+            "mark_resolved": "Marcar como Resuelto"
         },
         "no_reports": "No se encontraron reportes.",
+        "private": "Privado",
         "form": {
             "title": "Título",
             "create_title": "Crear Reporte",
@@ -446,6 +454,7 @@
             "select_category": "Seleccionar Categoría",
             "unit": "Unidad",
             "select_unit": "Seleccionar Unidad",
+            "private_report": "Reporte Privado",
             "desc": "Descripción",
             "placeholder_title": "ej. Luz rota",
             "placeholder_desc": "Describe el problema...",
@@ -533,6 +542,8 @@
             "no_unit_selected": "Ninguna unidad seleccionada",
             "send": "Enviar Invitación"
         },
+        "no_users": "No se encontraron usuarios",
+        "no_users_desc": "Intenta ajustar tu búsqueda o invita a un nuevo usuario.",
         "table": {
             "name": "Nombre",
             "role": "Rol",
@@ -657,18 +668,15 @@
         "add_comment": "Añadir Observación",
         "view": "Ver",
         "loading": "Cargando...",
-        "delete": "Eliminar",
-        "delete_confirmation": "Confirmar Eliminación",
-        "delete_warning": "¿Estás seguro de que deseas eliminar este elemento? Esta acción no se puede deshacer.",
-        "cancel": "Cancelar",
-        "create": "Crear",
-        "saving": "Guardando...",
-        "no_items": "No hay elementos",
-        "close": "Cerrar",
-        "type_to_confirm": "Por favor escribe \"{{word}}\" para confirmar:",
         "confirm": "Confirmar",
-        "confirm_delete_report": "¿Estás seguro de que quieres eliminar este reporte? No se puede deshacer.",
-        "confirm_delete_image": "¿Estás seguro de que quieres eliminar esta imagen?",
+        "cancel": "Cancelar",
+        "delete": "Eliminar",
+        "save": "Guardar",
+        "edit": "Editar",
+        "upload_success": "Imagen subida exitosamente",
+        "upload_error": "Error al subir imagen",
+        "delete_success": "Eliminado exitosamente",
+        "confirm_delete_image": "¿Estás seguro de que deseas eliminar esta imagen?",
         "error_occurred": "Ocurrió un error",
         "view_results": "Ver Resultados",
         "confirm_delete_notice": "¿Estás seguro de que quieres eliminar este aviso?",
@@ -689,7 +697,6 @@
         "hide_filters": "Ocultar Filtros",
         "export": "Exportar",
         "invalid_file_type": "Tipo de archivo inválido. Por favor sube una imagen.",
-        "upload_error": "Error al procesar la imagen.",
         "processing": "Procesando...",
         "add_photo": "Añadir Foto",
         "export_excel": "Exportar a Excel",
@@ -699,9 +706,10 @@
         "days": "días",
         "hours": "hrs",
         "no_description": "Sin descripción.",
-        "description": "Descripción",
         "error_fetching_data": "Error al obtener datos",
         "network_error": "Error de red",
+        "no_items": "No se encontraron elementos",
+        "no_items_desc": "No hay información para mostrar en este momento.",
         "filters": "Filtros",
         "clear_filters": "Limpiar",
         "clear_selection": "Limpiar Selección",
@@ -800,7 +808,7 @@
         "edit_title": "Editar Cuota",
         "ongoing_hint": "Dejar vacío para indefinida",
         "is_active": "Cuota Activa",
-        "contribute": "Pagar/Contribuir",
+        "contribute": "Contribuir",
         "back_to_list": "Volver a Cuotas",
         "contributions_title": "Historial de Pagos",
         "not_found": "Cuota no encontrada.",
@@ -822,9 +830,13 @@
         "unit_col": "Unidad",
         "amount_col": "Monto",
         "mandatory_warning": "Las cuotas extraordinarias se cobrarán automáticamente a todas las unidades seleccionadas.",
+        "selection_summary": "Resumen de Selección",
+        "total_entities": "entidades totales seleccionadas",
         "variable_fees": "Variable",
         "pay_fee": "Pagar Cuota",
-        "mandatory": "Mandatoria"
+        "mandatory": "Mandatoria",
+        "no_campaigns": "No se encontraron Cuotas Extraordinarias",
+        "no_campaigns_desc": "No hay cuotas extraordinarias que coincidan con tu filtro actual."
     },
     "cookies": {
         "message": "Utilizamos cookies para asegurar que tengas la mejor experiencia en nuestro sitio web.",

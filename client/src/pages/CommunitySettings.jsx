@@ -398,7 +398,7 @@ const CommunitySettings = () => {
 
                             <div className="space-y-4">
                                 {community.bank_details.map((bank, index) => (
-                                    <div key={index} className="bg-gray-50/50 dark:bg-neutral-800/50 p-4 rounded-lg relative group border border-gray-100 dark:border-gray-700/50 transition-all hover:bg-white/40 dark:hover:bg-neutral-800">
+                                    <div key={index} className="glass-card bg-white/20 dark:bg-neutral-800/80 p-4 rounded-xl shadow-lg relative group border border-white/20 transition-all hover:bg-white/30 dark:hover:bg-neutral-800">
                                         <button
                                             type="button"
                                             onClick={() => removeBankAccount(index)}
@@ -484,7 +484,7 @@ const CommunitySettings = () => {
 
                             {/* Upload Form */}
                             {canEdit && (
-                                <div className="bg-blue-50/50 dark:bg-blue-900/20 p-4 rounded-xl mb-6">
+                                <div className="glass-card bg-white/20 dark:bg-neutral-800/80 p-6 border-white/20 shadow-lg mb-6">
                                     <h3 className="text-sm font-medium mb-3 dark:text-gray-200">{t('community_settings.upload_new_doc', 'Upload New Document')}</h3>
                                     <div className="flex flex-col md:flex-row gap-4 items-end">
                                         <div className="flex-1 w-full">

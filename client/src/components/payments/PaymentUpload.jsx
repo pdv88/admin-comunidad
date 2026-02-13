@@ -5,6 +5,7 @@ import { API_URL } from '../../config';
 import GlassSelect from '../GlassSelect';
 import { useAuth } from '../../context/AuthContext';
 import { getCurrencySymbol } from '../../utils/currencyUtils';
+import FormModal from '../FormModal';
 
 const PaymentUpload = ({ onSuccess, onCancel, isAdmin, initialType, initialFeeId, initialCampaignId, initialAmount, initialUnitId }) => {
     const { user: currentUser, activeCommunity } = useAuth();
@@ -169,7 +170,7 @@ const PaymentUpload = ({ onSuccess, onCancel, isAdmin, initialType, initialFeeId
     };
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
+        if (e) e.preventDefault();
         setLoading(true);
         setMessage('');
 
@@ -247,7 +248,6 @@ const PaymentUpload = ({ onSuccess, onCancel, isAdmin, initialType, initialFeeId
             setAmount('');
             setNotes('');
             setFile(null);
-            setSelectedUserId('');
             setPaymentType('maintenance');
             setSelectedCampaignId('');
             setMessage(t('payments.success', 'Payment registered successfully'));
@@ -262,9 +262,15 @@ const PaymentUpload = ({ onSuccess, onCancel, isAdmin, initialType, initialFeeId
     };
 
     return (
-        <div className="glass-card p-6 animate-fade-in">
-            <h3 className="font-bold text-lg mb-4 text-gray-800 dark:text-white">{t('payments.upload.title', 'Register Payment')}</h3>
-            <form onSubmit={handleSubmit} className="space-y-4">
+        <FormModal
+            isOpen={true}
+            onClose={onCancel}
+            onSubmit={handleSubmit}
+            title={t('payments.upload.title', 'Register Payment')}
+            submitText={t('payments.upload.submit', 'Submit Payment')}
+            isLoading={loading}
+        >
+            <div className="space-y-4">
 
                 {isAdmin && !initialFeeId && !initialUnitId && (
                     <div className="mb-4">
@@ -435,27 +441,8 @@ const PaymentUpload = ({ onSuccess, onCancel, isAdmin, initialType, initialFeeId
                 </div>
 
                 {message && <p className={`text-sm ${message.includes('success') ? 'text-green-600' : 'text-red-400'}`}>{message}</p>}
-
-                <div className="flex gap-3 pt-2">
-                    {onCancel && (
-                        <button
-                            type="button"
-                            onClick={onCancel}
-                            className="glass-button-secondary flex-1"
-                        >
-                            {t('common.cancel', 'Cancel')}
-                        </button>
-                    )}
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="glass-button flex-1"
-                    >
-                        {loading ? t('common.loading', 'Loading...') : t('payments.upload.submit', 'Submit Payment')}
-                    </button>
-                </div>
-            </form>
-        </div>
+            </div>
+        </FormModal>
     );
 };
 

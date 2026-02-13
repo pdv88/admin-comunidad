@@ -91,11 +91,15 @@ function App() {
             {/* Financial Features - INCLUDES Treasurer */}
             <Route element={<ProtectedRoute allowedRoles={['super_admin', 'admin', 'president', 'secretary', 'treasurer', 'vocal', 'neighbor']} />}>
               <Route path="/app/maintenance" element={<Maintenance />} />
-              <Route path="/app/my-balance" element={<MyBalance />} />
               <Route path="/app/campaigns" element={<Navigate to="/app/maintenance?tab=extraordinary" replace />} />
               <Route path="/app/campaigns/:id" element={<CampaignDetails />} />
               {/* Redirect /app/payments to /app/maintenance */}
               <Route path="/app/payments" element={<Navigate to="/app/maintenance" replace />} />
+            </Route>
+
+            {/* My Balance: Neighbors Only */}
+            <Route element={<ProtectedRoute allowedRoles={['neighbor']} />}>
+              <Route path="/app/my-balance" element={<MyBalance />} />
             </Route>
 
             {/* Admin/President Only Routes */}

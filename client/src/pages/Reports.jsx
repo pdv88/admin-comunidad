@@ -14,7 +14,7 @@ import ReportDetailsPanel from '../components/ReportDetailsPanel';
 import ImageUploader from '../components/ImageUploader';
 import { exportReportToPDF } from '../utils/pdfExport';
 import HierarchicalBlockSelector from '../components/HierarchicalBlockSelector';
-import DrillDownUnitSelector from '../components/DrillDownUnitSelector';
+import HierarchicalUnitSelector from '../components/HierarchicalUnitSelector';
 
 const Reports = () => {
     const { user, activeCommunity, hasAnyRole } = useAuth();
@@ -826,11 +826,13 @@ const Reports = () => {
                                         )}
 
                                         {newReport.target_type === 'unit' && (
-                                            <div className="space-y-3 bg-gray-50 dark:bg-neutral-800/30 p-3 rounded-xl border border-gray-100 dark:border-neutral-700/50">
+                                            <div className="space-y-3 mt-2">
                                                 {/* If Admin/Pres/Vocal -> Select Block then Unit */}
                                                 {(isAdminOrPres || isVocal) ? (
-                                                    <DrillDownUnitSelector
+                                                    <HierarchicalUnitSelector
                                                         blocks={blocks}
+                                                        activeCommunity={activeCommunity}
+                                                        allowEdit={false}
                                                         selectedUnitId={newReport.unit_id}
                                                         onSelectUnit={(unitId) => {
                                                             // Find block for unit

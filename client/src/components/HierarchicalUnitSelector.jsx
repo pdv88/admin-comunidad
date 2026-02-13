@@ -4,7 +4,7 @@ import { API_URL } from '../config';
 import GlassSelect from './GlassSelect';
 import ModalPortal from './ModalPortal';
 
-const HierarchicalUnitSelector = ({ blocks: initialBlocks, activeCommunity, onSelectUnit, onCancel, onStructureChange }) => {
+const HierarchicalUnitSelector = ({ blocks: initialBlocks, activeCommunity, onSelectUnit, onCancel, onStructureChange, allowEdit = true, selectedUnitId = null }) => {
     const { t } = useTranslation();
     const [currentParentId, setCurrentParentId] = useState(null);
     const [breadcrumbs, setBreadcrumbs] = useState([{ id: null, name: t('properties.hierarchy.root', 'Root') }]);
@@ -129,16 +129,16 @@ const HierarchicalUnitSelector = ({ blocks: initialBlocks, activeCommunity, onSe
     };
 
     return (
-        <div className="flex flex-col h-[300px] bg-transparent">
+        <div className="flex flex-col h-[300px] bg-white/20 dark:bg-neutral-900/20 rounded-xl border border-gray-200/50 dark:border-neutral-700/50 overflow-hidden backdrop-blur-sm">
             {/* Header / Breadcrumbs */}
-            <div className="flex items-center gap-2 p-2 bg-gray-50/80 dark:bg-neutral-800/80 backdrop-blur-sm rounded-t-lg overflow-x-auto text-sm border-b border-gray-200/50 dark:border-neutral-700/50">
+            <div className="flex items-center gap-2 p-3 bg-gray-50/50 dark:bg-neutral-800/50 border-b border-gray-200/50 dark:border-neutral-700/50 overflow-x-auto text-sm shrink-0">
                 {breadcrumbs.map((crumb, idx) => (
                     <React.Fragment key={crumb.id || 'root'}>
                         {idx > 0 && <span className="text-gray-400">/</span>}
                         <button
                             type="button"
                             onClick={() => handleBreadcrumbClick(idx)}
-                            className={`whitespace-nowrap hover:text-indigo-600 dark:hover:text-indigo-400 ${idx === breadcrumbs.length - 1 ? 'font-semibold text-indigo-600 dark:text-indigo-400' : 'text-gray-600 dark:text-gray-300'}`}
+                            className={`whitespace-nowrap hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors ${idx === breadcrumbs.length - 1 ? 'font-bold text-indigo-600 dark:text-indigo-400' : 'text-gray-600 dark:text-gray-300'}`}
                         >
                             {crumb.id === null ? t('properties.hierarchy.root', 'Inicio') : crumb.name}
                         </button>
@@ -149,7 +149,7 @@ const HierarchicalUnitSelector = ({ blocks: initialBlocks, activeCommunity, onSe
             {/* List Content */}
             <div className="flex-1 overflow-y-auto p-2 space-y-1">
                 {displayedItems.length === 0 && (
-                    <div className="text-center py-8 text-gray-400 text-sm italic">
+                    <div className="text-center py-10 text-gray-400 text-sm italic">
                         {t('common.no_items', 'No items found')}
                     </div>
                 )}
@@ -158,62 +158,83 @@ const HierarchicalUnitSelector = ({ blocks: initialBlocks, activeCommunity, onSe
                     <div
                         key={`${item.itemType}-${item.id}`}
                         onClick={() => item.itemType === 'block' ? handleNavigate(item) : onSelectUnit(item.id)}
-                        className={`
-                            flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors border backdrop-blur-sm
+                        className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all border group
                             ${item.itemType === 'block'
-                                ? 'bg-white/40 dark:bg-neutral-800/40 border-gray-200/50 dark:border-neutral-700/50 hover:bg-white/60 dark:hover:bg-neutral-700/60'
-                                : 'bg-indigo-50/40 dark:bg-indigo-900/20 border-indigo-100/50 dark:border-indigo-900/30 hover:bg-indigo-100/60 dark:hover:bg-indigo-900/30'}
+                                ? 'bg-transparent hover:bg-white/40 dark:hover:bg-neutral-800/40 border-transparent hover:border-gray-200/50 dark:hover:border-neutral-700/50'
+                                : (item.id === selectedUnitId
+                                    ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800'
+                                    : 'bg-transparent hover:bg-indigo-50/30 dark:hover:bg-indigo-900/10 border-transparent hover:border-indigo-100/30 dark:hover:border-indigo-900/20')}
                         `}
                     >
-                        <div className="flex items-center gap-3">
-                            <span className={`p-1.5 rounded-md ${item.itemType === 'block' ? 'bg-gray-100 text-gray-500 dark:bg-neutral-700 dark:text-gray-400' : 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-400'}`}>
-                                {item.itemType === 'block' ? (
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
-                                ) : (
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
-                                )}
-                            </span>
+                        <div className="flex items-center gap-3 flex-1">
+                            {item.itemType === 'block' ? (
+                                <svg className="w-5 h-5 text-gray-400/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                                </svg>
+                            ) : (
+                                <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${item.id === selectedUnitId
+                                    ? 'border-indigo-500 bg-indigo-500 text-white'
+                                    : 'border-gray-400/50 bg-white/50 dark:bg-neutral-700/50 group-hover:border-indigo-400'}`}>
+                                    {item.id === selectedUnitId && (
+                                        <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
+                                    )}
+                                </div>
+                            )}
+
                             <div className="flex flex-col">
                                 <span className="font-medium text-gray-900 dark:text-gray-100">
                                     {item.itemType === 'block' ? item.name : `${t(`properties.unit_type.${item.type || 'apartment'}`, t('user_management.table.unit'))} ${item.unit_number}`}
                                 </span>
                                 {item.itemType === 'block' && (
-                                    <span className="text-xs text-gray-500 dark:text-gray-400 capitalize">
+                                    <span className="text-[10px] text-gray-500 dark:text-gray-400 capitalize">
                                         {t(`properties.types.${item.structure_type}`, item.structure_type)}
                                     </span>
                                 )}
                             </div>
                         </div>
+
+                        {/* Navigation Arrow */}
                         {item.itemType === 'block' && (
-                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+                            <button className="p-2 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 opacity-0 group-hover:opacity-100 transition-all">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+                            </button>
+                        )}
+
+                        {/* Selected Indicator for Unit? Optional but matches logic */}
+                        {item.itemType === 'unit' && (
+                            <svg className="w-5 h-5 text-gray-300 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                            </svg>
                         )}
                     </div>
                 ))}
             </div>
 
-            {/* Footer / Actions */}
-            <div className="p-2 border-t border-gray-200/50 dark:border-neutral-700/50 flex gap-2">
-                <button
-                    type="button"
-                    onClick={() => setIsCreating('block')}
-                    className={`glass-button-secondary py-2.5 px-4 text-xs font-semibold flex-1 flex items-center justify-center gap-1.5`}
-                >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
-                    {t('properties.add_sub_block', 'Add Block')}
-                </button>
-
-                {/* Only show 'Add Unit' if inside a block (currentParentId exists) */}
-                {currentParentId && (
+            {/* Footer / Actions - Only show if allowEdit is true */}
+            {allowEdit && (
+                <div className="p-2 border-t border-gray-200/50 dark:border-neutral-700/50 flex gap-2">
                     <button
                         type="button"
-                        onClick={() => setIsCreating('unit')}
-                        className="glass-button-secondary py-2.5 px-4 text-xs font-semibold flex-1 flex items-center justify-center gap-1.5"
+                        onClick={() => setIsCreating('block')}
+                        className={`glass-button-secondary py-2.5 px-4 text-xs font-semibold flex-1 flex items-center justify-center gap-1.5`}
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
-                        {t('properties.add_unit', 'Add Unit')}
+                        {t('properties.add_sub_block', 'Add Block')}
                     </button>
-                )}
-            </div>
+
+                    {/* Only show 'Add Unit' if inside a block (currentParentId exists) */}
+                    {currentParentId && (
+                        <button
+                            type="button"
+                            onClick={() => setIsCreating('unit')}
+                            className="glass-button-secondary py-2.5 px-4 text-xs font-semibold flex-1 flex items-center justify-center gap-1.5"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
+                            {t('properties.add_unit', 'Add Unit')}
+                        </button>
+                    )}
+                </div>
+            )}
 
             {/* Creation Modal */}
             {isCreating && (

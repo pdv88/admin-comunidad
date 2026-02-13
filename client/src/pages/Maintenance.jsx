@@ -9,6 +9,7 @@ import PaymentUpload from '../components/payments/PaymentUpload';
 import PaymentReviewModal from '../components/payments/PaymentReviewModal';
 import FeeDetailsModal from '../components/payments/FeeDetailsModal';
 import ModalPortal from '../components/ModalPortal';
+import Button from '../components/Button';
 import GlassLoader from '../components/GlassLoader';
 import Toast from '../components/Toast';
 import { CampaignsContent } from './Campaigns';
@@ -1053,7 +1054,7 @@ const Maintenance = () => {
                     <ModalPortal>
                         <div className="fixed inset-0 z-50 overflow-y-auto">
                             <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                                <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setIsGeneratorOpen(false)}></div>
+                                <div className="fixed inset-0 bg-gray-500 bg-opacity-75 backdrop-blur-sm transition-opacity" onClick={() => setIsGeneratorOpen(false)}></div>
                                 <span className="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
                                 <div className="inline-block align-bottom glass-card p-0 text-left shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full overflow-hidden">
                                     <div className="px-6 py-6 border-b border-white/20 dark:border-white/10 flex justify-between items-center">
@@ -1062,138 +1063,144 @@ const Maintenance = () => {
                                         </h3>
                                         <button onClick={() => { setIsGeneratorOpen(false); setMissingCoeffError(null); }} className="text-gray-400 hover:text-gray-500 text-2xl">&times;</button>
                                     </div>
-                                    <div className="bg-white/50 dark:bg-black/40 backdrop-blur-md px-6 py-6">
-                                        <form onSubmit={handleGenerate} className="space-y-6">
-                                            <div>
-                                                <label className="block text-sm font-medium mb-1 dark:text-gray-300">
-                                                    {t('maintenance.calculation_method', 'Method')}
-                                                </label>
-                                                <div className="flex gap-4 mt-2">
-                                                    <label className="flex items-center gap-2 cursor-pointer">
-                                                        <input
-                                                            type="radio"
-                                                            name="method"
-                                                            value="fixed"
-                                                            checked={genMethod === 'fixed'}
-                                                            onChange={() => setGenMethod('fixed')}
-                                                            className="text-indigo-600 focus:ring-indigo-500"
-                                                        />
-                                                        <span className="text-sm dark:text-gray-300">{t('maintenance.method_fixed', 'Fixed Amount')}</span>
+                                    <div>
+                                        <form onSubmit={handleGenerate}>
+                                            <div className="p-6 space-y-6">
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1 dark:text-gray-300">
+                                                        {t('maintenance.calculation_method', 'Method')}
                                                     </label>
-                                                    <label className="flex items-center gap-2 cursor-pointer">
-                                                        <input
-                                                            type="radio"
-                                                            name="method"
-                                                            value="coefficient"
-                                                            checked={genMethod === 'coefficient'}
-                                                            onChange={() => setGenMethod('coefficient')}
-                                                            className="text-indigo-600 focus:ring-indigo-500"
-                                                        />
-                                                        <span className="text-sm dark:text-gray-300">{t('maintenance.method_coefficient', 'By Coefficient')}</span>
-                                                    </label>
+                                                    <div className="flex gap-4 mt-2">
+                                                        <label className="flex items-center gap-2 cursor-pointer">
+                                                            <input
+                                                                type="radio"
+                                                                name="method"
+                                                                value="fixed"
+                                                                checked={genMethod === 'fixed'}
+                                                                onChange={() => setGenMethod('fixed')}
+                                                                className="text-indigo-600 focus:ring-indigo-500"
+                                                            />
+                                                            <span className="text-sm dark:text-gray-300">{t('maintenance.method_fixed', 'Fixed Amount')}</span>
+                                                        </label>
+                                                        <label className="flex items-center gap-2 cursor-pointer">
+                                                            <input
+                                                                type="radio"
+                                                                name="method"
+                                                                value="coefficient"
+                                                                checked={genMethod === 'coefficient'}
+                                                                onChange={() => setGenMethod('coefficient')}
+                                                                className="text-indigo-600 focus:ring-indigo-500"
+                                                            />
+                                                            <span className="text-sm dark:text-gray-300">{t('maintenance.method_coefficient', 'By Coefficient')}</span>
+                                                        </label>
+                                                    </div>
                                                 </div>
-                                            </div>
 
-                                            {missingCoeffError && (
-                                                <div className="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 p-4 rounded-md">
-                                                    <div className="flex">
-                                                        <div className="flex-shrink-0">
-                                                            <svg className="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
-                                                                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                                            </svg>
-                                                        </div>
-                                                        <div className="ml-3">
-                                                            <h3 className="text-sm leading-5 font-medium text-amber-800 dark:text-amber-200">
-                                                                {t('maintenance.error_missing_coefficient', 'Missing Coefficients')}
-                                                            </h3>
-                                                            <div className="mt-2 text-sm text-amber-700 dark:text-amber-300">
-                                                                <p className="mb-2">{t('maintenance.units_without_coefficient', 'The following units have no coefficient assigned:')}</p>
-                                                                <ul className="list-disc pl-5 space-y-1 max-h-32 overflow-y-auto">
-                                                                    {missingCoeffError.map((u, idx) => (
-                                                                        <li key={idx}>
-                                                                            <span className="font-semibold">{u.block_name}</span> - {u.unit_number}
-                                                                        </li>
-                                                                    ))}
-                                                                </ul>
+                                                {missingCoeffError && (
+                                                    <div className="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 p-4 rounded-md">
+                                                        <div className="flex">
+                                                            <div className="flex-shrink-0">
+                                                                <svg className="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                                                                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                                                </svg>
+                                                            </div>
+                                                            <div className="ml-3">
+                                                                <h3 className="text-sm leading-5 font-medium text-amber-800 dark:text-amber-200">
+                                                                    {t('maintenance.error_missing_coefficient', 'Missing Coefficients')}
+                                                                </h3>
+                                                                <div className="mt-2 text-sm text-amber-700 dark:text-amber-300">
+                                                                    <p className="mb-2">{t('maintenance.units_without_coefficient', 'The following units have no coefficient assigned:')}</p>
+                                                                    <ul className="list-disc pl-5 space-y-1 max-h-32 overflow-y-auto">
+                                                                        {missingCoeffError.map((u, idx) => (
+                                                                            <li key={idx}>
+                                                                                <span className="font-semibold">{u.block_name}</span> - {u.unit_number}
+                                                                            </li>
+                                                                        ))}
+                                                                    </ul>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            )}
-
-                                            <div>
-                                                <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('maintenance.period', 'Billing Period')}</label>
-                                                <div className="flex gap-2">
-                                                    <select
-                                                        className="glass-input flex-1"
-                                                        value={genPeriod.split('-')[1] || '01'}
-                                                        onChange={(e) => setGenPeriod(`${genPeriod.split('-')[0]}-${e.target.value}`)}
-                                                        required
-                                                    >
-                                                        {Array.from({ length: 12 }, (_, i) => {
-                                                            const monthNum = String(i + 1).padStart(2, '0');
-                                                            const monthName = new Date(2024, i, 1).toLocaleDateString(i18n.language, { month: 'long' });
-                                                            return (
-                                                                <option key={monthNum} value={monthNum} className="capitalize">
-                                                                    {monthName.charAt(0).toUpperCase() + monthName.slice(1)}
-                                                                </option>
-                                                            );
-                                                        })}
-                                                    </select>
-                                                    <select
-                                                        className="glass-input w-24"
-                                                        value={genPeriod.split('-')[0] || new Date().getFullYear()}
-                                                        onChange={(e) => setGenPeriod(`${e.target.value}-${genPeriod.split('-')[1] || '01'}`)}
-                                                        required
-                                                    >
-                                                        {Array.from({ length: 5 }, (_, i) => {
-                                                            const year = new Date().getFullYear() - 1 + i;
-                                                            return <option key={year} value={year}>{year}</option>;
-                                                        })}
-                                                    </select>
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                {genMethod === 'fixed' ? (
-                                                    <div>
-                                                        <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('maintenance.amount_per_unit', 'Amount per Unit')}</label>
-                                                        <input
-                                                            type="number"
-                                                            className="glass-input w-full"
-                                                            value={genAmount}
-                                                            onChange={(e) => setGenAmount(e.target.value)}
-                                                            required
-                                                            min="0"
-                                                        />
-                                                    </div>
-                                                ) : (
-                                                    <div>
-                                                        <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('maintenance.total_budget', 'Total Budget to Distribute')}</label>
-                                                        <input
-                                                            type="number"
-                                                            className="glass-input w-full"
-                                                            value={genTotalAmount}
-                                                            onChange={(e) => setGenTotalAmount(e.target.value)}
-                                                            required
-                                                            min="0"
-                                                        />
-                                                        <p className="text-xs text-gray-500 mt-1">{t('maintenance.coefficient_hint', 'This amount will be distributed among units based on their coefficient.')}</p>
-                                                    </div>
                                                 )}
+
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('maintenance.period', 'Billing Period')}</label>
+                                                    <div className="flex gap-2">
+                                                        <select
+                                                            className="glass-input flex-1"
+                                                            value={genPeriod.split('-')[1] || '01'}
+                                                            onChange={(e) => setGenPeriod(`${genPeriod.split('-')[0]}-${e.target.value}`)}
+                                                            required
+                                                        >
+                                                            {Array.from({ length: 12 }, (_, i) => {
+                                                                const monthNum = String(i + 1).padStart(2, '0');
+                                                                const monthName = new Date(2024, i, 1).toLocaleDateString(i18n.language, { month: 'long' });
+                                                                return (
+                                                                    <option key={monthNum} value={monthNum} className="capitalize">
+                                                                        {monthName.charAt(0).toUpperCase() + monthName.slice(1)}
+                                                                    </option>
+                                                                );
+                                                            })}
+                                                        </select>
+                                                        <select
+                                                            className="glass-input w-24"
+                                                            value={genPeriod.split('-')[0] || new Date().getFullYear()}
+                                                            onChange={(e) => setGenPeriod(`${e.target.value}-${genPeriod.split('-')[1] || '01'}`)}
+                                                            required
+                                                        >
+                                                            {Array.from({ length: 5 }, (_, i) => {
+                                                                const year = new Date().getFullYear() - 1 + i;
+                                                                return <option key={year} value={year}>{year}</option>;
+                                                            })}
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+                                                <div>
+                                                    {genMethod === 'fixed' ? (
+                                                        <div>
+                                                            <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('maintenance.amount_per_unit', 'Amount per Unit')}</label>
+                                                            <input
+                                                                type="number"
+                                                                className="glass-input w-full"
+                                                                value={genAmount}
+                                                                onChange={(e) => setGenAmount(e.target.value)}
+                                                                required
+                                                                min="0"
+                                                            />
+                                                        </div>
+                                                    ) : (
+                                                        <div>
+                                                            <label className="block text-sm font-medium mb-1 dark:text-gray-300">{t('maintenance.total_budget', 'Total Budget to Distribute')}</label>
+                                                            <input
+                                                                type="number"
+                                                                className="glass-input w-full"
+                                                                value={genTotalAmount}
+                                                                onChange={(e) => setGenTotalAmount(e.target.value)}
+                                                                required
+                                                                min="0"
+                                                            />
+                                                            <p className="text-xs text-gray-500 mt-1">{t('maintenance.coefficient_hint', 'This amount will be distributed among units based on their coefficient.')}</p>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
 
-                                            <div className="flex justify-end gap-3 pt-4">
-                                                <button type="button" onClick={() => setIsGeneratorOpen(false)} className="glass-button-secondary">
-                                                    {t('common.cancel', 'Cancel')}
-                                                </button>
-                                                <button
-                                                    type="submit"
+                                            <div className="px-6 py-4 flex justify-end gap-3 bg-gray-50/50 dark:bg-white/5 border-t border-gray-100 dark:border-white/5">
+                                                <Button
+                                                    onClick={() => setIsGeneratorOpen(false)}
+                                                    variant="secondary"
                                                     disabled={generating}
-                                                    className="glass-button bg-indigo-600 text-white hover:bg-indigo-700"
                                                 >
-                                                    {generating ? t('common.processing', 'Generating...') : t('maintenance.generate_btn', 'Generate Bills')}
-                                                </button>
+                                                    {t('common.cancel', 'Cancel')}
+                                                </Button>
+                                                <Button
+                                                    type="submit"
+                                                    isLoading={generating}
+                                                    variant="primary"
+                                                >
+                                                    {t('maintenance.generate_btn', 'Generate Bills')}
+                                                </Button>
                                             </div>
                                         </form>
                                     </div>

@@ -96,8 +96,8 @@ const DashboardLayout = ({ children }) => {
                     )}
 
 
-                    {/* My Balance: For Everyone (Residents) */}
-                    {hasAnyRole(['super_admin', 'admin', 'president', 'secretary', 'treasurer', 'vocal', 'neighbor']) && (
+                    {/* My Balance: For Neighbors Only */}
+                    {hasAnyRole(['neighbor']) && (
                         <Link to="/app/my-balance" onClick={closeSidebar} className={`block py-1.5 px-5 rounded-full transition-all duration-200 ${isActive('/app/my-balance')}`}>
                             {t('dashboard_layout.nav.my_balance', 'My Balance')}
                         </Link>
