@@ -76,7 +76,7 @@ const BlockCard = ({
                     </button>
 
                     {showMenu && (
-                        <div className="absolute right-0 top-full mt-1 w-56 z-[50] glass-card backdrop-blur-xl bg-white/40 dark:bg-neutral-900/80 p-1 flex flex-col gap-1 shadow-xl animate-in fade-in zoom-in-95 origin-top-right">
+                        <div className="absolute right-0 top-full mt-1 w-56 z-[50] glass-card backdrop-blur-md bg-white/40 dark:bg-neutral-900/80 p-1 flex flex-col gap-1 shadow-xl animate-in fade-in zoom-in-95 origin-top-right">
                             <button
                                 onClick={() => { setShowMenu(false); onAddStructure(block.id); }}
                                 className="w-full text-left px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors flex items-center gap-2"

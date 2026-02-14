@@ -83,3 +83,43 @@
 [2026-02-12T23:03:53.554Z] Auth Failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired
 [2026-02-12T23:03:53.558Z] Auth Failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired
 [2026-02-13T02:59:06.612Z] Auth Failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired
+[2026-02-13T23:14:37.462Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-13T23:14:37.478Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-13T23:14:47.251Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-13T23:14:47.349Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-13T23:14:47.350Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-13T23:14:58.148Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-13T23:14:58.158Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-13T23:14:58.167Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-14T05:28:35.186Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-14T05:31:27.471Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-14T05:32:25.832Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-14T05:33:13.268Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-14T05:37:37.086Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-14T05:38:21.134Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-14T05:38:29.753Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-14T05:38:30.171Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-14T05:38:30.208Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-14T05:38:30.209Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-14T05:38:30.269Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-14T05:38:31.177Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-14T05:38:31.186Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-14T05:38:31.199Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-14T05:43:33.783Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-14T05:43:33.799Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-14T05:43:33.832Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-14T05:44:18.967Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-14T05:44:18.968Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-14T05:44:18.969Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-14T05:45:00.175Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-14T05:45:00.184Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-14T05:45:00.200Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-14T05:45:43.596Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-14T05:45:43.602Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-14T05:45:43.667Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-14T05:46:58.811Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-14T05:46:58.915Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-14T05:47:30.156Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-14T05:47:30.182Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-14T05:48:30.152Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
+[2026-02-14T05:48:30.162Z] Auth Failed: invalid JWT: unable to parse or verify signature, token is malformed: token contains an invalid number of segments
